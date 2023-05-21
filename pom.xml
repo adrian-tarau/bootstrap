@@ -51,6 +51,7 @@
 
     <modules>
         <module>core</module>
+        <module>web</module>
         <module>test</module>
     </modules>
 
@@ -62,14 +63,22 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.app.profiles>local,dev</spring.app.profiles>
-        <spring.boot.version>3.0.1</spring.boot.version>
+        <!-- Runtime -->
+        <spring.boot.version>3.1.0</spring.boot.version>
+        <logback.version>2.0.7</logback.version>
+        <resource.version>1.0.0-SNAPSHOT</resource.version>
+        <jdbcpool.version>1.0.0-SNAPSHOT</jdbcpool.version>
+        <threadpool.version>1.0.0-SNAPSHOT</threadpool.version>
+        <!-- Tests -->
         <junit.version>5.9.1</junit.version>
-        <assertj.version>3.23.1</assertj.version>
-        <jmh.version>1.35</jmh.version>
-        <testcontainers.version>1.17.5</testcontainers.version>
+        <assertj.version>3.24.2</assertj.version>
+        <mockito.version>5.3.1</mockito.version>
+        <jmh.version>1.36</jmh.version>
+        <awaitility.version>4.2.0</awaitility.version>
+        <testcontainers.version>1.18.1</testcontainers.version>
     </properties>
 
     <developers>
@@ -92,6 +101,29 @@
                 <scope>import</scope>
             </dependency>
 
+            <dependency>
+                <groupId>net.microfalx</groupId>
+                <artifactId>jdbcpool</artifactId>
+                <version>${object.pool.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx</groupId>
+                <artifactId>threadpool</artifactId>
+                <version>${threadpool.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.resource</groupId>
+                <artifactId>resource-archive</artifactId>
+                <version>${resource.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.resource</groupId>
+                <artifactId>resource-s3</artifactId>
+                <version>${resource.version}</version>
+            </dependency>
 
             <!-- Tests -->
 
@@ -131,6 +163,12 @@
                 <groupId>org.testcontainers</groupId>
                 <artifactId>junit-jupiter</artifactId>
                 <version>${testcontainers.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.awaitility</groupId>
+                <artifactId>awaitility</artifactId>
+                <version>${awaitility.version}</version>
             </dependency>
 
         </dependencies>
