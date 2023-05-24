@@ -60,14 +60,14 @@
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.resource</groupId>
+            <groupId>net.microfalx.bootstrap</groupId>
             <artifactId>bootstrap-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- Testing -->
         <dependency>
-            <groupId>net.microfalx.resource</groupId>
+            <groupId>net.microfalx.bootstrap</groupId>
             <artifactId>bootstrap-test</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

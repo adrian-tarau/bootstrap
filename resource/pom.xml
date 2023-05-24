@@ -24,48 +24,38 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-core</artifactId>
+    <artifactId>bootstrap-resource</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-		<artifactId>bootstrap</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+        <artifactId>bootstrap</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap - Core</name>
+    <name>Bootstrap - Resource</name>
 
     <dependencies>
 
+        <!-- Runtime -->
+
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-core</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>net.microfalx.resource</groupId>
-            <artifactId>resource-archive</artifactId>
+            <artifactId>resource-s3</artifactId>
         </dependency>
 
+        <!-- Testing -->
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx</groupId>
-            <artifactId>threadpool</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <optional>true</optional>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
