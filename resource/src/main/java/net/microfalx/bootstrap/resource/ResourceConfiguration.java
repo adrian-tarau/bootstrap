@@ -14,9 +14,10 @@ public class ResourceConfiguration {
     @Value("${user.home}/.bootstrap/data")
     private String persistedDirectory;
 
-    @Value("${user.home}/.bootstrap/.storage")
+    @Value("${user.home}/.bootstrap/storage")
     private String transientDirectory;
 
+    @Value("${user.home}/.bootstrap/shared")
     private String sharedDirectory;
     private String sharedUserName;
     private String sharedPassword;

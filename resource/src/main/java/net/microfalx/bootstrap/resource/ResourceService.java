@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.resource;
 
 import jakarta.annotation.PostConstruct;
-import net.microfalx.resource.FileResource;
-import net.microfalx.resource.Resource;
+import net.microfalx.resource.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
 
 import static net.microfalx.resource.ResourceUtils.requireNonNull;
 
@@ -69,23 +69,44 @@ public class ResourceService {
         requireNonNull(location);
         requireNonNull(name);
 
-        File directory = switch (location) {
-            case PERSISTED -> new File(configuration.getPersistedDirectory(), name);
-            case TRANSIENT -> new File(configuration.getTransientDirectory(), name);
-            case SHARED -> new File(configuration.getSharedDirectory(), name);
+        return switch (location) {
+            case PERSISTED -> get(persistedDirectory, name);
+            case TRANSIENT -> get(transientDirectory, name);
+            case SHARED -> getSharedResource(name);
         };
-        return FileResource.file(directory).resolve(name, Resource.Type.DIRECTORY);
     }
 
     @PostConstruct
     protected void initialize() {
         validateDirectory(persistedDirectory = new File(configuration.getPersistedDirectory()));
         validateDirectory(transientDirectory = new File(configuration.getTransientDirectory()));
+        validateResource(getSharedResource(null));
+    }
+
+
+    private Resource getSharedResource(String name) {
+        Resource resource = ResourceFactory.resolve(configuration.getSharedDirectory(),
+                UserPasswordCredential.create(configuration.getSharedUserName(), configuration.getSharedPassword()));
+        return name != null ? resource.resolve(name, Resource.Type.DIRECTORY) : resource;
+    }
+
+    private Resource get(File directory, String name) {
+        return FileResource.directory(directory).resolve(name, Resource.Type.DIRECTORY);
     }
 
     private void validateDirectory(File directory) {
         if (!directory.exists() && !directory.mkdirs()) {
-            throw new IllegalStateException("Directory " + directory + " cannot be created");
+            throw new ResourceException("Directory " + directory + " cannot be created");
+        }
+    }
+
+    private void validateResource(Resource directory) {
+        try {
+            if (!directory.exists()) {
+                directory.create();
+            }
+        } catch (IOException e) {
+            throw new ResourceException("Directory " + directory + " cannot be created", e);
         }
     }
 }
