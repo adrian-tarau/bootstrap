@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * All these entities are named entities too.
  */
 @MappedSuperclass
-public abstract class TimestampAware extends NameAware {
+public abstract class TimestampAware {
 
     @Column(name = "created_at", nullable = false)
     @NotNull
@@ -21,19 +21,19 @@ public abstract class TimestampAware extends NameAware {
     @Column(name = "modified_at")
     private LocalDateTime modifiedAt;
 
-    public LocalDateTime getCreatedAt() {
+    public  LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public  void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getModifiedAt() {
+    public  LocalDateTime getModifiedAt() {
         return modifiedAt;
     }
 
-    public void setModifiedAt(LocalDateTime modifiedAt) {
+    public  void setModifiedAt(LocalDateTime modifiedAt) {
         this.modifiedAt = modifiedAt;
     }
 

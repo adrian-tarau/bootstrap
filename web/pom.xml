@@ -75,6 +75,18 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-resource</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-jdbc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Testing -->
 
         <dependency>

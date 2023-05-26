@@ -1,13 +1,13 @@
 package net.microfalx.bootstrap.security.group;
 
 import jakarta.persistence.*;
-import net.microfalx.bootstrap.jdbc.entity.TimestampAware;
+import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
 
 import java.util.Objects;
 
 @Entity
 @Table(name = "groups")
-public class Group extends TimestampAware {
+public class Group extends NamedTimestampAware {
 
     @Id
     @Column(name = "id", nullable = false)
@@ -16,9 +16,6 @@ public class Group extends TimestampAware {
 
     @Column(name = "active", nullable = false)
     private boolean active;
-
-    @Column(name = "description", nullable = false)
-    private String description;
 
     public Integer getId() {
         return id;
@@ -34,14 +31,6 @@ public class Group extends TimestampAware {
 
     public void setActive(boolean active) {
         this.active = active;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     @Override

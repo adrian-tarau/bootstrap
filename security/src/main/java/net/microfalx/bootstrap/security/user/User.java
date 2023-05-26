@@ -2,13 +2,13 @@ package net.microfalx.bootstrap.security.user;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import net.microfalx.bootstrap.jdbc.entity.TimestampAware;
+import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
 
 import java.util.Objects;
 
 @Entity
 @Table(name = "users")
-public class User extends TimestampAware {
+public class User extends NamedTimestampAware {
 
     @Id
     @Column(name = "id", nullable = false)
@@ -33,9 +33,6 @@ public class User extends TimestampAware {
     @Column(name = "roles", nullable = false)
     @NotBlank
     private String roles;
-
-    @Column(name = "description")
-    private String description;
 
     public Integer getId() {
         return id;
@@ -83,14 +80,6 @@ public class User extends TimestampAware {
 
     public void setRoles(String roles) {
         this.roles = roles;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     @Override

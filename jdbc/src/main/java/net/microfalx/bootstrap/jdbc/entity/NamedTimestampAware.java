@@ -5,10 +5,10 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * A base class for all entities which can be named and have an optional description.
+ * A base class for all entities which can be named and have timestamps.
  */
 @MappedSuperclass
-public abstract class NameAware {
+public class NamedTimestampAware extends TimestampAware {
 
     @Column(name = "name", nullable = false)
     @NotBlank
@@ -17,27 +17,27 @@ public abstract class NameAware {
     @Column(name = "description")
     private String description;
 
-    public String getName() {
+    public  String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public  void setName(String name) {
         this.name = name;
     }
 
-    public String getDescription() {
+    public  String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public  void setDescription(String description) {
         this.description = description;
     }
 
     @Override
     public String toString() {
-        return "NameAware{" +
+        return "NamedTimestampAware{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                '}';
+                "} " + super.toString();
     }
 }
