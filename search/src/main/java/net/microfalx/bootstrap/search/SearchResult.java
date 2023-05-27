@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.microfalx.resource.ResourceUtils.defaultIfNull;
-import static net.microfalx.resource.ResourceUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 /**
  * Holds the result of a search.

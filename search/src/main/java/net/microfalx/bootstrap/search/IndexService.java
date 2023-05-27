@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.resource.ResourceService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -9,6 +11,12 @@ import java.util.Collection;
  */
 @Service
 public class IndexService {
+
+    @Autowired
+    private SearchConfiguration configuration;
+
+    @Autowired
+    private ResourceService resourceService;
 
     /**
      * Indexes a collection of documents and commits at the end.

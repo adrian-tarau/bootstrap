@@ -1,12 +1,11 @@
 package net.microfalx.bootstrap.search;
 
-import net.microfalx.resource.ResourceUtils;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 
-import static net.microfalx.resource.ResourceUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ObjectUtils.isEmpty;
 
 /**
  * Holds a document.
@@ -162,7 +161,7 @@ public final class Document implements Serializable {
     }
 
     public Document addTags(String... tags) {
-        if (ResourceUtils.isEmpty(tags)) return this;
+        if (isEmpty(tags)) return this;
         if (this.tags == null) this.tags = new HashSet<>();
         this.tags.addAll(Arrays.asList(tags));
         return this;

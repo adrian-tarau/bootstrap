@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.resource.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,9 @@ public class SearchService {
 
     @Autowired
     private SearchConfiguration configuration;
+
+    @Autowired
+    private ResourceService resourceService;
 
     /**
      * Search the index for all items matching the query.

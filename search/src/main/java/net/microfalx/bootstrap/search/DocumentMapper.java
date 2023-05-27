@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.search;
 
-import net.microfalx.resource.ResourceUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
@@ -10,6 +9,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import static net.microfalx.bootstrap.search.SearchUtilities.*;
+import static net.microfalx.lang.ObjectUtils.isEmpty;
 
 /**
  * A class which writes an {@link Document} into the Lucene index and reads
@@ -63,7 +63,7 @@ class DocumentMapper {
             }
             Attribute attribute = entry.getValue();
             Object value = attribute.getValue();
-            if (ResourceUtils.isEmpty(value)) value = StringUtils.EMPTY;
+            if (isEmpty(value)) value = StringUtils.EMPTY;
             FieldType type = TYPES[attribute.getOptions()];
             luceneDocument.add(new Field(name, normalizeText(value.toString()), type));
         }

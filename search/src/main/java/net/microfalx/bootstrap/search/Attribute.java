@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.search;
 import java.io.Serial;
 import java.io.Serializable;
 
-import static net.microfalx.resource.ResourceUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Holds a custom attribute for a document.
