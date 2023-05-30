@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class SearchService {
 
     @Autowired
-    private SearchConfiguration configuration;
+    private SearchSettings configuration;
 
     @Autowired
     private ResourceService resourceService;

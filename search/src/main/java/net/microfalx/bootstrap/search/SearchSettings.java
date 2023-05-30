@@ -8,11 +8,15 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConfigurationProperties("bootstrap.search")
-public class SearchConfiguration {
+public class SearchSettings {
 
     private boolean allowLeadingWildcard;
 
     public boolean isAllowLeadingWildcard() {
         return allowLeadingWildcard;
+    }
+
+    public void setAllowLeadingWildcard(boolean allowLeadingWildcard) {
+        this.allowLeadingWildcard = allowLeadingWildcard;
     }
 }

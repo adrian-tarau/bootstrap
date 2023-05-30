@@ -26,19 +26,39 @@ public class ResourceConfiguration {
         return persistedDirectory;
     }
 
+    public void setPersistedDirectory(String persistedDirectory) {
+        this.persistedDirectory = persistedDirectory;
+    }
+
     public String getTransientDirectory() {
         return transientDirectory;
+    }
+
+    public void setTransientDirectory(String transientDirectory) {
+        this.transientDirectory = transientDirectory;
     }
 
     public String getSharedDirectory() {
         return sharedDirectory;
     }
 
+    public void setSharedDirectory(String sharedDirectory) {
+        this.sharedDirectory = sharedDirectory;
+    }
+
     public String getSharedUserName() {
         return sharedUserName;
     }
 
+    public void setSharedUserName(String sharedUserName) {
+        this.sharedUserName = sharedUserName;
+    }
+
     public String getSharedPassword() {
         return sharedPassword;
+    }
+
+    public void setSharedPassword(String sharedPassword) {
+        this.sharedPassword = sharedPassword;
     }
 }

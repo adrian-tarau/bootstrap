@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header}">
+<body>
+<div th:replace="~{fragments/header :: navigation}"/>
+<div class="container-fluid">
+    <div th:replace="~{fragments/header :: section(title='Users')}"/>
+    <!-- Your Content For the Page Here-->
+    <div th:replace="~{fragments/footer :: footer}"/>
+</div>
+</body>
+</html>

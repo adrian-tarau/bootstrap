@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Collections;
+
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Provides indexing capabilities for full text search.
@@ -13,30 +16,41 @@ import java.util.Collection;
 public class IndexService {
 
     @Autowired
-    private SearchConfiguration configuration;
+    private SearchSettings configuration;
 
     @Autowired
     private ResourceService resourceService;
 
     /**
+     * Indexes a document and commits at the end.
+     *
+     * @param document the document to index
+     * @throws IndexException if the document cannot be indexed
+     */
+    public void index(Document document) {
+        requireNonNull(document);
+        index(Collections.singleton(document));
+    }
+
+    /**
      * Indexes a collection of documents and commits at the end.
      *
-     * @param documents the collections of items to index
-     * @throws IndexException if the item cannot be indexed
+     * @param documents the collections of documents to index
+     * @throws IndexException if the document cannot be indexed
      */
     public void index(Collection<Document> documents) {
-
+        index(documents, true);
     }
 
     /**
      * Indexes a collection of documents.
      *
-     * @param documents the collections of items to index
-     * @param commit    true - wait to commit in batched items, false - commit immediately
-     * @throws IndexException if the item cannot be indexed
+     * @param documents the collections of documents to index
+     * @param commit    true - wait to commit in batched documents, false - commit immediately
+     * @throws IndexException if the document cannot be indexed
      */
     public void index(Collection<Document> documents, boolean commit) {
-
+        requireNonNull(documents);
     }
 
     /**
@@ -47,7 +61,7 @@ public class IndexService {
      * @param itemId the id of the item to remove
      */
     public void remove(String itemId) {
-
+        requireNonNull(itemId);
     }
 
     /**

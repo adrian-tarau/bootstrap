@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<application xmlns="https://net.microfalx/xsd/application-1.0.xsd">
+
+    <!-- Fonts  -->
+    <asset-bundle id="glyphs" version="1.0.0" name="Various stylesheets with fonts used for glyphs">
+        <asset path="font-awesome/all.css" type="stylesheet"/>
+    </asset-bundle>
+
+    <!-- jQuery  -->
+    <asset-bundle id="jquery" path="jquery" version="3.6.2" name="JQuery">
+        <asset path="jquery.js" type="script"/>
+        <asset path="jquery-migrate.js" type="script"/>
+        <asset path="jquery.datetimepicker.js" type="script"/>
+        <asset path="jquery.datetimepicker.css" type="stylesheet"/>
+    </asset-bundle>
+
+    <!-- Bootstrap  -->
+    <asset-bundle id="bootstrap" path="bootstrap" version="2.5.20" name="JQuery Date/Time Picker">
+        <asset path="bootstrap.js" type="script"/>
+        <asset path="bootstrap.css" type="stylesheet"/>
+    </asset-bundle>
+
+</application>

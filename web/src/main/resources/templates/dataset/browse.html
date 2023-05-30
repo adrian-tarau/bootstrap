@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:if="${message != null}" class="alert alert-success alert-dismissible fade show text-center message"
+     role="alert" th:fragment="message" id="message">
+    [[${message}]]
+</div>
+
+<nav class="nav gap-3" th:fragment="toolbar(path)">
+    <a class="btn btn-primary" aria-current="page" th:href="${path}+'/add'">Add</a>
+    <form class="d-flex float-end" role="search" method="post" th:action="${path}+'/search'">
+        <input class="form-control me-2" type="search" name="text" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success me-2" type="submit">Search</button>
+        <button class="btn btn-outline-success me-2" type="submit">Clear</button>
+    </form>
+</nav>
+
+<nav class="nav gap-3" th:fragment="toolbar_back(path)">
+    <a class="btn btn-primary" aria-current="page" th:href="${path}">Back</a>
+</nav>
+
+<nav class="nav gap-3" th:fragment="toolbar_complete(path,id)">
+    <a class="btn btn-primary" aria-current="page" th:href="${path}">Back</a>
+    <a class="btn btn-primary" aria-current="page" th:href="${path}+'/'+${id}+'/complete'">Complete</a>
+</nav>
+
+<td class="text-center" th:fragment="all_actions(path,id)">
+    <a th:href="${path}+'/'+${id}+'/view'" title="View this record" class="text-decoration-none text-reset"><i class="far fa-eye"></i></a>
+    <a th:href="${path}+'/'+${id}+'/edit'" title="Edit this record" class="text-decoration-none text-reset "><i class="fa-regular fa-pen-to-square"></i></a>
+    <a th:href="${path}+'/'+${id}+'/delete'" title="Delete this record" class="text-decoration-none text-reset"><i class="fa-regular fa-trash-can"></i></a>
+    <i class=""></i>
+</td>
+
+<td class="text-center" th:fragment="actions(path,id)">
+    <a th:href="${path}+'/'+${id}+'/edit'" title="Edit this record" class="text-decoration-none text-reset "><i class="fa-regular fa-pen-to-square"></i></a>
+    <a th:href="${path}+'/'+${id}+'/delete'" title="Delete this record" class="text-decoration-none text-reset"><i class="fa-regular fa-trash-can"></i></a>
+    <i class=""></i>
+</td>
+
+</body>
+</html>

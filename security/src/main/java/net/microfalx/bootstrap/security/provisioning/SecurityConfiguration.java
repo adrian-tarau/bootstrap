@@ -20,6 +20,9 @@ public class SecurityConfiguration {
     @Autowired
     private DataSource dataSource;
 
+    @Autowired
+    private SecuritySettings settings;
+
     @Bean
     public UserDetailsManager createUserDetailsManager() {
         JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
@@ -37,10 +40,17 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
-        http.csrf().disable();
-        http.headers().frameOptions().disable();
-        return http.build();
+        if (settings.isEnabled()) {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
+            http.csrf().disable();
+            http.headers().frameOptions().disable();
+            return http.build();
+        } else {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            http.csrf().disable();
+            http.headers().frameOptions().disable();
+            return http.build();
+        }
     }
 
     private void updateUserInfoManager(JdbcUserDetailsManager manager) {
