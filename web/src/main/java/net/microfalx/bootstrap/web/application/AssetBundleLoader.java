@@ -34,7 +34,7 @@ class AssetBundleLoader {
         LOGGER.info("Discover assets from web descriptors");
         Collection<URL> webDescriptors = null;
         try {
-            webDescriptors = ApplicationUtils.getDescriptors();
+            webDescriptors = ApplicationUtils.getAssetDescriptors();
             for (URL webDescriptor : webDescriptors) {
                 try {
                     loadResources(webDescriptor);

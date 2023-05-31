@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           xmlns="https://net.microfalx/xsd/application-1.0.xsd"
-           targetNamespace="https://net.microfalx/xsd/application-1.0.xsd"
+           xmlns="https://net.microfalx/xsd/asset-1.0.xsd"
+           targetNamespace="https://net.microfalx/xsd/asset-1.0.xsd"
            elementFormDefault="unqualified"
            attributeFormDefault="unqualified">
 
-    <xs:element name="application">
+    <xs:element name="assets">
         <xs:annotation>
             <xs:documentation>
             </xs:documentation>
