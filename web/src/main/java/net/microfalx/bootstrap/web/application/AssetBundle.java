@@ -88,6 +88,16 @@ public class AssetBundle implements Identifiable<String>, Nameable, Descriptable
         return Collections.unmodifiableCollection(assets);
     }
 
+    /**
+     * Returns the content type of this asset bundle.
+     *
+     * @return a non-null instance
+     */
+    public String getContentType() {
+        if (assets.isEmpty()) return "application/octet-stream";
+        return assets.iterator().next().getContentType();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

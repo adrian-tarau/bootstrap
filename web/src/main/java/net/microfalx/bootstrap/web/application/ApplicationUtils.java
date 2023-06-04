@@ -24,5 +24,19 @@ public class ApplicationUtils {
         return urls;
     }
 
+    /**
+     * Returns a collection of URLs pointing to navigation descriptors.
+     *
+     * @return a non-null collection;
+     */
+    static Collection<URL> getNavigationDescriptors() throws IOException {
+        Collection<URL> urls = new ArrayList<>();
+        Enumeration<URL> resources = ApplicationUtils.class.getClassLoader().getResources("navigation.xml");
+        while (resources.hasMoreElements()) {
+            urls.add(resources.nextElement());
+        }
+        return urls;
+    }
+
 
 }

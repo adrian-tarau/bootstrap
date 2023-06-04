@@ -17,7 +17,7 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.lang.XmlUtils.*;
 
 /**
- * Loads asset bundles from <code>application.xml</code> descriptors.
+ * Loads asset bundles from <code>asset.xml</code> descriptors.
  */
 class AssetBundleLoader {
 
@@ -39,7 +39,7 @@ class AssetBundleLoader {
                 try {
                     loadResources(webDescriptor);
                 } catch (Exception e) {
-                    LOGGER.error("Failed to load web resources from web descriptors: " + webDescriptor.toExternalForm(), e);
+                    LOGGER.error("Failed to load web resources from asset descriptors: " + webDescriptor.toExternalForm(), e);
                 }
             }
 
@@ -47,7 +47,7 @@ class AssetBundleLoader {
                 try {
                     loadResourceUpdates(webDescriptor);
                 } catch (Exception e) {
-                    LOGGER.error("Failed to load web resources from web descriptors: " + webDescriptor.toExternalForm(), e);
+                    LOGGER.error("Failed to load web resources from asset descriptors: " + webDescriptor.toExternalForm(), e);
                 }
             }
         } catch (IOException e) {

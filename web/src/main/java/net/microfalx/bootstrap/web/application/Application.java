@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.web.application;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Nameable;
 
-public class Application implements Nameable, Descriptable {
+public final class Application implements Nameable, Descriptable {
 
     String name;
     String description;

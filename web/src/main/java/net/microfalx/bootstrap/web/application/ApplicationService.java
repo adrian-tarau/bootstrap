@@ -4,14 +4,15 @@ import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.web.container.WebContainerService;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TextUtils;
+import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -30,6 +31,7 @@ public class ApplicationService {
     private WebContainerService webContainerService;
 
     private AssetBundleManager assetBundleManager = new AssetBundleManager(this);
+    private Map<String, Navigation> navigations = new ConcurrentHashMap<>();
     private final Application application = new Application();
 
     /**
@@ -39,6 +41,44 @@ public class ApplicationService {
      */
     public Application getApplication() {
         return application;
+    }
+
+    /**
+     * Registers a navigation.
+     *
+     * @param navigation the navigation
+     */
+    public void registerNavigation(Navigation navigation) {
+        requireNonNull(navigation);
+        if (navigations.containsKey(navigation.getId())) {
+            throw new ApplicationException("A navigation with identifier '" + navigation.getId() + " is already registered");
+        }
+        navigations.put(navigation.getId(), navigation);
+    }
+
+    /**
+     * Returns the navigation with a given identifier.
+     *
+     * @param id the navigation identifier
+     * @return the navigation
+     * @throws ApplicationException if the navigation is not registered
+     */
+    public Navigation getNavigation(String id) {
+        requireNonNull(id);
+        Navigation navigation = navigations.get(id.toLowerCase());
+        if (navigation == null) {
+            throw new ApplicationException("A navigation with identifier '" + id + "' is not registered");
+        }
+        return navigation;
+    }
+
+    /**
+     * Returns all registered navigations.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Navigation> getNavigations() {
+        return Collections.unmodifiableCollection(navigations.values());
     }
 
     /**
@@ -58,6 +98,17 @@ public class ApplicationService {
      */
     public AssetBundle getAssetBundle(String id) {
         return assetBundleManager.getAssetBundle(id);
+    }
+
+    /**
+     * Returns the content of an asset bundle.
+     *
+     * @param id   the asset bundle identifier
+     * @param type the type of the asset
+     * @return the resource with the bundle content
+     */
+    public Resource getAssetBundleContent(String id, Asset.Type type) throws IOException {
+        return assetBundleManager.getAssetBundleContent(id, type);
     }
 
     /**

@@ -1,11 +1,17 @@
 package net.microfalx.bootstrap.web.application;
 
+import net.microfalx.resource.MemoryResource;
+import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.zip.GZIPOutputStream;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -18,6 +24,7 @@ class AssetBundleManager {
 
     private final ApplicationService applicationService;
     private final Map<String, AssetBundle> bundles = new ConcurrentHashMap<>();
+    private final Map<String, Resource> bundlesContent = new ConcurrentHashMap<>();
     private final Map<String, Collection<String>> assetBundleDependencies = new ConcurrentHashMap<>();
 
     AssetBundleManager(ApplicationService applicationService) {
@@ -43,6 +50,13 @@ class AssetBundleManager {
         if (assetBundle == null)
             throw new ApplicationException("An asset bundle with identifier '" + id + "' is not registered");
         return assetBundle;
+    }
+
+    Resource getAssetBundleContent(String id, Asset.Type type) throws IOException {
+        AssetBundle assetBundle = getAssetBundle(id);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        OutputStream stream = new GZIPOutputStream(buffer);
+        return MemoryResource.create(buffer.toByteArray(), "assert-bundle-id");
     }
 
     Collection<AssetBundle> getAssetBundles() {
