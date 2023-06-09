@@ -150,17 +150,12 @@ public class Asset implements Identifiable<String>, Nameable, Descriptable, Comp
      * @return the content type
      */
     public final String getContentType() {
-        switch (type) {
-            case STYLE_SHEET:
-                return "text/css";
-            case JAVA_SCRIPT:
-                return "text/javascript";
-            case IMAGE:
-                // the asset id is actually the path
-                return URLConnection.guessContentTypeFromName(getId());
-            default:
-                return "application/octet-stream";
-        }
+        return switch (type) {
+            case STYLE_SHEET -> "text/css";
+            case JAVA_SCRIPT -> "text/javascript";
+            case IMAGE -> URLConnection.guessContentTypeFromName(getName());
+            default -> "application/octet-stream";
+        };
     }
 
     @Override
@@ -206,6 +201,9 @@ public class Asset implements Identifiable<String>, Nameable, Descriptable, Comp
         private Resource resource;
 
         private boolean requiresAuthentication;
+
+        Builder() {
+        }
 
         public Builder path(String path) {
             requireNotEmpty(path);

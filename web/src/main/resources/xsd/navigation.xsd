@@ -12,70 +12,40 @@
         </xs:annotation>
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="navigation" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="menu" minOccurs="0" maxOccurs="unbounded"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
 
-    <xs:element name="navigation">
+    <xs:element name="menu">
         <xs:annotation>
             <xs:documentation>
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="menu" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="item" minOccurs="0" maxOccurs="unbounded"/>
             </xs:sequence>
             <xs:attribute name="id" use="required"/>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name="link">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
-            <xs:attribute name="name" use="required"/>
-            <xs:attribute name="target"/>
+            <xs:attribute name="text"/>
+            <xs:attribute name="action"/>
+            <xs:attribute name="token"/>
             <xs:attribute name="roles"/>
             <xs:attribute name="icon"/>
-            <xs:attribute name="order" type="xs:integer"/>
+            <xs:attribute name="position" type="xs:integer"/>
         </xs:complexType>
     </xs:element>
 
-    <xs:element name="update-asset-bundle">
+    <xs:element name="item">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element minOccurs="0" maxOccurs="unbounded" ref="depends-on-asset-bundle"/>
-                <xs:element minOccurs="0" maxOccurs="unbounded" ref="depends-on-feature"/>
-                <xs:element minOccurs="1" maxOccurs="unbounded" ref="asset"/>
-            </xs:sequence>
             <xs:attribute name="id" use="required"/>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name="depends-on-asset-bundle"/>
-    <xs:element name="depends-on-theme"/>
-    <xs:element name="depends-on-feature"/>
-
-    <xs:element name="asset">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element minOccurs="0" maxOccurs="unbounded" ref="depends-on-feature"/>
-            </xs:sequence>
-            <xs:attribute name="path" use="required"/>
-            <xs:attribute name="type" use="required">
-                <xs:simpleType>
-                    <xs:restriction base="xs:token">
-                        <xs:enumeration value="script"/>
-                        <xs:enumeration value="stylesheet"/>
-                        <xs:enumeration value="image"/>
-                        <xs:enumeration value="font"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:attribute>
-            <xs:attribute name="order"/>
-            <xs:attribute name="absolute" type="xs:boolean" default="false"/>
+            <xs:attribute name="text"/>
+            <xs:attribute name="action"/>
+            <xs:attribute name="token"/>
+            <xs:attribute name="roles"/>
+            <xs:attribute name="icon"/>
+            <xs:attribute name="position" type="xs:integer"/>
         </xs:complexType>
     </xs:element>
 

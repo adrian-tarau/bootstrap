@@ -1,5 +1,8 @@
 package net.microfalx.bootstrap.web.application;
 
+import net.microfalx.bootstrap.web.component.Component;
+import net.microfalx.bootstrap.web.component.Item;
+import net.microfalx.bootstrap.web.component.Menu;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,31 +34,48 @@ class NavigationLoaderTest {
     @Test
     void loadLeft() {
         loader.load();
-        Navigation navigation = applicationService.getNavigation("left");
-        assertEquals("left", navigation.getId());
-        assertEquals(2, navigation.getLinks().size());
+        Menu menu = applicationService.getNavigation("left");
+        assertEquals("left", menu.getId());
+        assertEquals(2, menu.getChildren().size());
 
-        Iterator<Link> iterator = navigation.getLinks().iterator();
-        Link link = iterator.next();
-        assertEquals("Home", link.getName());
-        assertEquals("/", link.getTarget());
-        assertEquals(1, link.getOrder());
-        link = iterator.next();
-        assertEquals("Parent 1", link.getName());
-        assertEquals("/module1", link.getTarget());
-        assertEquals(100, link.getOrder());
-        assertEquals(3, link.getLinks().size());
+        Iterator<Component<?>> iterator = menu.getChildren().iterator();
+        Item item = (Item) iterator.next();
+        assertEquals("Home", item.getText());
+        assertEquals("/", item.getAction());
+        assertEquals(1, item.getPosition());
 
-        iterator = link.getLinks().iterator();
-        link = iterator.next();
-        assertEquals("Child 1", link.getName());
-        assertEquals("/module1/child1", link.getTarget());
-        assertEquals(1, link.getOrder());
-        Assertions.assertThat(link.getRoles()).containsExactly("ADMIN");
-        link = iterator.next();
-        assertEquals("Child 2", link.getName());
-        assertEquals("/module1/child2", link.getTarget());
-        Assertions.assertThat(link.getRoles()).containsExactlyInAnyOrder("USER", "MANAGER");
+        Menu parent = (Menu) iterator.next();
+        assertEquals("Parent 1", parent.getText());
+        assertEquals("/module1", parent.getAction());
+        assertEquals(100, parent.getPosition());
+        assertEquals(3, parent.getChildren().size());
+
+        iterator = parent.getChildren().iterator();
+        item = (Item) iterator.next();
+        assertEquals("Child 1", item.getText());
+        assertEquals("/module1/child1", item.getAction());
+        assertEquals(1, item.getPosition());
+        Assertions.assertThat(item.getRoles()).containsExactly("ADMIN");
+
+        item = (Item) iterator.next();
+        assertEquals("Child 2", item.getText());
+        assertEquals("/module1/child2", item.getAction());
+        Assertions.assertThat(item.getRoles()).containsExactlyInAnyOrder("USER", "MANAGER");
+    }
+
+    @Test
+    void loadTop() {
+        loader.load();
+        Menu menu = applicationService.getNavigation("top");
+        assertEquals("top", menu.getId());
+        assertEquals(1, menu.getChildren().size());
+
+        Iterator<Component<?>> iterator = menu.getChildren().iterator();
+        Item item = (Item) iterator.next();
+        assertEquals("Guest", item.getText());
+        assertEquals(null, item.getAction());
+        assertEquals(1000, item.getPosition());
+        assertEquals("fa-solid fa-user-crown", item.getIcon());
     }
 
 }

@@ -25,6 +25,16 @@ public class AssetBundle implements Identifiable<String>, Nameable, Descriptable
     private int order = Integer.MIN_VALUE;
     boolean requiresAuthentication;
 
+    /**
+     * Creates an asset bundle builder.
+     *
+     * @param id the bundle identifier
+     * @return a non-null instance
+     */
+    public static Builder builder(String id) {
+        return new Builder(id);
+    }
+
     private final List<Asset> assets = new CopyOnWriteArrayList<>();
 
     /**
@@ -146,7 +156,7 @@ public class AssetBundle implements Identifiable<String>, Nameable, Descriptable
         private boolean requiresAuthentication;
         private final List<Asset> assets = new ArrayList<>();
 
-        public Builder(String id) {
+        Builder(String id) {
             requireNonNull(id);
             this.id = StringUtils.toIdentifier(id);
         }

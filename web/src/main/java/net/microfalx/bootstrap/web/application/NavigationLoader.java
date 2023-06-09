@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.application;
 
+import net.microfalx.bootstrap.web.component.*;
 import net.microfalx.lang.StringUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -8,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -44,47 +44,64 @@ class NavigationLoader {
         } catch (IOException e) {
             LOGGER.error("Failed to discover web descriptors", e);
         }
-        if (webDescriptors != null) {
-            for (URL webDescriptor : webDescriptors) {
-                LOGGER.info(webDescriptor.toExternalForm());
-            }
-        }
     }
 
     private void loadNavigations(URL webDescriptor) throws IOException {
         LOGGER.info("Load resources from " + webDescriptor.toExternalForm());
         Document document = loadDocument(webDescriptor.openStream());
         Element rootElement = document.getRootElement();
-        List<Element> navigationElements = rootElement.elements("navigation");
-        for (Element navigationElement : navigationElements) {
+        List<Element> menuElements = rootElement.elements("menu");
+        for (Element navigationElement : menuElements) {
             String id = getRequiredAttribute(navigationElement, "id");
-            Navigation navigation;
+            Menu navigation;
             try {
                 navigation = applicationService.getNavigation(id);
             } catch (Exception e) {
-                navigation = new Navigation(id);
+                navigation = new Menu().setId(id);
                 applicationService.registerNavigation(navigation);
             }
-            loadLinks(navigationElement, navigation, null);
+            loadChildren(navigationElement, navigation);
         }
     }
 
-    private void loadLinks(Element root, Navigation navigation, Link parent) {
-        List<Element> linkElements = root.elements("link");
-        for (Element linkElement : linkElements) {
-            Link link = new Link(getRequiredAttribute(linkElement, "name"));
-            String target = getAttribute(linkElement, "target");
-            if (target != null) link.setTarget(target);
-            String roles = getAttribute(linkElement, "roles", StringUtils.EMPTY_STRING);
-            Arrays.asList(StringUtils.split(roles, ",")).forEach(link::addRole);
-            link.setOrder(getAttribute(linkElement, "order", -1));
-            link.setIcon(getAttribute(linkElement, "icon"));
-            if (parent != null) {
-                parent.add(link);
-            } else {
-                navigation.add(link);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void loadChildren(Element root, Container<?> parent) {
+        List<Element> elements = root.elements();
+        for (Element element : elements) {
+            Component component = switch (element.getName()) {
+                case "item" -> loadItem(element, parent);
+                case "menu" -> loadMenu(element, parent);
+                default -> null;
+            };
+            if (component != null) {
+                parent.add(component);
             }
-            loadLinks(linkElement, navigation, link);
+            if (component instanceof Container) loadChildren(element, (Container<?>) component);
         }
+    }
+
+    private Component<?> loadMenu(Element element, Container<?> parent) {
+        String id = getRequiredAttribute(element, "id");
+        Menu menu = parent.find(id);
+        if (menu == null) menu = new Menu().setId(id);
+        updateActionable(element, menu);
+        return menu;
+    }
+
+    private Component<?> loadItem(Element element, Container<?> parent) {
+        String id = getRequiredAttribute(element, "id");
+        Item item = new Item().setId(id);
+        updateActionable(element, item);
+        return item;
+    }
+
+    private void updateActionable(Element element, Actionable<?> actionable) {
+        actionable.setAction(getAttribute(element, "action"));
+        actionable.setToken(getAttribute(element, "token"));
+        actionable.setText(getAttribute(element, "text"));
+        String roles = getAttribute(element, "roles", StringUtils.EMPTY_STRING);
+        actionable.addRoles(StringUtils.split(roles, ","));
+        ((Component<?>) actionable).setPosition(getAttribute(element, "position", -1));
+        actionable.setIcon(getAttribute(element, "icon"));
     }
 }

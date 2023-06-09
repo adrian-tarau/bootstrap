@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.application;
 
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.XmlUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -53,12 +54,6 @@ class AssetBundleLoader {
         } catch (IOException e) {
             LOGGER.error("Failed to discover web descriptors", e);
         }
-
-        if (webDescriptors != null) {
-            for (URL webDescriptor : webDescriptors) {
-                LOGGER.info(webDescriptor.toExternalForm());
-            }
-        }
     }
 
     private void loadResources(URL webDescriptor) throws IOException {
@@ -66,6 +61,17 @@ class AssetBundleLoader {
         Document document = loadDocument(webDescriptor.openStream());
         Element rootElement = document.getRootElement();
         loadAssetBundles(rootElement);
+    }
+
+    private Theme getTheme(String name) {
+        Theme theme;
+        try {
+            theme = assetBundleManager.getTheme(name);
+        } catch (ApplicationException e) {
+            theme = Theme.builder(name).build();
+            assetBundleManager.registerTheme(theme);
+        }
+        return theme;
     }
 
     private void loadAssetBundles(Element root) {
@@ -82,6 +88,11 @@ class AssetBundleLoader {
             AssetBundle assetBundle = assetBundleBuilder.build();
             loadAssetBundleDependencies(assetBundle, assetBundleElement);
             assetBundleManager.registerAssetBundle(assetBundle);
+            String themeName = getAttribute(assetBundleElement, "theme");
+            if (StringUtils.isNotEmpty(themeName)) {
+                Theme theme = getTheme(themeName);
+                theme.addAssetBundle(assetBundle);
+            }
         }
     }
 

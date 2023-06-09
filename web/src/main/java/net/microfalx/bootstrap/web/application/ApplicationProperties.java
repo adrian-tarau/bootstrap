@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.web.application;
 
-import org.springframework.beans.factory.annotation.Value;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,11 +8,11 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties("bootstrap.application")
 public class ApplicationProperties {
 
-    @Value("Default")
-    private String name;
+    @NotBlank
+    private String name = "Default";
 
-    @Value("The default application descriptor")
-    private String description;
+    @NotBlank
+    private String description = "The default application descriptor";
 
     public String getName() {
         return name;

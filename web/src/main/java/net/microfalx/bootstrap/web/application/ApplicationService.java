@@ -1,8 +1,9 @@
 package net.microfalx.bootstrap.web.application;
 
 import jakarta.annotation.PostConstruct;
+import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.container.WebContainerService;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.TextUtils;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
  * A service which provides metadata for a web application.
@@ -24,14 +26,17 @@ public class ApplicationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationService.class);
 
+    private static final long timestamp = System.currentTimeMillis();
+
     @Autowired
     private ApplicationProperties applicationProperties;
 
     @Autowired
     private WebContainerService webContainerService;
 
-    private AssetBundleManager assetBundleManager = new AssetBundleManager(this);
-    private Map<String, Navigation> navigations = new ConcurrentHashMap<>();
+    private final AssetBundleManager assetBundleManager = new AssetBundleManager(this);
+    private final Map<String, Menu> navigations = new ConcurrentHashMap<>();
+
     private final Application application = new Application();
 
     /**
@@ -48,7 +53,7 @@ public class ApplicationService {
      *
      * @param navigation the navigation
      */
-    public void registerNavigation(Navigation navigation) {
+    public void registerNavigation(Menu navigation) {
         requireNonNull(navigation);
         if (navigations.containsKey(navigation.getId())) {
             throw new ApplicationException("A navigation with identifier '" + navigation.getId() + " is already registered");
@@ -63,9 +68,9 @@ public class ApplicationService {
      * @return the navigation
      * @throws ApplicationException if the navigation is not registered
      */
-    public Navigation getNavigation(String id) {
+    public Menu getNavigation(String id) {
         requireNonNull(id);
-        Navigation navigation = navigations.get(id.toLowerCase());
+        Menu navigation = navigations.get(id.toLowerCase());
         if (navigation == null) {
             throw new ApplicationException("A navigation with identifier '" + id + "' is not registered");
         }
@@ -77,8 +82,37 @@ public class ApplicationService {
      *
      * @return a non-null instance
      */
-    public Collection<Navigation> getNavigations() {
+    public Collection<Menu> getNavigations() {
         return Collections.unmodifiableCollection(navigations.values());
+    }
+
+    /**
+     * Returns all registered themes.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Theme> getThemes() {
+        return assetBundleManager.getThemes();
+    }
+
+    /**
+     * Returns the theme using its identifier or name.
+     *
+     * @param idOrName the identifier or the name of the theme
+     * @return the theme
+     * @throws ApplicationException if the theme does not exist
+     */
+    public Theme getTheme(String idOrName) {
+        return assetBundleManager.getTheme(idOrName);
+    }
+
+    /**
+     * Registers a new theme.
+     *
+     * @param theme the theme
+     */
+    public void registerTheme(Theme theme) {
+        assetBundleManager.registerTheme(theme);
     }
 
     /**
@@ -112,12 +146,24 @@ public class ApplicationService {
     }
 
     /**
-     * Returns a previously registered collection of asset bundle.
+     * Returns all asses bundles.
      *
-     * @param ids the asset bundle identifiers
      * @return the resource group with the newest version
      */
+    public Collection<AssetBundle> getAssetBundles() {
+        return assetBundleManager.getAssetBundles();
+    }
+
+    /**
+     * Returns a previously registered collection of asset bundle.
+     * <p>
+     * If an empty list is requested, all asset bundles are returned.
+     *
+     * @param ids the asset bundle identifiers
+     * @return a non-null instance
+     */
     public Collection<AssetBundle> getAssetBundles(String... ids) {
+        if (ObjectUtils.isEmpty(ids)) return getAssetBundles();
         Collection<AssetBundle> assetBundles = new ArrayList<>();
         for (String id : ids) {
             assetBundles.add(getAssetBundle(id));
@@ -137,23 +183,25 @@ public class ApplicationService {
         requireNonNull(type);
 
         StringBuilder builder = new StringBuilder();
-        String path;
+        String path = "asset/";
         switch (type) {
             case JAVA_SCRIPT -> {
                 builder.append("<script type=\"text/javascript\" src=\"");
-                path = "script";
+                path += "script";
             }
             case STYLE_SHEET -> {
                 builder.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
-                path = "stylesheet";
+                path += "stylesheet";
             }
             default -> throw new IllegalStateException("Unhandled asset type: " + type);
         }
-        path = webContainerService.getPath(path);
         path += "/" + assetBundle.getId();
-        builder.append(path);
-        if (!StringUtils.isNotEmpty(assetBundle.getVersion())) {
-            builder.append("&version=").append(assetBundle.getVersion());
+        path = webContainerService.getPath(path);
+        builder.append(path).append("?version=");
+        if (isNotEmpty(assetBundle.getVersion())) {
+            builder.append(assetBundle.getVersion());
+        } else {
+            builder.append(Long.toString(timestamp, Character.MAX_RADIX));
         }
         builder.append("\">");
         switch (type) {
@@ -169,19 +217,10 @@ public class ApplicationService {
         return builder.toString();
     }
 
-
     /**
      * Returns the HTML tags to include the stylesheets provided by the given bundles.
-     *
-     * @param assetBundles a list of asset bundles
-     * @return the HTML tags
-     */
-    public String getStylesheets(String... assetBundles) {
-        return getStylesheets(0, assetBundles);
-    }
-
-    /**
-     * Returns the HTML tags to include the stylesheets provided by the given bundles.
+     * <p>
+     * If an empty list is requested, all asset bundles are returned.
      *
      * @param assetBundles a list of asset bundles
      * @param indent       how many spaces to insert in front of each line
@@ -193,16 +232,8 @@ public class ApplicationService {
 
     /**
      * Returns the HTML tags to include the scripts provided by the given bundles.
-     *
-     * @param assetBundles a list of asset bundles
-     * @return the HTML tags
-     */
-    public String getScripts(String... assetBundles) {
-        return getScripts(0, assetBundles);
-    }
-
-    /**
-     * Returns the HTML tags to include the scripts provided by the given bundles.
+     * <p>
+     * If an empty list is requested, all asset bundles are returned.
      *
      * @param assetBundles a list of asset bundles
      * @param indent       how many spaces to insert in front of each line
@@ -236,11 +267,11 @@ public class ApplicationService {
         return TextUtils.insertSpaces(builder.toString(), indent);
     }
 
-
     @PostConstruct
-    private void initialize() {
+    protected void initialize() {
         initApplication();
         initAssets();
+        initNavigation();
     }
 
     private void initApplication() {
@@ -250,6 +281,10 @@ public class ApplicationService {
 
     private void initAssets() {
         assetBundleManager.load();
+    }
+
+    private void initNavigation() {
+        new NavigationLoader(this).load();
     }
 
     private String getImageBasePath() {

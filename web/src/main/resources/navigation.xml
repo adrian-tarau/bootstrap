@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <navigations xmlns="https://net.microfalx/xsd/navigation-1.0.xsd">
-    <navigation id="left">
-        <link name="Home" target="/" order="1"/>
-    </navigation>
+    <menu id="left">
+        <item id="home" text="Home" action="/" position="1"/>
+    </menu>
+    <menu id="top">
+        <item id="user" text="Guest" position="1000" icon="fa-solid fa-user-crown"/>
+    </menu>
 
 </navigations>

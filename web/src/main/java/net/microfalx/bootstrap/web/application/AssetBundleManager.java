@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.application;
 
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
@@ -8,12 +9,15 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.zip.GZIPOutputStream;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
 /**
  * Manages the asset bundles.
@@ -24,6 +28,7 @@ class AssetBundleManager {
 
     private final ApplicationService applicationService;
     private final Map<String, AssetBundle> bundles = new ConcurrentHashMap<>();
+    private final Map<String, Theme> themes = new ConcurrentHashMap<>();
     private final Map<String, Resource> bundlesContent = new ConcurrentHashMap<>();
     private final Map<String, Collection<String>> assetBundleDependencies = new ConcurrentHashMap<>();
 
@@ -37,6 +42,25 @@ class AssetBundleManager {
 
     Application getApplication() {
         return applicationService.getApplication();
+    }
+
+    Collection<Theme> getThemes() {
+        return Collections.unmodifiableCollection(themes.values());
+    }
+
+    Theme getTheme(String idOrName) {
+        requireNotEmpty(idOrName);
+        Theme theme = themes.get(StringUtils.toIdentifier(idOrName));
+        if (theme == null)
+            throw new ApplicationException("A theme with identifier or name '" + idOrName + "' is not registered");
+        return theme;
+    }
+
+    void registerTheme(Theme theme) {
+        requireNonNull(theme);
+        LOGGER.debug("Register theme {}, name {}", theme.getId(), theme.getName());
+        themes.put(theme.getId(), theme);
+        themes.put(StringUtils.toIdentifier(theme.getName()), theme);
     }
 
     void registerAssetBundle(AssetBundle assetBundle) {
@@ -53,10 +77,21 @@ class AssetBundleManager {
     }
 
     Resource getAssetBundleContent(String id, Asset.Type type) throws IOException {
+        Resource resource = bundlesContent.get(id);
+        if (resource != null) return resource;
         AssetBundle assetBundle = getAssetBundle(id);
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         OutputStream stream = new GZIPOutputStream(buffer);
-        return MemoryResource.create(buffer.toByteArray(), "assert-bundle-id");
+        OutputStreamWriter writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
+        for (Asset asset : assetBundle.getAssets()) {
+            if (asset.getType() != type) continue;
+            writer.append("/*\nAsset: ").append(asset.getName()).append(", path ").append(asset.getPath()).append("\n*/\n\n");
+            writer.append(asset.getResource().loadAsString());
+        }
+        writer.close();
+        resource = MemoryResource.create(buffer.toByteArray(), "assert-bundle-id");
+        bundlesContent.put(id, resource);
+        return resource;
     }
 
     Collection<AssetBundle> getAssetBundles() {

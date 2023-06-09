@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <navigations xmlns="https://net.microfalx/xsd/navigation-1.0.xsd">
-    <navigation id="left">
-        <link name="Parent 1" target="/module1" order="100">
-            <link name="Child 1" target="/module1/child1" roles="ADMIN"/>
-            <link name="Child 2" target="/module1/child2" roles="USER,MANAGER"/>
-            <link name="Child 3" target="/module1/child3"/>
-        </link>
-    </navigation>
+    <menu id="left">
+        <menu id="parent1" text="Parent 1" action="/module1" position="100">
+            <item id="child1" text="Child 1" action="/module1/child1" roles="ADMIN"/>
+            <item id="child2" text="Child 2" action="/module1/child2" roles="USER,MANAGER"/>
+            <item id="child3" text="Child 3" action="/module1/child3"/>
+        </menu>
+    </menu>
 </navigations>
