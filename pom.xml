@@ -55,6 +55,7 @@
         <module>jdbc</module>
         <module>resource</module>
         <module>search</module>
+        <module>js</module>
         <module>web</module>
         <module>security</module>
         <module>demo</module>
@@ -77,6 +78,7 @@
         <mysql.version>8.0.33</mysql.version>
         <apache.httpclient.version>4.5.13</apache.httpclient.version>
         <common.io.version>2.11.0</common.io.version>
+        <lombok.version>1.18.28</lombok.version>
         <lucene.version>9.6.0</lucene.version>
         <logback.version>2.0.7</logback.version>
         <resource.version>1.0.0-SNAPSHOT</resource.version>
@@ -132,6 +134,12 @@
                 <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
             </dependency>
 
             <dependency>

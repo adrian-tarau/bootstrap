@@ -14,6 +14,9 @@ public class ApplicationProperties {
     @NotBlank
     private String description = "The default application descriptor";
 
+    @NotBlank
+    private String theme = "default";
+
     public String getName() {
         return name;
     }

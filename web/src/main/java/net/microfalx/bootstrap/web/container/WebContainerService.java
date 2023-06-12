@@ -40,9 +40,9 @@ public class WebContainerService {
      * @return the absolute path
      */
     public String getPath(String path, Map<String, Object> params) {
-        String fullPath = StringUtils.addStartSlash(servletContext.getContextPath());
-        if (StringUtils.isNotEmpty(path)) fullPath += StringUtils.addStartSlash(path);
-        if (!path.isEmpty()) {
+        String fullPath = StringUtils.addStartSlash(StringUtils.addStartSlash(servletContext.getContextPath()));
+        if (StringUtils.isNotEmpty(path)) fullPath += StringUtils.removeStartSlash(path);
+        if (!path.isEmpty() && !params.isEmpty()) {
             List<BasicNameValuePair> pairs = params.entrySet().stream().map(e -> new BasicNameValuePair(e.getKey(), ObjectUtils.toString(e.getValue()))).toList();
             fullPath += "?" + URLEncodedUtils.format(pairs, StandardCharsets.UTF_8);
         }

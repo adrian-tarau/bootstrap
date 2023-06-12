@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.template;
 
 import jakarta.annotation.PostConstruct;
+import net.microfalx.bootstrap.web.application.ApplicationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,10 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 @Service
 public class TemplateService {
 
-    private Logger LOGGER = LoggerFactory.getLogger(TemplateService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TemplateService.class);
+
+    @Autowired
+    private ApplicationService applicationService;
 
     @Autowired
     private SpringTemplateEngine templateEngine;
@@ -19,6 +23,7 @@ public class TemplateService {
     @PostConstruct
     private void initialize() {
         templateEngine.addDialect(new SpringDataDialect());
+        templateEngine.addDialect(new AssetDialect(applicationService));
     }
 
 

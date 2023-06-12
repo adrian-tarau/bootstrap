@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 /**
  * An annotation which disables the JPA.
  * <p>
- * This annotation can be used with integration test to turn off JPA.
+ * This annotation can be used with tests to turn off JPA (even if it is enabled).
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

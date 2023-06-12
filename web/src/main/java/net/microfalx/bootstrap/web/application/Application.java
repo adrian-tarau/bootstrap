@@ -9,6 +9,8 @@ public final class Application implements Nameable, Descriptable {
     String description;
     String version;
 
+    Theme theme;
+
     @Override
     public String getName() {
         return name;
@@ -21,5 +23,9 @@ public final class Application implements Nameable, Descriptable {
 
     public String getVersion() {
         return version;
+    }
+
+    public Theme getTheme() {
+        return theme;
     }
 }
