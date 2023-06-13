@@ -1,16 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset">
+<html xmlns:th="http://www.thymeleaf.org">
 
-<head th:fragment="header">
-    <title th:text="${application.name}"></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <asset:css inline="true" bundles="loader"></asset:css>
-    <asset:css></asset:css>
-</head>
-
-<body>
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark" th:fragment="navigation">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" th:fragment="left">
     <div class="container-fluid">
         <a href="#" class="navbar-brand" th:text="${application.name}"></a>
         <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -25,7 +16,7 @@
                 <a href="#" class="nav-item nav-link" th:href="@{/register}">Register</a-->
                 <th:block th:if="${#authorization.expression('isAuthenticated()')}">
                     <div class="nav-item navbar-text">
-                    <span>Welcome </span><span class="bg-primary" th:text="${#authentication.getPrincipal().getUsername()}"></span>
+                        <span>Welcome </span><span class="bg-primary" th:text="${#authentication.getPrincipal().getUsername()}"></span>
                     </div>
                 </th:block>
                 <a href="#" class="nav-item nav-link" th:href="@{#}" onclick="$('#form').submit();">Logout</a>
@@ -34,10 +25,6 @@
         </div>
     </div>
 </nav>
-
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"  th:fragment="section(title)">
-    <h1 class="h2" th:text="${title}"></h1>
-</div>
 
 </body>
 </html>

@@ -28,4 +28,14 @@ public final class Application implements Nameable, Descriptable {
     public Theme getTheme() {
         return theme;
     }
+
+    @Override
+    public String toString() {
+        return "Application{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", version='" + version + '\'' +
+                ", theme=" + theme +
+                '}';
+    }
 }

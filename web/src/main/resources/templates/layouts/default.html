@@ -1,8 +1,8 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head th:replace="~{fragments/header :: header}">
-<body>
-<div th:replace="~{fragments/header :: navigation}"/>
+<body class="app">
+<div th:replace="~{fragments/navigation :: left}"/>
 <div class="container-fluid">
     <section layout:fragment="content">
         <p>Page content goes here</p>

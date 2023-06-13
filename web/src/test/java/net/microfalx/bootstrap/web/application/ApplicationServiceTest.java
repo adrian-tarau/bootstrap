@@ -66,10 +66,10 @@ class ApplicationServiceTest {
 
     @Test
     void assetBundleContent() throws IOException {
-        Resource resource = applicationService.getAssetBundleContent("jquery", Asset.Type.JAVA_SCRIPT);
+        Resource resource = applicationService.getAssetBundleContent(Asset.Type.JAVA_SCRIPT, "jquery");
         Assertions.assertThat(resource.loadAsString()).contains("Asset: jquery.js").contains("jQuery JavaScript Library")
                 .contains("Asset: jquery.datetimepicker.js");
-        resource = applicationService.getAssetBundleContent("jquery", Asset.Type.STYLE_SHEET);
+        resource = applicationService.getAssetBundleContent(Asset.Type.STYLE_SHEET, "jquery");
         Assertions.assertThat(resource.loadAsString()).contains("Asset: jquery.datetimepicker.css");
     }
 

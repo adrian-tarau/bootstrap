@@ -81,6 +81,7 @@ class AssetBundleLoader {
             assetBundleBuilder.name(getRequiredAttribute(assetBundleElement, "name"));
             assetBundleBuilder.path(getAttribute(assetBundleElement, "path"));
             assetBundleBuilder.order(getAttribute(assetBundleElement, "order", 0));
+            assetBundleBuilder.inline(getAttribute(assetBundleElement, "inline", false));
             assetBundleBuilder.description(getAttribute(assetBundleElement, "description"));
             String version = getAttribute(assetBundleElement, "version");
             assetBundleBuilder.version(isNotEmpty(version) ? version : assetBundleManager.getApplication().getVersion());
@@ -92,6 +93,7 @@ class AssetBundleLoader {
             if (StringUtils.isNotEmpty(themeName)) {
                 Theme theme = getTheme(themeName);
                 theme.addAssetBundle(assetBundle);
+                assetBundleManager.registerTheme(theme);
             }
         }
     }

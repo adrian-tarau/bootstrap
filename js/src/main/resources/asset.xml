@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<assets xmlns="https://net.microfalx/xsd/asset-1.0.xsd">
+
+    <!-- Fonts  -->
+    <asset-bundle id="glyphs" version="6.4.0" name="Various stylesheets with fonts used for glyphs">
+        <asset path="font-awesome/fontawesome.css" type="stylesheet"/>
+        <asset path="font-awesome/brands.css" type="stylesheet"/>
+    </asset-bundle>
+
+    <!-- jQuery  -->
+    <asset-bundle id="jquery" path="jquery" version="3.7.0" name="JQuery">
+        <asset path="jquery.js" type="script"/>
+        <asset path="jquery-migrate.js" type="script"/>
+        <asset path="jquery.datetimepicker.js" type="script"/>
+        <asset path="jquery.datetimepicker.css" type="stylesheet"/>
+    </asset-bundle>
+
+    <!-- Bootstrap  -->
+    <asset-bundle id="bootstrap" path="bootstrap" version="5.3.0" name="Bootstrap">
+        <asset path="bootstrap.js" type="script"/>
+        <asset path="bootstrap.css" type="stylesheet"/>
+    </asset-bundle>
+
+    <asset-bundle id="loader" path="misc" version="1.0.0" name="Loader" inline="true">
+        <asset path="loader.js" type="script"/>
+        <asset path="loader.css" type="stylesheet"/>
+    </asset-bundle>
+
+    <!-- Adminator Theme  -->
+    <asset-bundle id="adminator" path="adminator" version="2.0.0" name="Adminator" theme="Adminator">
+        <asset path="adminator.js" type="script"/>
+        <asset path="adminator.css" type="stylesheet"/>
+    </asset-bundle>
+
+
+</assets>

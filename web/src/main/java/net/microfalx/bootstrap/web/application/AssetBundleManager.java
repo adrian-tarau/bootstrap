@@ -76,21 +76,34 @@ class AssetBundleManager {
         return assetBundle;
     }
 
-    Resource getAssetBundleContent(String id, Asset.Type type) throws IOException {
-        Resource resource = bundlesContent.get(id);
+    Resource getAssetBundlesContent(Asset.Type type, boolean header, String... ids) throws IOException {
+        requireNonNull(type);
+        requireNotEmpty(ids);
+        String contentId = type.name().toLowerCase() + "/" + StringUtils.join("_", ids);
+        Resource resource = bundlesContent.get(contentId);
         if (resource != null) return resource;
-        AssetBundle assetBundle = getAssetBundle(id);
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         OutputStream stream = new GZIPOutputStream(buffer);
-        OutputStreamWriter writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
-        for (Asset asset : assetBundle.getAssets()) {
-            if (asset.getType() != type) continue;
-            writer.append("/*\nAsset: ").append(asset.getName()).append(", path ").append(asset.getPath()).append("\n*/\n\n");
-            writer.append(asset.getResource().loadAsString());
+        try (OutputStreamWriter writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8)) {
+            int counter = 0;
+            for (String id : ids) {
+                AssetBundle assetBundle = getAssetBundle(id);
+                for (Asset asset : assetBundle.getAssets()) {
+                    if (asset.getType() != type) continue;
+                    if (header) {
+                        writer.append("/*\nAsset: ").append(asset.getName()).append(", path ")
+                                .append(asset.getPath()).append("\n*/\n\n");
+                    }
+                    writer.append(asset.getResource().loadAsString());
+                    if (counter < ids.length - 1) {
+                        writer.append("\n\n");
+                    }
+                }
+                counter++;
+            }
         }
-        writer.close();
-        resource = MemoryResource.create(buffer.toByteArray(), "assert-bundle-id");
-        bundlesContent.put(id, resource);
+        resource = MemoryResource.create(buffer.toByteArray(), contentId);
+        bundlesContent.put(contentId, resource);
         return resource;
     }
 

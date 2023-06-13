@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.defaultIfNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -135,17 +136,6 @@ public class ApplicationService {
     }
 
     /**
-     * Returns the content of an asset bundle.
-     *
-     * @param id   the asset bundle identifier
-     * @param type the type of the asset
-     * @return the resource with the bundle content
-     */
-    public Resource getAssetBundleContent(String id, Asset.Type type) throws IOException {
-        return assetBundleManager.getAssetBundleContent(id, type);
-    }
-
-    /**
      * Returns all asses bundles.
      *
      * @return the resource group with the newest version
@@ -163,12 +153,40 @@ public class ApplicationService {
      * @return a non-null instance
      */
     public Collection<AssetBundle> getAssetBundles(String... ids) {
-        if (ObjectUtils.isEmpty(ids)) return getAssetBundles();
-        Collection<AssetBundle> assetBundles = new ArrayList<>();
-        for (String id : ids) {
-            assetBundles.add(getAssetBundle(id));
+        if (ObjectUtils.isEmpty(ids)) {
+            return getAssetBundles().stream().filter(assetBundle -> !assetBundle.isInline()).toList();
+        } else {
+            Collection<AssetBundle> assetBundles = new ArrayList<>();
+            for (String id : ids) {
+                assetBundles.add(getAssetBundle(id));
+            }
+            return assetBundles;
         }
-        return assetBundles;
+    }
+
+    /**
+     * Returns the content of one or more asset bundle.
+     * <p>
+     * The assets are separated by a header to distinguish when a bundle ends and another one starts.
+     *
+     * @param type the type of the asset
+     * @param id   ids the asset bundle identifier
+     * @return the resource with the bundle content
+     */
+    public Resource getAssetBundleContent(Asset.Type type, String id) throws IOException {
+        return getAssetBundlesContent(type, true, id);
+    }
+
+    /**
+     * Returns the content of one or more asset bundle.
+     *
+     * @param type   the type of the asset
+     * @param header {@code true} to include a header for each asset, {@code false} otherwise
+     * @param ids    ids the asset bundle identifiers
+     * @return the resource with the bundle content
+     */
+    public Resource getAssetBundlesContent(Asset.Type type, boolean header, String... ids) throws IOException {
+        return assetBundleManager.getAssetBundlesContent(type, header, ids);
     }
 
     /**
@@ -187,11 +205,11 @@ public class ApplicationService {
         switch (type) {
             case JAVA_SCRIPT -> {
                 builder.append("<script type=\"text/javascript\" src=\"");
-                path += "script";
+                path += "js";
             }
             case STYLE_SHEET -> {
                 builder.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
-                path += "stylesheet";
+                path += "css";
             }
             default -> throw new IllegalStateException("Unhandled asset type: " + type);
         }
@@ -272,11 +290,18 @@ public class ApplicationService {
         initApplication();
         initAssets();
         initNavigation();
+        initTheme();
+        logApplication();
+    }
+
+    private void initTheme() {
+        application.theme = getTheme(defaultIfNull(applicationProperties.getTheme(), ApplicationProperties.DEFAULT_THEME));
     }
 
     private void initApplication() {
         application.name = applicationProperties.getName();
         application.description = applicationProperties.getDescription();
+        application.version = defaultIfNull(applicationProperties.getVersion(), "1.0.0");
     }
 
     private void initAssets() {
@@ -285,6 +310,11 @@ public class ApplicationService {
 
     private void initNavigation() {
         new NavigationLoader(this).load();
+    }
+
+    private void logApplication() {
+        LOGGER.info("Initialize application: " + application.getName() + " (" + application.getVersion()
+                + "), theme " + application.getTheme().getName());
     }
 
     private String getImageBasePath() {

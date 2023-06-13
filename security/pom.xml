@@ -56,13 +56,7 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-jdbc</artifactId>
+            <artifactId>bootstrap-web</artifactId>
             <version>${project.version}</version>
         </dependency>
 

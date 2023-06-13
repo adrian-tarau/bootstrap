@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties("bootstrap.application")
 public class ApplicationProperties {
 
+    public static final String DEFAULT_THEME = "adminator";
+
     @NotBlank
     private String name = "Default";
 
@@ -15,7 +17,10 @@ public class ApplicationProperties {
     private String description = "The default application descriptor";
 
     @NotBlank
-    private String theme = "default";
+    private String theme = "adminator";
+
+    @NotBlank
+    private String version = "1.0.0";
 
     public String getName() {
         return name;
@@ -31,5 +36,31 @@ public class ApplicationProperties {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getTheme() {
+        return theme;
+    }
+
+    public void setTheme(String theme) {
+        this.theme = theme;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    @Override
+    public String toString() {
+        return "ApplicationProperties{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", theme='" + theme + '\'' +
+                ", version='" + version + '\'' +
+                '}';
     }
 }

@@ -2,10 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset">
 <body>
 <footer th:fragment="footer">
-    <asset:css indent="5"></asset:css>
+    <asset:js></asset:js>
     <script>
         $("#message").delay(2000).fadeOut(1000);
     </script>
+    <asset:js inline="true" bundles="loader"></asset:js>
 </footer>
 
 </body>

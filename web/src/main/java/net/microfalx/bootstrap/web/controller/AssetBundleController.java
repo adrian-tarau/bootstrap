@@ -27,19 +27,19 @@ public class AssetBundleController {
     @Autowired
     private ApplicationService applicationService;
 
-    @GetMapping(value = "/css/{id}", produces = "text/css")
+    @GetMapping(value = "/css/{id}")
     public ResponseEntity<Object> stylesheet(@PathVariable("id") String id) {
         return get(id, Asset.Type.STYLE_SHEET);
     }
 
-    @GetMapping(value = "/js/{id}", produces = "text/css")
+    @GetMapping(value = "/js/{id}")
     public ResponseEntity<Object> javaScript(@PathVariable("id") String id) {
         return get(id, Asset.Type.JAVA_SCRIPT);
     }
 
     private ResponseEntity<Object> get(String id, Asset.Type type) {
         try {
-            Resource content = applicationService.getAssetBundleContent(id, type);
+            Resource content = applicationService.getAssetBundleContent(type, id);
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(getContentType(type)))
                     .body(new InputStreamResource(content.getInputStream()));
         } catch (ApplicationException e) {

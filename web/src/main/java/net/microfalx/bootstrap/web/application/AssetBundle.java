@@ -22,6 +22,7 @@ public class AssetBundle implements Identifiable<String>, Nameable, Descriptable
     private String name;
     private String description;
     private String path;
+    private boolean inline;
     private int order = Integer.MIN_VALUE;
     boolean requiresAuthentication;
 
@@ -88,6 +89,15 @@ public class AssetBundle implements Identifiable<String>, Nameable, Descriptable
     }
 
     /**
+     * Returns whether the bundle is used to inject inline assets in HTML files.
+     *
+     * @return {@code true} if inline, {@code false} otherwise
+     */
+    public boolean isInline() {
+        return inline;
+    }
+
+    /**
      * Returns the resources part of this group.
      * <p>
      * The assest are order based on their {@link Asset#getOrder()}.
@@ -145,6 +155,20 @@ public class AssetBundle implements Identifiable<String>, Nameable, Descriptable
         asset.assetBundle = this;
     }
 
+    @Override
+    public String toString() {
+        return "AssetBundle{" +
+                "id='" + id + '\'' +
+                ", version='" + version + '\'' +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", path='" + path + '\'' +
+                ", order=" + order +
+                ", requiresAuthentication=" + requiresAuthentication +
+                ", assets=" + assets +
+                '}';
+    }
+
     public static class Builder {
 
         private final String id;
@@ -152,6 +176,7 @@ public class AssetBundle implements Identifiable<String>, Nameable, Descriptable
         private String name;
         private String description;
         private String path;
+        private boolean inline;
         private int order;
         private boolean requiresAuthentication;
         private final List<Asset> assets = new ArrayList<>();
@@ -183,6 +208,11 @@ public class AssetBundle implements Identifiable<String>, Nameable, Descriptable
             return this;
         }
 
+        public Builder inline(boolean inline) {
+            this.inline = inline;
+            return this;
+        }
+
         public Builder order(int order) {
             this.order = order;
             return this;
@@ -209,6 +239,7 @@ public class AssetBundle implements Identifiable<String>, Nameable, Descriptable
             assetBundle.description = description;
             assetBundle.version = version;
             assetBundle.path = path;
+            assetBundle.inline = inline;
             assetBundle.requiresAuthentication = requiresAuthentication;
             assetBundle.order = order;
             for (Asset asset : assets) {
