@@ -3,8 +3,11 @@
 
     <!-- Fonts  -->
     <asset-bundle id="glyphs" version="6.4.0" name="Various stylesheets with fonts used for glyphs">
+        <asset path="font-awesome/regular.css" type="stylesheet"/>
+        <asset path="font-awesome/solid.css" type="stylesheet"/>
         <asset path="font-awesome/fontawesome.css" type="stylesheet"/>
         <asset path="font-awesome/brands.css" type="stylesheet"/>
+        <asset path="themify/themify.css" type="stylesheet"/>
     </asset-bundle>
 
     <!-- jQuery  -->
@@ -17,6 +20,8 @@
 
     <!-- Bootstrap  -->
     <asset-bundle id="bootstrap" path="bootstrap" version="5.3.0" name="Bootstrap">
+        <depends-on-asset-bundle>jquery</depends-on-asset-bundle>
+        <asset path="popper.js" type="script"/>
         <asset path="bootstrap.js" type="script"/>
         <asset path="bootstrap.css" type="stylesheet"/>
     </asset-bundle>
@@ -28,6 +33,7 @@
 
     <!-- Adminator Theme  -->
     <asset-bundle id="adminator" path="adminator" version="2.0.0" name="Adminator" theme="Adminator">
+        <depends-on-asset-bundle>bootstrap</depends-on-asset-bundle>
         <asset path="adminator.js" type="script"/>
         <asset path="adminator.css" type="stylesheet"/>
     </asset-bundle>
