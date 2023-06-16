@@ -23,6 +23,7 @@ public class TemplateService {
     @PostConstruct
     private void initialize() {
         templateEngine.addDialect(new SpringDataDialect());
+        templateEngine.addDialect(new ExpressionsDialect(applicationService));
         templateEngine.addDialect(new AssetDialect(applicationService));
     }
 

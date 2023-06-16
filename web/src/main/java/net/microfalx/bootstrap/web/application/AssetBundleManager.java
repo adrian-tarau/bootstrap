@@ -142,9 +142,7 @@ class AssetBundleManager {
     }
 
     private void expandBundles(Collection<AssetBundleOrder> expandedBundles, AssetBundle assetBundle) {
-        if (!isExpanded(expandedBundles, assetBundle)) {
-            expandedBundles.add(new AssetBundleOrder(assetBundle));
-        }
+        if (!isExpanded(expandedBundles, assetBundle)) expandedBundles.add(new AssetBundleOrder(assetBundle));
         Collection<String> dependenciesForBundle = getDependenciesForBundle(assetBundle.getId());
         for (String dependency : dependenciesForBundle) {
             AssetBundle dependencyAssetBundle = applicationService.getAssetBundle(dependency);
@@ -154,21 +152,17 @@ class AssetBundleManager {
         }
     }
 
-
     private boolean shiftOrder(Collection<AssetBundleOrder> expandedBundles, AssetBundleOrder expandedBundle) {
         Collection<String> dependenciesForBundle = getDependenciesForBundle(expandedBundle.assetBundle.getId());
-
         boolean changed = false;
         for (String dependency : dependenciesForBundle) {
-            AssetBundleOrder _dependency = getAssetBundleOrder(expandedBundles, dependency);
-            if (_dependency == null) {
-                // the bundle was eliminated, skip
-                continue;
-            }
-            if (_dependency.order >= expandedBundle.order) {
+            AssetBundleOrder resolvedDependency = getAssetBundleOrder(expandedBundles, dependency);
+            // the bundle was eliminated, skip
+            if (resolvedDependency == null) continue;
+            if (resolvedDependency.order >= expandedBundle.order) {
                 // since the dependency order is not lower, we need to move it
                 changed = true;
-                _dependency.order--;
+                resolvedDependency.order--;
             }
         }
         return changed;

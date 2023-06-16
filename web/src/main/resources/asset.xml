@@ -3,6 +3,7 @@
 
     <!-- DataSet  -->
     <asset-bundle id="dataset" path="dataset" name="DataSet">
+        <depends-on-asset-bundle>bootstrap</depends-on-asset-bundle>
     </asset-bundle>
 
 </assets>

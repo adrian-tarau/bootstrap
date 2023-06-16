@@ -1,30 +1,87 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark" th:fragment="left">
-    <div class="container-fluid">
-        <a href="#" class="navbar-brand" th:text="${application.name}"></a>
-        <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarCollapse">
-            <div class="navbar-nav">
-                <a href="#" class="nav-item nav-link active" th:href="@{/}">Home</a>
-            </div>
-            <div class="navbar-nav ms-auto">
-                <!--a href="#" class="nav-item nav-link" th:href="@{/login}">Login</a>
-                <a href="#" class="nav-item nav-link" th:href="@{/register}">Register</a-->
-                <th:block th:if="${#authorization.expression('isAuthenticated()')}">
-                    <div class="nav-item navbar-text">
-                        <span>Welcome </span><span class="bg-primary" th:text="${#authentication.getPrincipal().getUsername()}"></span>
+<li class="nav-item actived" th:fragment="menu-item">
+    <a class="sidebar-link" th:href="@{${item.action}}">
+                <span class="icon-holder">
+                    <i th:class="${item.icon}"></i>
+                </span>
+        <span class="title" th:text="${item.text}">Text</span>
+    </a>
+</li>
+
+<li class="nav-item dropdown" th:fragment="menu">
+    <a class="dropdown-toggle" role="button" href="javascript:void(0);">
+                <span class="icon-holder">
+                  <i th:class="${item.icon}"></i>
+                </span>
+        <span class="title" th:text="${item.text}">Menu</span>
+        <span class="arrow"><i class="ti-angle-right"></i></span>
+    </a>
+    <ul class="dropdown-menu">
+        <div th:each="item : ${#component.getChildren(item)}" th:remove="tag">
+            <div th:replace="~{ this :: (${#component.isContainer(item)} ? 'menu' : 'menu-item') }"></div>
+        </div>
+    </ul>
+</li>
+
+<div class="sidebar" th:fragment="left">
+    <div class="sidebar-inner">
+        <div class="sidebar-logo">
+            <div class="peers ai-c fxw-nw">
+                <div class="peer peer-greed">
+                    <a class="sidebar-link td-n" th:href="@{/}">
+                        <div class="peers ai-c fxw-nw">
+                            <div class="peer">
+                                <div class="logo">
+                                    <img th:src="@{/asset/image/boar.png}">
+                                </div>
+                            </div>
+                            <div class="peer peer-greed">
+                                <h5 class="lh-1 mB-0 logo-text" th:text="${#application.name}"></h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="peer">
+                    <div class="mobile-toggle sidebar-toggle">
+                        <a href="" class="td-n">
+                            <i class="ti-arrow-circle-left"></i>
+                        </a>
                     </div>
-                </th:block>
-                <a href="#" class="nav-item nav-link" th:href="@{#}" onclick="$('#form').submit();">Logout</a>
-                <form style="visibility: hidden" id="form" method="post" action="#" th:action="@{/logout}"></form>
+                </div>
             </div>
         </div>
+        <ul class="sidebar-menu scrollable pos-r" th:with="menu = ${#navigation.get('left')}">
+            <div th:each="item : ${#component.getChildren(menu)}" th:remove="tag">
+                <div th:replace="~{ this :: (${#component.isContainer(item)} ? 'menu' : 'menu-item') }"></div>
+            </div>
+        </ul>
     </div>
-</nav>
+</div>
+
+<div class="header navbar" th:fragment="top">
+    <div class="header-container">
+        <ul class="nav-left">
+            <li>
+                <a id='sidebar-toggle' class="sidebar-toggle" href="javascript:void(0);">
+                    <i class="fa-solid fa-bars"></i>
+                </a>
+            </li>
+            <li class="search-box">
+                <a class="search-toggle no-pdd-right" href="javascript:void(0);">
+                    <i class="fa-solid fa-magnifying-glass pdd-right-10"></i>
+                    <i class="fa-solid fa-xmark pdd-right-10"></i>
+                </a>
+            </li>
+            <li class="search-input">
+                <input class="form-control" type="text" placeholder="Search...">
+            </li>
+            <ul class="nav-right">
+            </ul>
+        </ul>
+    </div>
+</div>
 
 </body>
 </html>

@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.List;
+import java.util.Queue;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.XmlUtils.*;
@@ -23,6 +25,7 @@ class NavigationLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(AssetBundleLoader.class);
 
     private ApplicationService applicationService;
+    private Queue<Pending> pending = new ArrayDeque<>();
 
     NavigationLoader(ApplicationService applicationService) {
         requireNonNull(applicationService);
@@ -44,6 +47,28 @@ class NavigationLoader {
         } catch (IOException e) {
             LOGGER.error("Failed to discover web descriptors", e);
         }
+        processPending();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void processPending() {
+        int iterations = 50;
+        while (iterations-- > 0 && !pending.isEmpty()) {
+            Pending pending = this.pending.poll();
+            Menu navigation;
+            try {
+                navigation = applicationService.getNavigation(pending.navigation);
+            } catch (Exception e) {
+                LOGGER.error("Missing navigation with identifier '" + pending.navigation + " while processing pending items");
+                continue;
+            }
+            Container<?> parent = (Container<?>) navigation.find(pending.parent, true);
+            if (parent == null) {
+                LOGGER.error("A parent ({}) could not be resolved in navigation '{}'", pending.parent, navigation.getText());
+            } else {
+                parent.add(pending.child);
+            }
+        }
     }
 
     private void loadNavigations(URL webDescriptor) throws IOException {
@@ -60,23 +85,27 @@ class NavigationLoader {
                 navigation = new Menu().setId(id);
                 applicationService.registerNavigation(navigation);
             }
-            loadChildren(navigationElement, navigation);
+            loadChildren(navigationElement, navigation, navigation);
         }
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void loadChildren(Element root, Container<?> parent) {
+    private void loadChildren(Element root, Menu navigation, Container<?> parent) {
         List<Element> elements = root.elements();
         for (Element element : elements) {
+            String parentComponent = getAttribute(element, "parent");
             Component component = switch (element.getName()) {
                 case "item" -> loadItem(element, parent);
+                case "spacer" -> loadSpacer(element, parent);
                 case "menu" -> loadMenu(element, parent);
                 default -> null;
             };
-            if (component != null) {
+            if (parentComponent != null) {
+                pending.offer(new Pending(navigation.getId(), parentComponent, component));
+            } else if (component != null) {
                 parent.add(component);
             }
-            if (component instanceof Container) loadChildren(element, (Container<?>) component);
+            if (component instanceof Container) loadChildren(element, navigation, (Container<?>) component);
         }
     }
 
@@ -95,6 +124,12 @@ class NavigationLoader {
         return item;
     }
 
+    private Component<?> loadSpacer(Element element, Container<?> parent) {
+        Spacer spacer = new Spacer();
+        spacer.setPosition(getAttribute(element, "position", -1));
+        return spacer;
+    }
+
     private void updateActionable(Element element, Actionable<?> actionable) {
         actionable.setAction(getAttribute(element, "action"));
         actionable.setToken(getAttribute(element, "token"));
@@ -103,5 +138,18 @@ class NavigationLoader {
         actionable.addRoles(StringUtils.split(roles, ","));
         ((Component<?>) actionable).setPosition(getAttribute(element, "position", -1));
         actionable.setIcon(getAttribute(element, "icon"));
+    }
+
+    static class Pending {
+
+        private String navigation;
+        private String parent;
+        private Component child;
+
+        Pending(String navigation, String parent, Component child) {
+            this.navigation = navigation;
+            this.parent = parent;
+            this.child = child;
+        }
     }
 }

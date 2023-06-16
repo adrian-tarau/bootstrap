@@ -8,6 +8,7 @@ public final class Application implements Nameable, Descriptable {
     String name;
     String description;
     String version;
+    String logo;
 
     Theme theme;
 
@@ -19,6 +20,10 @@ public final class Application implements Nameable, Descriptable {
     @Override
     public String getDescription() {
         return description;
+    }
+
+    public String getLogo() {
+        return logo;
     }
 
     public String getVersion() {
@@ -34,6 +39,7 @@ public final class Application implements Nameable, Descriptable {
         return "Application{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
+                ", logo='" + logo + '\'' +
                 ", version='" + version + '\'' +
                 ", theme=" + theme +
                 '}';

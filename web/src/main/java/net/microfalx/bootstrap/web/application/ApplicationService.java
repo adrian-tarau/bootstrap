@@ -153,15 +153,15 @@ public class ApplicationService {
      * @return a non-null instance
      */
     public Collection<AssetBundle> getAssetBundles(String... ids) {
+        Collection<AssetBundle> finalBundles = new ArrayList<>();
         if (ObjectUtils.isEmpty(ids)) {
-            return getAssetBundles().stream().filter(assetBundle -> !assetBundle.isInline()).toList();
+            finalBundles.addAll(getAssetBundles().stream().filter(assetBundle -> !assetBundle.isInline()).toList());
         } else {
-            Collection<AssetBundle> assetBundles = new ArrayList<>();
             for (String id : ids) {
-                assetBundles.add(getAssetBundle(id));
+                finalBundles.add(getAssetBundle(id));
             }
-            return assetBundles;
         }
+        return assetBundleManager.expandBundles(finalBundles);
     }
 
     /**
@@ -269,7 +269,7 @@ public class ApplicationService {
      * @param indent       how many spaces to insert in front of each line
      * @return the HTML tags
      */
-    private String getAssetBundleTags(Asset.Type type, int indent, Collection<AssetBundle> assetBundles) {
+    public String getAssetBundleTags(Asset.Type type, int indent, Collection<AssetBundle> assetBundles) {
         requireNonNull(assetBundles);
 
         StringBuilder builder = new StringBuilder();
@@ -301,6 +301,7 @@ public class ApplicationService {
     private void initApplication() {
         application.name = applicationProperties.getName();
         application.description = applicationProperties.getDescription();
+        application.logo = applicationProperties.getLogo();
         application.version = defaultIfNull(applicationProperties.getVersion(), "1.0.0");
     }
 
@@ -314,7 +315,7 @@ public class ApplicationService {
 
     private void logApplication() {
         LOGGER.info("Initialize application: " + application.getName() + " (" + application.getVersion()
-                + "), theme " + application.getTheme().getName());
+                + "), theme " + application.getTheme().getName() + ", logo " + application.getLogo());
     }
 
     private String getImageBasePath() {

@@ -11,9 +11,9 @@
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
-            <xs:sequence>
+            <xs:choice>
                 <xs:element ref="menu" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
+            </xs:choice>
         </xs:complexType>
     </xs:element>
 
@@ -23,10 +23,11 @@
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
-            <xs:sequence>
+            <xs:choice>
                 <xs:element ref="menu" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element ref="item" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
+                <xs:element ref="spacer" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
             <xs:attribute name="id" use="required"/>
             <xs:attribute name="text"/>
             <xs:attribute name="action"/>
@@ -34,6 +35,7 @@
             <xs:attribute name="roles"/>
             <xs:attribute name="icon"/>
             <xs:attribute name="position" type="xs:integer"/>
+            <xs:attribute name="parent"/>
         </xs:complexType>
     </xs:element>
 
@@ -45,6 +47,13 @@
             <xs:attribute name="token"/>
             <xs:attribute name="roles"/>
             <xs:attribute name="icon"/>
+            <xs:attribute name="position" type="xs:integer"/>
+            <xs:attribute name="parent"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="spacer">
+        <xs:complexType>
             <xs:attribute name="position" type="xs:integer"/>
         </xs:complexType>
     </xs:element>

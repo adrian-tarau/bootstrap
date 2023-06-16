@@ -3,7 +3,7 @@
       layout:decorate="~{layouts/default.html}">
 <body>
 <section layout:fragment="content">
-    <h1 th:text="${#application.name}"></h1>
+    <div th:replace="~{ fragments/content :: single-panel('Search')}"></div>
 </section>
 </body>
 </html>

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <navigations xmlns="https://net.microfalx/xsd/navigation-1.0.xsd">
     <menu id="left">
-        <item id="home" text="Home" action="/" position="1"/>
+        <item id="home" text="Home" action="/" position="1" icon="fa-solid fa-house-chimney"/>
+        <item id="search" text="Search" action="/search" position="2" icon="fa-solid fa-magnifying-glass"/>
     </menu>
     <menu id="top">
-        <item id="user" text="Guest" position="1000" icon="fa-solid fa-user-crown"/>
+        <spacer position="1000"/>
+        <item id="user" text="Guest" position="2000" icon="fa-solid fa-user-crown"/>
     </menu>
 
 </navigations>

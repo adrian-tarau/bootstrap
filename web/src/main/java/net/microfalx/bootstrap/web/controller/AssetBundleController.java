@@ -3,6 +3,8 @@ package net.microfalx.bootstrap.web.controller;
 import net.microfalx.bootstrap.web.application.ApplicationException;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.application.Asset;
+import net.microfalx.lang.StringUtils;
+import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,17 +29,27 @@ public class AssetBundleController {
     @Autowired
     private ApplicationService applicationService;
 
-    @GetMapping(value = "/css/{id}")
+    @GetMapping(value = "/css/{id}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> stylesheet(@PathVariable("id") String id) {
-        return get(id, Asset.Type.STYLE_SHEET);
+        return getBundle(id, Asset.Type.STYLE_SHEET);
     }
 
-    @GetMapping(value = "/js/{id}")
+    @GetMapping(value = "/js/{id}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> javaScript(@PathVariable("id") String id) {
-        return get(id, Asset.Type.JAVA_SCRIPT);
+        return getBundle(id, Asset.Type.JAVA_SCRIPT);
     }
 
-    private ResponseEntity<Object> get(String id, Asset.Type type) {
+    @GetMapping(value = "/font/{*path}", consumes = MediaType.ALL_VALUE)
+    public ResponseEntity<Object> font(@PathVariable("path") String path) {
+        return getResource("font/" + StringUtils.removeStartSlash(path), Asset.Type.FONT);
+    }
+
+    @GetMapping(value = "/image/{*path}", consumes = MediaType.ALL_VALUE)
+    public ResponseEntity<Object> image(@PathVariable("path") String path) {
+        return getResource("image/" + StringUtils.removeStartSlash(path), Asset.Type.FONT);
+    }
+
+    private ResponseEntity<Object> getBundle(String id, Asset.Type type) {
         try {
             Resource content = applicationService.getAssetBundleContent(type, id);
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(getContentType(type)))
@@ -45,7 +57,20 @@ public class AssetBundleController {
         } catch (ApplicationException e) {
             return ResponseEntity.notFound().build();
         } catch (IOException e) {
-            String message = "Failed to retrieve asset bundle content " + id;
+            String message = "Failed to retrieve asset bundle " + id;
+            LOGGER.error(message, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(message);
+        }
+    }
+
+    private ResponseEntity<Object> getResource(String path, Asset.Type type) {
+        try {
+            Resource content = ClassPathResource.file(StringUtils.removeStartSlash(path));
+            if (!content.exists()) return ResponseEntity.notFound().build();
+            return ResponseEntity.ok().contentType(MediaType.parseMediaType(getContentType(type)))
+                    .body(new InputStreamResource(content.getInputStream()));
+        } catch (IOException e) {
+            String message = "Failed to retrieve resource " + path;
             LOGGER.error(message, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(message);
         }

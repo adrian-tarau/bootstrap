@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="single-panel(title)">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="bgc-white bd bdrs-3 p-20 mB-20">
+                    <h3 class="c-grey-900 mB-20" th:text="${title}"></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

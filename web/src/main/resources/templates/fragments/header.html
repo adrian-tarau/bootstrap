@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset">
 
 <head th:fragment="header">
-    <title th:text="${application.name}"></title>
+    <title th:text="${#application.name}"></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <asset:css inline="true" bundles="loader"></asset:css>
     <asset:css></asset:css>

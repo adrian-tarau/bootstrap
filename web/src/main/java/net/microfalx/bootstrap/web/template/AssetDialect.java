@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.template;
 import net.microfalx.bootstrap.web.application.ApplicationException;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.application.Asset;
+import net.microfalx.bootstrap.web.application.AssetBundle;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
 import org.thymeleaf.context.ITemplateContext;
@@ -16,6 +17,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -110,7 +112,8 @@ public class AssetDialect implements IProcessorDialect {
 
         protected void writeTags(Asset.Type type, IProcessableElementTag tag, IElementTagStructureHandler structureHandler) {
             String[] bundles = getBundles(tag);
-            String tags = applicationService.getScripts(tag.getCol() - 1, bundles);
+            Collection<AssetBundle> assetBundles = applicationService.getAssetBundles(bundles);
+            String tags = applicationService.getAssetBundleTags(type, tag.getCol() - 1, assetBundles);
             structureHandler.replaceWith(tags, false);
         }
     }

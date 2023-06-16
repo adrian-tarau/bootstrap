@@ -2,12 +2,17 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head th:replace="~{fragments/header :: header}">
 <body class="app">
-<div th:replace="~{fragments/navigation :: left}"/>
-<div class="container-fluid">
-    <section layout:fragment="content">
-        <p>Page content goes here</p>
-    </section>
-    <div th:replace="~{fragments/footer :: footer}"/>
+<div>
+    <div th:replace="~{fragments/navigation :: left}"/>
+    <div class="page-container">
+        <div th:replace="~{fragments/navigation :: top}"/>
+        <main class='main-content bgc-grey-100'>
+            <div id='mainContent' layout:fragment="content">
+                    <p>Page content goes here</p>
+            </div>
+        </main>
+        <div th:replace="~{fragments/footer :: footer}"/>
+    </div>
 </div>
 </body>
 </html>

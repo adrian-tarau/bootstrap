@@ -17,6 +17,9 @@ public class ApplicationProperties {
     private String description = "The default application descriptor";
 
     @NotBlank
+    private String logo = "default.png";
+
+    @NotBlank
     private String theme = "adminator";
 
     @NotBlank
@@ -36,6 +39,14 @@ public class ApplicationProperties {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
     }
 
     public String getTheme() {

@@ -42,6 +42,19 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
     }
 
     /**
+     * Returns the type for the component.
+     * <p>
+     * The type is a short alias for component which can be used to find components.
+     * <p>
+     * By default, the type is equal with the simple class name.
+     *
+     * @return a non-null instance.
+     */
+    public String getType() {
+        return StringUtils.toIdentifier(getClass().getSimpleName());
+    }
+
+    /**
      * Returns the immediate parent of this component.
      *
      * @return the parent, null if this component is top level component

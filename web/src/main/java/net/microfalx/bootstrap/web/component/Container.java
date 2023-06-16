@@ -1,7 +1,11 @@
 package net.microfalx.bootstrap.web.component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ObjectUtils.isNotEmpty;
@@ -22,7 +26,7 @@ public class Container<C extends Container<C>> extends Component<C> {
      * @return a non-null instance
      */
     public final Collection<Component<? extends Component<?>>> getChildren() {
-        return Collections.unmodifiableCollection(children);
+        return unmodifiableCollection(children);
     }
 
     /**
