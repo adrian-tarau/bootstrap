@@ -22,7 +22,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 /**
  * Manages the asset bundles.
  */
-class AssetBundleManager {
+final class AssetBundleManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AssetBundleManager.class);
 

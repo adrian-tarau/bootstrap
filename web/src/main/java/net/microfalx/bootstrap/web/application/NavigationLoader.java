@@ -20,7 +20,7 @@ import static net.microfalx.lang.XmlUtils.*;
 /**
  * Loads navigation from <code>asset.xml</code> descriptors.
  */
-class NavigationLoader {
+final class NavigationLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AssetBundleLoader.class);
 

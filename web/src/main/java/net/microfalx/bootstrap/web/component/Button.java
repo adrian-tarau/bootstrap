@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.web.component;
 /**
  * A button widget.
  */
-public class Button extends ActionableComponent<Button> {
+public final class Button extends ActionableComponent<Button> {
 
     private boolean pressed;
 

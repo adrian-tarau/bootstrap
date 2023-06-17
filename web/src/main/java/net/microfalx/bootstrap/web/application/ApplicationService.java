@@ -23,7 +23,7 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
  * A service which provides metadata for a web application.
  */
 @Service
-public class ApplicationService {
+public final class ApplicationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationService.class);
 

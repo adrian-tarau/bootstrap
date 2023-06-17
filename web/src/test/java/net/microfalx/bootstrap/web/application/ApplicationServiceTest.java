@@ -34,13 +34,11 @@ class ApplicationServiceTest {
 
     @BeforeEach
     void before() {
-
         applicationService.initialize();
     }
 
     @Test
     void getApplication() {
-
         assertNotNull(applicationService.getApplication());
         assertEquals("Default", applicationService.getApplication().getName());
         assertEquals("The default application descriptor", applicationService.getApplication().getDescription());

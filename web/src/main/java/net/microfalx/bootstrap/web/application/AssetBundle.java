@@ -15,7 +15,7 @@ import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 /**
  * Represents a group of  web resources.
  */
-public class AssetBundle implements Identifiable<String>, Nameable, Descriptable {
+public final class AssetBundle implements Identifiable<String>, Nameable, Descriptable {
 
     private String id;
     private String version;

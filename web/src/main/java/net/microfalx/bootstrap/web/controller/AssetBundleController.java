@@ -3,8 +3,6 @@ package net.microfalx.bootstrap.web.controller;
 import net.microfalx.bootstrap.web.application.ApplicationException;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.application.Asset;
-import net.microfalx.lang.StringUtils;
-import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +18,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.io.IOException;
 
+import static net.microfalx.bootstrap.web.controller.AssetUtils.getContentType;
+import static net.microfalx.lang.StringUtils.removeStartSlash;
+
 @Controller
 @RequestMapping(value = "/asset")
-public class AssetBundleController {
+public final class AssetBundleController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AssetBundleController.class);
 
@@ -41,12 +42,12 @@ public class AssetBundleController {
 
     @GetMapping(value = "/font/{*path}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> font(@PathVariable("path") String path) {
-        return getResource("font/" + StringUtils.removeStartSlash(path), Asset.Type.FONT);
+        return AssetUtils.getResource(removeStartSlash(path), Asset.Type.FONT);
     }
 
     @GetMapping(value = "/image/{*path}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> image(@PathVariable("path") String path) {
-        return getResource("image/" + StringUtils.removeStartSlash(path), Asset.Type.FONT);
+        return AssetUtils.getResource(removeStartSlash(path), Asset.Type.IMAGE);
     }
 
     private ResponseEntity<Object> getBundle(String id, Asset.Type type) {
@@ -61,26 +62,5 @@ public class AssetBundleController {
             LOGGER.error(message, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(message);
         }
-    }
-
-    private ResponseEntity<Object> getResource(String path, Asset.Type type) {
-        try {
-            Resource content = ClassPathResource.file(StringUtils.removeStartSlash(path));
-            if (!content.exists()) return ResponseEntity.notFound().build();
-            return ResponseEntity.ok().contentType(MediaType.parseMediaType(getContentType(type)))
-                    .body(new InputStreamResource(content.getInputStream()));
-        } catch (IOException e) {
-            String message = "Failed to retrieve resource " + path;
-            LOGGER.error(message, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(message);
-        }
-    }
-
-    private String getContentType(Asset.Type type) {
-        return switch (type) {
-            case STYLE_SHEET -> "text/css;charset=UTF-8";
-            case JAVA_SCRIPT -> "text/javascript;charset=UTF-8";
-            default -> "application/octet-stream";
-        };
     }
 }

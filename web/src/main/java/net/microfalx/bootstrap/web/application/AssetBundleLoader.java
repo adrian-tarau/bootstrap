@@ -20,7 +20,7 @@ import static net.microfalx.lang.XmlUtils.*;
 /**
  * Loads asset bundles from <code>asset.xml</code> descriptors.
  */
-class AssetBundleLoader {
+final class AssetBundleLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AssetBundleLoader.class);
 

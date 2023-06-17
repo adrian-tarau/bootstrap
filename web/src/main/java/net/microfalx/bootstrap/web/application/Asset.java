@@ -16,7 +16,7 @@ import static net.microfalx.lang.StringUtils.*;
 /**
  * Represents a web media asset (javaScript, stylesheet, font, etc).
  */
-public class Asset implements Identifiable<String>, Nameable, Descriptable, Comparable<Asset> {
+public final class Asset implements Identifiable<String>, Nameable, Descriptable, Comparable<Asset> {
 
     private String id;
     private String name;

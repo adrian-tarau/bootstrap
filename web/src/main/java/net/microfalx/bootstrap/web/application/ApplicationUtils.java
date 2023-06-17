@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 
-public class ApplicationUtils {
+public final class ApplicationUtils {
 
     public static String NO_VERSION = "0.0.0";
 

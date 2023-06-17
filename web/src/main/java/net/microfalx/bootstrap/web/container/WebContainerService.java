@@ -17,7 +17,7 @@ import java.util.Map;
  * A service which gives access to some of the web container features.
  */
 @Service
-public class WebContainerService {
+public final class WebContainerService {
 
     @Autowired
     private ServletContext servletContext;
