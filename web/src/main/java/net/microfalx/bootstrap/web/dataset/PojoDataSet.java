@@ -1,9 +1,12 @@
 package net.microfalx.bootstrap.web.dataset;
 
-public abstract class PojoDataSet<M, ID> extends AbstractDataSet<M, ID> {
+import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.bootstrap.model.PojoField;
 
-    public PojoDataSet(DataSetFactory<M, ID> factory, Class<M> modelClass) {
-        super(factory, modelClass);
+public abstract class PojoDataSet<M, F extends PojoField<M>, ID> extends AbstractDataSet<M, F, ID> {
+
+    public PojoDataSet(DataSetFactory<M, F, ID> factory, Metadata<M, F> metadata) {
+        super(factory, metadata);
     }
 
 }

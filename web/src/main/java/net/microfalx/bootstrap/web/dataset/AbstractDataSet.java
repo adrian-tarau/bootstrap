@@ -1,6 +1,9 @@
 package net.microfalx.bootstrap.web.dataset;
 
 import com.google.common.collect.Lists;
+import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Filter;
+import net.microfalx.bootstrap.model.Metadata;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,27 +16,27 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * Base class for all data sets.
  */
-public abstract class AbstractDataSet<M, ID> implements DataSet<M, ID> {
+public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements DataSet<M, F, ID> {
 
-    private final DataSetFactory<M, ID> factory;
-    private final Metadata<M> metadata;
+    private final DataSetFactory<M, F, ID> factory;
+    private final Metadata<M, F> metadata;
     private boolean readOnly;
 
-    public AbstractDataSet(DataSetFactory<M, ID> factory, Class<M> modelClass) {
+    public AbstractDataSet(DataSetFactory<M, F, ID> factory, Metadata<M, F> metadata) {
         requireNonNull(factory);
-        requireNonNull(modelClass);
+        requireNonNull(metadata);
 
         this.factory = factory;
-        this.metadata = factory.getMetadata(modelClass);
+        this.metadata = metadata;
     }
 
     @Override
-    public final DataSetFactory<M, ID> getFactory() {
+    public final DataSetFactory<M, F, ID> getFactory() {
         return factory;
     }
 
     @Override
-    public final Metadata<M> getMetadata() {
+    public final Metadata<M,F> getMetadata() {
         return metadata;
     }
 
@@ -42,7 +45,7 @@ public abstract class AbstractDataSet<M, ID> implements DataSet<M, ID> {
         return readOnly;
     }
 
-    protected void setReadOnly(boolean readOnly) {
+    protected final void setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;
     }
 
@@ -92,8 +95,8 @@ public abstract class AbstractDataSet<M, ID> implements DataSet<M, ID> {
     }
 
     @Override
-    public Page<M> findAll(Pageable pageable, Expression expression) {
-        return doFindAll(pageable, expression);
+    public final Page<M> findAll(Pageable pageable, Filter filterable) {
+        return doFindAll(pageable, filterable);
     }
 
     @Override
@@ -167,7 +170,7 @@ public abstract class AbstractDataSet<M, ID> implements DataSet<M, ID> {
         return throwUnsupported();
     }
 
-    protected Page<M> doFindAll(Pageable pageable, Expression expression) {
+    protected Page<M> doFindAll(Pageable pageable, Filter filterable) {
         return throwUnsupported();
     }
 

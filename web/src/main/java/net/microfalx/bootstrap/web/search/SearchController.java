@@ -12,13 +12,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping(value = "/search")
 @DataSet(model = SearchResult.class)
-public final class SearchController extends DataSetController {
+public final class SearchController extends DataSetController<SearchResult, String> {
 
     @Autowired
     private SearchService searchService;
 
     @GetMapping()
-    public String home(Model model) {
+    public String browse(Model model) {
+        super.browse(model);
         return "search/index";
     }
 }

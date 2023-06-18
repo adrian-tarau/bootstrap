@@ -1,65 +1,64 @@
 package net.microfalx.bootstrap.web.dataset;
 
-import org.springframework.beans.BeanUtils;
+import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Metadata;
+import org.joor.Reflect;
 
-import java.beans.PropertyDescriptor;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collection;
 
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static org.apache.commons.lang3.ClassUtils.isAssignable;
 
 /**
  * Base class for all data set factories.
  *
  * @param <M> the model type
  */
-public abstract class AbstractDataSetFactory<M, ID> implements DataSetFactory<M, ID> {
-
-    private final Map<Class<?>, Metadata<M>> metadataCache = new ConcurrentHashMap<>();
+public abstract class AbstractDataSetFactory<M, F extends Field<M>, ID> implements DataSetFactory<M, F, ID> {
 
     @Override
-    public Metadata<M> getMetadata(Class<M> modelClass) {
-        requireNonNull(modelClass);
-        Metadata<M> metadata = metadataCache.get(modelClass);
-        if (metadata == null) {
-            metadata = createMetadata(modelClass);
-            extractFields((AbstractMetadata<M>) metadata, modelClass);
-            metadataCache.put(modelClass, metadata);
-        }
-        return metadata;
-    }
-
-    @Override
-    public void update(DataSet<M, ID> dataSet, Object owner) {
-        // empty by default
+    public final DataSet<M, F, ID> create(Metadata<M, F> metadata, Object... parameters) {
+        AbstractDataSet<M, F, ID> dataSet = doCreate(metadata);
+        update(dataSet, parameters);
+        return dataSet;
     }
 
     /**
-     * Subclasses would create the actual field.
+     * Updates the data set with information.
      *
-     * @param metadata the metadata
-     * @param name     the field name
-     * @param property the property name
-     * @return a non-null instance
+     * @param dataSet    the data set
+     * @param parameters the parameters
      */
-    protected abstract AbstractField<M> createField(Metadata<M> metadata, String name, String property);
+    void update(AbstractDataSet<M, F, ID> dataSet, Object... parameters) {
+
+    }
 
     /**
-     * Subclasses would create the actual metadata.
+     * Subclasses would create the actual dataset.
      *
-     * @param modelClass the model type
-     * @return a non-null instance
+     * @param metadata the model metadata
+     * @return a non0-null instance
      */
-    protected abstract AbstractMetadata<M> createMetadata(Class<M> modelClass);
+    protected abstract AbstractDataSet<M, F, ID> doCreate(Metadata<M, F> metadata);
 
-    private void extractFields(AbstractMetadata<M> metadata, Class<?> modelClass) {
-        PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(modelClass);
-        int index = 0;
-        for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-            AbstractField<M> field = createField(metadata, propertyDescriptor.getName(), propertyDescriptor.getName());
-            field.setDataClass(propertyDescriptor.getPropertyType());
-            field.setIndex(index++);
-            metadata.addField(field);
+    /**
+     * Finds a parameter by type.
+     *
+     * @param type       the type
+     * @param parameters the parameters
+     * @param <T>        the data type
+     * @return the parameter, null if does not exist
+     */
+    @SuppressWarnings("unchecked")
+    protected final <T> T find(Class<T> type, Object... parameters) {
+        for (Object parameter : parameters) {
+            if (isAssignable(parameter.getClass(), type)) return (T) parameter;
+            Collection<Reflect> fields = Reflect.on(parameter).fields().values();
+            for (Reflect field : fields) {
+                if (isAssignable(field.type(), type)) return field.get();
+            }
         }
+        return null;
     }
+
+
 }

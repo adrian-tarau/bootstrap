@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.web.dataset;
+package net.microfalx.bootstrap.model;
 
 /**
  * An interface for a query expression.

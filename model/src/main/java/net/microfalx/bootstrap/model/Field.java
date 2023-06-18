@@ -1,7 +1,9 @@
-package net.microfalx.bootstrap.web.dataset;
+package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
+
+import java.lang.annotation.Annotation;
 
 /**
  * A field part of record in a data set.
@@ -13,7 +15,7 @@ public interface Field<M> extends Identifiable<String>, Nameable {
      *
      * @return a non-null instance
      */
-    Metadata<M> getMetadata();
+    Metadata<M, ? extends Field<M>> getMetadata();
 
     /**
      * Returns the name of the field.
@@ -46,6 +48,20 @@ public interface Field<M> extends Identifiable<String>, Nameable {
     boolean isId();
 
     /**
+     * Returns whether the field is read-only.
+     *
+     * @return {@code true} if read-only, {@code false} otherwise
+     */
+    boolean isReadOnly();
+
+    /**
+     * Returns whether the field is transient (not persisted).
+     *
+     * @return {@code true} if transient, {@code false} otherwise
+     */
+    boolean isTransient();
+
+    /**
      * Returns the class name supporting the field.
      *
      * @return a non-null instance
@@ -58,6 +74,40 @@ public interface Field<M> extends Identifiable<String>, Nameable {
      * @return a non-null instance
      */
     DataType getDataType();
+
+    /**
+     * Returns an annotation by its type.
+     *
+     * @param annotationClass the annotation type
+     * @param <A>             the annotation type
+     * @return the annotation, null if not registered
+     */
+    <A extends Annotation> A findAnnotation(Class<A> annotationClass);
+
+    /**
+     * Returns whether an annotation with a given type exists.
+     *
+     * @param annotationClass the annotation type
+     * @param <A>             the annotation type
+     * @return the annotation, null if not registered
+     */
+    <A extends Annotation> boolean hasAnnotation(Class<A> annotationClass);
+
+    /**
+     * Returns the value from the model for a given field.
+     *
+     * @param model the model
+     * @return the value
+     */
+    Object get(M model);
+
+    /**
+     * Changes the value in the model for a given field.
+     *
+     * @param model the model
+     * @param value the value
+     */
+    void set(M model, Object value);
 
     /**
      * Holds the data type of the field
@@ -80,6 +130,11 @@ public interface Field<M> extends Identifiable<String>, Nameable {
         NUMBER,
 
         /**
+         * Characters
+         */
+        STRING,
+
+        /**
          * A date.
          */
         DATE,
@@ -98,6 +153,11 @@ public interface Field<M> extends Identifiable<String>, Nameable {
          * An enum
          */
         ENUM,
+
+        /**
+         * A collection class
+         */
+        COLLECTION,
 
         /**
          * Another model

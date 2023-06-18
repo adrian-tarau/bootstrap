@@ -18,6 +18,7 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
     private Container<?> parent;
     private String width;
     private String height;
+    private String tooltip;
     private boolean visible;
     private boolean disabled;
     private boolean readOnly;
@@ -145,6 +146,25 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
      */
     public final C setVisible(boolean visible) {
         this.visible = visible;
+        return self();
+    }
+
+    /**
+     * Returns the tooltip associated with the component.
+     *
+     * @return the tooltip, null if not set
+     */
+    public String getTooltip() {
+        return tooltip;
+    }
+
+    /**
+     * Changes the tooltip.
+     *
+     * @param tooltip the tooltip
+     */
+    public C setTooltip(String tooltip) {
+        this.tooltip = tooltip;
         return self();
     }
 

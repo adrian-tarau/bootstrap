@@ -1,9 +1,13 @@
 package net.microfalx.bootstrap.web.dataset;
 
 import jakarta.annotation.PostConstruct;
+import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.bootstrap.model.MetadataService;
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -23,8 +27,11 @@ public final class DataSetService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
 
-    private final Collection<DataSetFactory<?, ?>> factories = new CopyOnWriteArrayList<>();
+    private final Collection<DataSetFactory<?, ?, ?>> factories = new CopyOnWriteArrayList<>();
     private final Map<Class<?>, Map<String, Field<?>>> fieldsCache = new ConcurrentHashMap<>();
+
+    @Autowired
+    private MetadataService metadataService;
 
     /**
      * Returns a data set from a model class.
@@ -35,10 +42,11 @@ public final class DataSetService {
      * @throws DataSetException if a data set cannot be created
      */
     @SuppressWarnings("unchecked")
-    public <M, ID> DataSet<M, ID> lookup(Class<M> modelClass) {
+    public <M, F extends Field<M>, ID> DataSet<M, F, ID> lookup(Class<M> modelClass, Object... parameters) {
         requireNonNull(modelClass);
+        Metadata<M, Field<M>> metadata = metadataService.getMetadata(modelClass);
         for (DataSetFactory factory : factories) {
-            if (factory.supports(modelClass)) return factory.create(modelClass);
+            if (factory.supports(metadata)) return factory.create(metadata, parameters);
         }
         throw new DataSetException("A data set cannot be created for model " + ClassUtils.getName(modelClass));
     }
@@ -48,7 +56,7 @@ public final class DataSetService {
      *
      * @return a non-null instance.
      */
-    public Collection<DataSetFactory<?, ?>> getFactories() {
+    public Collection<DataSetFactory<?, ?, ?>> getFactories() {
         return unmodifiableCollection(factories);
     }
 
@@ -61,7 +69,7 @@ public final class DataSetService {
     private void discoverFactories() {
         LOGGER.info("Discover data set factories:");
         ServiceLoader<DataSetFactory> scannedFactories = ServiceLoader.load(DataSetFactory.class);
-        for (DataSetFactory<?, ?> scannedFactory : scannedFactories) {
+        for (DataSetFactory<?, ?, ?> scannedFactory : scannedFactories) {
             LOGGER.info(" - " + ClassUtils.getName(scannedFactory));
             factories.add(scannedFactory);
         }

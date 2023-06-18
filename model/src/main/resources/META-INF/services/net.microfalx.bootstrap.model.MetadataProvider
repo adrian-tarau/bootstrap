@@ -1,0 +1,2 @@
+net.microfalx.bootstrap.model.JpaMetadataProvider
+net.microfalx.bootstrap.model.PojoMetadataProvider

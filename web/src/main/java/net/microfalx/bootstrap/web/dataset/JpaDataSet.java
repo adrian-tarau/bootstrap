@@ -1,57 +1,138 @@
 package net.microfalx.bootstrap.web.dataset;
 
 import jakarta.persistence.Entity;
+import net.microfalx.bootstrap.model.Filter;
+import net.microfalx.bootstrap.model.JpaField;
+import net.microfalx.bootstrap.model.Metadata;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+import java.util.List;
+import java.util.Optional;
+
+import static net.microfalx.lang.AnnotationUtils.getAnnotation;
 
 /**
  * A data set for JPA entities.
  */
-public class JpaDataSet<T, ID> extends PojoDataSet<T, ID> {
+public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
 
-    public JpaDataSet(DataSetFactory<T, ID> factory, Class<T> modelClass) {
-        super(factory, modelClass);
+    JpaRepository<M, ID> repository;
+
+    public JpaDataSet(DataSetFactory<M, JpaField<M>, ID> factory, Metadata<M, JpaField<M>> metadata) {
+        super(factory, metadata);
     }
 
+    @Override
+    public <S extends M> List<S> saveAll(Iterable<S> entities) {
+        return repository.saveAll(entities);
+    }
 
+    @Override
+    protected List<M> doFindAll() {
+        return repository.findAll();
+    }
 
-    public static class JpaMetadata<M> extends PojoDataSetFactory.PojoMetadata<M> {
+    @Override
+    protected List<M> doFindAllById(Iterable<ID> ids) {
+        return repository.findAllById(ids);
+    }
 
-        public JpaMetadata(Class<M> modelClass) {
-            super(modelClass);
+    @Override
+    protected Optional<M> doFindById(ID id) {
+        return repository.findById(id);
+    }
+
+    @Override
+    protected boolean doExistsById(ID id) {
+        return repository.existsById(id);
+    }
+
+    @Override
+    protected long doCount() {
+        return repository.count();
+    }
+
+    @Override
+    protected List<M> doFindAll(Sort sort) {
+        return repository.findAll(sort);
+    }
+
+    @Override
+    protected Page<M> doFindAll(Pageable pageable) {
+        return repository.findAll(pageable);
+    }
+
+    @Override
+    protected Page<M> doFindAll(Pageable pageable, Filter filterable) {
+        if (repository instanceof JpaSpecificationExecutor) {
+            JpaSpecificationExecutor<M> executor = (JpaSpecificationExecutor<M>) repository;
+            Specification<M> specification = null;
+            return executor.findAll(specification, pageable);
+        } else {
+            throw new DataSetException("Filters are not supported for " + getMetadata().getName());
         }
     }
 
-    public static class JpaField<M> extends PojoDataSetFactory.PojoField<M> {
-
-        public JpaField(Metadata<M> metadata, String name, String property) {
-            super(metadata, name, property);
-        }
+    @Override
+    protected <S extends M> S doSave(S model) {
+        return repository.save(model);
     }
 
-    public static class Factory<T, ID> extends PojoDataSetFactory<T, ID> {
+    @Override
+    protected void doDeleteById(ID id) {
+        repository.deleteById(id);
+    }
+
+    @Override
+    protected void doDelete(M model) {
+        repository.delete(model);
+    }
+
+    @Override
+    protected void doDeleteAllById(Iterable<? extends ID> ids) {
+        repository.deleteAllById(ids);
+    }
+
+    @Override
+    protected void doDeleteAll(Iterable<? extends M> models) {
+        repository.deleteAll(models);
+    }
+
+    @Override
+    protected void doDeleteAll() {
+        repository.deleteAll();
+    }
+
+    void setRepository(JpaRepository<M, ID> repository) {
+        this.repository = repository;
+    }
+
+    public static class Factory<M, ID> extends PojoDataSetFactory<M, JpaField<M>, ID> {
 
         @Override
-        public boolean supports(Class<T> modelClass) {
-            return modelClass.getAnnotation(Entity.class) != null;
+        protected AbstractDataSet<M, JpaField<M>, ID> doCreate(Metadata<M, JpaField<M>> metadata) {
+            return new JpaDataSet<>(this, metadata);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        void update(AbstractDataSet<M, JpaField<M>, ID> dataSet, Object... parameters) {
+            super.update(dataSet, parameters);
+            JpaRepository<M, ID> repository = find(JpaRepository.class, parameters);
+            if (repository == null) {
+                throw new DataSetException("A JPA repository is required to create a data set for " + dataSet.getMetadata().getName());
+            }
+            ((JpaDataSet<M, JpaField<M>>) dataSet).setRepository((JpaRepository<M, JpaField<M>>) repository);
         }
 
         @Override
-        protected AbstractMetadata<T> createMetadata(Class<T> modelClass) {
-            return new JpaMetadata<>(modelClass);
-        }
-
-        @Override
-        protected AbstractField<T> createField(Metadata<T> metadata, String name, String property) {
-            return new JpaField<>(metadata, name, property);
-        }
-
-        @Override
-        public Expression parse(String value) {
-            return null;
-        }
-
-        @Override
-        public DataSet<T, ID> create(Class<T> modelClass) {
-            return new JpaDataSet<>(this, modelClass);
+        public boolean supports(Metadata<M, JpaField<M>> metadata) {
+            return getAnnotation(metadata.getModel(), Entity.class) != null;
         }
     }
 }

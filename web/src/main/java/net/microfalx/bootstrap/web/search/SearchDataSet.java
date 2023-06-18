@@ -1,28 +1,30 @@
 package net.microfalx.bootstrap.web.search;
 
-import net.microfalx.bootstrap.web.dataset.*;
+import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.bootstrap.model.PojoField;
+import net.microfalx.bootstrap.web.dataset.AbstractDataSet;
+import net.microfalx.bootstrap.web.dataset.DataSetFactory;
+import net.microfalx.bootstrap.web.dataset.PojoDataSet;
+import net.microfalx.bootstrap.web.dataset.PojoDataSetFactory;
 
-public class SearchDataSet extends PojoDataSet<SearchResult, String> {
+import static org.apache.commons.lang3.ClassUtils.isAssignable;
 
-    public SearchDataSet(DataSetFactory<SearchResult, String> factory, Class<SearchResult> modelClass) {
-        super(factory, modelClass);
+public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchResult>, String> {
+
+    public SearchDataSet(DataSetFactory<SearchResult, PojoField<SearchResult>, String> factory, Metadata<SearchResult, PojoField<SearchResult>> metadata) {
+        super(factory, metadata);
     }
 
-    public static class Factory extends PojoDataSetFactory<SearchResult, String> {
+    public static class Factory extends PojoDataSetFactory<SearchResult, PojoField<SearchResult>, String> {
 
         @Override
-        public boolean supports(Class<SearchResult> modelClass) {
-            return SearchResult.class.equals(modelClass);
+        protected AbstractDataSet<SearchResult, PojoField<SearchResult>, String> doCreate(Metadata<SearchResult, PojoField<SearchResult>> metadata) {
+            return new SearchDataSet(this, metadata);
         }
 
         @Override
-        public Expression parse(String value) {
-            return null;
-        }
-
-        @Override
-        public DataSet<SearchResult, String> create(Class<SearchResult> modelClass) {
-            return new SearchDataSet(this, modelClass);
+        public boolean supports(Metadata<SearchResult, PojoField<SearchResult>> metadata) {
+            return isAssignable(metadata.getModel(), SearchResult.class);
         }
     }
 }

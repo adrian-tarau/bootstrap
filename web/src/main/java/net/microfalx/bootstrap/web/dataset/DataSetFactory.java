@@ -1,46 +1,26 @@
 package net.microfalx.bootstrap.web.dataset;
 
+import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Metadata;
+
 /**
  * A data set factory.
  */
-public interface DataSetFactory<M, ID> {
+public interface DataSetFactory<M, F extends Field<M>, ID> {
 
     /**
      * Returns whether the factory supports a given model class.
      *
-     * @param modelClass the model class
+     * @param metadata the metadata of the  model
      * @return {@code true} if it supports, {@code otherwise}
      */
-    boolean supports(Class<M> modelClass);
+    boolean supports(Metadata<M, F> metadata);
 
     /**
-     * Returns the metadata about the model.
+     * Creates a data set  supporting a given model class
      *
-     * @param modelClass the model class
+     * @param metadata the metadata of the  model
      * @return a non-null instance
      */
-    Metadata<M> getMetadata(Class<M> modelClass);
-
-    /**
-     * Parses the expression and creates
-     * @param value
-     * @return
-     */
-    Expression parse(String value);
-
-    /**
-     * Updates the data set with information from the controller.
-     *
-     * @param dataSet the data set
-     * @param owner   the owner (usually a controller
-     */
-    void update(DataSet<M, ID> dataSet, Object owner);
-
-    /**
-     * Creates a data set instance
-     *
-     * @param modelClass the data set model
-     * @return a non-null instance
-     */
-    DataSet<M, ID> create(Class<M> modelClass);
+    DataSet<M, F, ID> create(Metadata<M, F> metadata, Object... parameters);
 }

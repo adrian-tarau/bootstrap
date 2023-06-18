@@ -20,4 +20,5 @@ public final class HomeController {
     public ResponseEntity<Object> favicon() {
         return AssetUtils.getResource("favicon.ico", Asset.Type.IMAGE);
     }
+
 }
