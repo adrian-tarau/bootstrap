@@ -1,4 +1,4 @@
-create table users
+create table security_users
 (
     username    varchar(50)          not null primary key,
     name        varchar(100)         not null,
@@ -10,17 +10,17 @@ create table users
     description varchar(1000)
 ) ENGINE = InnoDB;
 
-create table authorities
+create table security_authorities
 (
     username   varchar(50) not null,
     authority  varchar(50) not null,
     created_at datetime    not null,
-    constraint fk$authorities$user foreign key (username) references users (username)
+    constraint fk$security_authorities$user foreign key (username) references security_users (username)
 ) ENGINE = InnoDB;
 
-create unique index ix$authorities$username on authorities (username, authority);
+create unique index ix$security_authorities$username on security_authorities (username, authority);
 
-create table `groups`
+create table security_groups
 (
     id          integer              not null auto_increment primary key,
     name        varchar(100)         not null,
@@ -30,19 +30,19 @@ create table `groups`
     description varchar(1000)
 ) ENGINE = InnoDB;
 
-create table group_authorities
+create table security_group_authorities
 (
     group_id   integer     not null,
     authority  varchar(50) not null,
     created_at datetime    not null,
-    constraint fk$group_authorities$group foreign key (group_id) references `groups` (id)
+    constraint fk$security_group_authorities$group foreign key (group_id) references security_groups (id)
 ) ENGINE = InnoDB;
 
-create table group_members
+create table security_group_members
 (
     id         integer     not null auto_increment primary key,
     username   varchar(50) not null,
     group_id   integer     not null,
     created_at datetime    not null,
-    constraint fk$group_members$group foreign key (group_id) references `groups` (id)
+    constraint fk$security_group_members$group foreign key (group_id) references security_groups (id)
 ) ENGINE = InnoDB;

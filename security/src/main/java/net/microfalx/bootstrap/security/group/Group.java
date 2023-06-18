@@ -6,7 +6,7 @@ import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
 import java.util.Objects;
 
 @Entity
-@Table(name = "groups")
+@Table(name = "security_groups")
 public class Group extends NamedTimestampAware {
 
     @Id

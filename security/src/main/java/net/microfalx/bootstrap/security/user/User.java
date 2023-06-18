@@ -7,7 +7,7 @@ import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
 import java.util.Objects;
 
 @Entity
-@Table(name = "users")
+@Table(name = "security_users")
 public class User extends NamedTimestampAware {
 
     @Id
