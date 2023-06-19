@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.model;
 
 import jodd.typeconverter.TypeConverterManager;
 import net.microfalx.lang.Id;
+import net.microfalx.lang.ReadOnly;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
@@ -58,7 +59,7 @@ public abstract class PojoField<M> extends AbstractField<M> {
     void update(MethodHandle getter, MethodHandle setter) {
         this.getter = getter;
         this.setter = setter;
-        setReadOnly(setter == null);
+        setReadOnly(setter == null || hasAnnotation(ReadOnly.class));
     }
 
     protected void update(Field field) {

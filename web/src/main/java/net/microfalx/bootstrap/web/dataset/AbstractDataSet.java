@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.bootstrap.web.dataset.annotation.Visible;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 
 /**
  * Base class for all data sets.
@@ -20,7 +23,9 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
 
     private final DataSetFactory<M, F, ID> factory;
     private final Metadata<M, F> metadata;
+    private String name;
     private boolean readOnly;
+    private State state = State.BROWSE;
 
     public AbstractDataSet(DataSetFactory<M, F, ID> factory, Metadata<M, F> metadata) {
         requireNonNull(factory);
@@ -31,12 +36,23 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public String getName() {
+        return defaultIfEmpty(name, metadata.getName());
+    }
+
+    @Override
+    public void setName(String name) {
+        requireNotEmpty(name);
+        this.name = name;
+    }
+
+    @Override
     public final DataSetFactory<M, F, ID> getFactory() {
         return factory;
     }
 
     @Override
-    public final Metadata<M,F> getMetadata() {
+    public final Metadata<M, F> getMetadata() {
         return metadata;
     }
 
@@ -47,6 +63,26 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
 
     protected final void setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;
+    }
+
+    @Override
+    public final State getState() {
+        return state;
+    }
+
+    protected final void setState(State state) {
+        this.state = state;
+    }
+
+    @Override
+    public final boolean isVisible(Field<M> field) {
+        Visible visibleAnnot = field.findAnnotation(Visible.class);
+        if (visibleAnnot == null) return true;
+        return switch (state) {
+            case BROWSE -> visibleAnnot.browse();
+            case ADD -> visibleAnnot.add();
+            case EDIT -> visibleAnnot.edit();
+        };
     }
 
     @Override

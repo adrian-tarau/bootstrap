@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.web.component.grid;
 
+import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.component.panel.BasePanel;
+import net.microfalx.bootstrap.web.dataset.DataSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +13,25 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * A component specialized in displaying a scrollable table.
  */
-public class Grid extends BasePanel<Grid> {
+public class Grid<M, ID> extends BasePanel<Grid<M, ID>> {
 
     private final List<Column> columns = new ArrayList<>();
+    private DataSet<M, ? extends Field<M>, ID> dataSet;
+
+    public Grid(DataSet<M, ? extends Field<M>, ID> dataSet) {
+        requireNonNull(dataSet);
+        this.dataSet = dataSet;
+        this.setTitle(dataSet.getMetadata().getName());
+    }
+
+    /**
+     * Returns the data set attached to the grid.
+     *
+     * @return a non-null instance
+     */
+    public DataSet<M, ? extends Field<M>, ID> getDataSet() {
+        return dataSet;
+    }
 
     /**
      * Returns the registered columns.

@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.dataset;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.lang.Nameable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.ListCrudRepository;
@@ -13,7 +14,7 @@ import org.springframework.data.repository.NoRepositoryBean;
  * An abstract over a collection of records with CRUD support.
  */
 @NoRepositoryBean
-public interface DataSet<M, F extends Field<M>, ID> extends ListPagingAndSortingRepository<M, ID>, ListCrudRepository<M, ID> {
+public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPagingAndSortingRepository<M, ID>, ListCrudRepository<M, ID> {
 
     /**
      * Returns the factory which made this data set instance.
@@ -30,11 +31,43 @@ public interface DataSet<M, F extends Field<M>, ID> extends ListPagingAndSorting
     Metadata<M, F> getMetadata();
 
     /**
+     * Returns the state of the data set.
+     *
+     * @return a non-null instance
+     */
+    State getState();
+
+    /**
+     * Returns the name of the data set (title).
+     * <p>
+     * By default it returns the model name.
+     *
+     * @return a non-null instance
+     */
+    @Override
+    String getName();
+
+    /**
+     * Changes the name of the data set.
+     *
+     * @param name the new name
+     */
+    void setName(String name);
+
+    /**
      * Returns whether the data set is read-only.
      *
      * @return {@code true} if the data set is read-only, {@code false} otherwise
      */
     boolean isReadOnly();
+
+    /**
+     * Returns whether the field is read-only for this data set in the current mode.
+     *
+     * @param field the field
+     * @return {@code true} if read-only, {@code false} otherwise
+     */
+    boolean isVisible(Field<M> field);
 
     /**
      * Returns the model identifier.

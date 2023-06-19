@@ -29,6 +29,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     public AbstractMetadata(Class<M> modelClass) {
         this.modelClass = modelClass;
         this.id = modelClass.getName();
+        this.name = org.apache.commons.lang3.StringUtils.capitalize(modelClass.getSimpleName());
     }
 
     @Override

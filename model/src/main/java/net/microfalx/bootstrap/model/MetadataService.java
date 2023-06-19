@@ -75,7 +75,7 @@ public class MetadataService {
 
     @SuppressWarnings("rawtypes")
     private void discoverProviders() {
-        LOGGER.info("Discover data set factories:");
+        LOGGER.info("Discover metadata providers:");
         ServiceLoader<MetadataProvider> scannedProviders = ServiceLoader.load(MetadataProvider.class);
         for (MetadataProvider<?, ?> scannedProvider : scannedProviders) {
             LOGGER.info(" - " + ClassUtils.getName(scannedProvider));
