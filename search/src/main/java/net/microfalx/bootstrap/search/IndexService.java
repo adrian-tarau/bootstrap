@@ -16,7 +16,10 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class IndexService {
 
     @Autowired
-    private SearchSettings configuration;
+    private SearchProperties searchProperties;
+
+    @Autowired
+    private IndexProperties indexProperties;
 
     @Autowired
     private ResourceService resourceService;

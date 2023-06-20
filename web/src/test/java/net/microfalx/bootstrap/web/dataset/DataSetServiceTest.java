@@ -14,7 +14,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Arrays;
 
-import static org.joor.Reflect.on;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -31,14 +30,14 @@ class DataSetServiceTest {
     private DataSetService dataSetService;
 
     @BeforeEach
-    void before() {
-        on(metadataService).call("initialize");
-        dataSetService.initialize();
+    void before() throws Exception {
+        metadataService.afterPropertiesSet();
+        dataSetService.afterPropertiesSet();
     }
 
     @Test
     void loadFactories() {
-        assertEquals(2, dataSetService.getFactories().size());
+        assertEquals(3, dataSetService.getFactories().size());
     }
 
     @Test

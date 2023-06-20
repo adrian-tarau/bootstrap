@@ -1,8 +1,8 @@
 package net.microfalx.bootstrap.model;
 
 import jodd.typeconverter.TypeConverterManager;
-import net.microfalx.lang.Id;
-import net.microfalx.lang.ReadOnly;
+import net.microfalx.lang.annotation.Id;
+import net.microfalx.lang.annotation.ReadOnly;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;

@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.model;
 
-import net.microfalx.lang.Order;
+import net.microfalx.lang.annotation.Order;
 
 @Order(Order.AFTER)
 public class PojoMetadataProvider<M, F extends Field<M>> implements MetadataProvider<M, F> {
@@ -16,14 +16,14 @@ public class PojoMetadataProvider<M, F extends Field<M>> implements MetadataProv
         return (Metadata<M, F>) new DefaultPojoMetadata<>(modelClass);
     }
 
-     static class DefaultPojoField<M> extends PojoField<M> {
+    static class DefaultPojoField<M> extends PojoField<M> {
 
         public DefaultPojoField(PojoMetadata<M, PojoField<M>> metadata, String name, String property) {
             super(metadata, name, property);
         }
     }
 
-     static class DefaultPojoMetadata<M> extends PojoMetadata<M, DefaultPojoField<M>> {
+    static class DefaultPojoMetadata<M> extends PojoMetadata<M, DefaultPojoField<M>> {
 
         public DefaultPojoMetadata(Class<M> modelClass) {
             super(modelClass);

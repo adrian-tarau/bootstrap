@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.model;
 
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.I18n;
 
 import java.lang.annotation.Annotation;
 import java.time.LocalDate;
@@ -14,6 +14,8 @@ import java.util.Map;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 import static org.apache.commons.lang3.ClassUtils.isAssignable;
 
 /**
@@ -23,7 +25,7 @@ import static org.apache.commons.lang3.ClassUtils.isAssignable;
  */
 public abstract class AbstractField<M> implements Field<M> {
 
-    private final Metadata<M, ? extends AbstractField<M>> metadata;
+    private final AbstractMetadata<M, ? extends AbstractField<M>> metadata;
     private final String id;
     private final String name;
     private final String property;
@@ -34,12 +36,12 @@ public abstract class AbstractField<M> implements Field<M> {
     private boolean readOnly;
     private boolean _transient;
 
-    public AbstractField(Metadata<M, ? extends AbstractField<M>> metadata, String name, String property) {
+    public AbstractField(AbstractMetadata<M, ? extends AbstractField<M>> metadata, String name, String property) {
         requireNotEmpty(metadata);
         requireNotEmpty(name);
         requireNotEmpty(property);
 
-        this.id = StringUtils.toIdentifier(name);
+        this.id = toIdentifier(name);
         this.metadata = metadata;
         this.name = name;
         this.property = property;
@@ -58,6 +60,17 @@ public abstract class AbstractField<M> implements Field<M> {
     @Override
     public final String getName() {
         return name;
+    }
+
+    @Override
+    public final String getLabel() {
+        String label = metadata.getI18n(getI18nPrefix() + ".label");
+        return isNotEmpty(label) ? label : org.apache.commons.lang3.StringUtils.capitalize(getName());
+    }
+
+    @Override
+    public String getDescription() {
+        return metadata.getI18n(getI18nPrefix() + ".description");
     }
 
     @Override
@@ -136,6 +149,12 @@ public abstract class AbstractField<M> implements Field<M> {
         } else {
             this.dataType = DataType.MODEL;
         }
+    }
+
+    private String getI18nPrefix() {
+        I18n i18nAnnot = findAnnotation(I18n.class);
+        String suffix = toIdentifier(i18nAnnot != null ? i18nAnnot.value() : getName());
+        return metadata.getI18nPrefix() + suffix;
     }
 
     @Override

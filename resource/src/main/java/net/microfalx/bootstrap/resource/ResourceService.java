@@ -20,7 +20,7 @@ public class ResourceService {
     private File transientDirectory;
 
     @Autowired
-    private ResourceConfiguration configuration;
+    private ResourceProperties properties;
 
     /**
      * Returns the resource directory for persisted data.
@@ -78,15 +78,15 @@ public class ResourceService {
 
     @PostConstruct
     protected void initialize() {
-        validateDirectory(persistedDirectory = new File(configuration.getPersistedDirectory()));
-        validateDirectory(transientDirectory = new File(configuration.getTransientDirectory()));
+        validateDirectory(persistedDirectory = new File(properties.getPersistedDirectory()));
+        validateDirectory(transientDirectory = new File(properties.getTransientDirectory()));
         validateResource(getSharedResource(null));
     }
 
 
     private Resource getSharedResource(String name) {
-        Resource resource = ResourceFactory.resolve(configuration.getSharedDirectory(),
-                UserPasswordCredential.create(configuration.getSharedUserName(), configuration.getSharedPassword()));
+        Resource resource = ResourceFactory.resolve(properties.getSharedDirectory(),
+                UserPasswordCredential.create(properties.getSharedUserName(), properties.getSharedPassword()));
         return name != null ? resource.resolve(name, Resource.Type.DIRECTORY) : resource;
     }
 

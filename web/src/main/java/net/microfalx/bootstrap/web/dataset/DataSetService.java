@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.web.dataset;
 
-import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.MetadataService;
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * A service used to create data sets
  */
 @Service
-public final class DataSetService {
+public final class DataSetService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
 
@@ -60,7 +60,11 @@ public final class DataSetService {
         return unmodifiableCollection(factories);
     }
 
-    @PostConstruct
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initialize();
+    }
+
     protected void initialize() {
         discoverFactories();
     }

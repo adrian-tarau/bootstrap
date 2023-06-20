@@ -4,7 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import net.microfalx.lang.Id;
+import net.microfalx.lang.annotation.I18n;
+import net.microfalx.lang.annotation.Id;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class MetadataServiceTest {
+
 
     @InjectMocks
     private MetadataService metadataService;
@@ -47,12 +49,38 @@ class MetadataServiceTest {
         assertSame(metadata.getClass(), JpaMetadata.class);
         assertEquals(2, metadata.getIdFields().size());
         Assertions.assertThatCode(() -> metadata.findIdField().getName()).hasMessageContaining("Multiple");
-        assertEquals(5, metadata.getFields().size());
+        assertEquals(6, metadata.getFields().size());
+    }
+
+    @Test
+    void loadI18n() {
+        Metadata<Person, Field<Person>> metadata = metadataService.getMetadata(Person.class);
+        assertI18n(metadata);
+    }
+
+    @Test
+    void loadI18nJpa() {
+        Metadata<PersonJpa, Field<PersonJpa>> metadata = metadataService.getMetadata(PersonJpa.class);
+        assertI18n(metadata);
+    }
+
+    private void assertI18n(Metadata<?, ? extends Field<?>> metadata) {
+        assertEquals("Person", metadata.getName());
+        assertEquals("A person", metadata.getDescription());
+        Field<?> field = metadata.get("id");
+        assertEquals("Id", field.getLabel());
+        assertEquals("The identifier of the person", field.getDescription());
+        field = metadata.get("firstname");
+        assertEquals("First Name", field.getLabel());
+        assertEquals("The first name of the person", field.getDescription());
     }
 
     @Entity
     @Table(name = "person")
+    @I18n("person")
     private static class PersonJpa {
+
+        private int id;
 
         @jakarta.persistence.Id
         @Column(name = "first_name")
@@ -70,6 +98,14 @@ class MetadataServiceTest {
 
         @Transient
         private Double dummy;
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
 
         public String getFirstName() {
             return firstName;

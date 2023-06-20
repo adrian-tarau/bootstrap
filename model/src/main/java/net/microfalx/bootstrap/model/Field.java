@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.model;
 
+import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 
@@ -8,7 +9,7 @@ import java.lang.annotation.Annotation;
 /**
  * A field part of record in a data set.
  */
-public interface Field<M> extends Identifiable<String>, Nameable {
+public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
 
     /**
      * Returns the metadata which owns this field.
@@ -25,6 +26,22 @@ public interface Field<M> extends Identifiable<String>, Nameable {
      * @return a non-null instance
      */
     String getName();
+
+    /**
+     * Returns the label associated with the field.
+     *
+     * @return a non-null instance
+     * @see #net.microfalx.lang.annotation.I18n
+     */
+    String getLabel();
+
+    /**
+     * Returns the description associated with a field.
+     *
+     * The description is usually displayed as a tooltip in UIs.
+     * @return the description, null if not defined
+     */
+    String getDescription();
 
     /**
      * Returns the property name (class property).

@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.model;
 
 import jakarta.persistence.Entity;
-import net.microfalx.lang.Order;
+import net.microfalx.lang.annotation.Order;
 
 import static net.microfalx.lang.AnnotationUtils.getAnnotation;
 

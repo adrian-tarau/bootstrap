@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConfigurationProperties("bootstrap.resource")
-public class ResourceConfiguration {
+public class ResourceProperties {
 
     @Value("${user.home}/.bootstrap/data")
     private String persistedDirectory;

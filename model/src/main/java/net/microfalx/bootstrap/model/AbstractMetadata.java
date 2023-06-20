@@ -1,15 +1,25 @@
 package net.microfalx.bootstrap.model;
 
+import net.microfalx.lang.AnnotationUtils;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.I18n;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.NoSuchMessageException;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 
 /**
  * Base class for all metadata.
@@ -17,6 +27,8 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
  * @param <M> the model type
  */
 public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadata<M, F> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetadataService.class);
 
     private final String id;
     private String name;
@@ -26,10 +38,11 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     private F idField;
     private final Map<String, F> idFields = new HashMap<>();
 
+    MessageSource messageSource;
+
     public AbstractMetadata(Class<M> modelClass) {
         this.modelClass = modelClass;
         this.id = modelClass.getName();
-        this.name = org.apache.commons.lang3.StringUtils.capitalize(modelClass.getSimpleName());
     }
 
     @Override
@@ -121,6 +134,46 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
             idFields.put(StringUtils.toIdentifier(field.getProperty()), field);
         }
         if (idFields.size() > 1) idField = null;
+    }
+
+    /**
+     * Invoked after creation to initialize the metadata
+     */
+    protected void initialize() {
+        initI18n();
+    }
+
+    /**
+     * Returns the I18n prefix for the metadata.
+     *
+     * @return a non-null instance
+     */
+    protected final String getI18nPrefix() {
+        I18n i18nAnnot = AnnotationUtils.getAnnotation(getModel(), I18n.class);
+        String i18nPrefix = "model." + (i18nAnnot != null ? i18nAnnot.value() : StringUtils.toIdentifier(getModel().getSimpleName()));
+        i18nPrefix += ".";
+        return i18nPrefix;
+    }
+
+    /**
+     * Returns the value associated with a key
+     *
+     * @param key the key
+     * @return the value, null if not defined
+     */
+    protected final String getI18n(String key) {
+        try {
+            return messageSource.getMessage(key, ObjectUtils.EMPTY_ARRAY, Locale.US);
+        } catch (NoSuchMessageException e) {
+            LOGGER.debug("Missing i18n '" + key + "' for model " + getModel().getName());
+            return null;
+        }
+    }
+
+    private void initI18n() {
+        this.name = getI18n(getI18nPrefix() + "name");
+        this.name = defaultIfEmpty(name, capitalize(modelClass.getSimpleName()));
+        this.description = getI18n(getI18nPrefix() + "description");
     }
 
     @Override
