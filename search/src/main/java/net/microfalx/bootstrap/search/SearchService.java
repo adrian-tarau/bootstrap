@@ -1,6 +1,9 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.bootstrap.resource.ResourceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -8,7 +11,9 @@ import org.springframework.stereotype.Service;
  * A service used to execute full text searches.
  */
 @Service
-public class SearchService {
+public class SearchService implements InitializingBean {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchService.class);
 
     @Autowired
     private SearchProperties configuration;
@@ -49,5 +54,10 @@ public class SearchService {
      */
     public String getHighlightedText(SearchQuery query, String itemId) {
         return null;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
     }
 }

@@ -1,19 +1,38 @@
 package net.microfalx.bootstrap.search;
 
+import jakarta.annotation.PreDestroy;
 import net.microfalx.bootstrap.resource.ResourceService;
+import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.resource.FileResource;
+import net.microfalx.resource.Resource;
+import org.apache.commons.io.FileUtils;
+import org.apache.lucene.index.*;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.InfoStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import static net.microfalx.bootstrap.search.SearchUtilities.ID_FIELD;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
  * Provides indexing capabilities for full text search.
  */
 @Service
-public class IndexService {
+public class IndexService implements InitializingBean {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndexService.class);
 
     @Autowired
     private SearchProperties searchProperties;
@@ -23,6 +42,9 @@ public class IndexService {
 
     @Autowired
     private ResourceService resourceService;
+
+    private final Object lock = new Object();
+    private volatile IndexHolder index;
 
     /**
      * Indexes a document and commits at the end.
@@ -46,6 +68,33 @@ public class IndexService {
     }
 
     /**
+     * Returns a count with documents in the index.
+     *
+     * @return a positive integer
+     */
+    public long getDocumentCount() {
+        IndexHolder indexHolder = openIndex();
+        return indexHolder.indexWriter.getDocStats().numDocs;
+    }
+
+    /**
+     * Returns a count with documents pending in memory.
+     *
+     * @return a positive integer
+     */
+    public int getPendingDocumentCount() {
+        IndexHolder indexHolder = openIndex();
+        return (int) indexHolder.indexWriter.getPendingNumDocs();
+    }
+
+    /**
+     * Forces all documents in memory to be flushed on disk.
+     */
+    public void flush() {
+        commitIndexWriter();
+    }
+
+    /**
      * Indexes a collection of documents.
      *
      * @param documents the collections of documents to index
@@ -54,6 +103,25 @@ public class IndexService {
      */
     public void index(Collection<Document> documents, boolean commit) {
         requireNonNull(documents);
+        try {
+            doWithIndex(indexWriter -> {
+                DocumentMapper itemMapper = new DocumentMapper();
+                for (Document document : documents) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(" - index item, id: " + document.getId() + ", name: " + document.getName());
+                    }
+                    itemMapper.write(indexWriter, document);
+                }
+            });
+        } catch (Exception e) {
+            throw new IndexException("Failed to index collection", e);
+        } finally {
+            try {
+                markIndexChanged(commit);
+            } catch (Exception e) {
+                LOGGER.error("Failed to commit index", e);
+            }
+        }
     }
 
     /**
@@ -65,13 +133,240 @@ public class IndexService {
      */
     public void remove(String itemId) {
         requireNonNull(itemId);
+        doWithIndex(indexWriter -> {
+            LOGGER.info("Deleting item with id: " + itemId);
+            indexWriter.deleteDocuments(new Term(ID_FIELD, itemId));
+        });
     }
 
     /**
      * Clear the index.
      */
-    public void clear() {
+    public synchronized void clear() {
+        commitAndRelease();
+        try {
+            FileUtils.deleteDirectory(getIndexDirectory());
+        } catch (IOException e) {
+            LOGGER.error("Failed to remove index " + getIndexDirectory(), e);
+        }
+    }
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        openIndex();
+    }
+
+    @PreDestroy
+    protected void destroy() {
+        commitIndexWriter();
+        commitAndRelease();
+    }
+
+    /**
+     * Returns the maximum memory used by RAM Directories.
+     *
+     * @return maximum memory in MB
+     */
+    private int getRAMBufferSizeMB() {
+        int maxRamMB = (int) (Runtime.getRuntime().maxMemory() / 4) / (1024 * 1024);
+        maxRamMB = Math.max(16, maxRamMB);
+        maxRamMB = Math.min(100, maxRamMB);
+        return indexProperties.getRamBufferSize() > 0 ? (int) indexProperties.getRamBufferSize() : maxRamMB;
+    }
+
+    /**
+     * Returns the maximum memory used by RAM Directories per thread.
+     *
+     * @return maximum memory in MB
+     */
+    private int getRAMBPerThreadBufferSizeMB() {
+        int ramBufferSizeMB = getRAMBufferSizeMB();
+        return indexProperties.getRamBufferSizeThread() > 0 ? (int) indexProperties.getRamBufferSizeThread() : ramBufferSizeMB / 10;
+    }
+
+    /**
+     * Opens the index, if not already opened.
+     *
+     * @return a non-null instance
+     */
+    protected synchronized IndexHolder openIndex() {
+        if (index != null) return index;
+        try {
+            index = createIndex(false);
+            return index;
+        } catch (Exception e) {
+            if (index != null) index.release();
+            return ExceptionUtils.throwException(e);
+        }
+    }
+
+    /**
+     * Performs an operation on an index.
+     *
+     * @param indexCallback the index callback
+     */
+    protected void doWithIndex(final IndexCallback indexCallback) {
+        IndexHolder index = openIndex();
+        try {
+            indexCallback.doWithIndex(index.indexWriter);
+        } catch (Exception throwable) {
+            commitAndRelease();
+            ExceptionUtils.throwException(throwable);
+        } finally {
+            index.indexLastUpdated = System.currentTimeMillis();
+            index.indexChanged.set(true);
+        }
+    }
+
+    /**
+     * Commits any pending documents and closes index structures.
+     */
+    private void commitAndRelease() {
+        synchronized (lock) {
+            LOGGER.debug("Rollback and release");
+            if (index != null) index.release();
+            index = null;
+        }
+    }
+
+    /**
+     * Marks the index changed if commit is false or commits the index.
+     *
+     * @param commit <code>true</code> to commit later, <code>false</code> to commit right away
+     */
+    private void markIndexChanged(boolean commit) {
+        IndexHolder indexHolder = openIndex();
+        if (commit) {
+            commitIndexWriter();
+        } else {
+            indexHolder.indexChanged.set(true);
+        }
+        indexHolder.indexLastUpdated = System.currentTimeMillis();
+    }
+
+    /**
+     * Commits the index.
+     */
+    void commitIndexWriter() {
+        try {
+            doWithIndex(indexWriter -> {
+                LOGGER.debug("Committing index writer");
+                indexWriter.flush();
+                indexWriter.commit();
+                index.indexChangedOptimizationPending.set(true);
+            });
+        } catch (Exception e) {
+            LOGGER.error("Failed to commit changes to index", e);
+        }
+    }
+
+    /**
+     * Returns the directory which holds the index.
+     *
+     * @return a non-null instance
+     */
+    private File getIndexDirectory() {
+        Resource resource = resourceService.getPersisted("index");
+        return ((FileResource) resource).getFile();
+    }
+
+    /**
+     * Creates the index.
+     *
+     * @param recreate {@code true} to recreate the index, {@code false} otherwise
+     */
+    private IndexHolder createIndex(boolean recreate) {
+        IndexWriterConfig.OpenMode openMode = IndexWriterConfig.OpenMode.CREATE_OR_APPEND;
+        if (recreate) openMode = IndexWriterConfig.OpenMode.CREATE;
+
+        IndexWriterConfig writerConfig = new IndexWriterConfig(Analyzers.createIndexAnalyzer());
+        writerConfig.setOpenMode(openMode);
+        writerConfig.setIndexDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
+        writerConfig.setMergeScheduler(new ConcurrentMergeScheduler());
+        writerConfig.setUseCompoundFile(true);
+
+        writerConfig.setRAMBufferSizeMB(getRAMBufferSizeMB());
+        writerConfig.setRAMPerThreadHardLimitMB(getRAMBPerThreadBufferSizeMB());
+
+        if (LOGGER.isDebugEnabled()) writerConfig.setInfoStream(new LoggerInfoStream());
+
+        try {
+            Directory directory = new NIOFSDirectory(getIndexDirectory().toPath());
+            IndexWriter indexWriter = new IndexWriter(directory, writerConfig);
+            if (openMode == IndexWriterConfig.OpenMode.CREATE) {
+                indexWriter.commit();
+            }
+            LOGGER.debug("Create index writer, RAM Buffer " + writerConfig.getRAMBufferSizeMB() + " MB" +
+                    ", Thread RAM Buffer " + writerConfig.getRAMPerThreadHardLimitMB() + " MB" +
+                    ", Use compound files " + writerConfig.getUseCompoundFile());
+            return new IndexHolder(indexWriter, directory);
+        } catch (IOException e) {
+            throw new IndexException("Failed to create the index", e);
+        }
+    }
+
+    private boolean isItemValid(Document document) {
+        return isNotEmpty(document.getId());
+    }
+
+    static class IndexHolder {
+        private final IndexWriter indexWriter;
+        private final Directory directory;
+
+        private volatile long indexLastUpdated;
+        private volatile long indexLastFlushed = System.currentTimeMillis();
+        private volatile long indexLastMerged = System.currentTimeMillis();
+        private final AtomicBoolean indexChanged = new AtomicBoolean(false);
+        private final AtomicBoolean indexChangedOptimizationPending = new AtomicBoolean(false);
+
+        IndexHolder(IndexWriter indexWriter, Directory directory) {
+            this.indexWriter = indexWriter;
+            this.directory = directory;
+        }
+
+        void release() {
+            try {
+                indexWriter.flush();
+                indexWriter.commit();
+            } catch (Exception e) {
+                LOGGER.error("Failed to commit index", e);
+            }
+
+            try {
+                indexWriter.close();
+            } catch (IOException e) {
+                LOGGER.error("Failed to close index", e);
+            }
+
+            try {
+                directory.close();
+            } catch (IOException e) {
+                LOGGER.error("Failed to close directory", e);
+            }
+        }
+    }
+
+    private static class LoggerInfoStream extends InfoStream {
+
+        @Override
+        public void message(String component, String message) {
+            LOGGER.debug("[Info Stream] " + component + " - " + message);
+        }
+
+        @Override
+        public boolean isEnabled(String component) {
+            return true;
+        }
+
+        @Override
+        public void close() {
+
+        }
+    }
+
+    interface IndexCallback {
+
+        void doWithIndex(IndexWriter indexWriter) throws Exception;
     }
 
 }

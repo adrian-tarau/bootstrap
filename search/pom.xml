@@ -103,6 +103,11 @@
 
         <!-- Testing -->
 
+        <dependency>
+            <groupId>net.datafaker</groupId>
+            <artifactId>datafaker</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>
