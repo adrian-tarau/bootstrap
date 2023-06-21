@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.resource;
 
-import jakarta.annotation.PostConstruct;
 import net.microfalx.resource.*;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +14,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * A service which provides standard locations for resources.
  */
 @Service
-public class ResourceService {
+public class ResourceService implements InitializingBean {
 
     private File persistedDirectory;
     private File transientDirectory;
@@ -76,7 +76,11 @@ public class ResourceService {
         };
     }
 
-    @PostConstruct
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initialize();
+    }
+
     protected void initialize() {
         validateDirectory(persistedDirectory = new File(properties.getPersistedDirectory()));
         validateDirectory(transientDirectory = new File(properties.getTransientDirectory()));
@@ -85,8 +89,7 @@ public class ResourceService {
 
 
     private Resource getSharedResource(String name) {
-        Resource resource = ResourceFactory.resolve(properties.getSharedDirectory(),
-                UserPasswordCredential.create(properties.getSharedUserName(), properties.getSharedPassword()));
+        Resource resource = ResourceFactory.resolve(properties.getSharedDirectory(), UserPasswordCredential.create(properties.getSharedUserName(), properties.getSharedPassword()));
         return name != null ? resource.resolve(name, Resource.Type.DIRECTORY) : resource;
     }
 
