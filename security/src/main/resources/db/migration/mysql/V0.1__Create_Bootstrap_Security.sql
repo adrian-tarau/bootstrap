@@ -4,7 +4,7 @@ create table security_users
     name        varchar(100)         not null,
     password    varchar(500)         not null,
     `enabled`   boolean default true not null,
-    email       varchar(100)         not null,
+    smtpEvent       varchar(100)         not null,
     created_at  datetime             not null,
     modified_at datetime,
     description varchar(1000)

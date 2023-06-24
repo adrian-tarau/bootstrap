@@ -151,6 +151,13 @@ public class IndexService implements InitializingBean {
         }
     }
 
+    /**
+     * Commits any pending changes.
+     */
+    public void commit() {
+        commitIndexWriter();
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         openIndex();

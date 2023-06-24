@@ -50,9 +50,10 @@ class IndexServiceTest extends AbstractSearchEngineTestCase {
     }
 
     @Test
-    void Delete() {
+    void delete() {
         doIndex(10);
         indexService.remove("test1");
+        indexService.commit();
         assertEquals(9, indexService.getDocumentCount());
     }
 
