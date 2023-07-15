@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.jdbc.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
@@ -35,6 +36,11 @@ public abstract class TimestampAware {
 
     public void setModifiedAt(LocalDateTime modifiedAt) {
         this.modifiedAt = modifiedAt;
+    }
+
+    @PrePersist
+    public void updateTimestamps() {
+        modifiedAt = LocalDateTime.now();
     }
 
     @Override

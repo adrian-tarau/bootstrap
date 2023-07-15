@@ -52,6 +52,11 @@
 
         <dependency>
             <groupId>net.microfalx.resource</groupId>
+            <artifactId>resource-sftp</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.resource</groupId>
             <artifactId>resource-s3</artifactId>
         </dependency>
 

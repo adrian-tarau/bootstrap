@@ -74,16 +74,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.app.profiles>local,dev</spring.app.profiles>
         <!-- Runtime -->
-        <spring.boot.version>3.1.0</spring.boot.version>
-        <flyaway.version>9.18.0</flyaway.version>
+        <spring.boot.version>3.1.1</spring.boot.version>
+        <flyaway.version>9.20.1</flyaway.version>
         <mysql.version>8.0.33</mysql.version>
         <apache.httpclient.version>4.5.13</apache.httpclient.version>
         <common.io.version>2.11.0</common.io.version>
         <lombok.version>1.18.28</lombok.version>
         <jodd.version>5.1.6</jodd.version>
-        <lucene.version>9.6.0</lucene.version>
+        <lucene.version>9.7.0</lucene.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <datafaker.version>1.9.0</datafaker.version>
+        <datafaker.version>2.0.1</datafaker.version>
         <logback.version>2.0.7</logback.version>
         <resource.version>1.0.0-SNAPSHOT</resource.version>
         <jdbcpool.version>1.0.0-SNAPSHOT</jdbcpool.version>
@@ -91,9 +91,9 @@
         <!-- Tests -->
         <junit.version>5.9.1</junit.version>
         <assertj.version>3.24.2</assertj.version>
-        <mockito.version>5.3.1</mockito.version>
+        <mockito.version>5.4.0</mockito.version>
         <jmh.version>1.36</jmh.version>
-        <testcontainers.version>1.18.1</testcontainers.version>
+        <testcontainers.version>1.18.3</testcontainers.version>
         <joor.version>0.9.14</joor.version>
     </properties>
 
@@ -190,12 +190,6 @@
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-analysis-common</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queries</artifactId>
                 <version>${lucene.version}</version>
             </dependency>
@@ -251,6 +245,12 @@
             <dependency>
                 <groupId>net.microfalx.resource</groupId>
                 <artifactId>resource-archive</artifactId>
+                <version>${resource.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.resource</groupId>
+                <artifactId>resource-sftp</artifactId>
                 <version>${resource.version}</version>
             </dependency>
 
