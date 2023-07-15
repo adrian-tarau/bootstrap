@@ -95,6 +95,7 @@
         <jmh.version>1.36</jmh.version>
         <testcontainers.version>1.18.3</testcontainers.version>
         <joor.version>0.9.14</joor.version>
+        <ulidj.version>1.0.4</ulidj.version>
     </properties>
 
     <developers>
@@ -276,6 +277,12 @@
                 <groupId>org.jooq</groupId>
                 <artifactId>joor</artifactId>
                 <version>${joor.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.azam.ulidj</groupId>
+                <artifactId>ulidj</artifactId>
+                <version>${ulidj.version}</version>
             </dependency>
 
             <!-- Tests -->
