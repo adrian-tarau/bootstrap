@@ -11,10 +11,10 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties("bootstrap.resource")
 public class ResourceProperties {
 
-    @Value("${user.home}/.bootstrap/data")
+    @Value("${user.home}/.bootstrap/persisted")
     private String persistedDirectory;
 
-    @Value("${user.home}/.bootstrap/storage")
+    @Value("${user.home}/.bootstrap/transient")
     private String transientDirectory;
 
     @Value("${user.home}/.bootstrap/shared")

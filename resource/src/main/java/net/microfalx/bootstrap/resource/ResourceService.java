@@ -12,6 +12,13 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * A service which provides standard locations for resources.
+ * <p>
+ * The service provides three types of locations:
+ * <ul>
+ *     <li>transient - a location for temporary resources, which are not guaranteed to survive process restart</li>
+ *     <li>persistent - a location for persisted resources, local to the server where the process runs, which will survive process restarts</li>
+ *     <li>shared - a location for persisted resources outside the local server</li>
+ * </ul>
  */
 @Service
 public class ResourceService implements InitializingBean {
@@ -23,7 +30,7 @@ public class ResourceService implements InitializingBean {
     private ResourceProperties properties;
 
     /**
-     * Returns the resource directory for persisted data.
+     * Returns a resource directory for persisted data.
      * <p>
      * Loss of persisted data does result in loss of critical data.
      *
@@ -35,7 +42,7 @@ public class ResourceService implements InitializingBean {
     }
 
     /**
-     * Returns the resource directory for transient data.
+     * Returns a resource directory for transient data.
      * <p>
      * Loss of transient data does not result in loss of critical data.
      *
@@ -47,9 +54,9 @@ public class ResourceService implements InitializingBean {
     }
 
     /**
-     * Returns the resource directory for shared data.
+     * Returns a resource directory for shared data.
      * <p>
-     * Shared data is stored outside the process and it is usually a remote file system.
+     * Shared data is stored outside the process (most of the time), and it is usually a remote file system (object store like S3, etc).
      *
      * @param name the subdirectory name
      * @return a non-null instance
