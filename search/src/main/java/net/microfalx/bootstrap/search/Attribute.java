@@ -7,6 +7,9 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Holds a custom attribute for a document.
+ * <p>
+ * By default an attribute is only stored. If the attribute needs to be indexed (and possible tokenized),
+ * use {@link #setIndexed(boolean)} and {@link #setTokenized(boolean)}.
  */
 public class Attribute implements Serializable {
 

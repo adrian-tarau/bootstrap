@@ -1,7 +1,11 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.resource.Resource;
+import net.microfalx.resource.ResourceFactory;
+
 import java.io.Serial;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.*;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -25,6 +29,8 @@ public final class Document implements Serializable {
     private String id;
     private String name;
     private String description;
+    private Resource body;
+    private URI bodyUri;
     private String type;
 
     private String owner;
@@ -92,6 +98,25 @@ public final class Document implements Serializable {
     public Document setDescription(String description) {
         this.description = description;
         return this;
+    }
+
+    public Resource getBody() {
+        if (body == null && bodyUri != null) {
+            body = ResourceFactory.resolve(bodyUri);
+        }
+        return body;
+    }
+
+    public void setBody(Resource body) {
+        this.body = body;
+    }
+
+    public URI getBodyUri() {
+        return bodyUri;
+    }
+
+    public void setBodyUri(URI bodyUri) {
+        this.bodyUri = bodyUri;
     }
 
     public String getType() {

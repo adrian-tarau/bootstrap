@@ -6,6 +6,7 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Map;
 
 import static net.microfalx.bootstrap.search.SearchUtilities.*;
@@ -26,21 +27,31 @@ class DocumentMapper {
         final org.apache.lucene.document.Document luceneDocument = new org.apache.lucene.document.Document();
 
         luceneDocument.add(new StringField(ID_FIELD, document.getId(), Field.Store.YES));
-        if (document.getName() != null)
+        if (document.getName() != null) {
             luceneDocument.add(new TextField(NAME_FIELD, normalizeText(document.getName()), Field.Store.YES));
+        }
 
-        if (document.getType() != null)
+        if (document.getType() != null) {
             luceneDocument.add(new TextField(TYPE_FIELD, document.getType(), Field.Store.YES));
+        }
 
-        if (document.getDescription() != null)
+        if (document.getDescription() != null) {
             luceneDocument.add(new TextField(DESCRIPTION_FIELD, normalizeText(document.getDescription()), Field.Store.YES));
+        }
+        if (document.getBody() != null) {
+            luceneDocument.add(new TextField(BODY_FIELD, normalizeText(document.getBody().loadAsString()), Field.Store.NO));
+            luceneDocument.add(new StringField(BODY_URI_FIELD, document.getBody().toURI().toASCIIString(), Field.Store.YES));
+        }
 
-        if (document.getOwner() != null)
+        if (document.getOwner() != null) {
             luceneDocument.add(new TextField(OWNER_FIELD, document.getOwner(), Field.Store.YES));
-        if (document.getCreatedTime() > 0)
+        }
+        if (document.getCreatedTime() > 0) {
             luceneDocument.add(new LongPoint(CREATED_TIME_FIELD, document.getCreatedTime()));
-        if (document.getModifiedTime() > 0)
+        }
+        if (document.getModifiedTime() > 0) {
             luceneDocument.add(new LongPoint(MODIFIED_TIME_FIELD, document.getModifiedTime()));
+        }
 
         if (!document.getTags().isEmpty()) {
             StringBuilder tagBuilder = new StringBuilder();
@@ -82,7 +93,7 @@ class DocumentMapper {
      *
      * @param document the document
      * @return the item
-     * @throws IOException
+     * @throws IOException if an I/O exception occurs
      */
     public Document read(org.apache.lucene.document.Document document) throws IOException {
         String id = document.get(ID_FIELD);
@@ -90,6 +101,8 @@ class DocumentMapper {
         Document item = Document.create(id, name);
 
         item.setDescription(document.get(DESCRIPTION_FIELD));
+        String bodyUri = document.get(BODY_URI_FIELD);
+        if (bodyUri != null) item.setBodyUri(URI.create(bodyUri));
         item.setOwner(document.get(OWNER_FIELD));
         item.setType(document.get(TYPE_FIELD));
 

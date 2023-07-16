@@ -16,6 +16,8 @@ public class SearchUtilities {
     public static final String TYPE_FIELD = "type";
     public static final String NAME_FIELD = "name";
     public static final String DESCRIPTION_FIELD = "desc";
+    public static final String BODY_FIELD = "body";
+    public static final String BODY_URI_FIELD = "body_uri";
     public static final String TAG_FIELD = "tag";
     public static final String OWNER_FIELD = "owner";
     public static final String CREATED_TIME_FIELD = "created";
@@ -170,6 +172,7 @@ public class SearchUtilities {
         STANDARD_FIELD_NAMES.add(ID_FIELD);
         STANDARD_FIELD_NAMES.add(NAME_FIELD);
         STANDARD_FIELD_NAMES.add(DESCRIPTION_FIELD);
+        STANDARD_FIELD_NAMES.add(BODY_FIELD);
         STANDARD_FIELD_NAMES.add(TYPE_FIELD);
         STANDARD_FIELD_NAMES.add(OWNER_FIELD);
         STANDARD_FIELD_NAMES.add(TAG_FIELD);
