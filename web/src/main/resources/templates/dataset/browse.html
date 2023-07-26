@@ -3,7 +3,7 @@
       layout:decorate="~{layouts/default.html}">
 <body>
 <section layout:fragment="content">
-    <div th:replace="~{ fragments/content :: single-panel(${dataSet.name})}"></div>
+    <div th:replace="~{ fragments/dataset :: render}"></div>
 </section>
 </body>
 </html>

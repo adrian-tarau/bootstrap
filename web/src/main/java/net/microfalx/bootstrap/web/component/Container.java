@@ -97,7 +97,10 @@ public class Container<C extends Container<C>> extends Component<C> {
         id = toIdentifier(id);
         for (Component<? extends Component<?>> child : children) {
             if (id.equals(child.getId())) return (CC) child;
-            if (recursive && child instanceof Container) return ((Container<?>) child).find(id, recursive);
+            if (recursive && child instanceof Container) {
+                child = ((Container<?>) child).find(id, true);
+                if (child != null) return (CC) child;
+            }
         }
         return null;
     }

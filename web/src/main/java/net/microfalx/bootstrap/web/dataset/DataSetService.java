@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -33,6 +34,9 @@ public final class DataSetService implements InitializingBean {
     @Autowired
     private MetadataService metadataService;
 
+    @Autowired
+    ApplicationContext applicationContext;
+
     /**
      * Returns a data set from a model class.
      *
@@ -41,14 +45,23 @@ public final class DataSetService implements InitializingBean {
      * @return the data set
      * @throws DataSetException if a data set cannot be created
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <M, F extends Field<M>, ID> DataSet<M, F, ID> lookup(Class<M> modelClass, Object... parameters) {
         requireNonNull(modelClass);
         Metadata<M, Field<M>> metadata = metadataService.getMetadata(modelClass);
+        DataSet<M, F, ID> dataSet = null;
         for (DataSetFactory factory : factories) {
-            if (factory.supports(metadata)) return factory.create(metadata, parameters);
+            if (factory.supports(metadata)) {
+                dataSet = factory.create(metadata, parameters);
+                break;
+            }
         }
-        throw new DataSetException("A data set cannot be created for model " + ClassUtils.getName(modelClass));
+        if (dataSet != null) {
+            ((AbstractDataSet) dataSet).applicationContext = applicationContext;
+            return dataSet;
+        } else {
+            throw new DataSetException("A data set cannot be created for model " + ClassUtils.getName(modelClass));
+        }
     }
 
     /**

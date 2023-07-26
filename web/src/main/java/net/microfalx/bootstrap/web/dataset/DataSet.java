@@ -10,6 +10,8 @@ import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.ListPagingAndSortingRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
+import java.util.List;
+
 /**
  * An abstract over a collection of records with CRUD support.
  */
@@ -38,9 +40,19 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
     State getState();
 
     /**
+     * Opens the data set to edit a record.
+     */
+    void edit();
+
+    /**
+     * Opens the data set to append a record.
+     */
+    void append();
+
+    /**
      * Returns the name of the data set (title).
      * <p>
-     * By default it returns the model name.
+     * By default, it returns the model name.
      *
      * @return a non-null instance
      */
@@ -68,6 +80,23 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
      * @return {@code true} if read-only, {@code false} otherwise
      */
     boolean isVisible(Field<M> field);
+
+    /**
+     * Returns a list with visible fields for the current state, sorted by position.
+     *
+     * @return a non-null instance
+     * @see #getState()
+     */
+    List<Field<M>> getVisibleFields();
+
+    /**
+     * Returns the value of a field for a given model in a display format.
+     *
+     * @param model the model
+     * @param field the field
+     * @return the display value
+     */
+    String getDisplayValue(M model, Field<M> field);
 
     /**
      * Returns the model identifier.

@@ -22,7 +22,7 @@ import static net.microfalx.lang.XmlUtils.*;
  */
 final class NavigationLoader {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AssetBundleLoader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NavigationLoader.class);
 
     private ApplicationService applicationService;
     private Queue<Pending> pending = new ArrayDeque<>();

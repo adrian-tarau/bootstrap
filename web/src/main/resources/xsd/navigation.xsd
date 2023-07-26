@@ -23,7 +23,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
-            <xs:choice>
+            <xs:choice maxOccurs="unbounded">
                 <xs:element ref="menu" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element ref="item" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element ref="spacer" minOccurs="0" maxOccurs="unbounded"/>

@@ -3,6 +3,8 @@
     <menu id="left">
         <item id="home" text="Home" action="/" position="1" icon="fa-solid fa-house-chimney"/>
         <item id="search" text="Search" action="/search" position="2" icon="fa-solid fa-magnifying-glass"/>
+        <menu id="administration" text="Administration" position="1000" icon="fa-solid fa-gears">
+        </menu>
     </menu>
     <menu id="top">
         <spacer position="1000"/>

@@ -1,11 +1,15 @@
 package net.microfalx.bootstrap.web.template;
 
+import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.component.Actionable;
 import net.microfalx.bootstrap.web.component.Container;
 import net.microfalx.bootstrap.web.component.Menu;
+import net.microfalx.bootstrap.web.dataset.DataSet;
+import net.microfalx.bootstrap.web.dataset.DataSetException;
 import org.thymeleaf.context.IContext;
 import org.thymeleaf.context.IExpressionContext;
+import org.thymeleaf.context.IWebContext;
 import org.thymeleaf.dialect.AbstractDialect;
 import org.thymeleaf.dialect.IExpressionObjectDialect;
 import org.thymeleaf.expression.IExpressionObjectFactory;
@@ -32,9 +36,24 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
     }
 
     /**
+     * Returns an attribute of the model.
+     *
+     * @param context the template context
+     * @param name    the attribute name
+     * @return the value, null if does not exist
+     */
+    static Object getModelAttribute(IContext context, String name) {
+        if (context instanceof IWebContext) {
+            return ((IWebContext) context).getExchange().getAttributeValue(name);
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Template utilities around navigation.
      */
-    public class Navigation {
+    public class NavigationTools {
 
         /**
          * Returns the navigation with a given identifier.
@@ -51,11 +70,11 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
     /**
      * Template utilities around components.
      */
-    public class Component {
+    public static class ComponentTools {
 
-        private IContext context;
+        private final IContext context;
 
-        public Component(IContext context) {
+        public ComponentTools(IContext context) {
             this.context = context;
         }
 
@@ -95,16 +114,95 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
         }
     }
 
+    /**
+     * Template utilities around data sets
+     */
+    public static class DataSetTools<M, F extends Field<M>, ID> {
+
+        private final IContext context;
+
+        public DataSetTools(IContext context) {
+            this.context = context;
+        }
+
+        /**
+         * Returns the current data set.
+         *
+         * @return a non-null instance
+         */
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        public DataSet<M, F, ID> getDataSet() {
+            DataSet dataset = (DataSet) getModelAttribute(context, "dataset");
+            if (dataset == null) throw new DataSetException("A data set is not available in the context");
+            return dataset;
+        }
+
+        /**
+         * Returns a list of fields displayed in a grid.
+         *
+         * @return a non-null instance
+         */
+        public Collection<Field<M>> getBrowsableFields() {
+            DataSet<M, F, ID> dataSet = getDataSet();
+            return dataSet.getVisibleFields();
+        }
+
+        /**
+         * Returns a list of fields displayed to edit an existing record.
+         *
+         * @return a non-null instance
+         */
+        public Collection<Field<M>> getEditableFields() {
+            DataSet<M, F, ID> dataSet = getDataSet();
+            dataSet.edit();
+            return dataSet.getVisibleFields();
+        }
+
+        /**
+         * Returns a list of fields displayed to append a new record.
+         *
+         * @return a non-null instance
+         */
+        public Collection<Field<M>> getAppendableFields() {
+            DataSet<M, F, ID> dataSet = getDataSet();
+            dataSet.edit();
+            return dataSet.getVisibleFields();
+        }
+
+        /**
+         * Returns the records for the current data set.
+         *
+         * @return a non-null instance
+         */
+        public Iterable<M> getModels() {
+            DataSet<M, F, ID> dataSet = getDataSet();
+            return dataSet.findAll();
+        }
+
+        /**
+         * Returns the display valu for a field of the model.
+         *
+         * @param model the model
+         * @param field the field
+         * @return the display value
+         */
+        public String getDisplayValue(M model, Field<M> field) {
+            DataSet<M, F, ID> dataSet = getDataSet();
+            return dataSet.getDisplayValue(model, field);
+        }
+
+    }
+
 
     class ExpressionsObjectFactory implements IExpressionObjectFactory {
 
         public static final String APPLICATION_OBJECT_NAME = "application";
         public static final String NAVIGATION_OBJECT_NAME = "navigation";
         public static final String COMPONENT_OBJECT_NAME = "component";
+        public static final String DATASET_OBJECT_NAME = "dataset";
         public static final String USER_OBJECT_NAME = "user";
 
-        protected static final Set<String> ALL_EXPRESSION_OBJECT_NAMES = unmodifiableSet(
-                new LinkedHashSet<>(asList(APPLICATION_OBJECT_NAME, NAVIGATION_OBJECT_NAME, COMPONENT_OBJECT_NAME, USER_OBJECT_NAME)));
+        protected static final Set<String> ALL_EXPRESSION_OBJECT_NAMES = unmodifiableSet(new LinkedHashSet<>(asList(APPLICATION_OBJECT_NAME, NAVIGATION_OBJECT_NAME, COMPONENT_OBJECT_NAME, USER_OBJECT_NAME, DATASET_OBJECT_NAME)));
 
         @Override
         public Set<String> getAllExpressionObjectNames() {
@@ -116,9 +214,11 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
             if (APPLICATION_OBJECT_NAME.equals(expressionObjectName)) {
                 return applicationService.getApplication();
             } else if (NAVIGATION_OBJECT_NAME.equals(expressionObjectName)) {
-                return new Navigation();
+                return new NavigationTools();
             } else if (COMPONENT_OBJECT_NAME.equals(expressionObjectName)) {
-                return new Component(context);
+                return new ComponentTools(context);
+            } else if (DATASET_OBJECT_NAME.equals(expressionObjectName)) {
+                return new DataSetTools<>(context);
             } else if (USER_OBJECT_NAME.equals(expressionObjectName)) {
                 return TemplateSecurityContext.get(context);
             } else {

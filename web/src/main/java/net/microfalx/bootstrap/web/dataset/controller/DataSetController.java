@@ -1,7 +1,10 @@
-package net.microfalx.bootstrap.web.dataset;
+package net.microfalx.bootstrap.web.dataset.controller;
 
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.controller.NavigableController;
+import net.microfalx.bootstrap.web.dataset.DataSet;
+import net.microfalx.bootstrap.web.dataset.DataSetException;
+import net.microfalx.bootstrap.web.dataset.DataSetService;
 import net.microfalx.lang.AnnotationUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +24,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @GetMapping()
     public String browse(Model model) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        model.addAttribute("dataSet", dataSet);
+        model.addAttribute("dataset", dataSet);
         model.addAttribute("metadata", dataSet.getMetadata());
         return "dataset/browse";
     }

@@ -4,14 +4,22 @@ import com.google.common.collect.Lists;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
-import net.microfalx.bootstrap.web.dataset.annotation.Visible;
+import net.microfalx.bootstrap.web.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.web.dataset.formatter.Formatter;
+import net.microfalx.lang.ArgumentUtils;
+import net.microfalx.lang.annotation.Visible;
+import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static net.microfalx.bootstrap.web.dataset.formatter.FormatterUtils.basicFormatting;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
@@ -26,6 +34,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     private String name;
     private boolean readOnly;
     private State state = State.BROWSE;
+
+    ApplicationContext applicationContext;
+    private List<Field<M>> browsableFields;
+    private List<Field<M>> editableFields;
+    private List<Field<M>> appendableFields;
 
     public AbstractDataSet(DataSetFactory<M, F, ID> factory, Metadata<M, F> metadata) {
         requireNonNull(factory);
@@ -75,14 +88,58 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public void edit() {
+        checkIfBrowse();
+        this.state = State.EDIT;
+    }
+
+    @Override
+    public void append() {
+        checkIfBrowse();
+        this.state = State.EDIT;
+    }
+
+    @Override
     public final boolean isVisible(Field<M> field) {
         Visible visibleAnnot = field.findAnnotation(Visible.class);
         if (visibleAnnot == null) return true;
+        if (!visibleAnnot.value()) return false;
         return switch (state) {
-            case BROWSE -> visibleAnnot.browse();
-            case ADD -> visibleAnnot.add();
-            case EDIT -> visibleAnnot.edit();
+            case BROWSE -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.BROWSE);
+            case ADD -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.ADD);
+            case EDIT -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.EDIT);
         };
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<Field<M>> getVisibleFields() {
+        switch (state) {
+            case BROWSE:
+                if (browsableFields == null) browsableFields = getVisibleAndOrderedFields();
+                return browsableFields;
+            case ADD:
+                if (editableFields == null) editableFields = getVisibleAndOrderedFields();
+                return editableFields;
+            case EDIT:
+                if (appendableFields == null) appendableFields = getVisibleAndOrderedFields();
+                return appendableFields;
+            default:
+                throw new DataSetException("Unhandled state: " + state);
+        }
+    }
+
+    @Override
+    public String getDisplayValue(M model, Field<M> field) {
+        ArgumentUtils.requireNonNull(field);
+        if (model == null) return null;
+        Object value = field.get(model);
+        Formattable formattableAnnot = field.findAnnotation(Formattable.class);
+        if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
+            return createFormatter(field, formattableAnnot).format(value, (F) field, model);
+        } else {
+            return basicFormatting(value, formattableAnnot);
+        }
     }
 
     @Override
@@ -178,6 +235,17 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         doDeleteAll();
     }
 
+    /**
+     * Finds a service by class.
+     *
+     * @param serviceClass the service class
+     * @param <S>          the service type
+     * @return the service instance
+     */
+    protected final <S> S getService(Class<S> serviceClass) {
+        return applicationContext.getBean(serviceClass);
+    }
+
     protected List<M> doFindAll() {
         return throwUnsupported();
     }
@@ -191,7 +259,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     protected boolean doExistsById(ID id) {
-        return throwUnsupported();
+        return doFindById(id) != null;
     }
 
     protected long doCount() {
@@ -245,5 +313,24 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public String toString() {
         return "AbstractDataSet{" + "factory=" + factory + ", metadata=" + metadata + '}';
+    }
+
+    private List<Field<M>> getVisibleAndOrderedFields() {
+        return getMetadata().getFields().stream()
+                .filter(this::isVisible)
+                .sorted(Comparator.comparing(Field::getPosition))
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    private void checkIfBrowse() {
+        if (state != State.BROWSE) throw new DataSetException("The data set is not in BROWSE state");
+    }
+
+    private Formatter<M, F, Object> createFormatter(Field<M> field, Formattable formattable) {
+        try {
+            return formattable.formatter().getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            throw new DataSetException("Failed to create formatter for field '" + field.getName() + "'", e);
+        }
     }
 }
