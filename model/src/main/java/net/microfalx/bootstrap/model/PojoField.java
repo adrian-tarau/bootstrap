@@ -1,12 +1,15 @@
 package net.microfalx.bootstrap.model;
 
 import jodd.typeconverter.TypeConverterManager;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.annotation.Id;
+import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.ReadOnly;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
-import java.lang.reflect.Field;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Member;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,7 +33,7 @@ public abstract class PojoField<M> extends AbstractField<M> {
     public Object get(M model) {
         if (getter == null) throw new ModelException("The field '" + getName() + "' cannot be read");
         try {
-            return getter.invokeExact(model);
+            return getter.invoke(model);
         } catch (Throwable e) {
             throw new ModelException("Failed to extract field '" + getName() + "' value", e);
         }
@@ -40,10 +43,16 @@ public abstract class PojoField<M> extends AbstractField<M> {
     public void set(M model, Object value) {
         if (setter == null) throw new ModelException("The field '" + getName() + "' is read only");
         try {
-            getter.invokeExact(model, value);
+            getter.invoke(model, value);
         } catch (Throwable e) {
             throw new ModelException("Failed to extract field '" + getName() + "' value", e);
         }
+    }
+
+    @Override
+    public String getDisplay(M model) {
+        Object value = get(model);
+        return ObjectUtils.toString(value);
     }
 
     @SuppressWarnings("unchecked")
@@ -62,9 +71,11 @@ public abstract class PojoField<M> extends AbstractField<M> {
         setReadOnly(setter == null || hasAnnotation(ReadOnly.class));
     }
 
-    protected void update(Field field) {
-        requireNonNull(field);
-        annotations = Arrays.asList(field.getAnnotations());
+    protected void update(Member member) {
+        requireNonNull(member);
+        annotations = Arrays.asList(((AnnotatedElement) member).getAnnotations());
+        Position positionAnnot = findAnnotation(Position.class);
+        setPosition(positionAnnot != null ? positionAnnot.value() : 1 + getIndex() * 10);
         setId(hasAnnotation(Id.class));
     }
 }

@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 
 public final class JpaField<M> extends PojoField<M> {
 
@@ -19,14 +19,12 @@ public final class JpaField<M> extends PojoField<M> {
     }
 
     @Override
-    protected void update(Field field) {
-        super.update(field);
+    protected void update(Member member) {
+        super.update(member);
 
         setId(hasAnnotation(Id.class));
         Column columnAnnot = findAnnotation(Column.class);
-        if (columnAnnot != null) {
-            columnName = columnAnnot.name();
-        }
+        if (columnAnnot != null) columnName = columnAnnot.name();
         setTransient(hasAnnotation(Transient.class));
     }
 }

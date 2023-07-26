@@ -1,12 +1,15 @@
 package net.microfalx.bootstrap.model;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.ReflectionUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
@@ -15,6 +18,8 @@ import java.lang.reflect.Method;
  * @param <M> the model
  */
 public abstract class PojoMetadata<M, F extends PojoField<M>> extends AbstractMetadata<M, F> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PojoMetadata.class);
 
     private static final String CLASS_FIELD_NAME = "class";
 
@@ -60,7 +65,12 @@ public abstract class PojoMetadata<M, F extends PojoField<M>> extends AbstractMe
                 field.setDataClass(propertyDescriptor.getPropertyType());
                 field.setIndex(index++);
                 field.update(getGetter(propertyDescriptor), getSetter(propertyDescriptor));
-                field.update(ReflectionUtils.findField(modelClass, propertyDescriptor.getName()));
+                Field jvmField = ReflectionUtils.findField(modelClass, propertyDescriptor.getName());
+                if (jvmField != null) {
+                    field.update(jvmField);
+                } else {
+                    field.update(propertyDescriptor.getReadMethod());
+                }
                 metadata.addField(field);
             } catch (Exception e) {
                 throw new ModelException("Failed to process field '" + propertyDescriptor.getName()

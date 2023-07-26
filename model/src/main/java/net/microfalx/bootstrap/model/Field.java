@@ -31,14 +31,15 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
      * Returns the label associated with the field.
      *
      * @return a non-null instance
-     * @see #net.microfalx.lang.annotation.I18n
+     * @see net.microfalx.lang.annotation.I18n
      */
     String getLabel();
 
     /**
      * Returns the description associated with a field.
-     *
+     * <p>
      * The description is usually displayed as a tooltip in UIs.
+     *
      * @return the description, null if not defined
      */
     String getDescription();
@@ -56,6 +57,14 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
      * @return a positive integer
      */
     int getIndex();
+
+    /**
+     * Returns the position of the field for UI representation
+     *
+     * @return a positive integer
+     * @see net.microfalx.lang.annotation.Position
+     */
+    int getPosition();
 
     /**
      * Returns whether the field is part of the model identifier.
@@ -125,6 +134,14 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
      * @param value the value
      */
     void set(M model, Object value);
+
+    /**
+     * Returns the display value for a field value.
+     *
+     * @param model the model
+     * @return the display value
+     */
+    String getDisplay(M model);
 
     /**
      * Holds the data type of the field

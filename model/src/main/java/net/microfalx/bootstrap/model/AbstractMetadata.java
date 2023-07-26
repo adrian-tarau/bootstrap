@@ -10,12 +10,9 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
-import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
@@ -34,9 +31,11 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     private String name;
     private String description;
     private final Class<M> modelClass;
-    private final Map<String, F> fields = new HashMap<>();
+    private final List<F> fields = new ArrayList<>();
+    private final Map<String, F> fieldsById = new HashMap<>();
     private F idField;
-    private final Map<String, F> idFields = new HashMap<>();
+    private final List<F> idFields = new ArrayList<>();
+    private final Map<String, F> idFieldsById = new HashMap<>();
 
     MessageSource messageSource;
 
@@ -75,13 +74,13 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     }
 
     @Override
-    public final Collection<F> getFields() {
-        return unmodifiableCollection(fields.values());
+    public final List<F> getFields() {
+        return unmodifiableList(fields);
     }
 
     @Override
-    public Collection<F> getIdFields() {
-        return unmodifiableCollection(idFields.values());
+    public List<F> getIdFields() {
+        return unmodifiableList(idFields);
     }
 
     @Override
@@ -93,7 +92,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     @Override
     public F find(String nameOrProperty) {
         requireNonNull(nameOrProperty);
-        return fields.get(StringUtils.toIdentifier(nameOrProperty));
+        return fieldsById.get(StringUtils.toIdentifier(nameOrProperty));
     }
 
     @SuppressWarnings("unchecked")
@@ -123,15 +122,17 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
      */
     public void addField(F field) {
         requireNonNull(field);
-        fields.put(field.getId(), field);
-        fields.put(StringUtils.toIdentifier(field.getName()), field);
-        fields.put(StringUtils.toIdentifier(field.getProperty()), field);
+        fields.add(field);
+        fieldsById.put(field.getId(), field);
+        fieldsById.put(StringUtils.toIdentifier(field.getName()), field);
+        fieldsById.put(StringUtils.toIdentifier(field.getProperty()), field);
 
         if (field.isId()) {
             idField = field;
-            idFields.put(field.getId(), field);
-            idFields.put(StringUtils.toIdentifier(field.getName()), field);
-            idFields.put(StringUtils.toIdentifier(field.getProperty()), field);
+            idFields.add(field);
+            idFieldsById.put(field.getId(), field);
+            idFieldsById.put(StringUtils.toIdentifier(field.getName()), field);
+            idFieldsById.put(StringUtils.toIdentifier(field.getProperty()), field);
         }
         if (idFields.size() > 1) idField = null;
     }

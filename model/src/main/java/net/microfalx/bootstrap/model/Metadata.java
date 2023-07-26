@@ -5,7 +5,7 @@ import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * An interface which holds metadata about a model's fields.
@@ -24,14 +24,14 @@ public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, N
      *
      * @return a non-null instance
      */
-    Collection<F> getFields();
+    List<F> getFields();
 
     /**
      * Returns the fields part of the record identifier.
      *
      * @return a non-null instance
      */
-    Collection<F> getIdFields();
+    List<F> getIdFields();
 
     /**
      * Returns the field which identifies the record.

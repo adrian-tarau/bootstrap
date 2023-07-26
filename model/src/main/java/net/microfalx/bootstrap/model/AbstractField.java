@@ -31,6 +31,7 @@ public abstract class AbstractField<M> implements Field<M> {
     private final String property;
     private boolean isId;
     private int index;
+    private int position;
     private Class<?> dataClass = Object.class;
     private DataType dataType = DataType.MODEL;
     private boolean readOnly;
@@ -83,7 +84,7 @@ public abstract class AbstractField<M> implements Field<M> {
         return isId;
     }
 
-    protected void setId(boolean id) {
+    protected final void setId(boolean id) {
         this.isId = id;
     }
 
@@ -92,8 +93,17 @@ public abstract class AbstractField<M> implements Field<M> {
         return index;
     }
 
-    final void setIndex(int index) {
+    protected final void setIndex(int index) {
         this.index = index;
+    }
+
+    @Override
+    public final int getPosition() {
+        return position;
+    }
+
+    protected void setPosition(int position) {
+        this.position = position;
     }
 
     public final boolean isReadOnly() {
