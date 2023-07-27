@@ -5,6 +5,7 @@ import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 
 import java.text.NumberFormat;
+import java.time.temporal.Temporal;
 
 /**
  * Various utilities around formatters.
@@ -34,6 +35,8 @@ public class FormatterUtils {
             } else {
                 return NumberFormat.getIntegerInstance().format(((Number) value).longValue());
             }
+        } else if (value instanceof Temporal) {
+            return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value);
         } else {
             return ObjectUtils.toString(value);
         }

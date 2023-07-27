@@ -34,7 +34,20 @@ public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, N
     List<F> getIdFields();
 
     /**
+     * Returns the fields which gives name to a record.
+     * <p>
+     * The annotation {@link net.microfalx.lang.annotation.Name} will be used to decide which field i
+     * <p>
+     * If there are multiple fields, they will be separated by spaces.
+     *
+     * @return the fields
+     * @throws FieldNotFoundException if at least one fi
+     */
+    List<F> getNameFields();
+
+    /**
      * Returns the field which identifies the record.
+     *
      * @return the field, null if there is no identifier
      */
     F findIdField();
@@ -55,6 +68,14 @@ public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, N
      * @throws FieldNotFoundException if the field does not exist
      */
     Field<?> get(String nameOrProperty);
+
+    /**
+     * Returns the model name.
+     *
+     * @param model the model
+     * @return the name
+     */
+    String getName(M model);
 
     /**
      * Returns an annotation by its type.

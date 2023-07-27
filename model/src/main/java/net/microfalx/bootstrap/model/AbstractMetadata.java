@@ -4,6 +4,8 @@ import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.I18n;
+import net.microfalx.lang.annotation.Name;
+import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -16,7 +18,6 @@ import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
-import static org.apache.commons.lang3.StringUtils.capitalize;
 
 /**
  * Base class for all metadata.
@@ -84,6 +85,21 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     }
 
     @Override
+    public List<F> getNameFields() {
+        List<F> nameFields = fields.stream().filter(f -> f.hasAnnotation(Name.class)).toList();
+        if (nameFields.isEmpty()) {
+            Optional<F> firstString = fields.stream().filter(f -> f.getDataType() == Field.DataType.STRING).findFirst();
+            if (firstString.isEmpty()) {
+                throw new FieldNotFoundException("At least one field must be annotated with @Name or at least one String field for model"
+                        + ClassUtils.getName(this));
+            }
+            nameFields = Arrays.asList(firstString.get());
+        }
+
+        return Collections.unmodifiableList(nameFields);
+    }
+
+    @Override
     public F findIdField() {
         if (idFields.size() > 1) throw new ModelException("Multiple identifier fields are present for " + getName());
         return idField != null ? idField : null;
@@ -103,6 +119,18 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
             throw new FieldNotFoundException("A field with name or property '" + nameOrProperty + "' is not registered in " + getName());
         }
         return (F) field;
+    }
+
+    @Override
+    public String getName(M model) {
+        requireNonNull(model);
+        StringBuilder builder = new StringBuilder();
+        List<F> nameFields = getNameFields();
+        for (F nameField : nameFields) {
+            if (builder.length() > 0) builder.append(" ");
+            builder.append(nameField.get(model));
+        }
+        return builder.toString();
     }
 
     @Override
@@ -141,6 +169,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
      * Invoked after creation to initialize the metadata
      */
     protected void initialize() {
+        initName();
         initI18n();
     }
 
@@ -172,9 +201,17 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     }
 
     private void initI18n() {
-        this.name = getI18n(getI18nPrefix() + "name");
-        this.name = defaultIfEmpty(name, capitalize(modelClass.getSimpleName()));
+        this.name = defaultIfEmpty(getI18n(getI18nPrefix() + "name"), this.name);
         this.description = getI18n(getI18nPrefix() + "description");
+    }
+
+    private void initName() {
+        Name nameAnnot = findAnnotation(Name.class);
+        if (nameAnnot != null) {
+            this.name = nameAnnot.value();
+        } else {
+            this.name = StringUtils.beautifyCamelCase(modelClass.getSimpleName());
+        }
     }
 
     @Override

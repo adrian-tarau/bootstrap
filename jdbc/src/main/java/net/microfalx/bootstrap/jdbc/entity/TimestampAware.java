@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.NotNull;
+import net.microfalx.lang.annotation.Position;
 
 import java.time.LocalDateTime;
 
@@ -17,9 +18,11 @@ public abstract class TimestampAware {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @NotNull
+    @Position(500)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "modified_at")
+    @Position(501)
     private LocalDateTime modifiedAt;
 
     public LocalDateTime getCreatedAt() {

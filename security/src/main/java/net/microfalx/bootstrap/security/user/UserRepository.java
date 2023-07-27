@@ -24,15 +24,15 @@ public interface UserRepository extends JpaRepository<User, Integer> {
      * @param id the primary key of the user
      */
     @Modifying
-    @Query("update User u set u.active = false where u.active = true and id = ?1")
+    @Query("update User u set u.enabled = false where u.enabled = true and id = ?1")
     void disable(int id);
 
     /**
-     * Enables  a user with a given id.
+     * Enables a user with a given id.
      *
      * @param id the primary key of the user
      */
     @Modifying
-    @Query("update User u set u.active = true where u.active = false and id = ?1")
+    @Query("update User u set u.enabled = true where u.enabled = false and id = ?1")
     void activate(int id);
 }

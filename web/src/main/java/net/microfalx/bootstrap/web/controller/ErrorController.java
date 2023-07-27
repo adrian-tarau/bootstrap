@@ -10,7 +10,7 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller("error")
 public final class ErrorController {
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(Throwable.class)
     public ModelAndView handleException(HttpServletRequest request, Exception exception) {
         ModelAndView mv = new ModelAndView();
         mv.addObject("exception", exception.getLocalizedMessage());

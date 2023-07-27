@@ -1,6 +1,5 @@
-package net.microfalx.bootstrap.web.search;
+package net.microfalx.bootstrap.security.audit;
 
-import net.microfalx.bootstrap.search.SearchService;
 import net.microfalx.bootstrap.web.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.web.dataset.controller.DataSetController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,11 +7,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping(value = "/search")
-@DataSet(model = SearchResult.class)
-public final class SearchController extends DataSetController<SearchResult, String> {
+@RequestMapping("security/audit")
+@DataSet(model = Audit.class)
+public class AuditController extends DataSetController<Audit, Integer> {
 
     @Autowired
-    private SearchService searchService;
-
+    private AuditRepository auditRepository;
 }

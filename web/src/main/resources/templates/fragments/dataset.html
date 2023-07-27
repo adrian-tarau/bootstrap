@@ -4,13 +4,15 @@
 
 <thead class="table-light" th:fragment="grid-header">
 <tr>
-    <th scope="col" th:each="field : ${#dataset.getBrowsableFields()}" th:text="${field.label}"></th>
+    <th scope="col" th:each="field : ${#dataset.getBrowsableFields()}" th:class="${#dataset.getFieldClass(field)}"
+        th:utext="${field.label}"></th>
 </tr>
 </thead>
 
 <tbody th:fragment="grid-body">
 <tr th:each="model : ${#dataset.getModels()}">
-    <td th:each="field : ${#dataset.getBrowsableFields()}" th:text="${#dataset.getDisplayValue(model, field)}"></td>
+    <td th:each="field : ${#dataset.getBrowsableFields()}" th:class="${#dataset.getFieldClass(field)}"
+        th:utext="${#dataset.getDisplayValue(model, field)}"></td>
 </tr>
 </tbody>
 
@@ -19,10 +21,39 @@
     <tbody th:replace="~{ fragments/dataset :: grid-body}">
 </table>
 
+<nav class="navbar navbar-expand-lg bg-body-tertiary mB-5" th:fragment="toolbar">
+    <div class="container-fluid">
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <button class="btn btn-primary btn-color" type="button" th:if="${#dataset.canAdd}"
+                        data-bs-toggle="tooltip" title="Adds a new entry"><i class="fa-solid fa-plus"></i><span
+                        class="mL-5">Add</span></button>
+            </ul>
+            <div class="mR-10"><span class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageInfo}"></span></div>
+            <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="ta-c bdT w-100 p-20" th:fragment="grid-next-page" th:if="${#dataset.hasNext}">
+    <span class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageAndRecordInfo}"></span>
+    <span class="badge bgc-green-50 c-green-700 p-10 tt-c rounded-pill">
+        <a href="#">More results</a>
+    </span>
+</div>
+
 <div th:fragment="render">
     <div class="col-md-12">
-        <div class="bgc-white bd bdrs-3 p-20 mB-20"><h4 class="c-grey-900 mB-20" th:text="${dataset.name}"></h4>
+        <div class="bgc-white bd bdrs-3 p-20 mB-20">
+            <div>
+                <h3 class="c-grey-900" th:text="${dataset.name}"></h3>
+                <nav th:replace="~{ fragments/dataset :: toolbar}"></nav>
+            </div>
             <table th:replace="~{ fragments/dataset :: grid}"></table>
+            <div th:replace="~{ fragments/dataset :: grid-next-page}"></div>
         </div>
     </div>
 </div>

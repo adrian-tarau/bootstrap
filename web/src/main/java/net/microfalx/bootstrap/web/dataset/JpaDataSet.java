@@ -69,12 +69,12 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
 
     @Override
     protected Page<M> doFindAll(Pageable pageable, Filter filterable) {
-        if (repository instanceof JpaSpecificationExecutor) {
+        if (repository instanceof JpaSpecificationExecutor && filterable != null) {
             JpaSpecificationExecutor<M> executor = (JpaSpecificationExecutor<M>) repository;
             Specification<M> specification = null;
             return executor.findAll(specification, pageable);
         } else {
-            throw new DataSetException("Filters are not supported for " + getMetadata().getName());
+            return findAll(pageable);
         }
     }
 

@@ -7,6 +7,7 @@ import net.microfalx.bootstrap.web.component.Container;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.dataset.DataSet;
 import net.microfalx.bootstrap.web.dataset.DataSetException;
+import org.springframework.data.domain.Page;
 import org.thymeleaf.context.IContext;
 import org.thymeleaf.context.IExpressionContext;
 import org.thymeleaf.context.IWebContext;
@@ -20,6 +21,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 
 public class ExpressionsDialect extends AbstractDialect implements IExpressionObjectDialect {
+
+    public static final String BOOLEAN_CHECKED = "<i class=\"far fa-check-square\"></i>";
+    public static final String BOOLEAN_UNCHECKED = "<i class=\"far fa-square\"></i>";
 
     private final IExpressionObjectFactory EXPRESSION_OBJECTS_FACTORY = new ExpressionsObjectFactory();
 
@@ -42,9 +46,9 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
      * @param name    the attribute name
      * @return the value, null if does not exist
      */
-    static Object getModelAttribute(IContext context, String name) {
+    static <T> T getModelAttribute(IContext context, String name) {
         if (context instanceof IWebContext) {
-            return ((IWebContext) context).getExchange().getAttributeValue(name);
+            return (T) ((IWebContext) context).getExchange().getAttributeValue(name);
         } else {
             return null;
         }
@@ -175,8 +179,73 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
          * @return a non-null instance
          */
         public Iterable<M> getModels() {
+            return getPage().getContent();
+        }
+
+        /**
+         * Returns the current page with models for the data set.
+         *
+         * @return a non-null instance
+         */
+        public Page<M> getPage() {
+            Page<M> page = getModelAttribute(context, "page");
+            if (page == null) page = Page.empty();
+            return page;
+        }
+
+        /**
+         * Returns whether the data set supports adding a new model.
+         *
+         * @return {@code true} if add can be enabled, {@code false} otherwise
+         */
+        public boolean canAdd() {
             DataSet<M, F, ID> dataSet = getDataSet();
-            return dataSet.findAll();
+            return !dataSet.isReadOnly();
+        }
+
+        /**
+         * Returns whether the data set has more pages after the current one.
+         *
+         * @return {@code true} if there are more pages, {@code false} if this is the last one
+         */
+        public boolean hasNext() {
+            return getPage().hasNext();
+        }
+
+        /**
+         * Returns information about current page.
+         *
+         * @return a non-null instance
+         */
+        public String getPageInfo() {
+            Page<M> page = getPage();
+            return page.getTotalPages() + " page(s) (" + page.getTotalElements() + ")";
+        }
+
+        /**
+         * Returns information about current page and records.
+         *
+         * @return a non-null instance
+         */
+        public String getPageAndRecordInfo() {
+            Page<M> page = getPage();
+            return "Page " + (page.getNumber() + 1) + " of " + page.getTotalPages() + " (" + page.getTotalElements() + ")";
+        }
+
+        /**
+         * Returns the class to be used with  a cell.
+         *
+         * @param field the field
+         * @return the class
+         */
+        public String getFieldClass(Field<M> field) {
+            if (field.getDataType() == Field.DataType.BOOLEAN) {
+                return "text-center";
+            } else if (field.getDataType().isNumeric()) {
+                return "text-right";
+            } else {
+                return null;
+            }
         }
 
         /**
@@ -188,7 +257,12 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
          */
         public String getDisplayValue(M model, Field<M> field) {
             DataSet<M, F, ID> dataSet = getDataSet();
-            return dataSet.getDisplayValue(model, field);
+            if (field.getDataType() == Field.DataType.BOOLEAN) {
+                boolean bool = Boolean.TRUE.equals(field.get(model));
+                return bool ? BOOLEAN_CHECKED : BOOLEAN_UNCHECKED;
+            } else {
+                return dataSet.getDisplayValue(model, field);
+            }
         }
 
     }

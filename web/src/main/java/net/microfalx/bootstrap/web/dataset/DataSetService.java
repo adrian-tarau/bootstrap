@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.web.dataset;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.MetadataService;
-import org.apache.commons.lang3.ClassUtils;
+import net.microfalx.lang.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -79,16 +79,26 @@ public final class DataSetService implements InitializingBean {
     }
 
     protected void initialize() {
-        discoverFactories();
+        discoverStaticFactories();
+        discoverDynamicFactories();
     }
 
     @SuppressWarnings("rawtypes")
-    private void discoverFactories() {
-        LOGGER.info("Discover data set factories:");
+    private void discoverStaticFactories() {
+        LOGGER.info("Discover static data set factories:");
         ServiceLoader<DataSetFactory> scannedFactories = ServiceLoader.load(DataSetFactory.class);
         for (DataSetFactory<?, ?, ?> scannedFactory : scannedFactories) {
             LOGGER.info(" - " + ClassUtils.getName(scannedFactory));
             factories.add(scannedFactory);
+        }
+    }
+
+    private void discoverDynamicFactories() {
+        LOGGER.info("Discover dynamic data set factories:");
+        Collection<Class<DataSet>> dataSetClasses = ClassUtils.resolveProviders(DataSet.class);
+        for (Class<DataSet> dataSetClass : dataSetClasses) {
+            LOGGER.info(" - " + ClassUtils.getName(dataSetClass));
+            factories.add(new ProviderDataSetFactory(dataSetClass));
         }
     }
 }

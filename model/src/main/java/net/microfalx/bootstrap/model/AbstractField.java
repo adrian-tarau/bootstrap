@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.model;
 
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.I18n;
 
 import java.lang.annotation.Annotation;
@@ -66,7 +67,7 @@ public abstract class AbstractField<M> implements Field<M> {
     @Override
     public final String getLabel() {
         String label = metadata.getI18n(getI18nPrefix() + ".label");
-        return isNotEmpty(label) ? label : org.apache.commons.lang3.StringUtils.capitalize(getName());
+        return isNotEmpty(label) ? label : StringUtils.beautifyCamelCase(getName());
     }
 
     @Override

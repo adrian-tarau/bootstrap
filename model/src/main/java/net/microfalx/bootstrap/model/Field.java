@@ -151,52 +151,67 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
         /**
          * A boolean (yes/no)
          */
-        BOOLEAN,
+        BOOLEAN(false, false),
 
         /**
          * An integer (byte/short/int/long)
          */
-        INTEGER,
+        INTEGER(true, false),
 
         /**
          * A floating point (float/double)
          */
-        NUMBER,
+        NUMBER(true, false),
 
         /**
          * Characters
          */
-        STRING,
+        STRING(false, false),
 
         /**
          * A date.
          */
-        DATE,
+        DATE(false, true),
 
         /**
          * A time.
          */
-        TIME,
+        TIME(false, true),
 
         /**
          * A date/time.
          */
-        DATE_TIME,
+        DATE_TIME(false, true),
 
         /**
          * An enum
          */
-        ENUM,
+        ENUM(false, false),
 
         /**
          * A collection class
          */
-        COLLECTION,
+        COLLECTION(false, false),
 
         /**
          * Another model
          */
-        MODEL
+        MODEL(false, false);
 
+        private boolean numeric;
+        private boolean temporal;
+
+        DataType(boolean numeric, boolean temporal) {
+            this.numeric = numeric;
+            this.temporal = temporal;
+        }
+
+        public boolean isNumeric() {
+            return numeric;
+        }
+
+        public boolean isTemporal() {
+            return temporal;
+        }
     }
 }

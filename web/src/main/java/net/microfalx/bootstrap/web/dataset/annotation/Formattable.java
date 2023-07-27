@@ -13,6 +13,11 @@ import java.lang.annotation.*;
 public @interface Formattable {
 
     /**
+     * A value for "value not available"
+     */
+    String NA = "-";
+
+    /**
      * Returns the maximum number of lines displayed for a field (if the field type is STRING)
      *
      * @return the number of lines, -1 for unlimited
@@ -25,6 +30,20 @@ public @interface Formattable {
      * @return the number of characters, -1 for unlimited
      */
     int maximumLength() default -1;
+
+    /**
+     * Returns the string to be used when the value is null.
+     *
+     * @return the value
+     */
+    String nullValue() default NA;
+
+    /**
+     * Returns the string to be used when the value is empty.
+     *
+     * @return the value
+     */
+    String emptyValue() default NA;
 
     /**
      * Returns the custom formatter to be used for a field.

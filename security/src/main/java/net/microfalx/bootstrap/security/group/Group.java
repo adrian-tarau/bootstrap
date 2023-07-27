@@ -2,6 +2,8 @@ package net.microfalx.bootstrap.security.group;
 
 import jakarta.persistence.*;
 import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
+import net.microfalx.lang.annotation.Position;
+import net.microfalx.lang.annotation.Visible;
 
 import java.util.Objects;
 
@@ -12,10 +14,12 @@ public class Group extends NamedTimestampAware {
     @Id
     @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Visible(false)
     private Integer id;
 
-    @Column(name = "active", nullable = false)
-    private boolean active;
+    @Column(name = "enabled", nullable = false)
+    @Position(10)
+    private boolean enabled;
 
     public Integer getId() {
         return id;
@@ -25,12 +29,12 @@ public class Group extends NamedTimestampAware {
         this.id = id;
     }
 
-    public boolean isActive() {
-        return active;
+    public boolean isEnabled() {
+        return enabled;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     @Override

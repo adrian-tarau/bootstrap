@@ -1,8 +1,13 @@
 package net.microfalx.bootstrap.security.user;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
+import net.microfalx.lang.annotation.Position;
+import net.microfalx.lang.annotation.Visible;
 
 import java.util.Objects;
 
@@ -11,36 +16,23 @@ import java.util.Objects;
 public class User extends NamedTimestampAware {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
     @Column(name = "username", nullable = false)
     @NotBlank
+    @Position(1)
     private String userName;
 
     @Column(name = "enabled", nullable = false)
-    private boolean active;
+    @Position(10)
+    private boolean enabled;
 
     @Column(name = "password", nullable = false)
     @NotBlank
+    @Visible(false)
     private String password;
 
-    @Column(name = "email", nullable = false)
-    @NotBlank
+    @Column(name = "email")
+    @Position(20)
     private String email;
-
-    @Column(name = "roles", nullable = false)
-    @NotBlank
-    private String roles;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getUserName() {
         return userName;
@@ -50,12 +42,12 @@ public class User extends NamedTimestampAware {
         this.userName = userName;
     }
 
-    public boolean isActive() {
-        return active;
+    public boolean isEnabled() {
+        return enabled;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public String getEmail() {
@@ -74,24 +66,16 @@ public class User extends NamedTimestampAware {
         this.password = password;
     }
 
-    public String getRoles() {
-        return roles;
-    }
-
-    public void setRoles(String roles) {
-        this.roles = roles;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User user)) return false;
 
-        return Objects.equals(id, user.id);
+        return Objects.equals(userName, user.userName);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return userName != null ? userName.hashCode() : 0;
     }
 }

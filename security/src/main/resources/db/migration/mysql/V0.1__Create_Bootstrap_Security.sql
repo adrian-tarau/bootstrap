@@ -4,7 +4,7 @@ create table security_users
     name        varchar(100)         not null,
     password    varchar(500)         not null,
     `enabled`   boolean default true not null,
-    smtpEvent       varchar(100)         not null,
+    email       varchar(100),
     created_at  datetime             not null,
     modified_at datetime,
     description varchar(1000)
@@ -45,4 +45,14 @@ create table security_group_members
     group_id   integer     not null,
     created_at datetime    not null,
     constraint fk$security_group_members$group foreign key (group_id) references security_groups (id)
+) ENGINE = InnoDB;
+
+create table security_audit
+(
+    id          integer      not null auto_increment primary key,
+    username    varchar(50)  not null,
+    `action`    varchar(100) not null,
+    created_at  datetime     not null,
+    description varchar(1000),
+    constraint fk$security_audit$user foreign key (username) references security_users (username)
 ) ENGINE = InnoDB;

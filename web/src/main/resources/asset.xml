@@ -4,6 +4,8 @@
     <!-- DataSet  -->
     <asset-bundle id="dataset" path="dataset" name="DataSet">
         <depends-on-asset-bundle>bootstrap</depends-on-asset-bundle>
+        <asset path="scroll_top.css" type="stylesheet"/>
+        <asset path="scroll_top.js" type="script"/>
     </asset-bundle>
 
 </assets>

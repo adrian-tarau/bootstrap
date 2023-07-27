@@ -29,5 +29,5 @@ public @interface DataSet {
      *
      * @return a non-null instance
      */
-    int pageSize() default 25;
+    int pageSize() default 100;
 }

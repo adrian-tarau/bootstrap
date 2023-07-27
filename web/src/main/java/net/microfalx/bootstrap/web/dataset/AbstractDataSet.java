@@ -4,9 +4,12 @@ import com.google.common.collect.Lists;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.web.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.web.dataset.formatter.Formatter;
 import net.microfalx.lang.ArgumentUtils;
+import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.ReadOnly;
 import net.microfalx.lang.annotation.Visible;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.context.ApplicationContext;
@@ -46,6 +49,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
 
         this.factory = factory;
         this.metadata = metadata;
+        initFromMetadata();
     }
 
     @Override
@@ -129,6 +133,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public String getDisplayValue(M model, Field<M> field) {
         ArgumentUtils.requireNonNull(field);
@@ -138,7 +143,14 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
             return createFormatter(field, formattableAnnot).format(value, (F) field, model);
         } else {
-            return basicFormatting(value, formattableAnnot);
+            if (value == null) return null;
+            if (isJdkType(value)) {
+                return basicFormatting(value, formattableAnnot);
+            } else {
+                MetadataService metadataService = applicationContext.getBean(MetadataService.class);
+                Metadata modelMetadata = metadataService.getMetadata(value.getClass());
+                return modelMetadata.getName(value);
+            }
         }
     }
 
@@ -247,7 +259,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     protected List<M> doFindAll() {
-        return throwUnsupported();
+        return doFindAll(Pageable.ofSize(100).withPage(0)).getContent();
     }
 
     protected List<M> doFindAllById(Iterable<ID> ids) {
@@ -315,6 +327,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         return "AbstractDataSet{" + "factory=" + factory + ", metadata=" + metadata + '}';
     }
 
+    private void initFromMetadata() {
+        ReadOnly readOnlyAnnot = metadata.findAnnotation(ReadOnly.class);
+        if (readOnlyAnnot != null) this.readOnly = readOnlyAnnot.value();
+    }
+
     private List<Field<M>> getVisibleAndOrderedFields() {
         return getMetadata().getFields().stream()
                 .filter(this::isVisible)
@@ -324,6 +341,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
 
     private void checkIfBrowse() {
         if (state != State.BROWSE) throw new DataSetException("The data set is not in BROWSE state");
+    }
+
+    private boolean isJdkType(Object value) {
+        if (value == null) return false;
+        return value.getClass().getClassLoader() == StringUtils.NA_STRING.getClass().getClassLoader();
     }
 
     private Formatter<M, F, Object> createFormatter(Field<M> field, Formattable formattable) {
