@@ -1,14 +1,10 @@
 package net.microfalx.bootstrap.model;
 
+import net.microfalx.lang.Descriptable;
+import net.microfalx.lang.Nameable;
+
 /**
  * An interface for a query expression.
  */
-public interface Expression {
-
-    /**
-     * Returns the value of the expression.
-     *
-     * @return a non-null instance
-     */
-    String getValue();
+public interface Expression extends Nameable, Descriptable {
 }
