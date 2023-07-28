@@ -1,11 +1,14 @@
 package net.microfalx.bootstrap.model;
 
+import net.microfalx.lang.Descriptable;
+import net.microfalx.lang.Nameable;
+
 import java.util.Collections;
 
 /**
  * Abstraction filter information.
  */
-public interface Filter {
+public interface Filter extends Nameable, Descriptable {
 
     /**
      * A constant for no limit for pagination.
@@ -70,11 +73,4 @@ public interface Filter {
      * @return {@code true} if empty, {@code false} otherwise
      */
     boolean isEmpty();
-
-    /**
-     * Returns the string representation of the filter.
-     *
-     * @return a non-null instance
-     */
-    String getValue();
 }

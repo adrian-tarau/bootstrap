@@ -19,6 +19,16 @@ class FilterImpl implements Filter {
     }
 
     @Override
+    public String getDescription() {
+        return expression.getDescription();
+    }
+
+    @Override
+    public String getName() {
+        return expression.getName();
+    }
+
+    @Override
     public Expression getExpression() {
         return expression;
     }
@@ -39,14 +49,29 @@ class FilterImpl implements Filter {
     }
 
     @Override
-    public String getValue() {
-        return expression.getDescription();
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FilterImpl filter)) return false;
+
+        if (offset != filter.offset) return false;
+        if (limit != filter.limit) return false;
+        return expression.equals(filter.expression);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = expression.hashCode();
+        result = 31 * result + offset;
+        result = 31 * result + limit;
+        return result;
     }
 
     @Override
     public String toString() {
         return "FilterImpl{" +
                 "expression=" + expression +
+                ", offset=" + offset +
+                ", limit=" + limit +
                 '}';
     }
 }

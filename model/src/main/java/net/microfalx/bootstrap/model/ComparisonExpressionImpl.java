@@ -2,9 +2,11 @@ package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.ObjectUtils;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ObjectUtils.toArray;
 
 class ComparisonExpressionImpl implements ComparisonExpression {
@@ -19,7 +21,10 @@ class ComparisonExpressionImpl implements ComparisonExpression {
 
     ComparisonExpressionImpl(Operator operator, String field, Object value) {
         requireNonNull(operator);
-        requireNonNull(field);
+        requireNotEmpty(field);
+        if (value != null && operator.getMaximumOperands() == 0) {
+            throw new IllegalArgumentException("Operator '" + operator.getLabel() + "' does not accept operands");
+        }
         this.field = field;
         this.value = value;
         this.operator = operator;
@@ -33,11 +38,18 @@ class ComparisonExpressionImpl implements ComparisonExpression {
     @Override
     public String getDescription() {
         StringBuilder builder = new StringBuilder();
-        builder.append(field).append(' ').append(operator.getLabel()).append(' ');
-        boolean shouldQuote = value instanceof String;
-        if (shouldQuote) builder.append("'");
-        builder.append(ObjectUtils.toString(value));
-        if (shouldQuote) builder.append("'");
+        builder.append(field).append(' ').append(operator.getLabel());
+        if (operator.getMaximumOperands() > 0) {
+            builder.append(' ');
+            boolean shouldQuote = value instanceof String;
+            if (shouldQuote) builder.append("'");
+            if (ObjectUtils.isArray(value)) {
+                builder.append(Arrays.toString(getValues()));
+            } else {
+                builder.append(ObjectUtils.toString(getValue()));
+            }
+            if (shouldQuote) builder.append("'");
+        }
         return builder.toString();
     }
 

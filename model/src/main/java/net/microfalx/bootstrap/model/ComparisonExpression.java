@@ -8,6 +8,8 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
 /**
  * An expression which provides comparison for a single field.
+ * <p>
+ * For example for an EQUAL operation, FIELD = VALUE.
  */
 public interface ComparisonExpression extends Expression {
 
@@ -23,7 +25,7 @@ public interface ComparisonExpression extends Expression {
     }
 
     /**
-     * Creates a new comparison expression with an '<></>' operator.
+     * Creates a new comparison expression with an '<>' operator.
      *
      * @param field the expression field
      * @param value the expression value
@@ -101,7 +103,7 @@ public interface ComparisonExpression extends Expression {
     }
 
     /**
-     * Creates a new comparison expression with an 'like' operator. Ex. FIELD_NAME like '*va?ue*',
+     * Creates a new comparison expression with an 'like' operator. Ex. FIELD_NAME like '*value*',
      * where * matches any number of characters and ? matches any single character
      *
      * @param field the expression field
@@ -181,7 +183,7 @@ public interface ComparisonExpression extends Expression {
     Object getValue();
 
     /**
-     * Returns the value associated with the field name
+     * Returns the values associated with the field name
      *
      * @return the field values
      */
@@ -262,7 +264,7 @@ public interface ComparisonExpression extends Expression {
         /**
          * Null operator; FIELD_NAME is null
          */
-        NULL("null", 0);
+        NULL("is null", 0);
 
         private final int minimumOperands;
 

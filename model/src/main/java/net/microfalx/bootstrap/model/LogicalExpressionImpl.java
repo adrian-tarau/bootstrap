@@ -24,6 +24,9 @@ class LogicalExpressionImpl implements LogicalExpression {
     @Override
     public String getDescription() {
         StringBuilder builder = new StringBuilder();
+        if (expressions.size() == 1 && operator == Operator.NOT) {
+            builder.append(operator.getLabel());
+        }
         builder.append("(");
         Iterator<Expression> iterator = expressions.iterator();
         while (iterator.hasNext()) {
