@@ -187,42 +187,45 @@ public class Sort implements Iterable<Sort.Order> {
 
     /**
      * Enumeration for sort directions.
-     *
-     * @author Oliver Gierke
      */
     public enum Direction {
 
-        ASC, DESC;
+        /**
+         * A value for ascending order.
+         */
+        ASC,
+
+        /**
+         * A value for descending order.
+         */
+        DESC;
 
         /**
          * Returns whether the direction is ascending.
          *
-         * @return
-         * @since 1.13
+         * @return {@code true} if the order is ascending, {@code false} otherwise
          */
         public boolean isAscending() {
-            return this.equals(ASC);
+            return this == ASC;
         }
 
         /**
          * Returns whether the direction is descending.
          *
-         * @return
-         * @since 1.13
+         * @return {@code true} if the order is descending, {@code false} otherwise
          */
         public boolean isDescending() {
-            return this.equals(DESC);
+            return this == DESC;
         }
 
         /**
          * Returns the {@link Direction} enum for the given {@link String} value.
          *
-         * @param value
-         * @return
+         * @param value the direction as string
+         * @return a non-null instance
          * @throws IllegalArgumentException in case the given value cannot be parsed into an enum value.
          */
         public static Direction fromString(String value) {
-
             try {
                 return Direction.valueOf(value.toUpperCase(Locale.US));
             } catch (Exception e) {
@@ -230,29 +233,10 @@ public class Sort implements Iterable<Sort.Order> {
                         "Invalid value '%s' for orders given; Has to be either 'desc' or 'asc' (case insensitive)", value), e);
             }
         }
-
-        /**
-         * Returns the {@link Direction} enum for the given {@link String} or null if it cannot be parsed into an enum
-         * value.
-         *
-         * @param value
-         * @return
-         */
-        public static Optional<Direction> fromOptionalString(String value) {
-
-            try {
-                return Optional.of(fromString(value));
-            } catch (IllegalArgumentException e) {
-                return Optional.empty();
-            }
-        }
     }
 
     /**
      * Enumeration for null handling hints that can be used in {@link Order} expressions.
-     *
-     * @author Thomas Darimont
-     * @since 1.8
      */
     public enum NullHandling {
 

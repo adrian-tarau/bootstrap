@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.security.user;
 
 import net.microfalx.bootstrap.security.SecurityUtils;
 import net.microfalx.bootstrap.security.audit.Audit;
+import net.microfalx.bootstrap.security.audit.AuditContext;
 import net.microfalx.bootstrap.security.audit.AuditRepository;
 import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
@@ -16,7 +17,6 @@ import java.time.LocalDateTime;
 
 import static net.microfalx.bootstrap.security.SecurityConstants.ANONYMOUS_USER;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
 /**
  * A service around user management.
@@ -47,27 +47,31 @@ public class UserService {
 
     /**
      * Registers an audit action.
+     * <p>
+     * Information about user is provided by the service.
      *
-     * @param action      the action
-     * @param description the description
+     * @param context the audit context information
      */
-    public void audit(String action, String description) {
-        requireNonNull(action);
-        requireNotEmpty(description);
-        Audit audit = createAudit(action, description);
+    public void audit(AuditContext context) {
+        requireNonNull(context);
+        Audit audit = createAudit(context);
         try {
             auditRepository.saveAndFlush(audit);
         } catch (Exception e) {
-            LOGGER.error("Failed to audit action '" + action + "' for user '" + getUserName() + "', details: " + description, e);
+            LOGGER.error("Failed to audit action '" + context.getAction() + "' for user '" + getUserName() + "', details: " + context.getDescription(), e);
         }
     }
 
-    private Audit createAudit(String action, String description) {
+    private Audit createAudit(AuditContext context) {
         User user = findUser(true);
         Audit audit = new Audit();
         audit.setUser(user);
-        audit.setAction(action);
-        audit.setDescription(description);
+        audit.setAction(context.getAction());
+        audit.setCategory(context.getCategory());
+        audit.setDescription(context.getDescription());
+        audit.setErrorCode(context.getErrorCode());
+        audit.setReference(context.getReference());
+        audit.setClientInfo(context.getClientInfo());
         audit.setCreatedAt(LocalDateTime.now());
         return audit;
     }
