@@ -5,7 +5,7 @@ import net.microfalx.bootstrap.web.dataset.formatter.Formatter;
 import java.lang.annotation.*;
 
 /**
- * An annotat
+ * An annotation used to provide formatting rules or custom formatters to fields.
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset"
+      xmlns:application="https://net.microfalx/application">
 
 <head th:fragment="header">
     <title th:text="${#application.name}"></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <asset:css inline="true" bundles="loader"></asset:css>
     <asset:css></asset:css>
+    <application:context></application:context>
 </head>
 
 <body>

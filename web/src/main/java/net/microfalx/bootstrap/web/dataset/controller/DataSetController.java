@@ -2,10 +2,16 @@ package net.microfalx.bootstrap.web.dataset.controller;
 
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
+import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.bootstrap.web.component.Button;
+import net.microfalx.bootstrap.web.component.Item;
+import net.microfalx.bootstrap.web.component.Menu;
+import net.microfalx.bootstrap.web.component.Toolbar;
 import net.microfalx.bootstrap.web.controller.NavigableController;
 import net.microfalx.bootstrap.web.dataset.DataSet;
 import net.microfalx.bootstrap.web.dataset.DataSetException;
 import net.microfalx.bootstrap.web.dataset.DataSetService;
+import net.microfalx.bootstrap.web.dataset.annotation.OrderBy;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.StringUtils;
 import org.apache.commons.lang3.ClassUtils;
@@ -47,7 +53,27 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         model.addAttribute("query", queryParameter);
         model.addAttribute("sort", sort);
         model.addAttribute("metadata", dataSet.getMetadata());
+        model.addAttribute("toolbar", getToolBar());
+        model.addAttribute("actions", getMenu());
         return "dataset/browse";
+    }
+
+    /**
+     * Updates the toolbar with additional actions.
+     *
+     * @param toolbar the toolbar
+     */
+    protected void updateToolbar(Toolbar toolbar) {
+        // empty on purpose
+    }
+
+    /**
+     * Updates the actions.
+     *
+     * @param menu the menu
+     */
+    protected void updateActions(Menu menu) {
+        // empty on purpose
     }
 
     /**
@@ -87,7 +113,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     private Sort getSort(String value) {
-        if (StringUtils.isEmpty(value)) return Sort.unsorted();
+        if (StringUtils.isEmpty(value)) return getDefaultSort();
         List<Sort.Order> orders = new ArrayList<>();
         String[] parts = StringUtils.split(value, ";");
         for (String part : parts) {
@@ -103,5 +129,49 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             }
         }
         return Sort.by(orders);
+    }
+
+    private Sort getDefaultSort() {
+        List<Sort.Order> orders = new ArrayList<>();
+        Metadata<M, Field<M>> metadata = getDataSet().getMetadata();
+        for (Field<M> field : metadata.getFields()) {
+            OrderBy orderByAnnot = field.findAnnotation(OrderBy.class);
+            if (orderByAnnot != null) {
+                orders.add(Sort.Order.by(field.getName())
+                        .with(orderByAnnot.value() == OrderBy.Direction.ASC ? Sort.Direction.ASC : Sort.Direction.DESC));
+            }
+        }
+        if (orders.isEmpty()) {
+            for (Field<M> field : metadata.getNameFields()) {
+                orders.add(Sort.Order.by(field.getName()));
+            }
+        }
+        return orders.isEmpty() ? Sort.unsorted() : Sort.by(orders);
+    }
+
+    private Toolbar getToolBar() {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        Toolbar toolbar = new Toolbar();
+        if (!dataSet.isReadOnly()) {
+            toolbar.add(new Button().setText("Add").setIcon("fa-solid fa-plus"));
+        }
+        // if (toolbar.hasChildren()) toolbar.add(new Separator());
+        toolbar.add(new Button().setText("Print").setIcon("fa-solid fa-print"));
+        toolbar.add(new Button().setText("Export").setIcon("fa-solid fa-file-export"));
+        //toolbar.add(new Separator());
+        toolbar.add(new Button().setText("Refresh").setIcon("fa-solid fa-arrows-rotate"));
+        updateToolbar(toolbar);
+        return toolbar;
+    }
+
+    private Menu getMenu() {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        Menu menu = new Menu();
+        if (!dataSet.isReadOnly()) {
+            menu.add(new Item().setText("Edit").setIcon("fa-solid fa-pen-to-square"));
+            menu.add(new Item().setText("Delete").setIcon("fa-solid fa-trash-can"));
+        }
+        updateActions(menu);
+        return menu;
     }
 }

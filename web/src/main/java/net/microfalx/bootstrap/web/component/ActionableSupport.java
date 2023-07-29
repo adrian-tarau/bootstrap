@@ -1,11 +1,11 @@
 package net.microfalx.bootstrap.web.component;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static java.util.Collections.unmodifiableSet;
+import static java.util.Arrays.asList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.CollectionUtils.immutableSet;
 
 /**
  * Helper code for all actionables.
@@ -64,21 +64,21 @@ public class ActionableSupport implements Actionable<ActionableSupport> {
 
     @Override
     public Set<String> getRoles() {
-        return unmodifiableSet(roles);
+        return immutableSet(roles);
     }
 
     @Override
     public ActionableSupport setRoles(String... roles) {
         if (this.roles != null) this.roles.clear();
         if (this.roles == null) this.roles = new HashSet<>();
-        this.roles.addAll(Arrays.asList(roles));
+        this.roles.addAll(asList(roles));
         return this;
     }
 
     @Override
     public ActionableSupport addRoles(String... roles) {
         if (this.roles == null) this.roles = new HashSet<>();
-        this.roles.addAll(Arrays.asList(roles));
+        this.roles.addAll(asList(roles));
         return this;
     }
 

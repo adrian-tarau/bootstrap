@@ -25,6 +25,8 @@ public class TemplateService {
         templateEngine.addDialect(new SpringDataDialect());
         templateEngine.addDialect(new ExpressionsDialect(applicationService));
         templateEngine.addDialect(new AssetDialect(applicationService));
+        templateEngine.addDialect(new ComponentDialect());
+        templateEngine.addDialect(new ApplicationDialect());
     }
 
 

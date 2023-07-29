@@ -4,15 +4,19 @@
 
 <thead class="table-light" th:fragment="grid-header">
 <tr>
-    <th scope="col" th:each="field : ${#dataset.getBrowsableFields()}" th:class="${#dataset.getFieldClass(field)}"
-        th:utext="${field.label}"></th>
+    <th scope="col" th:each="field : ${#dataset.getBrowsableFields()}" th:class="${#dataset.getHeaderClass(field)}"
+        th:utext="${field.label}" th:attr="field=${field.name}"></th>
+    <th scope="col" class="text-center">Actions</th>
 </tr>
 </thead>
 
 <tbody th:fragment="grid-body">
 <tr th:each="model : ${#dataset.getModels()}">
-    <td th:each="field : ${#dataset.getBrowsableFields()}" th:class="${#dataset.getFieldClass(field)}"
+    <td th:each="field : ${#dataset.getBrowsableFields()}" th:class="${#dataset.getCellClass(field)}"
         th:utext="${#dataset.getDisplayValue(model, field)}"></td>
+    <td class="text-center">
+        <button type="button" class="btn cur-p no-after dropdown-toggle" ><i class="fa-solid fa-ellipsis"></i></button>
+    </td>
 </tr>
 </tbody>
 
@@ -25,14 +29,14 @@
     <div class="container-fluid">
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <button class="btn btn-primary btn-color" type="button" th:if="${#dataset.canAdd}"
-                        data-bs-toggle="tooltip" title="Adds a new entry"><i class="fa-solid fa-plus"></i><span
-                        class="mL-5">Add</span></button>
+                <button class="btn btn-primary btn-color mR-5" type="button" th:each="button : ${#component.getChildren(toolbar)}"
+                        data-bs-toggle="tooltip" title="Adds a new entry"><i th:class="${button.icon}"></i><span
+                        class="mL-5" th:text="${button.text}"></span></button>
             </ul>
             <div class="mR-10"><span class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageInfo}"></span></div>
             <form class="d-flex" role="search">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success" type="submit">Search</button>
+                <button class="btn btn-outline-success text-nowrap" type="submit"><i class="fa-solid fa-magnifying-glass icon-font-grow"></i><span class="mL-5">Search</span></button>
             </form>
         </div>
     </div>

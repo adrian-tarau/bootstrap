@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.web.component;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
+import static net.microfalx.lang.StringUtils.defaultIfNull;
 
 /**
  * Helper code for all itemable.
@@ -36,7 +38,7 @@ public class ItemableSupport implements Itemable<ItemableSupport> {
     }
 
     public String getIcon() {
-        return icon;
+        return ("icon-font-grow " + defaultIfNull(icon, EMPTY_STRING)).trim();
     }
 
     public ItemableSupport setIcon(String icon) {

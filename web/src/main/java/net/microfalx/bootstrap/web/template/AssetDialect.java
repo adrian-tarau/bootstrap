@@ -7,7 +7,7 @@ import net.microfalx.bootstrap.web.application.AssetBundle;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
 import org.thymeleaf.context.ITemplateContext;
-import org.thymeleaf.dialect.IProcessorDialect;
+import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.model.IAttribute;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.IProcessor;
@@ -25,7 +25,10 @@ import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.TextUtils.MEDIUM_INDENT;
 import static net.microfalx.lang.TextUtils.insertSpaces;
 
-public class AssetDialect implements IProcessorDialect {
+/**
+ * Processors for assets.
+ */
+public class AssetDialect extends AbstractProcessorDialect {
 
     private static final String DIALECT_PREFIX = "asset";
     private static final String DIALECT_NAME = "Bootstrap Asset";
@@ -34,24 +37,13 @@ public class AssetDialect implements IProcessorDialect {
     private ApplicationService applicationService;
 
     public AssetDialect(ApplicationService applicationService) {
+        super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE);
         this.applicationService = applicationService;
-    }
-
-    public String getName() {
-        return DIALECT_NAME;
-    }
-
-    public String getPrefix() {
-        return DIALECT_PREFIX;
-    }
-
-    public int getDialectProcessorPrecedence() {
-        return PRECEDENCE;
     }
 
     @Override
     public Set<IProcessor> getProcessors(String dialectPrefix) {
-        Set<IProcessor> processors = new HashSet<IProcessor>();
+        Set<IProcessor> processors = new HashSet<>();
         processors.add(new ScriptsAssetTagProcessor());
         processors.add(new StylesheetsAssetTagProcessor());
         return processors;
