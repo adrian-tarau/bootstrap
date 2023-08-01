@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.jdbc.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.validation.constraints.NotBlank;
+import net.microfalx.bootstrap.dataset.annotation.Component;
 
 /**
  * A base class for all entities which can be named and have an optional description.
@@ -15,6 +16,7 @@ public abstract class NameAware {
     private String name;
 
     @Column(name = "description")
+    @Component(Component.Type.TEXT_AREA)
     private String description;
 
     public String getName() {

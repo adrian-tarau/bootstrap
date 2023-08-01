@@ -80,11 +80,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>joor</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
             <artifactId>bootstrap-core</artifactId>
             <version>${project.version}</version>
@@ -110,6 +105,12 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-dataset</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
             <artifactId>bootstrap-search</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -121,8 +122,6 @@
         </dependency>
 
         <!-- Testing -->
-
-
 
         <dependency>
             <groupId>org.springframework.security</groupId>

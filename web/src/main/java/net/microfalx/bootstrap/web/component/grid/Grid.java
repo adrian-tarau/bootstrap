@@ -1,8 +1,8 @@
 package net.microfalx.bootstrap.web.component.grid;
 
+import net.microfalx.bootstrap.dataset.DataSet;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.component.panel.BasePanel;
-import net.microfalx.bootstrap.web.dataset.DataSet;
 
 import java.util.ArrayList;
 import java.util.List;

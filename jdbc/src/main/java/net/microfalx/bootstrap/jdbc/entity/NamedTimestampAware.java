@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.jdbc.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.validation.constraints.NotBlank;
+import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Position;
 
@@ -20,6 +21,7 @@ public class NamedTimestampAware extends TimestampAware {
 
     @Column(name = "description")
     @Position(1000)
+    @Component(Component.Type.TEXT_AREA)
     private String description;
 
     public String getName() {

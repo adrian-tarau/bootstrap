@@ -1,11 +1,11 @@
 package net.microfalx.bootstrap.web.template.tools;
 
+import net.microfalx.bootstrap.dataset.DataSet;
+import net.microfalx.bootstrap.dataset.DataSetException;
+import net.microfalx.bootstrap.dataset.State;
+import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.component.Menu;
-import net.microfalx.bootstrap.web.dataset.DataSet;
-import net.microfalx.bootstrap.web.dataset.DataSetException;
-import net.microfalx.bootstrap.web.dataset.State;
-import net.microfalx.bootstrap.web.dataset.annotation.Component;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.thymeleaf.context.IContext;
@@ -183,6 +183,16 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public boolean isInputField(Field<M> field) {
         return isVisible(field) && getComponentType(field) == Component.Type.TEXT_FIELD;
+    }
+
+    /**
+     * Returns whether the field associated with the field should be a TEXT_AREA type.
+     *
+     * @param field the field
+     * @return {@code true} if of type INPUT, {@code false} otherwise
+     */
+    public boolean isTextAreaField(Field<M> field) {
+        return isVisible(field) && getComponentType(field) == Component.Type.TEXT_AREA;
     }
 
     /**

@@ -57,6 +57,7 @@
         <module>search</module>
         <module>js</module>
         <module>model</module>
+        <module>dataset</module>
         <module>web</module>
         <module>security</module>
         <module>demo</module>

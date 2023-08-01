@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.web.dataset.controller;
+package net.microfalx.bootstrap.dataset.controller;
 
 import net.microfalx.bootstrap.web.controller.AbstractControllerTestCase;
 import net.microfalx.bootstrap.web.controller.HomeController;

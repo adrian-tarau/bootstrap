@@ -96,8 +96,9 @@ x
     <label th:attr="for=${field.name}" class="" th:class="${#dataset.getInputLabelClass(field)}" th:text="${field.label}"></label>
     <div th:class="${#dataset.getInputContainerClass(field)}">
         <input th:class="${#dataset.getInputFieldClass(field)}" th:name="${field.name}" th:type="${#dataset.getInputType(field)}"
-               th:readonly="${#dataset.isReadOnly(field)}" th:if="${#dataset.isVisible(field)}">
-        <input type="hidden" readonly th:name="${field.name}" th:if="${#dataset.isVisible(field)}">
+               th:readonly="${#dataset.isReadOnly(field)}" th:if="${#dataset.isInputField(field)}">
+        <input type="hidden" readonly th:name="${field.name}" th:unless="${#dataset.isVisible(field)}">
+        <textarea th:class="${#dataset.getInputFieldClass(field)}" th:name="${field.name}" th:if="${#dataset.isTextAreaField(field)}" rows="2"></textarea>
     </div>
 </div>
 

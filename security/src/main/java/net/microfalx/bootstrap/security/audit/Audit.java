@@ -3,8 +3,9 @@ package net.microfalx.bootstrap.security.audit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import net.microfalx.bootstrap.dataset.annotation.Component;
+import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.security.user.User;
-import net.microfalx.bootstrap.web.dataset.annotation.OrderBy;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.ReadOnly;
 import net.microfalx.lang.annotation.Visible;
@@ -68,6 +69,7 @@ public class Audit {
 
     @Column(name = "description")
     @Position(1000)
+    @Component(Component.Type.TEXT_AREA)
     private String description;
 
     public Integer getId() {

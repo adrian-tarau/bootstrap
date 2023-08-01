@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.web.component.form;
 
+import net.microfalx.bootstrap.dataset.DataSet;
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.web.dataset.DataSet;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 

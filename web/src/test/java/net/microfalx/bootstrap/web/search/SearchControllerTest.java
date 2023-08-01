@@ -1,11 +1,11 @@
 package net.microfalx.bootstrap.web.search;
 
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.search.SearchProperties;
 import net.microfalx.bootstrap.search.SearchService;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.controller.AbstractControllerTestCase;
-import net.microfalx.bootstrap.web.dataset.DataSetService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
