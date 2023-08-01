@@ -64,6 +64,17 @@ class MetadataServiceTest {
         assertI18n(metadata);
     }
 
+    @Test
+    void getFieldValue() {
+        Person person = new Person();
+        person.setId(1);
+        person.setFirstName("John");
+        person.setLastName("Doe");
+        Metadata<Person, Field<Person>> metadata = metadataService.getMetadata(Person.class);
+        Field<Person> field = metadata.get("firstName");
+        assertEquals("John", field.get(person));
+    }
+
     private void assertI18n(Metadata<?, ? extends Field<?>> metadata) {
         assertEquals("Person", metadata.getName());
         assertEquals("A person", metadata.getDescription());

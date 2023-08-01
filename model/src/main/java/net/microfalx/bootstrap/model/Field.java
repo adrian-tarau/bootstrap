@@ -7,7 +7,7 @@ import net.microfalx.lang.Nameable;
 import java.lang.annotation.Annotation;
 
 /**
- * A field part of record in a data set.
+ * A field in a (data) model.
  */
 public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
 

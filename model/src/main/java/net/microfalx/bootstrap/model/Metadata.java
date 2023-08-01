@@ -64,10 +64,10 @@ public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, N
      * Gets a field by its name or property name.
      *
      * @param nameOrProperty the name or property name
-     * @return the field, null if it does not exist
+     * @return the field
      * @throws FieldNotFoundException if the field does not exist
      */
-    Field<?> get(String nameOrProperty);
+    F get(String nameOrProperty);
 
     /**
      * Returns the model name.
