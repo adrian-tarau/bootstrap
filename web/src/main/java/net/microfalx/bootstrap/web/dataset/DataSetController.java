@@ -1,6 +1,10 @@
-package net.microfalx.bootstrap.dataset;
+package net.microfalx.bootstrap.web.dataset;
 
 import jakarta.websocket.server.PathParam;
+import net.microfalx.bootstrap.dataset.DataSet;
+import net.microfalx.bootstrap.dataset.DataSetException;
+import net.microfalx.bootstrap.dataset.DataSetService;
+import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;

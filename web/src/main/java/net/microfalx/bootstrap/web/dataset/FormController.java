@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.dataset;
+package net.microfalx.bootstrap.web.dataset;
 
 import net.microfalx.bootstrap.web.controller.PageController;
 
