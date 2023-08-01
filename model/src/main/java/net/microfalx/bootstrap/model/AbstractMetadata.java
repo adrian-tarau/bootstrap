@@ -134,6 +134,16 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     }
 
     @Override
+    public CompositeIdentifier<M, F> getId(M model) {
+        return new CompositeIdentifier<>(this, model);
+    }
+
+    @Override
+    public CompositeIdentifier<M, F> getId(String id) {
+        return new CompositeIdentifier<>(this, id);
+    }
+
+    @Override
     public <A extends Annotation> A findAnnotation(Class<A> annotationClass) {
         return modelClass.getAnnotation(annotationClass);
     }
@@ -213,6 +223,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
             this.name = StringUtils.beautifyCamelCase(modelClass.getSimpleName());
         }
     }
+
 
     @Override
     public String toString() {

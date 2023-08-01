@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.model;
 
-import jodd.typeconverter.TypeConverterManager;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.annotation.Id;
 import net.microfalx.lang.annotation.Position;
@@ -18,8 +17,6 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static org.apache.commons.lang3.ClassUtils.isAssignable;
 
 public abstract class PojoField<M> extends AbstractField<M> {
-
-    private static final TypeConverterManager TYPE_CONVERTER_MANAGER = TypeConverterManager.get();
 
     private MethodHandle setter;
     private MethodHandle getter;
@@ -43,6 +40,7 @@ public abstract class PojoField<M> extends AbstractField<M> {
     public void set(M model, Object value) {
         if (setter == null) throw new ModelException("The field '" + getName() + "' is read only");
         try {
+            value = from(value, getDataClass());
             getter.invoke(model, value);
         } catch (Throwable e) {
             throw new ModelException("Failed to extract field '" + getName() + "' value", e);

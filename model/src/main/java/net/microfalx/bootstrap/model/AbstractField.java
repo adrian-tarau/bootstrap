@@ -4,15 +4,15 @@ import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.I18n;
 
 import java.lang.annotation.Annotation;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.*;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static net.microfalx.bootstrap.model.FieldUtils.TYPE_CONVERTER_MANAGER;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
@@ -149,6 +149,23 @@ public abstract class AbstractField<M> implements Field<M> {
         return findAnnotation(annotationClass) != null;
     }
 
+    /**
+     * Converts an object to a target type.
+     *
+     * @param value  the value to convert
+     * @param target the target class
+     * @param <T>    the type of the target value
+     * @return the converted value
+     */
+    protected final <T> T from(Object value, Class<T> target) {
+        try {
+            return TYPE_CONVERTER_MANAGER.convertType(value, target);
+        } catch (Exception e) {
+            throw new InvalidDataTypeExpression("Data conversion failure for field '" + getName() + "' from object '"
+                    + value + "' to type '" + net.microfalx.lang.ClassUtils.getName(target) + "'", e);
+        }
+    }
+
     private void updateDataType(Class<?> dataClass) {
         DataType dataType = dataTypes.get(dataClass);
         if (dataType != null) {
@@ -183,8 +200,8 @@ public abstract class AbstractField<M> implements Field<M> {
     private static final Map<Class<?>, DataType> dataTypes = new HashMap<>();
 
     static {
-        dataTypes.put(boolean.class, DataType.BOOLEAN);
-        dataTypes.put(Boolean.class, DataType.BOOLEAN);
+
+        // numbers
         dataTypes.put(byte.class, DataType.INTEGER);
         dataTypes.put(Byte.class, DataType.INTEGER);
         dataTypes.put(short.class, DataType.INTEGER);
@@ -193,18 +210,27 @@ public abstract class AbstractField<M> implements Field<M> {
         dataTypes.put(Integer.class, DataType.INTEGER);
         dataTypes.put(long.class, DataType.INTEGER);
         dataTypes.put(Long.class, DataType.INTEGER);
+        dataTypes.put(BigInteger.class, DataType.INTEGER);
         dataTypes.put(float.class, DataType.NUMBER);
         dataTypes.put(Float.class, DataType.NUMBER);
         dataTypes.put(double.class, DataType.NUMBER);
-        dataTypes.put(Double.class, DataType.INTEGER);
-        dataTypes.put(String.class, DataType.STRING);
+        dataTypes.put(Double.class, DataType.NUMBER);
+        dataTypes.put(BigDecimal.class, DataType.NUMBER);
 
+        // date/time
         dataTypes.put(Date.class, DataType.DATE_TIME);
         dataTypes.put(java.sql.Date.class, DataType.DATE);
         dataTypes.put(java.sql.Time.class, DataType.TIME);
         dataTypes.put(LocalDate.class, DataType.DATE);
         dataTypes.put(LocalTime.class, DataType.TIME);
+        dataTypes.put(LocalDateTime.class, DataType.DATE_TIME);
         dataTypes.put(ZonedDateTime.class, DataType.DATE_TIME);
         dataTypes.put(OffsetDateTime.class, DataType.DATE_TIME);
+
+        // various
+        dataTypes.put(boolean.class, DataType.BOOLEAN);
+        dataTypes.put(Boolean.class, DataType.BOOLEAN);
+        dataTypes.put(String.class, DataType.STRING);
+
     }
 }

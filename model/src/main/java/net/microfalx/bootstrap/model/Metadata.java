@@ -78,6 +78,22 @@ public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, N
     String getName(M model);
 
     /**
+     * Returns the composite identifier for a given model.
+     *
+     * @param model the model
+     * @return a non-null instance
+     */
+    CompositeIdentifier<M, F> getId(M model);
+
+    /**
+     * Returns the composite identifier from its string representation.
+     *
+     * @param id the identifier
+     * @return a non-nul instance
+     */
+    CompositeIdentifier<M, F> getId(String id);
+
+    /**
      * Returns an annotation by its type.
      *
      * @param annotationClass the annotation type

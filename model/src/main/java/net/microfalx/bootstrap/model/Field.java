@@ -12,6 +12,18 @@ import java.lang.annotation.Annotation;
 public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
 
     /**
+     * Converts an object to a target type.
+     *
+     * @param value  the value to convert
+     * @param target the target class
+     * @param <T>    the type of the target value
+     * @return the converted value
+     */
+    static <T> T from(Object value, Class<T> target) {
+        return FieldUtils.from(value, target);
+    }
+
+    /**
      * Returns the metadata which owns this field.
      *
      * @return a non-null instance
@@ -204,6 +216,14 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
         DataType(boolean numeric, boolean temporal) {
             this.numeric = numeric;
             this.temporal = temporal;
+        }
+
+        public boolean isText() {
+            return this == STRING;
+        }
+
+        public boolean isBoolean() {
+            return this == BOOLEAN;
         }
 
         public boolean isNumeric() {
