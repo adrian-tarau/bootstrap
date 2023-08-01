@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.web.application;
 
-import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.container.WebContainerService;
 import net.microfalx.lang.ObjectUtils;
@@ -8,6 +7,7 @@ import net.microfalx.lang.TextUtils;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
  * A service which provides metadata for a web application.
  */
 @Service
-public final class ApplicationService {
+public final class ApplicationService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationService.class);
 
@@ -31,6 +31,9 @@ public final class ApplicationService {
 
     @Autowired
     private ApplicationProperties applicationProperties;
+
+    @Autowired
+    private AssetProperties assetProperties;
 
     @Autowired
     private WebContainerService webContainerService;
@@ -285,8 +288,8 @@ public final class ApplicationService {
         return TextUtils.insertSpaces(builder.toString(), indent);
     }
 
-    @PostConstruct
-    protected void initialize() {
+    @Override
+    public void afterPropertiesSet() throws Exception {
         initApplication();
         initAssets();
         initNavigation();
@@ -306,6 +309,7 @@ public final class ApplicationService {
     }
 
     private void initAssets() {
+        assetBundleManager.assetProperties = assetProperties;
         assetBundleManager.load();
     }
 

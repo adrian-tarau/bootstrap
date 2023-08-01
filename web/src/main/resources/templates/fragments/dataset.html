@@ -4,18 +4,20 @@
 
 <thead class="table-light" th:fragment="grid-header">
 <tr>
-    <th scope="col" th:each="field : ${#dataset.getBrowsableFields()}" th:class="${#dataset.getHeaderClass(field)}"
+    <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}"
         th:utext="${field.label}" th:attr="field=${field.name}"></th>
-    <th scope="col" class="text-center">Actions</th>
+    <th scope="col" class="text-center" th:if="${#dataset.hasActions}">Actions</th>
 </tr>
 </thead>
+x
 
 <tbody th:fragment="grid-body">
 <tr th:each="model : ${#dataset.getModels()}">
-    <td th:each="field : ${#dataset.getBrowsableFields()}" th:class="${#dataset.getCellClass(field)}"
+    <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}"
         th:utext="${#dataset.getDisplayValue(model, field)}"></td>
-    <td class="text-center">
-        <button type="button" class="btn cur-p no-after dropdown-toggle" ><i class="fa-solid fa-ellipsis"></i></button>
+    <td class="text-center" th:if="${#dataset.hasActions}">
+        <a class="icon-link" href="#" th:attr="onclick=|DataSet.showActions(event, '${#dataset.getId(model)}')|"><i
+                class="fa-solid fa-ellipsis"></i></a>
     </td>
 </tr>
 </tbody>
@@ -25,25 +27,35 @@
     <tbody th:replace="~{ fragments/dataset :: grid-body}">
 </table>
 
+<div class="dropdown-menu" th:fragment="action-menu" id="dataset-actions">
+    <a href="#" class="dropdown-item" th:each="action : ${#component.getChildren(actions)}"
+       th:attr="onclick=|DataSet.performAction('${action.action}', '${action.handler}')|">
+        <i th:class="${action.icon}"></i><span th:text="${action.text}" class="ms-2"></span></a>
+</div>
+
 <nav class="navbar navbar-expand-lg bg-body-tertiary mB-5" th:fragment="toolbar">
     <div class="container-fluid">
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <button class="btn btn-primary btn-color mR-5" type="button" th:each="button : ${#component.getChildren(toolbar)}"
+                <button class="btn btn-primary btn-color mR-5" type="button"
+                        th:each="button : ${#component.getChildren(toolbar)}"
                         data-bs-toggle="tooltip" title="Adds a new entry"><i th:class="${button.icon}"></i><span
                         class="mL-5" th:text="${button.text}"></span></button>
             </ul>
-            <div class="mR-10"><span class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageInfo}"></span></div>
+            <div class="mR-10"><span class="badge rounded-pill bg-success p-10"
+                                     th:text="${#dataset.getPageInfo()}"></span></div>
             <form class="d-flex" role="search">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success text-nowrap" type="submit"><i class="fa-solid fa-magnifying-glass icon-font-grow"></i><span class="mL-5">Search</span></button>
+                <button class="btn btn-outline-success text-nowrap" type="submit"><i
+                        class="fa-solid fa-magnifying-glass icon-font-grow"></i><span class="mL-5">Search</span>
+                </button>
             </form>
         </div>
     </div>
 </nav>
 
-<div class="ta-c bdT w-100 p-20" th:fragment="grid-next-page" th:if="${#dataset.hasNext}">
-    <span class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageAndRecordInfo}"></span>
+<div class="ta-c bdT w-100 p-20" th:fragment="grid-next-page" th:if="${#dataset.hasNext()}">
+    <span class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageAndRecordInfo()}"></span>
     <span class="badge bgc-green-50 c-green-700 p-10 tt-c rounded-pill">
         <a href="#">More results</a>
     </span>
@@ -59,6 +71,33 @@
             <table th:replace="~{ fragments/dataset :: grid}"></table>
             <div th:replace="~{ fragments/dataset :: grid-next-page}"></div>
         </div>
+    </div>
+</div>
+
+<div th:fragment="dialog" id="dataset-dialog" tabindex="-1"
+     class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="${dataset.name}"></h5>
+            </div>
+            <div class="modal-body">
+                <div th:replace="~{ fragments/dataset :: fields}"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="fields" class="mb-3 row" th:each="field : ${#dataset.getFields()}">
+    <label th:attr="for=${field.name}" class="" th:class="${#dataset.getInputLabelClass(field)}" th:text="${field.label}"></label>
+    <div th:class="${#dataset.getInputContainerClass(field)}">
+        <input th:class="${#dataset.getInputFieldClass(field)}" th:name="${field.name}" th:type="${#dataset.getInputType(field)}"
+               th:readonly="${#dataset.isReadOnly(field)}" th:if="${#dataset.isVisible(field)}">
+        <input type="hidden" readonly th:name="${field.name}" th:if="${#dataset.isVisible(field)}">
     </div>
 </div>
 

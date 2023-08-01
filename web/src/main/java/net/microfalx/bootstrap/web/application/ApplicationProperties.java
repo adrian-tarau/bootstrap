@@ -1,11 +1,13 @@
 package net.microfalx.bootstrap.web.application;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.ToString;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties("bootstrap.application")
+@ToString
 public class ApplicationProperties {
 
     public static final String DEFAULT_THEME = "adminator";

@@ -33,8 +33,8 @@ class ApplicationServiceTest {
     private ApplicationService applicationService;
 
     @BeforeEach
-    void before() {
-        applicationService.initialize();
+    void before() throws Exception {
+        applicationService.afterPropertiesSet();
     }
 
     @Test

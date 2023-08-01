@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.dataset;
 
+import net.microfalx.bootstrap.model.CompositeIdentifier;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
@@ -40,14 +41,27 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
     State getState();
 
     /**
-     * Opens the data set to edit a record.
+     * Changes the state of the data set.
+     *
+     * @param state the state
+     * @return self
      */
-    void edit();
+    DataSet<M, F, ID> setState(State state);
 
     /**
-     * Opens the data set to append a record.
+     * Opens the data set to view a model.
      */
-    void append();
+    DataSet<M, F, ID> view();
+
+    /**
+     * Opens the data set to edit a model.
+     */
+    DataSet<M, F, ID> edit();
+
+    /**
+     * Opens the data set to append a model.
+     */
+    DataSet<M, F, ID> add();
 
     /**
      * Returns the name of the data set (title).
@@ -104,7 +118,31 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
      * @param model the model
      * @return the identifier
      */
+    CompositeIdentifier<M, F> getCompositeId(M model);
+
+    /**
+     * Sets the composite identifier into model
+     *
+     * @param model the model
+     * @param id    the composite identifier
+     */
+    void setCompositeId(M model, CompositeIdentifier<M, F> id);
+
+    /**
+     * Returns the model identifier.
+     *
+     * @param model the model
+     * @return the identifier
+     */
     ID getId(M model);
+
+    /**
+     * Sets the ID into the model.
+     *
+     * @param model the model
+     * @param id    the id
+     */
+    void setId(M model, ID id);
 
     /**
      * Returns a {@link Filter} used to restrict

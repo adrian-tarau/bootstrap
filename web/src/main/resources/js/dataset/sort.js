@@ -13,5 +13,5 @@ $sortable.on('click', function () {
         direction = 'desc';
     }
     $this.addClass(direction);
-    sortDataSet(field, direction);
+    DataSet.sort(field, direction);
 });

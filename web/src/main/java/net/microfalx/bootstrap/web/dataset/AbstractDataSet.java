@@ -1,10 +1,7 @@
 package net.microfalx.bootstrap.web.dataset;
 
 import com.google.common.collect.Lists;
-import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.model.Filter;
-import net.microfalx.bootstrap.model.Metadata;
-import net.microfalx.bootstrap.model.MetadataService;
+import net.microfalx.bootstrap.model.*;
 import net.microfalx.bootstrap.web.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.web.dataset.formatter.Formatter;
 import net.microfalx.lang.ArgumentUtils;
@@ -40,6 +37,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
 
     ApplicationContext applicationContext;
     private List<Field<M>> browsableFields;
+    private List<Field<M>> viewableFields;
     private List<Field<M>> editableFields;
     private List<Field<M>> appendableFields;
 
@@ -87,20 +85,26 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         return state;
     }
 
-    protected final void setState(State state) {
+    public final DataSet<M, F, ID> setState(State state) {
+        ArgumentUtils.requireNonNull(state);
+        if (state != State.BROWSE) checkIfBrowse();
         this.state = state;
+        return this;
     }
 
     @Override
-    public void edit() {
-        checkIfBrowse();
-        this.state = State.EDIT;
+    public DataSet<M, F, ID> view() {
+        return setState(State.VIEW);
     }
 
     @Override
-    public void append() {
-        checkIfBrowse();
-        this.state = State.EDIT;
+    public DataSet<M, F, ID> edit() {
+        return setState(State.EDIT);
+    }
+
+    @Override
+    public DataSet<M, F, ID> add() {
+        return setState(State.ADD);
     }
 
     @Override
@@ -110,6 +114,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         if (!visibleAnnot.value()) return false;
         return switch (state) {
             case BROWSE -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.BROWSE);
+            case VIEW -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.VIEW);
             case ADD -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.ADD);
             case EDIT -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.EDIT);
         };
@@ -119,17 +124,23 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public List<Field<M>> getVisibleFields() {
         switch (state) {
-            case BROWSE:
+            case BROWSE -> {
                 if (browsableFields == null) browsableFields = getVisibleAndOrderedFields();
                 return browsableFields;
-            case ADD:
+            }
+            case VIEW -> {
+                if (viewableFields == null) viewableFields = getVisibleAndOrderedFields();
+                return viewableFields;
+            }
+            case ADD -> {
                 if (editableFields == null) editableFields = getVisibleAndOrderedFields();
                 return editableFields;
-            case EDIT:
+            }
+            case EDIT -> {
                 if (appendableFields == null) appendableFields = getVisibleAndOrderedFields();
                 return appendableFields;
-            default:
-                throw new DataSetException("Unhandled state: " + state);
+            }
+            default -> throw new DataSetException("Unhandled state: " + state);
         }
     }
 
@@ -155,8 +166,23 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public CompositeIdentifier<M, F> getCompositeId(M model) {
+        return metadata.getId(model);
+    }
+
+    @Override
+    public void setCompositeId(M model, CompositeIdentifier<M, F> id) {
+
+    }
+
+    @Override
     public ID getId(M model) {
         return null;
+    }
+
+    @Override
+    public void setId(M model, ID id) {
+
     }
 
     @Override

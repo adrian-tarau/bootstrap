@@ -9,9 +9,9 @@
         <asset path="sort.css" type="stylesheet"/>
         <asset path="component.css" type="stylesheet"/>
 
+        <asset path="core.js" type="script"/>
         <asset path="scroll_top.js" type="script"/>
         <asset path="sort.js" type="script"/>
-        <asset path="request.js" type="script"/>
     </asset-bundle>
 
 </assets>

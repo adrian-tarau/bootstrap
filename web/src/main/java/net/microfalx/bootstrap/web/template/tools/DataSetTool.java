@@ -1,8 +1,11 @@
 package net.microfalx.bootstrap.web.template.tools;
 
 import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.dataset.DataSet;
 import net.microfalx.bootstrap.web.dataset.DataSetException;
+import net.microfalx.bootstrap.web.dataset.State;
+import net.microfalx.bootstrap.web.dataset.annotation.Component;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.thymeleaf.context.IContext;
@@ -48,35 +51,24 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
-     * Returns a list of fields displayed in a grid.
-     *
-     * @return a non-null instance
-     */
-    public Collection<Field<M>> getBrowsableFields() {
-        DataSet<M, F, ID> dataSet = getDataSet();
-        return dataSet.getVisibleFields();
-    }
-
-    /**
      * Returns a list of fields displayed to edit an existing record.
      *
      * @return a non-null instance
      */
-    public Collection<Field<M>> getEditableFields() {
+    public Collection<Field<M>> getFields() {
         DataSet<M, F, ID> dataSet = getDataSet();
-        dataSet.edit();
         return dataSet.getVisibleFields();
     }
 
     /**
-     * Returns a list of fields displayed to append a new record.
+     * Returns whether a field is visible for the current state of the data set.
      *
-     * @return a non-null instance
+     * @param field the field
+     * @return {@code true} if visible, {@code false} otherwise
      */
-    public Collection<Field<M>> getAppendableFields() {
+    public boolean isVisible(Field<M> field) {
         DataSet<M, F, ID> dataSet = getDataSet();
-        dataSet.edit();
-        return dataSet.getVisibleFields();
+        return dataSet.isVisible(field);
     }
 
     /**
@@ -110,6 +102,16 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns whether the data set has at least one actions.
+     *
+     * @return {@code true} if a list one action, {@code false} otherwise
+     */
+    public boolean hasActions() {
+        Menu menu = getModelAttribute(context, "actions");
+        return menu != null ? menu.hasChildren() : false;
+    }
+
+    /**
      * Returns whether the data set has more pages after the current one.
      *
      * @return {@code true} if there are more pages, {@code false} if this is the last one
@@ -136,6 +138,91 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public String getPageAndRecordInfo() {
         Page<M> page = getPage();
         return "Page " + (page.getNumber() + 1) + " of " + page.getTotalPages() + " (" + page.getTotalElements() + ")";
+    }
+
+    /**
+     * Returns the class to be used with a header cell.
+     *
+     * @param field the field
+     * @return the input type
+     */
+    public boolean isReadOnly(Field<M> field) {
+        DataSet<M, F, ID> dataSet = getDataSet();
+        if (dataSet.isReadOnly() || dataSet.getState() == State.VIEW) return true;
+        return field.isReadOnly();
+    }
+
+    /**
+     * Returns the class to be used with a header cell.
+     *
+     * @param field the field
+     * @return the input type
+     */
+    public String getInputType(Field<M> field) {
+        if (field.getDataType().isNumeric()) {
+            return "numeric";
+        } else if (field.getDataType().isBoolean()) {
+            return "checkbox";
+        } else if (field.getDataType() == Field.DataType.DATE) {
+            return "date";
+        } else if (field.getDataType() == Field.DataType.DATE_TIME) {
+            return "datetime-local";
+        } else if (field.getDataType() == Field.DataType.TIME) {
+            return "time";
+        } else {
+            Component.Type componentType = getComponentType(field);
+            return componentType == Component.Type.TEXT_FIELD ? "text" : "password";
+        }
+    }
+
+    /**
+     * Returns whether the field associated with the field should be an INPUT type.
+     *
+     * @param field the field
+     * @return {@code true} if of type INPUT, {@code false} otherwise
+     */
+    public boolean isInputField(Field<M> field) {
+        return isVisible(field) && getComponentType(field) == Component.Type.TEXT_FIELD;
+    }
+
+    /**
+     * Returns the CSS class(es) for a given field label.
+     *
+     * @param field the field
+     * @return the classes
+     */
+    public String getInputLabelClass(Field<M> field) {
+        String classes = "col-sm-3 col-form-label";
+        return classes.trim();
+    }
+
+    /**
+     * Returns the CSS class(es) for a given field container.
+     *
+     * @param field the field
+     * @return the classes
+     */
+    public String getInputContainerClass(Field<M> field) {
+        if (isVisible(field)) {
+            String classes = "col-sm-9";
+            if (field.getDataType().isBoolean()) {
+                classes += " form-check";
+            }
+            return classes.trim();
+        } else {
+            return "d-none";
+        }
+    }
+
+    /**
+     * Returns the CSS class(es) for a given field.
+     *
+     * @param field the field
+     * @return the classes
+     */
+    public String getInputFieldClass(Field<M> field) {
+        String classes = "form-control";
+        return classes;
     }
 
     /**
@@ -195,5 +282,21 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         } else {
             return dataSet.getDisplayValue(model, field);
         }
+    }
+
+    /**
+     * Returns the components identifier of the record in its string form
+     *
+     * @param model the model
+     * @return a non-null instance
+     */
+    public String getId(M model) {
+        DataSet<M, F, ID> dataSet = getDataSet();
+        return dataSet.getCompositeId(model).toString();
+    }
+
+    private Component.Type getComponentType(Field<M> field) {
+        Component componentAnnot = field.findAnnotation(Component.class);
+        return componentAnnot != null ? componentAnnot.value() : Component.Type.TEXT_FIELD;
     }
 }

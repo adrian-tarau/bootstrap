@@ -6,6 +6,11 @@ package net.microfalx.bootstrap.web.dataset;
 public enum State {
 
     /**
+     * Data set is in view mode (current record is displayed in all details)
+     */
+    VIEW,
+
+    /**
      * Data set is in edit mode (current record is edited)
      */
     EDIT,

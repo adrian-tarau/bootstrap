@@ -59,6 +59,7 @@ public class Container<C extends Container<C>> extends Component<C> {
         requireNonNull(component);
         if (find(component.getId()) != null) return;
         children.add(component);
+        component.setParent(this);
         if (component.getPosition() < 0) component.setPosition(children.size());
         children.sort(Comparator.comparingInt(Component::getPosition));
     }

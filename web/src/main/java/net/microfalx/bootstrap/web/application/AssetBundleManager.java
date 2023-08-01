@@ -32,6 +32,8 @@ final class AssetBundleManager {
     private final Map<String, Resource> bundlesContent = new ConcurrentHashMap<>();
     private final Map<String, Collection<String>> assetBundleDependencies = new ConcurrentHashMap<>();
 
+    AssetProperties assetProperties = new AssetProperties();
+
     AssetBundleManager(ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
@@ -81,7 +83,7 @@ final class AssetBundleManager {
         requireNotEmpty(ids);
         String contentId = type.name().toLowerCase() + "/" + StringUtils.join("_", ids);
         Resource resource = bundlesContent.get(contentId);
-        if (resource != null) return resource;
+        if (resource != null && !assetProperties.isDebug()) return resource;
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         OutputStream stream = new GZIPOutputStream(buffer);
         try (OutputStreamWriter writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8)) {

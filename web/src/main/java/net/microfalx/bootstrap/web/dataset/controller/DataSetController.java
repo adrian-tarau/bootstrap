@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.dataset.controller;
 
+import jakarta.websocket.server.PathParam;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
@@ -11,6 +12,7 @@ import net.microfalx.bootstrap.web.controller.NavigableController;
 import net.microfalx.bootstrap.web.dataset.DataSet;
 import net.microfalx.bootstrap.web.dataset.DataSetException;
 import net.microfalx.bootstrap.web.dataset.DataSetService;
+import net.microfalx.bootstrap.web.dataset.State;
 import net.microfalx.bootstrap.web.dataset.annotation.OrderBy;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.StringUtils;
@@ -43,18 +45,31 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                          @RequestParam(value = "query", defaultValue = "") String queryParameter,
                          @RequestParam(value = "filter", defaultValue = "") String filterParameter,
                          @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
-        DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        Filter filter = getFilter(filterParameter);
-        Sort sort = getSort(sortParameter);
-        Pageable page = getPage(pageParameter, sort);
-        Page<M> models = extractModels(filter, page);
-        model.addAttribute("dataset", dataSet);
-        model.addAttribute("page", models);
-        model.addAttribute("query", queryParameter);
-        model.addAttribute("sort", sort);
-        model.addAttribute("metadata", dataSet.getMetadata());
-        model.addAttribute("toolbar", getToolBar());
-        model.addAttribute("actions", getMenu());
+        updateModel(model, State.BROWSE);
+        processParams(model, pageParameter, queryParameter, filterParameter, sortParameter);
+        return "dataset/browse";
+    }
+
+    @GetMapping(path = "{id}/add")
+    public String add(Model model, @PathParam("id") String id) {
+        updateModel(model, State.ADD);
+        return "dataset/add:: #dataset-dialog";
+    }
+
+    @GetMapping(path = "{id}/view")
+    public String view(Model model, @PathParam("id") String id) {
+        updateModel(model, State.VIEW);
+        return "dataset/view :: #dataset-dialog";
+    }
+
+    @GetMapping(path = "{id}/edit")
+    public String edit(Model model, @PathParam("id") String id) {
+        updateModel(model, State.EDIT);
+        return "dataset/view:: #dataset-dialog";
+    }
+
+    @GetMapping(path = "{id}/delete")
+    public String delete(Model model, @PathParam("id") String id) {
         return "dataset/browse";
     }
 
@@ -151,7 +166,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Toolbar getToolBar() {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        Toolbar toolbar = new Toolbar();
+        Toolbar toolbar = new Toolbar().setId("toolbar");
         if (!dataSet.isReadOnly()) {
             toolbar.add(new Button().setText("Add").setIcon("fa-solid fa-plus"));
         }
@@ -166,12 +181,32 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Menu getMenu() {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        Menu menu = new Menu();
+        Menu menu = new Menu().setId("actions");
         if (!dataSet.isReadOnly()) {
-            menu.add(new Item().setText("Edit").setIcon("fa-solid fa-pen-to-square"));
-            menu.add(new Item().setText("Delete").setIcon("fa-solid fa-trash-can"));
+            menu.add(new Item().setAction("view").setText("View").setIcon("fa-solid fa-eye"));
+            menu.add(new Item().setAction("edit").setText("Edit").setIcon("fa-solid fa-pen-to-square"));
+            menu.add(new Item().setAction("delete").setText("Delete").setIcon("fa-solid fa-trash-can"));
         }
         updateActions(menu);
         return menu;
+    }
+
+    private void updateModel(Model model, State state) {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        dataSet.setState(state);
+        model.addAttribute("dataset", dataSet);
+        model.addAttribute("metadata", dataSet.getMetadata());
+        model.addAttribute("toolbar", getToolBar());
+        model.addAttribute("actions", getMenu());
+    }
+
+    private void processParams(Model model, int pageParameter, String queryParameter, String filterParameter, String sortParameter) {
+        Filter filter = getFilter(filterParameter);
+        Sort sort = getSort(sortParameter);
+        Pageable page = getPage(pageParameter, sort);
+        Page<M> models = extractModels(filter, page);
+        model.addAttribute("page", models);
+        model.addAttribute("query", queryParameter);
+        model.addAttribute("sort", sort);
     }
 }
