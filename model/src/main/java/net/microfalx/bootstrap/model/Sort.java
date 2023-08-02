@@ -10,7 +10,10 @@ import java.util.stream.Collectors;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
-public class Sort implements Iterable<Sort.Order> {
+/**
+ * Holds sorting criteria for a model.
+ */
+public class Sort implements Iterable<Sort.Order>{
 
     private static final Sort UNSORTED = Sort.create(new Order[0]);
     public static final Direction DEFAULT_DIRECTION = Direction.ASC;

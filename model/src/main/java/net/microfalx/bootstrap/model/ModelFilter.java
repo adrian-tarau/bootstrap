@@ -12,12 +12,15 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  */
 public class ModelFilter<M> {
 
+    private final Metadata<M, ? extends Field<M>, ?> metadata;
     private final List<M> models;
     private final Filter filter;
 
-    public ModelFilter(List<M> models, Filter filter) {
+    public ModelFilter(Metadata<M, ? extends Field<M>, ?> metadata, List<M> models, Filter filter) {
+        requireNonNull(metadata);
         requireNonNull(models);
         requireNonNull(filter);
+        this.metadata = metadata;
         this.models = new ArrayList<>(models);
         this.filter = filter;
     }
@@ -37,5 +40,9 @@ public class ModelFilter<M> {
                 "models=" + models.size() +
                 ", filter=" + filter +
                 '}';
+    }
+
+    public void filter(M model){
+
     }
 }
