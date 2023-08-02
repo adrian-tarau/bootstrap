@@ -48,7 +48,7 @@ public final class DataSetService implements InitializingBean {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <M, F extends Field<M>, ID> DataSet<M, F, ID> lookup(Class<M> modelClass, Object... parameters) {
         requireNonNull(modelClass);
-        Metadata<M, Field<M>> metadata = metadataService.getMetadata(modelClass);
+        Metadata<M, Field<M>, ID> metadata = metadataService.getMetadata(modelClass);
         DataSet<M, F, ID> dataSet = null;
         for (DataSetFactory factory : factories) {
             if (factory.supports(metadata)) {

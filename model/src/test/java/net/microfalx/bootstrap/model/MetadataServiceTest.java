@@ -34,7 +34,7 @@ class MetadataServiceTest {
 
     @Test
     void loadPojoMetadata() {
-        Metadata<Person, Field<Person>> metadata = metadataService.getMetadata(Person.class);
+        Metadata<Person, Field<Person>, Integer> metadata = metadataService.getMetadata(Person.class);
         assertNotNull(metadata);
         assertSame(metadata.getClass(), PojoMetadataProvider.DefaultPojoMetadata.class);
         assertEquals(1, metadata.getIdFields().size());
@@ -44,7 +44,7 @@ class MetadataServiceTest {
 
     @Test
     void loadJpaMetadata() {
-        Metadata<PersonJpa, Field<PersonJpa>> metadata = metadataService.getMetadata(PersonJpa.class);
+        Metadata<PersonJpa, Field<PersonJpa>, Integer> metadata = metadataService.getMetadata(PersonJpa.class);
         assertNotNull(metadata);
         assertSame(metadata.getClass(), JpaMetadata.class);
         assertEquals(2, metadata.getIdFields().size());
@@ -54,13 +54,13 @@ class MetadataServiceTest {
 
     @Test
     void loadI18n() {
-        Metadata<Person, Field<Person>> metadata = metadataService.getMetadata(Person.class);
+        Metadata<Person, Field<Person>, Integer> metadata = metadataService.getMetadata(Person.class);
         assertI18n(metadata);
     }
 
     @Test
     void loadI18nJpa() {
-        Metadata<PersonJpa, Field<PersonJpa>> metadata = metadataService.getMetadata(PersonJpa.class);
+        Metadata<PersonJpa, Field<PersonJpa>, Integer> metadata = metadataService.getMetadata(PersonJpa.class);
         assertI18n(metadata);
     }
 
@@ -70,12 +70,12 @@ class MetadataServiceTest {
         person.setId(1);
         person.setFirstName("John");
         person.setLastName("Doe");
-        Metadata<Person, Field<Person>> metadata = metadataService.getMetadata(Person.class);
+        Metadata<Person, Field<Person>, Integer> metadata = metadataService.getMetadata(Person.class);
         Field<Person> field = metadata.get("firstName");
         assertEquals("John", field.get(person));
     }
 
-    private void assertI18n(Metadata<?, ? extends Field<?>> metadata) {
+    private void assertI18n(Metadata<?, ? extends Field<?>, ?> metadata) {
         assertEquals("Person", metadata.getName());
         assertEquals("A person", metadata.getDescription());
         Field<?> field = metadata.get("id");

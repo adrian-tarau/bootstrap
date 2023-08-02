@@ -1,7 +1,9 @@
 package net.microfalx.bootstrap.model;
 
+import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import org.joor.Reflect;
 
 import java.util.List;
 
@@ -16,16 +18,16 @@ import static net.microfalx.lang.StringUtils.append;
  *
  * @param <M> the model type
  */
-public class CompositeIdentifier<M, F extends Field<M>> {
+public class CompositeIdentifier<M, F extends Field<M>, ID> {
 
     public static final char SEPARATOR = '|';
 
-    private final Metadata<M, F> metadata;
+    private final Metadata<M, F, ID> metadata;
     private final M model;
     private final String id;
     private Object[] values;
 
-    public CompositeIdentifier(Metadata<M, F> metadata, M model) {
+    public CompositeIdentifier(Metadata<M, F, ID> metadata, M model) {
         requireNonNull(metadata);
         requireNonNull(model);
         this.metadata = metadata;
@@ -33,7 +35,7 @@ public class CompositeIdentifier<M, F extends Field<M>> {
         this.id = encodeId();
     }
 
-    public CompositeIdentifier(Metadata<M, F> metadata, String id) {
+    public CompositeIdentifier(Metadata<M, F, ID> metadata, String id) {
         requireNonNull(metadata);
         requireNonNull(id);
         this.metadata = metadata;
@@ -92,6 +94,22 @@ public class CompositeIdentifier<M, F extends Field<M>> {
         if (idFields.isEmpty())
             throw new ModelException("Model '" + metadata.getName() + " does not have any identifiers");
         return idFields;
+    }
+
+    @SuppressWarnings("unchecked")
+    public ID toId() {
+        Object[] values = getValues();
+        if (values.length == 1) {
+            return (ID) values[0];
+        } else {
+            ID id = ClassUtils.create(metadata.getIdClass());
+            List<F> idFields = getIdFields();
+            int index = 0;
+            for (F idField : idFields) {
+                Reflect.on(id).set(idField.getProperty(), values[index++]);
+            }
+            return id;
+        }
     }
 
     @Override

@@ -28,7 +28,7 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
      *
      * @return a non-null instance
      */
-    Metadata<M, ? extends Field<M>> getMetadata();
+    Metadata<M, ? extends Field<M>, ?> getMetadata();
 
     /**
      * Returns the name of the field.

@@ -14,7 +14,7 @@ public interface DataSetFactory<M, F extends Field<M>, ID> {
      * @param metadata the metadata of the  model
      * @return {@code true} if it supports, {@code otherwise}
      */
-    boolean supports(Metadata<M, F> metadata);
+    boolean supports(Metadata<M, F, ID> metadata);
 
     /**
      * Creates a data set  supporting a given model class
@@ -22,5 +22,5 @@ public interface DataSetFactory<M, F extends Field<M>, ID> {
      * @param metadata the metadata of the  model
      * @return a non-null instance
      */
-    DataSet<M, F, ID> create(Metadata<M, F> metadata, Object... parameters);
+    DataSet<M, F, ID> create(Metadata<M, F, ID> metadata, Object... parameters);
 }

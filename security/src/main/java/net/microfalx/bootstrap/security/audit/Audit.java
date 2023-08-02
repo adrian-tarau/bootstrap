@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.security.audit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.security.user.User;
@@ -16,6 +17,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "security_audit")
 @ReadOnly
+@ToString(callSuper = true)
 public class Audit {
 
     public static String OPEN = "Open";

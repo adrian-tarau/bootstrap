@@ -17,7 +17,7 @@ import java.lang.reflect.Method;
  *
  * @param <M> the model
  */
-public abstract class PojoMetadata<M, F extends PojoField<M>> extends AbstractMetadata<M, F> {
+public abstract class PojoMetadata<M, F extends PojoField<M>, ID> extends AbstractMetadata<M, F, ID> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PojoMetadata.class);
 
@@ -26,7 +26,7 @@ public abstract class PojoMetadata<M, F extends PojoField<M>> extends AbstractMe
     @SuppressWarnings("unchecked")
     public PojoMetadata(Class<M> modelClass) {
         super(modelClass);
-        extractFields((PojoMetadata<M, PojoField<M>>) this, modelClass);
+        extractFields((PojoMetadata<M, PojoField<M>, ID>) this, modelClass);
     }
 
     /**
@@ -47,7 +47,7 @@ public abstract class PojoMetadata<M, F extends PojoField<M>> extends AbstractMe
      * @param property the property name
      * @return a non-null instance
      */
-    protected abstract F createField(PojoMetadata<M, PojoField<M>> metadata, String name, String property);
+    protected abstract F createField(PojoMetadata<M, PojoField<M>, ID> metadata, String name, String property);
 
     /**
      * Extracts Java Bean metadata and create fields as needed.
@@ -55,7 +55,7 @@ public abstract class PojoMetadata<M, F extends PojoField<M>> extends AbstractMe
      * @param metadata   the metadata instance
      * @param modelClass the model class
      */
-    private void extractFields(PojoMetadata<M, PojoField<M>> metadata, Class<?> modelClass) {
+    private void extractFields(PojoMetadata<M, PojoField<M>, ID> metadata, Class<?> modelClass) {
         PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(modelClass);
         int index = 0;
         for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {

@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.NotNull;
+import lombok.ToString;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Visible;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
  * All these entities are named entities too.
  */
 @MappedSuperclass
+@ToString
 public abstract class TimestampAware {
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -47,13 +49,5 @@ public abstract class TimestampAware {
     @PrePersist
     public void updateTimestamps() {
         modifiedAt = LocalDateTime.now();
-    }
-
-    @Override
-    public String toString() {
-        return "TimestampAware{" +
-                "createdAt=" + createdAt +
-                ", modifiedAt=" + modifiedAt +
-                "} " + super.toString();
     }
 }

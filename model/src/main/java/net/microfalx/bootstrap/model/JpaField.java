@@ -10,7 +10,7 @@ public final class JpaField<M> extends PojoField<M> {
 
     private String columnName;
 
-    public JpaField(PojoMetadata<M, PojoField<M>> metadata, String name, String property) {
+    public JpaField(PojoMetadata<M, PojoField<M>, ?> metadata, String name, String property) {
         super(metadata, name, property);
     }
 

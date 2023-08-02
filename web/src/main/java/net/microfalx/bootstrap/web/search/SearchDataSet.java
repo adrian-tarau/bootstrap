@@ -9,7 +9,7 @@ import net.microfalx.lang.annotation.Provider;
 @Provider
 public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchResult>, String> {
 
-    public SearchDataSet(DataSetFactory<SearchResult, PojoField<SearchResult>, String> factory, Metadata<SearchResult, PojoField<SearchResult>> metadata) {
+    public SearchDataSet(DataSetFactory<SearchResult, PojoField<SearchResult>, String> factory, Metadata<SearchResult, PojoField<SearchResult>, String> metadata) {
         super(factory, metadata);
     }
 

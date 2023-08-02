@@ -22,7 +22,7 @@ public abstract class PojoField<M> extends AbstractField<M> {
     private MethodHandle getter;
     private Collection<? extends Annotation> annotations = Collections.emptyList();
 
-    public PojoField(PojoMetadata<M, PojoField<M>> metadata, String name, String property) {
+    public PojoField(PojoMetadata<M, PojoField<M>, ?> metadata, String name, String property) {
         super(metadata, name, property);
     }
 

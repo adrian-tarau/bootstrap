@@ -27,8 +27,8 @@ public class MetadataService implements InitializingBean {
     @Autowired
     private MessageSource messageSource;
 
-    private final List<MetadataProvider<?, ?>> providers = new CopyOnWriteArrayList<>();
-    private final Map<Class<?>, Metadata<?, ? extends Field<?>>> metadataCache = new ConcurrentHashMap<>();
+    private final List<MetadataProvider<?, ?, ?>> providers = new CopyOnWriteArrayList<>();
+    private final Map<Class<?>, Metadata<?, ? extends Field<?>, ?>> metadataCache = new ConcurrentHashMap<>();
 
     /**
      * Returns the metadata.
@@ -39,13 +39,13 @@ public class MetadataService implements InitializingBean {
      * @return a non-null instance
      */
     @SuppressWarnings("unchecked")
-    public <M, F extends Field<M>> Metadata<M, F> getMetadata(Class<M> modelClass) {
+    public <M, F extends Field<M>, ID> Metadata<M, F, ID> getMetadata(Class<M> modelClass) {
         requireNonNull(modelClass);
-        Metadata<M, F> metadata = (Metadata<M, F>) metadataCache.get(modelClass);
+        Metadata<M, F, ID> metadata = (Metadata<M, F, ID>) metadataCache.get(modelClass);
         if (metadata == null) {
-            MetadataProvider<M, Field<M>> provider = find(modelClass);
-            metadata = (Metadata<M, F>) provider.getMetadata(modelClass);
-            if (metadata instanceof AbstractMetadata<M, F> ametadata) {
+            MetadataProvider<M, Field<M>, ID> provider = find(modelClass);
+            metadata = (Metadata<M, F, ID>) provider.getMetadata(modelClass);
+            if (metadata instanceof AbstractMetadata<M, F, ID> ametadata) {
                 ametadata.messageSource = messageSource;
                 ametadata.initialize();
             }
@@ -59,7 +59,7 @@ public class MetadataService implements InitializingBean {
      *
      * @return a non-null instance
      */
-    public Collection<MetadataProvider<?, ?>> getProviders() {
+    public Collection<MetadataProvider<?, ?, ?>> getProviders() {
         return Collections.unmodifiableCollection(providers);
     }
 
@@ -81,9 +81,9 @@ public class MetadataService implements InitializingBean {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private <M, F extends Field<M>> MetadataProvider<M, F> find(Class modelClass) {
-        for (MetadataProvider<?, ?> provider : providers) {
-            if (provider.supports(modelClass)) return (MetadataProvider<M, F>) provider;
+    private <M, F extends Field<M>, ID> MetadataProvider<M, F, ID> find(Class modelClass) {
+        for (MetadataProvider<?, ?, ?> provider : providers) {
+            if (provider.supports(modelClass)) return (MetadataProvider<M, F, ID>) provider;
         }
         throw new ModelException("A metadata provider is not registered for model " + ClassUtils.getName(modelClass));
     }
@@ -98,7 +98,7 @@ public class MetadataService implements InitializingBean {
     private void discoverProviders() {
         LOGGER.info("Discover metadata providers:");
         ServiceLoader<MetadataProvider> scannedProviders = ServiceLoader.load(MetadataProvider.class);
-        for (MetadataProvider<?, ?> scannedProvider : scannedProviders) {
+        for (MetadataProvider<?, ?, ?> scannedProvider : scannedProviders) {
             LOGGER.info(" - " + ClassUtils.getName(scannedProvider));
             providers.add(scannedProvider);
         }

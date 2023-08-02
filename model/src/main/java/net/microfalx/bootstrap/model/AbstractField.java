@@ -26,7 +26,7 @@ import static org.apache.commons.lang3.ClassUtils.isAssignable;
  */
 public abstract class AbstractField<M> implements Field<M> {
 
-    private final AbstractMetadata<M, ? extends AbstractField<M>> metadata;
+    private final AbstractMetadata<M, ? extends AbstractField<M>, ?> metadata;
     private final String id;
     private final String name;
     private final String property;
@@ -38,7 +38,7 @@ public abstract class AbstractField<M> implements Field<M> {
     private boolean readOnly;
     private boolean _transient;
 
-    public AbstractField(AbstractMetadata<M, ? extends AbstractField<M>> metadata, String name, String property) {
+    public AbstractField(AbstractMetadata<M, ? extends AbstractField<M>, ?> metadata, String name, String property) {
         requireNotEmpty(metadata);
         requireNotEmpty(name);
         requireNotEmpty(property);
@@ -55,7 +55,7 @@ public abstract class AbstractField<M> implements Field<M> {
     }
 
     @Override
-    public final Metadata<M, ? extends Field<M>> getMetadata() {
+    public final Metadata<M, ? extends Field<M>, ?> getMetadata() {
         return metadata;
     }
 

@@ -31,7 +31,7 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
      *
      * @return a non-null instance
      */
-    Metadata<M, F> getMetadata();
+    Metadata<M, F, ID> getMetadata();
 
     /**
      * Returns the state of the data set.
@@ -118,7 +118,7 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
      * @param model the model
      * @return the identifier
      */
-    CompositeIdentifier<M, F> getCompositeId(M model);
+    CompositeIdentifier<M, F, ID> getCompositeId(M model);
 
     /**
      * Sets the composite identifier into model
@@ -126,7 +126,7 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
      * @param model the model
      * @param id    the composite identifier
      */
-    void setCompositeId(M model, CompositeIdentifier<M, F> id);
+    void setCompositeId(M model, CompositeIdentifier<M, F, ID> id);
 
     /**
      * Returns the model identifier.

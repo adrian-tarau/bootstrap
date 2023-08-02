@@ -30,7 +30,7 @@ import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements DataSet<M, F, ID> {
 
     private final DataSetFactory<M, F, ID> factory;
-    private final Metadata<M, F> metadata;
+    private final Metadata<M, F, ID> metadata;
     private String name;
     private boolean readOnly;
     private State state = State.BROWSE;
@@ -41,7 +41,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     private List<Field<M>> editableFields;
     private List<Field<M>> appendableFields;
 
-    public AbstractDataSet(DataSetFactory<M, F, ID> factory, Metadata<M, F> metadata) {
+    public AbstractDataSet(DataSetFactory<M, F, ID> factory, Metadata<M, F, ID> metadata) {
         requireNonNull(factory);
         requireNonNull(metadata);
 
@@ -67,7 +67,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
-    public final Metadata<M, F> getMetadata() {
+    public final Metadata<M, F, ID> getMetadata() {
         return metadata;
     }
 
@@ -166,23 +166,23 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
-    public CompositeIdentifier<M, F> getCompositeId(M model) {
+    public CompositeIdentifier<M, F, ID> getCompositeId(M model) {
         return metadata.getId(model);
     }
 
     @Override
-    public void setCompositeId(M model, CompositeIdentifier<M, F> id) {
+    public void setCompositeId(M model, CompositeIdentifier<M, F, ID> id) {
 
     }
 
     @Override
     public ID getId(M model) {
-        return null;
+        return getCompositeId(model).toId();
     }
 
     @Override
     public void setId(M model, ID id) {
-
+        new CompositeIdentifier<>(metadata, model);
     }
 
     @Override
@@ -198,16 +198,12 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public final Optional<M> findById(ID id) {
         requireNonNull(id);
-        for (M model : findAll()) {
-            ID modelId = getId(model);
-            if (id.equals(modelId)) return Optional.of(model);
-        }
-        return Optional.empty();
+        return doFindById(id);
     }
 
     @Override
     public final boolean existsById(ID id) {
-        return findById(id).isPresent();
+        return doExistsById(id);
     }
 
     @Override
@@ -293,7 +289,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     protected Optional<M> doFindById(ID id) {
-        return throwUnsupported();
+        for (M model : findAll()) {
+            ID modelId = getId(model);
+            if (id.equals(modelId)) return Optional.of(model);
+        }
+        return Optional.empty();
     }
 
     protected boolean doExistsById(ID id) {

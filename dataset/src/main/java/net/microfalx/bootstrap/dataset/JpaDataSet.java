@@ -23,7 +23,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
 
     JpaRepository<M, ID> repository;
 
-    public JpaDataSet(DataSetFactory<M, JpaField<M>, ID> factory, Metadata<M, JpaField<M>> metadata) {
+    public JpaDataSet(DataSetFactory<M, JpaField<M>, ID> factory, Metadata<M, JpaField<M>, ID> metadata) {
         super(factory, metadata);
     }
 
@@ -115,7 +115,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
     public static class Factory<M, ID> extends PojoDataSetFactory<M, JpaField<M>, ID> {
 
         @Override
-        protected AbstractDataSet<M, JpaField<M>, ID> doCreate(Metadata<M, JpaField<M>> metadata) {
+        protected AbstractDataSet<M, JpaField<M>, ID> doCreate(Metadata<M, JpaField<M>, ID> metadata) {
             return new JpaDataSet<>(this, metadata);
         }
 
@@ -131,7 +131,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
         }
 
         @Override
-        public boolean supports(Metadata<M, JpaField<M>> metadata) {
+        public boolean supports(Metadata<M, JpaField<M>, ID> metadata) {
             return getAnnotation(metadata.getModel(), Entity.class) != null;
         }
     }

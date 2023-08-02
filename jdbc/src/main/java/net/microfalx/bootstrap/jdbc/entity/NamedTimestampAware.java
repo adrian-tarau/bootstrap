@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.jdbc.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.validation.constraints.NotBlank;
+import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Position;
@@ -11,6 +12,7 @@ import net.microfalx.lang.annotation.Position;
  * A base class for all entities which can be named and have timestamps.
  */
 @MappedSuperclass
+@ToString
 public class NamedTimestampAware extends TimestampAware {
 
     @Column(name = "name", nullable = false)
@@ -38,13 +40,5 @@ public class NamedTimestampAware extends TimestampAware {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    @Override
-    public String toString() {
-        return "NamedTimestampAware{" +
-                "name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                "} " + super.toString();
     }
 }

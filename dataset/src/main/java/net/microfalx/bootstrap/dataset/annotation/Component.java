@@ -18,6 +18,20 @@ public @interface Component {
     Type value() default Type.TEXT_FIELD;
 
     /**
+     * The number of columns (characters) for the component.
+     *
+     * @return a positive integer, -1 for auto
+     */
+    int columns() default -1;
+
+    /**
+     * The number of rows (characters) for the component.
+     *
+     * @return a positive integer, -1 for auto
+     */
+    int rows() default -1;
+
+    /**
      * An enum for the component type.
      */
     enum Type {

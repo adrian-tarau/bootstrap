@@ -6,6 +6,7 @@ import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.component.Menu;
+import net.microfalx.lang.ObjectUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.thymeleaf.context.IContext;
@@ -196,13 +197,40 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the number columns for a text area field.
+     *
+     * @param field the field
+     * @return the number of columns
+     */
+    public int getInputColumns(Field<M> field) {
+        Component componentAnnot = field.findAnnotation(Component.class);
+        return componentAnnot != null ? componentAnnot.columns() : -1;
+    }
+
+    /**
+     * Returns the number rows for a text area field.
+     *
+     * @param field the field
+     * @return the number of columns
+     */
+    public int getInputRows(Field<M> field) {
+        Component componentAnnot = field.findAnnotation(Component.class);
+        int rows = componentAnnot != null ? componentAnnot.rows() : -1;
+        if (rows <= 0) rows = 3;
+        return rows;
+    }
+
+    /**
      * Returns the CSS class(es) for a given field label.
      *
      * @param field the field
      * @return the classes
      */
     public String getInputLabelClass(Field<M> field) {
-        String classes = "col-sm-3 col-form-label";
+        String classes = "col-sm-3 col-form-label-sm";
+        if (field.getDataType().isBoolean()) {
+            classes += " form-check-label";
+        }
         return classes.trim();
     }
 
@@ -231,8 +259,13 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return the classes
      */
     public String getInputFieldClass(Field<M> field) {
-        String classes = "form-control";
-        return classes;
+        String classes = "";
+        if (field.getDataType().isBoolean()) {
+            classes += " form-check-input";
+        } else {
+            classes += " form-control-sm form-control";
+        }
+        return classes.trim();
     }
 
     /**
@@ -271,14 +304,14 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         if (field.getDataType() == Field.DataType.BOOLEAN) {
             classes += " text-center";
         } else if (field.getDataType().isNumeric()) {
-            classes += "text-right";
+            classes += " text-right";
         }
         classes = classes.trim();
         return isNotEmpty(classes) ? classes : null;
     }
 
     /**
-     * Returns the display valu for a field of the model.
+     * Returns the display value for a field of the model.
      *
      * @param model the model
      * @param field the field
@@ -292,6 +325,18 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         } else {
             return dataSet.getDisplayValue(model, field);
         }
+    }
+
+    /**
+     * Returns the value for a field of the model.
+     *
+     * @param model the model
+     * @param field the field
+     * @return the display value
+     */
+    public String getValue(M model, Field<M> field) {
+        if (model == null) return null;
+        return ObjectUtils.toString(field.get(model));
     }
 
     /**

@@ -17,7 +17,7 @@ import static org.apache.commons.lang3.ClassUtils.isAssignable;
 public abstract class AbstractDataSetFactory<M, F extends Field<M>, ID> implements DataSetFactory<M, F, ID> {
 
     @Override
-    public final DataSet<M, F, ID> create(Metadata<M, F> metadata, Object... parameters) {
+    public final DataSet<M, F, ID> create(Metadata<M, F, ID> metadata, Object... parameters) {
         AbstractDataSet<M, F, ID> dataSet = doCreate(metadata);
         update(dataSet, parameters);
         return dataSet;
@@ -39,7 +39,7 @@ public abstract class AbstractDataSetFactory<M, F extends Field<M>, ID> implemen
      * @param metadata the model metadata
      * @return a non0-null instance
      */
-    protected abstract AbstractDataSet<M, F, ID> doCreate(Metadata<M, F> metadata);
+    protected abstract AbstractDataSet<M, F, ID> doCreate(Metadata<M, F, ID> metadata);
 
     /**
      * Finds a parameter by type.

@@ -2,7 +2,7 @@ package net.microfalx.bootstrap.model;
 
 import jakarta.persistence.Table;
 
-public final class JpaMetadata<M> extends PojoMetadata<M, JpaField<M>> {
+public final class JpaMetadata<M, ID> extends PojoMetadata<M, JpaField<M>, ID> {
 
     private String tableName;
 
@@ -16,7 +16,7 @@ public final class JpaMetadata<M> extends PojoMetadata<M, JpaField<M>> {
     }
 
     @Override
-    protected JpaField<M> createField(PojoMetadata<M, PojoField<M>> metadata, String name, String property) {
+    protected JpaField<M> createField(PojoMetadata<M, PojoField<M>, ID> metadata, String name, String property) {
         return new JpaField<>(metadata, name, property);
     }
 

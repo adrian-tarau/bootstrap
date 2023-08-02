@@ -24,7 +24,7 @@ import static net.microfalx.lang.StringUtils.defaultIfEmpty;
  *
  * @param <M> the model type
  */
-public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadata<M, F> {
+public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Metadata<M, F, ID> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataService.class);
 
@@ -37,6 +37,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     private F idField;
     private final List<F> idFields = new ArrayList<>();
     private final Map<String, F> idFieldsById = new HashMap<>();
+    private Class<ID> idClass;
 
     MessageSource messageSource;
 
@@ -134,12 +135,17 @@ public abstract class AbstractMetadata<M, F extends Field<M>> implements Metadat
     }
 
     @Override
-    public CompositeIdentifier<M, F> getId(M model) {
+    public Class<ID> getIdClass() {
+        return idClass;
+    }
+
+    @Override
+    public CompositeIdentifier<M, F, ID> getId(M model) {
         return new CompositeIdentifier<>(this, model);
     }
 
     @Override
-    public CompositeIdentifier<M, F> getId(String id) {
+    public CompositeIdentifier<M, F, ID> getId(String id) {
         return new CompositeIdentifier<>(this, id);
     }
 

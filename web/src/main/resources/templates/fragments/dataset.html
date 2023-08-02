@@ -74,8 +74,8 @@ x
     </div>
 </div>
 
-<div th:fragment="dialog" id="dataset-dialog" tabindex="-1"
-     class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
+<div th:fragment="dialog" id="dataset-modal" tabindex="-1"
+     class="modal modal-lg fade" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
@@ -85,8 +85,8 @@ x
                 <div th:replace="~{ fragments/dataset :: fields}"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary">Save</button>
-                <button type="button" class="btn btn-secondary">Close</button>
+                <button type="button" class="btn btn-primary" th:attr="onclick=|DataSet.save()|">Save</button>
+                <button type="button" class="btn btn-secondary" th:attr="onclick=|DataSet.closeModal()|">Cancel</button>
             </div>
         </div>
     </div>
@@ -96,9 +96,9 @@ x
     <label th:attr="for=${field.name}" class="" th:class="${#dataset.getInputLabelClass(field)}" th:text="${field.label}"></label>
     <div th:class="${#dataset.getInputContainerClass(field)}">
         <input th:class="${#dataset.getInputFieldClass(field)}" th:name="${field.name}" th:type="${#dataset.getInputType(field)}"
-               th:readonly="${#dataset.isReadOnly(field)}" th:if="${#dataset.isInputField(field)}">
-        <input type="hidden" readonly th:name="${field.name}" th:unless="${#dataset.isVisible(field)}">
-        <textarea th:class="${#dataset.getInputFieldClass(field)}" th:name="${field.name}" th:if="${#dataset.isTextAreaField(field)}" rows="2"></textarea>
+               th:readonly="${#dataset.isReadOnly(field)}" th:if="${#dataset.isInputField(field)}" th:value="${#dataset.getValue(model, field)}">
+        <input type="hidden" th:name="${field.name}" th:unless="${#dataset.isVisible(field)}" th:value="${#dataset.getValue(model, field)}">
+        <textarea th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}" th:name="${field.name}" th:if="${#dataset.isTextAreaField(field)}" th:attr="rows=${#dataset.getInputRows(field)}" th:text="${#dataset.getValue(model, field)}"></textarea>
     </div>
 </div>
 

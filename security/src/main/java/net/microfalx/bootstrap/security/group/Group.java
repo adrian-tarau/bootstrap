@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.security.group;
 
 import jakarta.persistence.*;
+import lombok.ToString;
 import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Visible;
@@ -9,6 +10,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "security_groups")
+@ToString(callSuper = true)
 public class Group extends NamedTimestampAware {
 
     @Id

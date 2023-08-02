@@ -44,7 +44,7 @@ DataSet.performAction = function (action) {
  */
 DataSet.view = function () {
     $.get(REQUEST_PATH + "/" + DataSet.id + "/view", function (data) {
-        DataSet.loadDialog(data);
+        DataSet.loadModal(data);
     });
 }
 
@@ -53,7 +53,7 @@ DataSet.view = function () {
  */
 DataSet.edit = function () {
     $.get(REQUEST_PATH + "/" + DataSet.id + "/edit", function (data) {
-        DataSet.loadDialog(data);
+        DataSet.loadModal(data);
     });
 }
 
@@ -62,7 +62,7 @@ DataSet.edit = function () {
  */
 DataSet.delete = function () {
     $.get(REQUEST_PATH + "/" + DataSet.id + "/delete", function (data) {
-        DataSet.loadDialog(data);
+        DataSet.loadModal(data);
     });
 }
 
@@ -70,12 +70,13 @@ DataSet.delete = function () {
  * Shows an HTML fragment which contains a data set modal.
  * @param {String} html the modal
  */
-DataSet.loadDialog = function (html) {
+DataSet.loadModal = function (html) {
     console.log(html);
-    $('#dataset-model').remove();
+    $('#dataset-modal').remove();
     $(document.body).append(html);
-    let model = new bootstrap.Modal('#dataset-dialog', {});
-    model.show();
+    let modal = new bootstrap.Modal('#dataset-modal', {});
+    modal.show();
+    DataSet.registerModal(modal);
 }
 
 /**
@@ -156,6 +157,41 @@ DataSet.registerPopup = function (element) {
 DataSet.getPopups = function () {
     DataSet.popups = DataSet.popups || [];
     return DataSet.popups;
+}
+
+/**
+ * Closes last dialog.
+ */
+DataSet.closeModal = function () {
+    let modal = DataSet.getModals().pop();
+    if (modal) {
+        modal.hide();
+    }
+}
+
+/**
+ * Registers a modal, which is used to validate if the user clicks outside the popup.
+ * @param {bootstrap.Modal} modal the modal instance
+ */
+DataSet.registerModal = function (modal) {
+    DataSet.getModals().push(modal);
+}
+
+/**
+ * Returns the registers modals.
+ *
+ * @return {bootstrap.Modal[]} the modals.
+ */
+DataSet.getModals = function () {
+    DataSet.modals = DataSet.modals || [];
+    return DataSet.modals;
+}
+
+/**
+ * Saves the current data set model
+ */
+DataSet.save = function () {
+    DataSet.closeModal();
 }
 
 /**

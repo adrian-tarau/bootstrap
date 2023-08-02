@@ -28,7 +28,7 @@ class ProviderDataSetFactory<M, F extends Field<M>, ID> extends AbstractDataSetF
     }
 
     @Override
-    protected AbstractDataSet<M, F, ID> doCreate(Metadata<M, F> metadata) {
+    protected AbstractDataSet<M, F, ID> doCreate(Metadata<M, F, ID> metadata) {
         try {
             Constructor<DataSet<M, F, ID>> constructor = dataSetClass.getDeclaredConstructor(DataSetFactory.class, Metadata.class);
             return (AbstractDataSet<M, F, ID>) constructor.newInstance(this, metadata);
@@ -38,7 +38,7 @@ class ProviderDataSetFactory<M, F extends Field<M>, ID> extends AbstractDataSetF
     }
 
     @Override
-    public boolean supports(Metadata<M, F> metadata) {
+    public boolean supports(Metadata<M, F, ID> metadata) {
         return metadata.getModel() == modelClass;
     }
 }

@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * An interface which holds metadata about a model's fields.
  */
-public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, Nameable, Descriptable {
+public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String>, Nameable, Descriptable {
 
     /**
      * Returns the class supporting the model.
@@ -53,7 +53,7 @@ public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, N
     F findIdField();
 
     /**
-     * Finds a field by its name or property name.
+     * Returns a field by its name or property name, if exists.
      *
      * @param nameOrProperty the name or property name
      * @return the field, null if it does not exist
@@ -61,7 +61,7 @@ public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, N
     F find(String nameOrProperty);
 
     /**
-     * Gets a field by its name or property name.
+     * Returns a field by its name or property name.
      *
      * @param nameOrProperty the name or property name
      * @return the field
@@ -78,12 +78,18 @@ public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, N
     String getName(M model);
 
     /**
+     * Returns the class representing the model identifier.
+     * @return a non-null instance
+     */
+    Class<ID> getIdClass();
+
+    /**
      * Returns the composite identifier for a given model.
      *
      * @param model the model
      * @return a non-null instance
      */
-    CompositeIdentifier<M, F> getId(M model);
+    CompositeIdentifier<M, F, ID> getId(M model);
 
     /**
      * Returns the composite identifier from its string representation.
@@ -91,7 +97,7 @@ public interface Metadata<M, F extends Field<M>> extends Identifiable<String>, N
      * @param id the identifier
      * @return a non-nul instance
      */
-    CompositeIdentifier<M, F> getId(String id);
+    CompositeIdentifier<M, F, ID> getId(String id);
 
     /**
      * Returns an annotation by its type.

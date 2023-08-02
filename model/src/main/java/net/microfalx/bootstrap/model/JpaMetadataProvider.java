@@ -6,7 +6,7 @@ import net.microfalx.lang.annotation.Order;
 import static net.microfalx.lang.AnnotationUtils.getAnnotation;
 
 @Order
-public class JpaMetadataProvider<M> implements MetadataProvider<M, JpaField<M>> {
+public class JpaMetadataProvider<M, ID> implements MetadataProvider<M, JpaField<M>, ID> {
 
     @Override
     public boolean supports(Class<M> modelClass) {
@@ -14,7 +14,7 @@ public class JpaMetadataProvider<M> implements MetadataProvider<M, JpaField<M>> 
     }
 
     @Override
-    public Metadata<M, JpaField<M>> getMetadata(Class<M> modelClass) {
+    public Metadata<M, JpaField<M>, ID> getMetadata(Class<M> modelClass) {
         return new JpaMetadata<>(modelClass);
     }
 }

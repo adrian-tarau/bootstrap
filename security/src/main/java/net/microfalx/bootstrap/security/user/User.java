@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import lombok.ToString;
 import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Visible;
@@ -13,6 +14,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "security_users")
+@ToString(callSuper = true)
 public class User extends NamedTimestampAware {
 
     @Id
