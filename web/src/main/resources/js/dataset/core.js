@@ -12,8 +12,27 @@ DataSet.open = function (params) {
     let requestParams = $.extend({}, REQUEST_QUERY);
     requestParams = $.extend(requestParams, params);
     let uri = REQUEST_PATH + "?" + $.param(requestParams);
-    console.info("Open dat set " + uri);
+    console.info("Open data set " + uri);
     window.location.href = uri;
+}
+
+/**
+ * Takes a collection of parameters and queries the same end points with original parameters
+ * plus the additional parameters
+ * @param {Object }params the new parameters
+ */
+DataSet.ajax = function (path, params, callback) {
+    let requestParams = $.extend({}, REQUEST_QUERY);
+    requestParams = $.extend(requestParams, params);
+    let uri = REQUEST_PATH + "/" + path;
+    console.info("Ajax data set " + uri);
+    $.get({
+        data: requestParams,
+        url: uri,
+        success: function(output, status, xhr) {
+            callback.apply(this, [output, status, xhr]);
+        }
+    });
 }
 
 /**
@@ -21,7 +40,14 @@ DataSet.open = function (params) {
  * @param {Integer} page the page number, first one starts at 1
  */
 DataSet.loadPage = function (page) {
-
+    page = parseInt(page);
+    DataSet.ajax("page", {page: page}, function (data, status, xhr) {
+        console.log(data);
+        $("#dataset-grid tbody").append(data);
+        $("#more_results").attr("data-page", page + 1);
+        $("#page_info").text(xhr.getResponseHeader('X-DATASET-PAGE-INFO'));
+        $("#page_info_and_records").text(xhr.getResponseHeader('X-DATASET-PAGE-INFO-EXTENDED'));
+    });
 }
 
 /**

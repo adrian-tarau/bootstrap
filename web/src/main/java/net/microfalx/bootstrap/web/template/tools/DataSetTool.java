@@ -7,6 +7,7 @@ import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.lang.ObjectUtils;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.thymeleaf.context.IContext;
@@ -14,6 +15,8 @@ import org.thymeleaf.context.IContext;
 import java.util.Collection;
 
 import static net.microfalx.bootstrap.web.template.TemplateUtils.getModelAttribute;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -73,6 +76,16 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the index of the current row.
+     *
+     * @return the index
+     */
+    public long getCurrentIndex() {
+        MutableLong index = getModelAttribute(context, "index");
+        return index.getAndIncrement();
+    }
+
+    /**
      * Returns the records for the current data set.
      *
      * @return a non-null instance
@@ -127,8 +140,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return a non-null instance
      */
     public String getPageInfo() {
-        Page<M> page = getPage();
-        return page.getTotalPages() + " page(s) (" + page.getTotalElements() + ")";
+        return getPageInfo(getPage());
     }
 
     /**
@@ -137,8 +149,16 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return a non-null instance
      */
     public String getPageAndRecordInfo() {
-        Page<M> page = getPage();
-        return "Page " + (page.getNumber() + 1) + " of " + page.getTotalPages() + " (" + page.getTotalElements() + ")";
+        return getPageAndRecordInfo(getPage());
+    }
+
+    /**
+     * Returns the next page number.
+     *
+     * @return a positive integer
+     */
+    public int getNextPage() {
+        return getPage().getNumber() + 1;
     }
 
     /**
@@ -348,6 +368,27 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public String getId(M model) {
         DataSet<M, F, ID> dataSet = getDataSet();
         return dataSet.getCompositeId(model).toString();
+    }
+
+    /**
+     * Returns information about current page.
+     *
+     * @return a non-null instance
+     */
+    public static <M> String getPageInfo(Page<M> page) {
+        requireNonNull(page);
+        return formatNumber(page.getTotalPages()) + " page(s) (" + formatNumber(page.getTotalElements()) + ")";
+    }
+
+    /**
+     * Returns information about current page and records.
+     *
+     * @return a non-null instance
+     */
+    public static <M> String getPageAndRecordInfo(Page<M> page) {
+        requireNonNull(page);
+        return "Page " + (formatNumber(page.getNumber() + 1)) + " of " + formatNumber(page.getTotalPages())
+                + " (" + formatNumber(page.getTotalElements()) + ")";
     }
 
     private Component.Type getComponentType(Field<M> field) {

@@ -4,15 +4,15 @@
 
 <thead class="table-light" th:fragment="grid-header">
 <tr>
+    <th scope="col" class="text-right">#</th>
     <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}"
         th:utext="${field.label}" th:attr="field=${field.name}"></th>
     <th scope="col" class="text-center" th:if="${#dataset.hasActions}">Actions</th>
 </tr>
 </thead>
-x
 
-<tbody th:fragment="grid-body">
-<tr th:each="model : ${#dataset.getModels()}">
+<tr th:each="model : ${#dataset.getModels()}" th:fragment="grid-rows">
+    <td class="text-right" th:text="${#dataset.getCurrentIndex()}"></td>
     <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}"
         th:utext="${#dataset.getDisplayValue(model, field)}"></td>
     <td class="text-center" th:if="${#dataset.hasActions}">
@@ -20,11 +20,14 @@ x
                 class="fa-solid fa-ellipsis"></i></a>
     </td>
 </tr>
+
+<tbody th:fragment="grid-body">
+<tr th:replace="~{ fragments/dataset :: grid-rows}"></tr>
 </tbody>
 
-<table class="table table-hover" th:fragment="grid">
-    <thead th:replace="~{ fragments/dataset :: grid-header}">
-    <tbody th:replace="~{ fragments/dataset :: grid-body}">
+<table class="table table-hover" th:fragment="grid" id="dataset-grid">
+    <thead th:replace="~{ fragments/dataset :: grid-header}"></thead>
+    <tbody th:replace="~{ fragments/dataset :: grid-body}"></tbody>
 </table>
 
 <div class="dropdown-menu" th:fragment="action-menu" id="dataset-actions">
@@ -42,7 +45,7 @@ x
                         data-bs-toggle="tooltip" title="Adds a new entry"><i th:class="${button.icon}"></i><span
                         class="mL-5" th:text="${button.text}"></span></button>
             </ul>
-            <div class="mR-10"><span class="badge rounded-pill bg-success p-10"
+            <div class="mR-10"><span id="page_info" class="badge rounded-pill bg-success p-10"
                                      th:text="${#dataset.getPageInfo()}"></span></div>
             <form class="d-flex" role="search">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
@@ -55,10 +58,13 @@ x
 </nav>
 
 <div class="ta-c bdT w-100 p-20" th:fragment="grid-next-page" th:if="${#dataset.hasNext()}">
-    <span class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageAndRecordInfo()}"></span>
+    <span id="page_info_and_records" class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageAndRecordInfo()}"></span>
+    <a id="more_results" href="#" th:data-page="${#dataset.getNextPage()}"
+       th:onclick="DataSet.loadPage(this.getAttribute('data-page')); return false">
     <span class="badge bgc-green-50 c-green-700 p-10 tt-c rounded-pill">
-        <a href="#">More results</a>
+        More results
     </span>
+    </a>
 </div>
 
 <div th:fragment="render">
@@ -93,12 +99,19 @@ x
 </div>
 
 <div th:fragment="fields" class="mb-3 row" th:each="field : ${#dataset.getFields()}">
-    <label th:attr="for=${field.name}" class="" th:class="${#dataset.getInputLabelClass(field)}" th:text="${field.label}"></label>
+    <label th:attr="for=${field.name}" class="" th:class="${#dataset.getInputLabelClass(field)}"
+           th:text="${field.label}"></label>
     <div th:class="${#dataset.getInputContainerClass(field)}">
-        <input th:class="${#dataset.getInputFieldClass(field)}" th:name="${field.name}" th:type="${#dataset.getInputType(field)}"
-               th:readonly="${#dataset.isReadOnly(field)}" th:if="${#dataset.isInputField(field)}" th:value="${#dataset.getValue(model, field)}">
-        <input type="hidden" th:name="${field.name}" th:unless="${#dataset.isVisible(field)}" th:value="${#dataset.getValue(model, field)}">
-        <textarea th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}" th:name="${field.name}" th:if="${#dataset.isTextAreaField(field)}" th:attr="rows=${#dataset.getInputRows(field)}" th:text="${#dataset.getValue(model, field)}"></textarea>
+        <input th:class="${#dataset.getInputFieldClass(field)}" th:name="${field.name}"
+               th:type="${#dataset.getInputType(field)}"
+               th:readonly="${#dataset.isReadOnly(field)}" th:if="${#dataset.isInputField(field)}"
+               th:value="${#dataset.getValue(model, field)}">
+        <input type="hidden" th:name="${field.name}" th:unless="${#dataset.isVisible(field)}"
+               th:value="${#dataset.getValue(model, field)}">
+        <textarea th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}"
+                  th:name="${field.name}" th:if="${#dataset.isTextAreaField(field)}"
+                  th:attr="rows=${#dataset.getInputRows(field)}"
+                  th:text="${#dataset.getValue(model, field)}"></textarea>
     </div>
 </div>
 

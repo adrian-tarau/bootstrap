@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.dataset;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.server.PathParam;
 import net.microfalx.bootstrap.dataset.DataSet;
 import net.microfalx.bootstrap.dataset.DataSetException;
@@ -15,9 +16,11 @@ import net.microfalx.bootstrap.web.component.Item;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.component.Toolbar;
 import net.microfalx.bootstrap.web.controller.NavigableController;
+import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.StringUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -52,6 +55,20 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         updateModel(dataSet, model, State.BROWSE);
         processParams(dataSet, model, pageParameter, queryParameter, filterParameter, sortParameter);
         return "dataset/browse";
+    }
+
+    @GetMapping(path = "page")
+    public String next(Model model, HttpServletResponse response,
+                       @RequestParam(value = "page", defaultValue = "0") int pageParameter,
+                       @RequestParam(value = "query", defaultValue = "") String queryParameter,
+                       @RequestParam(value = "filter", defaultValue = "") String filterParameter,
+                       @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        updateModel(dataSet, model, State.BROWSE);
+        Page<M> page = processParams(dataSet, model, pageParameter, queryParameter, filterParameter, sortParameter);
+        response.addHeader("X-DATASET-PAGE-INFO", DataSetTool.getPageInfo(page));
+        response.addHeader("X-DATASET-PAGE-INFO-EXTENDED", DataSetTool.getPageAndRecordInfo(page));
+        return "dataset/page:: #dataset-page";
     }
 
     @GetMapping(path = "{id}/add")
@@ -214,14 +231,16 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         }
     }
 
-    private void processParams(DataSet<M, Field<M>, ID> dataSet, Model model,
-                               int pageParameter, String queryParameter, String filterParameter, String sortParameter) {
+    private Page<M> processParams(DataSet<M, Field<M>, ID> dataSet, Model model,
+                                  int pageParameter, String queryParameter, String filterParameter, String sortParameter) {
         Filter filter = getFilter(filterParameter);
         Sort sort = getSort(sortParameter);
         Pageable page = getPage(pageParameter, sort);
-        Page<M> models = extractModels(filter, page);
-        model.addAttribute("page", models);
+        Page<M> pagedModels = extractModels(filter, page);
+        model.addAttribute("page", pagedModels);
         model.addAttribute("query", queryParameter);
         model.addAttribute("sort", sort);
+        model.addAttribute("index", new MutableLong(pagedModels.getPageable().getOffset() + 1));
+        return pagedModels;
     }
 }

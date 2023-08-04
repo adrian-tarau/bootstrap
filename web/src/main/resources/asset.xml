@@ -10,6 +10,7 @@
         <asset path="component.css" type="stylesheet"/>
 
         <asset path="core.js" type="script"/>
+        <asset path="ajax.js" type="script"/>
         <asset path="scroll_top.js" type="script"/>
         <asset path="sort.js" type="script"/>
     </asset-bundle>

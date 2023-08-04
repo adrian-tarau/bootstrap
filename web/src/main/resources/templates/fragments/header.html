@@ -12,6 +12,12 @@
 
 <body>
 
+<li th:fragment="ajax">
+    <div class="spinner-border text-secondary mt-3" role="status" style="display: none" id="ajax">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</li>
+
 <li class="dropdown" th:fragment="user">
     <a href="" class="dropdown-toggle no-after peers fxw-nw ai-c lh-1" data-bs-toggle="dropdown">
         <div class="peer mR-10">
