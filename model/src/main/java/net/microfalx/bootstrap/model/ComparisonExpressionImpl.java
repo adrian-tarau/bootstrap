@@ -25,6 +25,12 @@ class ComparisonExpressionImpl implements ComparisonExpression {
         if (value != null && operator.getMaximumOperands() == 0) {
             throw new IllegalArgumentException("Operator '" + operator.getLabel() + "' does not accept operands");
         }
+        if (toArray(value).length < operator.getMinimumOperands()) {
+            throw new IllegalArgumentException("Operator '" + operator.getLabel() + "' requires a minimum of " + operator.getMaximumOperands() + " operands");
+        }
+        if (toArray(value).length > operator.getMaximumOperands()) {
+            throw new IllegalArgumentException("Operator '" + operator.getLabel() + "' requires a maximum of " + operator.getMaximumOperands() + " operands");
+        }
         this.field = field;
         this.value = value;
         this.operator = operator;

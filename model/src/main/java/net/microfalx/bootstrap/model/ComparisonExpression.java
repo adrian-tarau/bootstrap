@@ -115,6 +115,18 @@ public interface ComparisonExpression extends Expression {
     }
 
     /**
+     * Creates a new comparison expression with an 'regex' operator.
+     * For example:FIELD_NAME regex 'MATCHER', where MATCHER is a regular expression to be matches
+     *
+     * @param field the expression field
+     * @param value the expression value
+     * @return a non-null instance
+     */
+    static ComparisonExpression regex(String field, Object value) {
+        return new ComparisonExpressionImpl(Operator.REGEX, field, value);
+    }
+
+    /**
      * Creates a new comparison expression with an 'in' operator. Ex. FIELD_NAME in (?,?,?).
      *
      * @param field  the expression field
@@ -215,6 +227,11 @@ public interface ComparisonExpression extends Expression {
          * Like operator; FIELD_NAME like '*va?ue*', where * matches any number of characters and ? matches any single character
          */
         LIKE("like", 1),
+
+        /**
+         * Regular expression operator; FIELD_NAME regex 'MATCHER', where MATCHER is a regular expression to be matches
+         */
+        REGEX("regex", 1),
 
         /**
          * Contains operator: FIELD_NAME contains 'value' or FIELD_NAME like '%value%'

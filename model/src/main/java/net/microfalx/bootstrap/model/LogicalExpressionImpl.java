@@ -14,6 +14,9 @@ class LogicalExpressionImpl implements LogicalExpression {
         requireNonNull(expressions);
         this.expressions = new ArrayList<>(expressions);
         this.operator = operator;
+        if (operator == Operator.NOT && expressions.size() > 1) {
+            throw new ExpressionException("NOT operator expects zero or one sub-expression, got " + expressions);
+        }
     }
 
     @Override
