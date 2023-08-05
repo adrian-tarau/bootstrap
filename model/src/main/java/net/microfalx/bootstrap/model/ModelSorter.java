@@ -20,10 +20,9 @@ public class ModelSorter<M> {
     public ModelSorter(Metadata<M, ? extends Field<M>, ?> metadata, List<M> models, Sort sort) {
         requireNonNull(metadata);
         requireNonNull(models);
-        requireNonNull(sort);
         this.metadata = metadata;
         this.models = new ArrayList<>(models);
-        this.sort = sort;
+        this.sort = sort != null ? sort : Sort.unsorted();
         initialize();
     }
 
@@ -32,11 +31,10 @@ public class ModelSorter<M> {
      *
      * @return the sorted models
      */
-    List<M> apply() {
+    public List<M> apply() {
         if (!sort.isSorted()) return models;
-        ArrayList<M> sortedModel = new ArrayList<>(models);
-        sortedModel.sort(new SortComparator());
-        return sortedModel;
+        models.sort(new SortComparator());
+        return models;
     }
 
     @SuppressWarnings("unchecked")

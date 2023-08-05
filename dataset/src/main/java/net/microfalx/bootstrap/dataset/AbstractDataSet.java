@@ -2,10 +2,13 @@ package net.microfalx.bootstrap.dataset;
 
 import com.google.common.collect.Lists;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.formatter.EnumFormatter;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
 import net.microfalx.bootstrap.model.*;
+import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ArgumentUtils;
+import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.ReadOnly;
 import net.microfalx.lang.annotation.Visible;
@@ -27,6 +30,7 @@ import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 /**
  * Base class for all data sets.
  */
+@net.microfalx.bootstrap.dataset.annotation.DataSet
 public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements DataSet<M, F, ID> {
 
     private final DataSetFactory<M, F, ID> factory;
@@ -51,12 +55,12 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
-    public String getName() {
+    public final String getName() {
         return defaultIfEmpty(name, metadata.getName());
     }
 
     @Override
-    public void setName(String name) {
+    public final void setName(String name) {
         requireNotEmpty(name);
         this.name = name;
     }
@@ -93,17 +97,17 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
-    public DataSet<M, F, ID> view() {
+    public final DataSet<M, F, ID> view() {
         return setState(State.VIEW);
     }
 
     @Override
-    public DataSet<M, F, ID> edit() {
+    public final DataSet<M, F, ID> edit() {
         return setState(State.EDIT);
     }
 
     @Override
-    public DataSet<M, F, ID> add() {
+    public final DataSet<M, F, ID> add() {
         return setState(State.ADD);
     }
 
@@ -120,9 +124,8 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         };
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public List<Field<M>> getVisibleFields() {
+    public final List<Field<M>> getVisibleFields() {
         switch (state) {
             case BROWSE -> {
                 if (browsableFields == null) browsableFields = getVisibleAndOrderedFields();
@@ -144,9 +147,9 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public String getDisplayValue(M model, Field<M> field) {
+    public final String getDisplayValue(M model, Field<M> field) {
         ArgumentUtils.requireNonNull(field);
         if (model == null) return null;
         Object value = field.get(model);
@@ -156,7 +159,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         } else {
             if (value == null) return null;
             if (isJdkType(value)) {
-                return FormatterUtils.basicFormatting(value, formattableAnnot);
+                if (value instanceof Enum) {
+                    return ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
+                } else {
+                    return FormatterUtils.basicFormatting(value, formattableAnnot);
+                }
             } else {
                 MetadataService metadataService = applicationContext.getBean(MetadataService.class);
                 Metadata modelMetadata = metadataService.getMetadata(value.getClass());
@@ -166,22 +173,22 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
-    public CompositeIdentifier<M, F, ID> getCompositeId(M model) {
+    public final CompositeIdentifier<M, F, ID> getCompositeId(M model) {
         return metadata.getId(model);
     }
 
     @Override
-    public void setCompositeId(M model, CompositeIdentifier<M, F, ID> id) {
+    public final void setCompositeId(M model, CompositeIdentifier<M, F, ID> id) {
 
     }
 
     @Override
-    public ID getId(M model) {
+    public final ID getId(M model) {
         return getCompositeId(model).toId();
     }
 
     @Override
-    public void setId(M model, ID id) {
+    public final void setId(M model, ID id) {
         new CompositeIdentifier<>(metadata, model);
     }
 
@@ -270,6 +277,15 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     /**
+     * Returns the data set service.
+     *
+     * @return a non-null instance
+     */
+    protected final DataSetService getDataSetService() {
+        return getService(DataSetService.class);
+    }
+
+    /**
      * Finds a service by class.
      *
      * @param serviceClass the service class
@@ -281,7 +297,8 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     protected List<M> doFindAll() {
-        return doFindAll(Pageable.ofSize(100).withPage(0)).getContent();
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = AnnotationUtils.getAnnotation(this, net.microfalx.bootstrap.dataset.annotation.DataSet.class);
+        return doFindAll(Pageable.ofSize(dataSetAnnot.pageSize()).withPage(0)).getContent();
     }
 
     protected List<M> doFindAllById(Iterable<ID> ids) {
@@ -350,7 +367,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
 
     @Override
     public String toString() {
-        return "AbstractDataSet{" + "factory=" + factory + ", metadata=" + metadata + '}';
+        return getClass().getSimpleName() + "{" + "factory=" + ClassUtils.getName(factory) + ", metadata=" + metadata + '}';
     }
 
     private void initFromMetadata() {
@@ -359,8 +376,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     private List<Field<M>> getVisibleAndOrderedFields() {
-        return getMetadata().getFields().stream()
-                .filter(this::isVisible)
+        return getMetadata().getFields().stream().filter(this::isVisible)
                 .sorted(Comparator.comparing(Field::getPosition))
                 .collect(Collectors.toUnmodifiableList());
     }
@@ -381,4 +397,6 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
             throw new DataSetException("Failed to create formatter for field '" + field.getName() + "'", e);
         }
     }
+
+    private static final Formatter<?, ?, ?> ENUM_FORMATTER = new EnumFormatter<>();
 }

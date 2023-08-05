@@ -11,7 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import java.lang.ref.SoftReference;
+import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.FormatterUtils.formatDateTime;
 
 /**
  * A service used to create data sets
@@ -29,7 +33,7 @@ public final class DataSetService implements InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
 
     private final Collection<DataSetFactory<?, ?, ?>> factories = new CopyOnWriteArrayList<>();
-    private final Map<Class<?>, Map<String, Field<?>>> fieldsCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, SoftReference<CachedModels<?, ?>>> caches = new ConcurrentHashMap<>();
 
     @Autowired
     private MetadataService metadataService;
@@ -78,6 +82,32 @@ public final class DataSetService implements InitializingBean {
         initialize();
     }
 
+    /**
+     * Registers a list of models into the cache.
+     *
+     * @param models the models
+     * @param <M>    the model type
+     */
+    <M, ID> void registerCache(CachedModels<M, ID> models) {
+        requireNonNull(models);
+        caches.put(models.modelClass, new SoftReference<>(models));
+    }
+
+    /**
+     * Returns a list of cached models from the cache.
+     *
+     * @param modelClass the model class
+     * @param <M>        the model type
+     * @return the cached models, null if there is nothing in the cache
+     */
+    @SuppressWarnings("unchecked")
+    <M, ID> CachedModels<M, ID> getCached(Class<M> modelClass) {
+        requireNonNull(modelClass);
+        SoftReference<CachedModels<?, ?>> reference = caches.get(modelClass);
+        CachedModels<M, ID> holder = reference != null ? (CachedModels<M, ID>) reference.get() : null;
+        return holder != null && !holder.isExpired() ? holder : null;
+    }
+
     protected void initialize() {
         discoverStaticFactories();
         discoverDynamicFactories();
@@ -99,6 +129,43 @@ public final class DataSetService implements InitializingBean {
         for (Class<DataSet> dataSetClass : dataSetClasses) {
             LOGGER.info(" - " + ClassUtils.getName(dataSetClass));
             factories.add(new ProviderDataSetFactory(dataSetClass));
+        }
+    }
+
+    static class CachedModels<M, ID> {
+
+        private final Class<M> modelClass;
+        private final List<M> models;
+        private final Map<ID, M> modelsById;
+        private final Duration expiration;
+        private final long created = System.currentTimeMillis();
+
+        CachedModels(Class<M> modelClass, List<M> models, Map<ID, M> modelsById, Duration expiration) {
+            this.modelClass = modelClass;
+            this.models = models;
+            this.modelsById = modelsById;
+            this.expiration = expiration;
+        }
+
+        List<M> getModels() {
+            return models;
+        }
+
+        Map<ID, M> getModelsById() {
+            return modelsById;
+        }
+
+        private boolean isExpired() {
+            return (System.currentTimeMillis() - created) > expiration.toMillis();
+        }
+
+        @Override
+        public String toString() {
+            return "CacheHolder{" +
+                    "models=" + models.size() +
+                    ", expiration=" + expiration +
+                    ", created=" + formatDateTime(created) +
+                    '}';
         }
     }
 }

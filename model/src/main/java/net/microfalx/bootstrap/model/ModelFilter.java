@@ -26,10 +26,9 @@ public class ModelFilter<M> {
     public ModelFilter(Metadata<M, ? extends Field<M>, ?> metadata, List<M> models, Filter filter) {
         requireNonNull(metadata);
         requireNonNull(models);
-        requireNonNull(filter);
         this.metadata = metadata;
         this.models = new ArrayList<>(models);
-        this.filter = filter;
+        this.filter = filter != null ? filter : Filter.create();
         this.matcher.setCachePatterns(true);
         this.matcher.setCaseSensitive(false);
     }
@@ -39,7 +38,7 @@ public class ModelFilter<M> {
      *
      * @return the sorted models
      */
-    List<M> apply() {
+    public List<M> apply() {
         return models.stream().filter(m -> evaluateExpression(filter.getExpression(), m)).toList();
     }
 

@@ -13,7 +13,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 /**
  * Holds sorting criteria for a model.
  */
-public class Sort implements Iterable<Sort.Order>{
+public class Sort implements Iterable<Sort.Order> {
 
     private static final Sort UNSORTED = Sort.create(new Order[0]);
     public static final Direction DEFAULT_DIRECTION = Direction.ASC;
@@ -414,6 +414,15 @@ public class Sort implements Iterable<Sort.Order>{
          */
         public Order ignoreCase() {
             return new Order(direction, field, true, nullHandling);
+        }
+
+        /**
+         * Returns a new {@link Order} with a different case-insensitive flat.
+         *
+         * @return a new instance
+         */
+        public Order ignoreCase(boolean value) {
+            return new Order(direction, field, value, nullHandling);
         }
 
         /**
