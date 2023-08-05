@@ -8,6 +8,8 @@
         <asset path="scroll_top.css" type="stylesheet"/>
         <asset path="sort.css" type="stylesheet"/>
         <asset path="component.css" type="stylesheet"/>
+        <asset path="grid.css" type="stylesheet"/>
+        <asset path="resizable.css" type="stylesheet"/>
 
         <asset path="core.js" type="script"/>
         <asset path="ajax.js" type="script"/>

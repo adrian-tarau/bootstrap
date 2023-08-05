@@ -29,7 +29,7 @@ DataSet.ajax = function (path, params, callback) {
     $.get({
         data: requestParams,
         url: uri,
-        success: function(output, status, xhr) {
+        success: function (output, status, xhr) {
             callback.apply(this, [output, status, xhr]);
         }
     });
@@ -221,10 +221,35 @@ DataSet.save = function () {
 }
 
 /**
+ * Initializes various notifications related components.
+ */
+DataSet.initNotifications = function() {
+    $("#message").delay(2000).fadeOut(1000);
+}
+
+/**
+ * Transforms a plain tables into a resizable ones.
+ */
+DataSet.initTables = function () {
+    $(".dataset-table th")
+        .css({
+            position: "relative"
+        })
+        .prepend("<div class='dataset-table-resizer'></div>")
+        .resizable({
+            resizeHeight: false,
+            handleSelector: "",
+            onDragStart: function (e, $el, opt) {
+                return $(e.target).hasClass("resizer");
+            }
+        });
+}
+
+/**
  * Initializes the data set.
  */
 DataSet.init = function () {
     DataSet.initEvents();
+    DataSet.initNotifications();
+    DataSet.initTables();
 }
-
-DataSet.init();
