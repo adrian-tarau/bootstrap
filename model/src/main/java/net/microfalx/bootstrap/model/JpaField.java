@@ -19,12 +19,12 @@ public final class JpaField<M> extends PojoField<M> {
     }
 
     @Override
-    protected void update(Member member) {
-        super.update(member);
-
-        setId(hasAnnotation(Id.class));
+    protected boolean update(Member member) {
+        boolean accepted = super.update(member);
+        setIsId(hasAnnotation(Id.class));
         Column columnAnnot = findAnnotation(Column.class);
         if (columnAnnot != null) columnName = columnAnnot.name();
         setTransient(hasAnnotation(Transient.class));
+        return accepted;
     }
 }

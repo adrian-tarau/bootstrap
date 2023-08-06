@@ -86,6 +86,13 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
     boolean isId();
 
     /**
+     * Returns whether the field is part of the model name.
+     *
+     * @return {@code true} if part of the model name, {@code false} otherwise
+     */
+    boolean isName();
+
+    /**
      * Returns whether the field is read-only.
      *
      * @return {@code true} if read-only, {@code false} otherwise
@@ -166,12 +173,12 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
         BOOLEAN(false, false),
 
         /**
-         * An integer (byte/short/int/long)
+         * An integer (byte/short/int/long,big integer)
          */
         INTEGER(true, false),
 
         /**
-         * A floating point (float/double)
+         * A floating point (float/double,big number)
          */
         NUMBER(true, false),
 
@@ -201,7 +208,7 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
         ENUM(false, false),
 
         /**
-         * A collection class
+         * A collection class (Collection or Map)
          */
         COLLECTION(false, false),
 

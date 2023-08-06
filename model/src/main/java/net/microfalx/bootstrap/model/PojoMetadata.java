@@ -66,12 +66,13 @@ public abstract class PojoMetadata<M, F extends PojoField<M>, ID> extends Abstra
                 field.setIndex(index++);
                 field.update(getGetter(propertyDescriptor), getSetter(propertyDescriptor));
                 Field jvmField = ReflectionUtils.findField(modelClass, propertyDescriptor.getName());
+                boolean accepted = false;
                 if (jvmField != null) {
-                    field.update(jvmField);
-                } else {
-                    field.update(propertyDescriptor.getReadMethod());
+                    accepted = field.update(jvmField);
+                } else if (propertyDescriptor.getReadMethod() != null) {
+                    accepted = field.update(propertyDescriptor.getReadMethod());
                 }
-                metadata.addField(field);
+                if (accepted) metadata.addField(field);
             } catch (Exception e) {
                 throw new ModelException("Failed to process field '" + propertyDescriptor.getName()
                         + "' in " + ClassUtils.getName(modelClass), e);

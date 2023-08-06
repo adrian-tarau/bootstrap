@@ -7,7 +7,6 @@ import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
 import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.AnnotationUtils;
-import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.ReadOnly;
@@ -90,7 +89,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     public final DataSet<M, F, ID> setState(State state) {
-        ArgumentUtils.requireNonNull(state);
+        requireNonNull(state);
         if (state != State.BROWSE) checkIfBrowse();
         this.state = state;
         return this;
@@ -113,8 +112,9 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
 
     @Override
     public final boolean isVisible(Field<M> field) {
+        requireNonNull(field);
         Visible visibleAnnot = field.findAnnotation(Visible.class);
-        if (visibleAnnot == null) return true;
+        if (visibleAnnot == null) return !field.isId();
         if (!visibleAnnot.value()) return false;
         return switch (state) {
             case BROWSE -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.BROWSE);
@@ -150,7 +150,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public final String getDisplayValue(M model, Field<M> field) {
-        ArgumentUtils.requireNonNull(field);
+        requireNonNull(field);
         if (model == null) return null;
         Object value = field.get(model);
         Formattable formattableAnnot = field.findAnnotation(Formattable.class);

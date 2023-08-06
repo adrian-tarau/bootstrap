@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.model;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.Glue;
 import net.microfalx.lang.annotation.I18n;
 import net.microfalx.lang.annotation.Name;
 import org.apache.commons.lang3.ClassUtils;
@@ -128,8 +129,12 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
         StringBuilder builder = new StringBuilder();
         List<F> nameFields = getNameFields();
         for (F nameField : nameFields) {
-            if (builder.length() > 0) builder.append(" ");
+            Glue glueAnnot = nameField.findAnnotation(Glue.class);
+            String separator = glueAnnot != null ? glueAnnot.value() : " ";
+            if (builder.length() > 0) builder.append(separator);
+            if (glueAnnot != null && StringUtils.isNotEmpty(glueAnnot.before())) builder.append(glueAnnot.before());
             builder.append(nameField.get(model));
+            if (glueAnnot != null && StringUtils.isNotEmpty(glueAnnot.after())) builder.append(glueAnnot.after());
         }
         return builder.toString();
     }

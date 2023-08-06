@@ -12,7 +12,10 @@ import static java.time.Duration.ofSeconds;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
- * A data set backed by data in memory.
+ * A data set backed by data in memory, which holds cached data from various services.
+ * <p>
+ * Subclasses would implement {@link  #extractModels()} to retrieve the models from services, store it with
+ * {@link DataSetService} in internal caches and reused for any instance of the data set.
  */
 public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractDataSet<M, F, ID> {
 

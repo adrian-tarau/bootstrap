@@ -1,9 +1,7 @@
 package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.annotation.Id;
-import net.microfalx.lang.annotation.Position;
-import net.microfalx.lang.annotation.ReadOnly;
+import net.microfalx.lang.annotation.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
@@ -69,11 +67,14 @@ public abstract class PojoField<M> extends AbstractField<M> {
         setReadOnly(setter == null || hasAnnotation(ReadOnly.class));
     }
 
-    protected void update(Member member) {
+    protected boolean update(Member member) {
         requireNonNull(member);
+        if (((AnnotatedElement) member).isAnnotationPresent(Ignore.class)) return false;
         annotations = Arrays.asList(((AnnotatedElement) member).getAnnotations());
         Position positionAnnot = findAnnotation(Position.class);
         setPosition(positionAnnot != null ? positionAnnot.value() : 1 + getIndex() * 10);
-        setId(hasAnnotation(Id.class));
+        setIsId(hasAnnotation(Id.class));
+        setIsName(hasAnnotation(Name.class));
+        return true;
     }
 }
