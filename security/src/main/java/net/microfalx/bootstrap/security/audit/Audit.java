@@ -3,21 +3,27 @@ package net.microfalx.bootstrap.security.audit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.security.user.User;
+import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.ReadOnly;
 import net.microfalx.lang.annotation.Visible;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(name = "security_audit")
 @ReadOnly
-@ToString(callSuper = true)
+@Getter
+@Setter
+@EqualsAndHashCode(of = "id")
+@ToString
 public class Audit {
 
     public static String OPEN = "Open";
@@ -43,9 +49,14 @@ public class Audit {
     @Position(2)
     private String action;
 
-    @Column(name = "category", nullable = false)
+    @Column(name = "module", nullable = false)
     @NotBlank
     @Position(3)
+    private String module;
+
+    @Column(name = "category", nullable = false)
+    @NotBlank
+    @Position(4)
     private String category;
 
     @Column(name = "client_info", nullable = false)
@@ -62,6 +73,7 @@ public class Audit {
     @Column(name = "reference", nullable = false)
     @NotBlank
     @Position(30)
+    @Name
     private String reference;
 
     @Column(name = "error_code", nullable = false)
@@ -73,89 +85,4 @@ public class Audit {
     @Position(1000)
     @Component(Component.Type.TEXT_AREA)
     private String description;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public String getClientInfo() {
-        return clientInfo;
-    }
-
-    public void setClientInfo(String clientInfo) {
-        this.clientInfo = clientInfo;
-    }
-
-    public String getReference() {
-        return reference;
-    }
-
-    public void setReference(String reference) {
-        this.reference = reference;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
-    }
-
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Audit audit = (Audit) o;
-        return Objects.equals(id, audit.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 }

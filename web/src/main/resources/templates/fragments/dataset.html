@@ -13,8 +13,11 @@
 
 <tr th:each="model : ${#dataset.getModels()}" th:fragment="grid-rows">
     <td class="text-right" th:text="${#dataset.getCurrentIndex()}"></td>
-    <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}"
-        th:utext="${#dataset.getDisplayValue(model, field)}"></td>
+    <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}">
+        <span th:unless="${field.isName()}" th:utext="${#dataset.getDisplayValue(model, field)}"></span>
+        <a th:if="${field.isName()}" href="#" th:attr="onclick=|DataSet.performAction('view', null, '${#dataset.getId(model)}')|"
+           th:utext="${#dataset.getDisplayValue(model, field)}"></a>
+    </td>
     <td class="text-center" th:if="${#dataset.hasActions}">
         <a class="icon-link" href="#" th:attr="onclick=|DataSet.showActions(event, '${#dataset.getId(model)}')|"><i
                 class="fa-solid fa-ellipsis"></i></a>
@@ -25,7 +28,7 @@
 <tr th:replace="~{ fragments/dataset :: grid-rows}"></tr>
 </tbody>
 
-<table id="dataset-grid" class="table table-hover dataset-table" th:fragment="grid" >
+<table id="dataset-grid" class="table table-hover dataset-table" th:fragment="grid">
     <thead th:replace="~{ fragments/dataset :: grid-header}"></thead>
     <tbody th:replace="~{ fragments/dataset :: grid-body}"></tbody>
 </table>
@@ -42,8 +45,10 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <button class="btn btn-primary btn-color mR-5" type="button"
                         th:each="button : ${#component.getChildren(toolbar)}"
-                        data-bs-toggle="tooltip" title="Adds a new entry"><i th:class="${button.icon}"></i><span
-                        class="mL-5" th:text="${button.text}"></span></button>
+                        data-bs-toggle="tooltip" title="${button.description}"
+                        th:attr="onclick=|DataSet.performAction('${button.action}', '${button.handler}')|">
+                    <i th:class="${button.icon}"></i><span class="mL-5" th:text="${button.text}"></span>
+                </button>
             </ul>
             <div class="mR-10"><span id="page_info" class="badge rounded-pill bg-success p-10"
                                      th:text="${#dataset.getPageInfo()}"></span></div>
@@ -58,7 +63,8 @@
 </nav>
 
 <div class="ta-c bdT w-100 p-20" th:fragment="grid-next-page" th:if="${#dataset.hasNext()}">
-    <span id="page_info_and_records" class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageAndRecordInfo()}"></span>
+    <span id="page_info_and_records" class="badge rounded-pill bg-success p-10"
+          th:text="${#dataset.getPageAndRecordInfo()}"></span>
     <a id="more_results" href="#" th:data-page="${#dataset.getNextPage()}"
        th:onclick="DataSet.loadPage(this.getAttribute('data-page')); return false">
     <span class="badge bgc-green-50 c-green-700 p-10 tt-c rounded-pill">

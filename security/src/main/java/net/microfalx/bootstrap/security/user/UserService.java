@@ -67,6 +67,7 @@ public class UserService {
         Audit audit = new Audit();
         audit.setUser(user);
         audit.setAction(context.getAction());
+        audit.setModule(context.getModule());
         audit.setCategory(context.getCategory());
         audit.setDescription(context.getDescription());
         audit.setErrorCode(context.getErrorCode());

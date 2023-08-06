@@ -326,6 +326,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         } else if (field.getDataType().isNumeric()) {
             classes += " text-right";
         }
+        if (field.getDataType().isTemporal()) classes += " text-nowrap";
         classes = classes.trim();
         return isNotEmpty(classes) ? classes : null;
     }

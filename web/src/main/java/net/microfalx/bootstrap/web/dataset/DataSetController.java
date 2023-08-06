@@ -190,13 +190,12 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private Toolbar getToolBar(DataSet<M, Field<M>, ID> dataSet) {
         Toolbar toolbar = new Toolbar().setId("toolbar");
         if (!dataSet.isReadOnly()) {
-            toolbar.add(new Button().setText("Add").setIcon("fa-solid fa-plus"));
+            toolbar.add(new Button().setAction("add").setText("Add").setIcon("fa-solid fa-plus"));
         }
         // if (toolbar.hasChildren()) toolbar.add(new Separator());
-        toolbar.add(new Button().setText("Print").setIcon("fa-solid fa-print"));
-        toolbar.add(new Button().setText("Export").setIcon("fa-solid fa-file-export"));
+        toolbar.add(new Button().setAction("print").setText("Print").setIcon("fa-solid fa-print"));
         //toolbar.add(new Separator());
-        toolbar.add(new Button().setText("Refresh").setIcon("fa-solid fa-arrows-rotate"));
+        toolbar.add(new Button().setAction("refresh").setText("Refresh").setIcon("fa-solid fa-arrows-rotate"));
         updateToolbar(toolbar);
         return toolbar;
     }

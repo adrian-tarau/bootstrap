@@ -52,16 +52,19 @@ DataSet.loadPage = function (page) {
 
 /**
  * Loads using AJAX the next page for a data set
- * @param {String} action the action to perform
+ * @param {String} action the action to perform, it needs to be a function in the data set
+ * @param {String} [handler] the function to perform
+ * @param {String} [id] the model identifier
  */
-DataSet.performAction = function (action) {
-    if (!DataSet.id) throw new Error("An identifier for the current model is not registered")
-    if (action === "view") {
-        DataSet.view();
-    } else if (action === "edit") {
-        DataSet.edit();
-    } else if (action === "delete") {
-        DataSet.delete();
+DataSet.performAction = function (action, handler, id) {
+    if (id) DataSet.id = id;
+    if (action) {
+        if ($.isFunction(DataSet[action])) {
+            console.info("Invoke action '" + action + "'");
+            DataSet[action].apply(this, arguments);
+        } else {
+            console.error("There is no action with name '" + action + "' registered");
+        }
     }
 }
 
@@ -69,7 +72,17 @@ DataSet.performAction = function (action) {
  * Views the current model.
  */
 DataSet.view = function () {
+    DataSet.checkIdentifier();
     $.get(REQUEST_PATH + "/" + DataSet.id + "/view", function (data) {
+        DataSet.loadModal(data);
+    });
+}
+
+/**
+ * Adds the current model.
+ */
+DataSet.add = function () {
+    $.get(REQUEST_PATH + "/add", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -78,6 +91,7 @@ DataSet.view = function () {
  * Edit the current model.
  */
 DataSet.edit = function () {
+    DataSet.checkIdentifier();
     $.get(REQUEST_PATH + "/" + DataSet.id + "/edit", function (data) {
         DataSet.loadModal(data);
     });
@@ -87,9 +101,26 @@ DataSet.edit = function () {
  * Delete the current model.
  */
 DataSet.delete = function () {
+    DataSet.checkIdentifier();
     $.get(REQUEST_PATH + "/" + DataSet.id + "/delete", function (data) {
         DataSet.loadModal(data);
     });
+}
+
+/**
+ * Prints the current model.
+ */
+DataSet.print = function () {
+    $.get(REQUEST_PATH + "/" + DataSet.id + "/add", function (data) {
+        DataSet.loadModal(data);
+    });
+}
+
+/**
+ * Refresh the current view.
+ */
+DataSet.refresh = function () {
+    DataSet.open({});
 }
 
 /**
@@ -221,9 +252,16 @@ DataSet.save = function () {
 }
 
 /**
+ * Validates whether a model identifier is set.
+ */
+DataSet.checkIdentifier = function () {
+    if (!DataSet.id) throw new Error("An identifier for the current model is not registered");
+}
+
+/**
  * Initializes various notifications related components.
  */
-DataSet.initNotifications = function() {
+DataSet.initNotifications = function () {
     $("#message").delay(2000).fadeOut(1000);
 }
 

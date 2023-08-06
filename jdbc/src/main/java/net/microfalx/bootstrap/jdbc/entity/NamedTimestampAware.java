@@ -13,7 +13,7 @@ import net.microfalx.lang.annotation.Position;
  */
 @MappedSuperclass
 @ToString
-public class NamedTimestampAware extends TimestampAware {
+public abstract class NamedTimestampAware extends TimestampAware {
 
     @Column(name = "name", nullable = false)
     @NotBlank

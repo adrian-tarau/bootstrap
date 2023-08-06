@@ -10,6 +10,7 @@ public class AuditContext {
     private static ThreadLocal<AuditContext> CONTEXT = ThreadLocal.withInitial(AuditContext::new);
 
     private String action;
+    private String module = "Core";
     private String category = "Web";
     private String clientInfo;
     private String errorCode;
@@ -49,6 +50,25 @@ public class AuditContext {
     public AuditContext setAction(String action) {
         this.action = action;
         return this;
+    }
+
+    /**
+     * Returns the module associated with the current request.
+     *
+     * @return the module, not if not known
+     */
+    public String getModule() {
+        return module;
+    }
+
+    /**
+     * Changes the module associated with the current request.
+     *
+     * @param module the module, null if not known
+     */
+    public void setModule(String module) {
+        requireNotEmpty(module);
+        this.module = module;
     }
 
     /**
@@ -151,6 +171,12 @@ public class AuditContext {
     public String toString() {
         return "AuditContext{" +
                 "action='" + action + '\'' +
+                ", module='" + module + '\'' +
+                ", category='" + category + '\'' +
+                ", clientInfo='" + clientInfo + '\'' +
+                ", errorCode='" + errorCode + '\'' +
+                ", reference='" + reference + '\'' +
+                ", description='" + description + '\'' +
                 '}';
     }
 }
