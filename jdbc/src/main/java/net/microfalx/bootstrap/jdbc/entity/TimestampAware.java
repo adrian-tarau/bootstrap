@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Visible;
@@ -17,6 +19,8 @@ import java.time.LocalDateTime;
  */
 @MappedSuperclass
 @ToString
+@Getter
+@Setter
 public abstract class TimestampAware {
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -29,22 +33,6 @@ public abstract class TimestampAware {
     @Position(501)
     @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
     private LocalDateTime modifiedAt;
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getModifiedAt() {
-        return modifiedAt;
-    }
-
-    public void setModifiedAt(LocalDateTime modifiedAt) {
-        this.modifiedAt = modifiedAt;
-    }
 
     @PrePersist
     public void updateTimestamps() {

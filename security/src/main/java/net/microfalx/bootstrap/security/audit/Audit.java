@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @ReadOnly
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Audit {
 
@@ -33,8 +33,9 @@ public class Audit {
     public static String EXECUTE = "Execute";
 
     @Id
-    @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    @EqualsAndHashCode.Include
     @Visible(false)
     private Integer id;
 

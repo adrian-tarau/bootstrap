@@ -12,13 +12,14 @@ import net.microfalx.lang.annotation.Position;
 @Table(name = "security_groups")
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @ToString
 public class Group extends NamedTimestampAware {
 
     @Id
-    @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    @EqualsAndHashCode.Include
     private Integer id;
 
     @Column(name = "enabled", nullable = false)

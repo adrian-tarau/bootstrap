@@ -17,7 +17,7 @@ import net.microfalx.lang.annotation.Visible;
 @Table(name = "security_users")
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true,callSuper = false)
 @ToString
 public class User extends NamedTimestampAware {
 
@@ -25,6 +25,7 @@ public class User extends NamedTimestampAware {
     @Column(name = "username", nullable = false)
     @NotBlank
     @Position(1)
+    @EqualsAndHashCode.Include
     private String userName;
 
     @Column(name = "enabled", nullable = false)
