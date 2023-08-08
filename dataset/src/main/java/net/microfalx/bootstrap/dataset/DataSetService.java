@@ -42,6 +42,15 @@ public final class DataSetService implements InitializingBean {
     ApplicationContext applicationContext;
 
     /**
+     * Returns the metadata associated with a model.
+     *
+     * @return a non-null instance
+     */
+    public <M, F extends Field<M>, ID> Metadata<M, F, ID> getMetadata(Class<M> modelClass) {
+        return metadataService.getMetadata(modelClass);
+    }
+
+    /**
      * Returns a data set from a model class.
      *
      * @param modelClass the model class
@@ -111,6 +120,7 @@ public final class DataSetService implements InitializingBean {
     protected void initialize() {
         discoverStaticFactories();
         discoverDynamicFactories();
+        discoverDynamicLookups();
     }
 
     @SuppressWarnings("rawtypes")
@@ -123,12 +133,23 @@ public final class DataSetService implements InitializingBean {
         }
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void discoverDynamicFactories() {
         LOGGER.info("Discover dynamic data set factories:");
         Collection<Class<DataSet>> dataSetClasses = ClassUtils.resolveProviders(DataSet.class);
         for (Class<DataSet> dataSetClass : dataSetClasses) {
             LOGGER.info(" - " + ClassUtils.getName(dataSetClass));
             factories.add(new ProviderDataSetFactory(dataSetClass));
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void discoverDynamicLookups() {
+        LOGGER.info("Discover dynamic lookups:");
+        Collection<Class<LookupProvider>> lookupProviderClasses = ClassUtils.resolveProviders(LookupProvider.class);
+        for (Class<LookupProvider> lookupProviderClass : lookupProviderClasses) {
+            LOGGER.info(" - " + ClassUtils.getName(lookupProviderClass));
+            factories.add(new LookupDataSetFactory<>(ClassUtils.create(lookupProviderClass)));
         }
     }
 

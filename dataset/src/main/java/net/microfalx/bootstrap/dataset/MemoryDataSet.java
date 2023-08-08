@@ -81,14 +81,14 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
     @Override
     protected final List<M> doFindAll(Sort sort) {
         List<M> models = getCachedModels().getModels();
-        ModelSorter<M> sorter = new ModelSorter<>(getMetadata(), models, from(sort));
+        ModelSorter<M> sorter = new ModelSorter<>(getMetadata(), models, DataSetUtils.from(sort));
         return sorter.apply();
     }
 
     @Override
     protected final Page<M> doFindAll(Pageable pageable) {
         List<M> models = getCachedModels().getModels();
-        ModelSorter<M> sorter = new ModelSorter<>(getMetadata(), models, from(pageable.getSort()));
+        ModelSorter<M> sorter = new ModelSorter<>(getMetadata(), models, DataSetUtils.from(pageable.getSort()));
         return new DataSetPage<>(pageable, sorter.apply());
     }
 
@@ -97,7 +97,7 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
         List<M> models = getCachedModels().getModels();
         ModelFilter<M> filter = new ModelFilter<>(getMetadata(), models, filterable);
         models = filter.apply();
-        ModelSorter<M> sorter = new ModelSorter<>(getMetadata(), models, from(pageable.getSort()));
+        ModelSorter<M> sorter = new ModelSorter<>(getMetadata(), models, DataSetUtils.from(pageable.getSort()));
         return new DataSetPage<>(pageable, sorter.apply());
     }
 
@@ -145,31 +145,6 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
         return modelsMap;
     }
 
-    private net.microfalx.bootstrap.model.Sort from(Sort sort) {
-        List<net.microfalx.bootstrap.model.Sort.Order> orders = new ArrayList<>();
-        for (Sort.Order order : sort.toList()) {
-            orders.add(net.microfalx.bootstrap.model.Sort.Order.create(order.getProperty())
-                    .ignoreCase(order.isIgnoreCase())
-                    .with(from(order.getDirection()))
-                    .with(from(order.getNullHandling())));
 
-        }
-        return net.microfalx.bootstrap.model.Sort.create(orders);
-    }
-
-    private net.microfalx.bootstrap.model.Sort.Direction from(Sort.Direction direction) {
-        return switch (direction) {
-            case ASC -> net.microfalx.bootstrap.model.Sort.Direction.ASC;
-            case DESC -> net.microfalx.bootstrap.model.Sort.Direction.DESC;
-        };
-    }
-
-    private net.microfalx.bootstrap.model.Sort.NullHandling from(Sort.NullHandling nullHandling) {
-        return switch (nullHandling) {
-            case NATIVE -> net.microfalx.bootstrap.model.Sort.NullHandling.NATIVE;
-            case NULLS_FIRST -> net.microfalx.bootstrap.model.Sort.NullHandling.NULLS_FIRST;
-            case NULLS_LAST -> net.microfalx.bootstrap.model.Sort.NullHandling.NULLS_LAST;
-        };
-    }
 
 }

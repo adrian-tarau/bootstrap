@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.I18n;
+import net.microfalx.lang.annotation.Label;
 
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
@@ -68,6 +69,10 @@ public abstract class AbstractField<M> implements Field<M> {
     @Override
     public final String getLabel() {
         String label = metadata.getI18n(getI18nPrefix() + ".label");
+        if (StringUtils.isEmpty(label)) {
+            Label labelAnnot = findAnnotation(Label.class);
+            if (labelAnnot != null) label = labelAnnot.value();
+        }
         return isNotEmpty(label) ? label : StringUtils.beautifyCamelCase(getName());
     }
 

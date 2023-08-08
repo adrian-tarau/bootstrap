@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.dataset;
 
 import com.google.common.collect.Lists;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.annotation.Lookup;
 import net.microfalx.bootstrap.dataset.formatter.EnumFormatter;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
@@ -9,6 +10,8 @@ import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.Label;
+import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.ReadOnly;
 import net.microfalx.lang.annotation.Visible;
 import org.apache.commons.lang3.ArrayUtils;
@@ -158,6 +161,14 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
             return createFormatter(field, formattableAnnot).format(value, (F) field, model);
         } else {
             if (value == null) return null;
+            Lookup lookupAnnot = field.findAnnotation(Lookup.class);
+            if (lookupAnnot != null) {
+                DataSet<?, ? extends Field<?>, Object> lookupDataSet = getDataSetService().lookup(lookupAnnot.model());
+                Optional<?> lookupModel = lookupDataSet.findById(value);
+                if (lookupModel.isPresent()) {
+                    return ((net.microfalx.bootstrap.dataset.Lookup) lookupModel.get()).getName();
+                }
+            }
             if (isJdkType(value)) {
                 if (value instanceof Enum) {
                     return ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
@@ -373,6 +384,10 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     private void initFromMetadata() {
         ReadOnly readOnlyAnnot = metadata.findAnnotation(ReadOnly.class);
         if (readOnlyAnnot != null) this.readOnly = readOnlyAnnot.value();
+        Name nameAnnot = metadata.findAnnotation(Name.class);
+        if (nameAnnot != null) setName(nameAnnot.value());
+        Label labelAnnot = metadata.findAnnotation(Label.class);
+        if (labelAnnot != null) setName(labelAnnot.value());
     }
 
     private List<Field<M>> getVisibleAndOrderedFields() {

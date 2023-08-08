@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 public @interface DataSet {
 
     /**
-     * Returns the model for the data set record.
+     * Returns the model for the data set model.
      *
      * @return the model class, Object is not set
      */
@@ -30,4 +30,11 @@ public @interface DataSet {
      * @return a non-null instance
      */
     int pageSize() default 50;
+
+    /**
+     * Returns the view to be used to render the data instead of the default one.
+     *
+     * @return the view, empty if not set
+     */
+    String viewTemplate() default "";
 }

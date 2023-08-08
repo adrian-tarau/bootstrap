@@ -145,7 +145,7 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
     void setId(M model, ID id);
 
     /**
-     * Returns a {@link Filter} used to restrict
+     * Returns a page of results based on page information and a filter.
      *
      * @param pageable   the page information
      * @param filterable the filter information
