@@ -37,6 +37,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
+
 /**
  * Base class for all data set controllers.
  */
@@ -83,6 +86,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         updateModel(dataSet, model, State.VIEW);
         findModel(dataSet, model, id);
+        if (isNotEmpty(getDataSetAnnotation().viewTemplate())) model.addAttribute("viewTemplate", getDataSetAnnotation().viewTemplate());
         return "dataset/view :: #dataset-modal";
     }
 
@@ -151,7 +155,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     private Sort getSort(String value) {
-        if (StringUtils.isEmpty(value)) return getDefaultSort();
+        if (isEmpty(value)) return getDefaultSort();
         List<Sort.Order> orders = new ArrayList<>();
         String[] parts = StringUtils.split(value, ";");
         for (String part : parts) {

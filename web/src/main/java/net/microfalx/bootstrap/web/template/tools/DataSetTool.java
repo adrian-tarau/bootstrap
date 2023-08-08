@@ -357,7 +357,12 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public String getValue(M model, Field<M> field) {
         if (model == null) return null;
-        return ObjectUtils.toString(field.get(model));
+        DataSet<M, F, ID> dataSet = getDataSet();
+        if (dataSet.getState() == State.VIEW || dataSet.getState() == State.BROWSE) {
+            return getDisplayValue(model, field);
+        } else {
+            return ObjectUtils.toString(field.get(model));
+        }
     }
 
     /**
