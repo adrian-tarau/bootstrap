@@ -32,9 +32,16 @@ public @interface DataSet {
     int pageSize() default 50;
 
     /**
-     * Returns the view to be used to render the data instead of the default one.
+     * Returns the template to be used to render the data instead of the default one.
      *
      * @return the view, empty if not set
      */
     String viewTemplate() default "";
+
+    /**
+     * Returns the view to be used to render the data instead of the default one.
+     *
+     * @return the view, empty if not set
+     */
+    String viewFragment() default "";
 }

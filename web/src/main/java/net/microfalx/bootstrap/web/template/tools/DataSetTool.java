@@ -116,6 +116,14 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns whether the data set is in view mode.
+     * @return {@code true} in view mode, {@code false} otherwise
+     */
+    public boolean isView() {
+        return getDataSet().getState() == State.VIEW;
+    }
+
+    /**
      * Returns whether the data set has at least one actions.
      *
      * @return {@code true} if a list one action, {@code false} otherwise

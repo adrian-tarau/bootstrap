@@ -86,7 +86,6 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         updateModel(dataSet, model, State.VIEW);
         findModel(dataSet, model, id);
-        if (isNotEmpty(getDataSetAnnotation().viewTemplate())) model.addAttribute("viewTemplate", getDataSetAnnotation().viewTemplate());
         return "dataset/view :: #dataset-modal";
     }
 
@@ -222,6 +221,17 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         model.addAttribute("toolbar", getToolBar(dataSet));
         model.addAttribute("actions", getMenu(dataSet));
         model.addAttribute("model", null);
+        updateModelTemplate(dataSet, model);
+    }
+
+    private void updateModelTemplate(DataSet<M, Field<M>, ID> dataSet, Model model) {
+        String fieldsTemplate = "fragments/dataset";
+        String fieldsFragment = "fields";
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
+        if (isNotEmpty(dataSetAnnotation.viewTemplate())) fieldsTemplate = dataSetAnnotation.viewTemplate();
+        if (isNotEmpty(dataSetAnnotation.viewFragment())) fieldsFragment = dataSetAnnotation.viewTemplate();
+        model.addAttribute("fieldsTemplate", fieldsTemplate);
+        model.addAttribute("fieldsFragment", fieldsFragment);
     }
 
     private void findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id) {
