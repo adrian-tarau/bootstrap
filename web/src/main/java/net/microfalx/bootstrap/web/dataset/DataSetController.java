@@ -18,6 +18,7 @@ import net.microfalx.bootstrap.web.component.Toolbar;
 import net.microfalx.bootstrap.web.controller.NavigableController;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.lang.AnnotationUtils;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
@@ -232,6 +233,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         if (isNotEmpty(dataSetAnnotation.viewFragment())) fieldsFragment = dataSetAnnotation.viewTemplate();
         model.addAttribute("fieldsTemplate", fieldsTemplate);
         model.addAttribute("fieldsFragment", fieldsFragment);
+        if (ObjectUtils.isNotEmpty(dataSetAnnotation.viewClasses())) {
+            model.addAttribute("viewClasses", StringUtils.join(" ", dataSetAnnotation.viewClasses()));
+        } else {
+            model.addAttribute("viewClasses", StringUtils.EMPTY_STRING);
+        }
     }
 
     private void findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id) {

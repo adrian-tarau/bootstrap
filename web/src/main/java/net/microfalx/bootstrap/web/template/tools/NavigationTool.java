@@ -4,6 +4,8 @@ import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.component.Menu;
 import org.thymeleaf.context.IContext;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+
 /**
  * Template utilities around navigation.
  */
@@ -13,6 +15,7 @@ public class NavigationTool extends AbstractTool {
 
     public NavigationTool(IContext context, ApplicationService applicationService) {
         super(context);
+        requireNonNull(applicationService);
         this.applicationService = applicationService;
     }
 

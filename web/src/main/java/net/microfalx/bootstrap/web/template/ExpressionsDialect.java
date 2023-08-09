@@ -1,10 +1,8 @@
 package net.microfalx.bootstrap.web.template;
 
+import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.web.application.ApplicationService;
-import net.microfalx.bootstrap.web.template.tools.ComponentTool;
-import net.microfalx.bootstrap.web.template.tools.DataSetTool;
-import net.microfalx.bootstrap.web.template.tools.LinkTool;
-import net.microfalx.bootstrap.web.template.tools.NavigationTool;
+import net.microfalx.bootstrap.web.template.tools.*;
 import org.thymeleaf.context.IExpressionContext;
 import org.thymeleaf.dialect.AbstractDialect;
 import org.thymeleaf.dialect.IExpressionObjectDialect;
@@ -21,10 +19,12 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
     private final IExpressionObjectFactory EXPRESSION_OBJECTS_FACTORY = new ExpressionsObjectFactory();
 
     private final ApplicationService applicationService;
+    private final MetadataService metadataService;
 
-    public ExpressionsDialect(ApplicationService applicationService) {
+    public ExpressionsDialect(ApplicationService applicationService, MetadataService metadataService) {
         super("application");
         this.applicationService = applicationService;
+        this.metadataService = metadataService;
     }
 
     @Override
@@ -40,10 +40,14 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
         public static final String DATASET_OBJECT_NAME = "dataset";
         public static final String LINK_OBJECT_NAME = "link";
         public static final String USER_OBJECT_NAME = "user";
+        public static final String RESOURCE_OBJECT_NAME = "resources";
+        public static final String MODEL_TOOL_NAME = "models";
+        public static final String HTML_TOOL_NAME = "htmls";
 
         protected static final Set<String> ALL_EXPRESSION_OBJECT_NAMES = unmodifiableSet(
                 new LinkedHashSet<>(asList(APPLICATION_OBJECT_NAME, NAVIGATION_OBJECT_NAME, COMPONENT_OBJECT_NAME,
-                        USER_OBJECT_NAME, DATASET_OBJECT_NAME, LINK_OBJECT_NAME)));
+                        USER_OBJECT_NAME, DATASET_OBJECT_NAME, LINK_OBJECT_NAME,
+                        RESOURCE_OBJECT_NAME, MODEL_TOOL_NAME)));
 
         @Override
         public Set<String> getAllExpressionObjectNames() {
@@ -62,6 +66,12 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
                 return new DataSetTool<>(context);
             } else if (LINK_OBJECT_NAME.equals(expressionObjectName)) {
                 return new LinkTool(context);
+            } else if (RESOURCE_OBJECT_NAME.equals(expressionObjectName)) {
+                return new ResourceTool(context);
+            } else if (MODEL_TOOL_NAME.equals(expressionObjectName)) {
+                return new ModelTool(context, metadataService);
+            } else if (HTML_TOOL_NAME.equals(expressionObjectName)) {
+                return new HtmlTool(context);
             } else if (USER_OBJECT_NAME.equals(expressionObjectName)) {
                 return TemplateSecurityContext.get(context);
             } else {

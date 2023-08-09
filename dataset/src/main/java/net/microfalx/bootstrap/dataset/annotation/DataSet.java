@@ -44,4 +44,11 @@ public @interface DataSet {
      * @return the view, empty if not set
      */
     String viewFragment() default "";
+
+    /**
+     * Returns an array of CSS classes to be applied to the view modal.
+     *
+     * @return the classes
+     */
+    String[] viewClasses() default "";
 }

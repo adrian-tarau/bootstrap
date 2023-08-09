@@ -87,7 +87,7 @@
 </div>
 
 <div th:fragment="dialog" id="dataset-modal" tabindex="-1"
-     class="modal modal-lg fade" data-bs-backdrop="static" data-bs-keyboard="false">
+     th:class="|modal modal-lg fade ${viewClasses}|" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
