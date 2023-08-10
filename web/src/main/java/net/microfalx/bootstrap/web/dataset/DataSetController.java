@@ -50,23 +50,24 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private DataSetService dataSetService;
 
     @GetMapping()
-    public String browse(Model model,
-                         @RequestParam(value = "page", defaultValue = "0") int pageParameter,
-                         @RequestParam(value = "query", defaultValue = "") String queryParameter,
-                         @RequestParam(value = "filter", defaultValue = "") String filterParameter,
-                         @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
+    public final String browse(Model model,
+                               @RequestParam(value = "page", defaultValue = "0") int pageParameter,
+                               @RequestParam(value = "query", defaultValue = "") String queryParameter,
+                               @RequestParam(value = "filter", defaultValue = "") String filterParameter,
+                               @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         updateModel(dataSet, model, State.BROWSE);
+        updateModel(dataSet, model, null, State.BROWSE);
         processParams(dataSet, model, pageParameter, queryParameter, filterParameter, sortParameter);
         return "dataset/browse";
     }
 
     @GetMapping(path = "page")
-    public String next(Model model, HttpServletResponse response,
-                       @RequestParam(value = "page", defaultValue = "0") int pageParameter,
-                       @RequestParam(value = "query", defaultValue = "") String queryParameter,
-                       @RequestParam(value = "filter", defaultValue = "") String filterParameter,
-                       @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
+    public final String next(Model model, HttpServletResponse response,
+                             @RequestParam(value = "page", defaultValue = "0") int pageParameter,
+                             @RequestParam(value = "query", defaultValue = "") String queryParameter,
+                             @RequestParam(value = "filter", defaultValue = "") String filterParameter,
+                             @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         updateModel(dataSet, model, State.BROWSE);
         Page<M> page = processParams(dataSet, model, pageParameter, queryParameter, filterParameter, sortParameter);
@@ -76,30 +77,33 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     @GetMapping(path = "{id}/add")
-    public String add(Model model, @PathVariable("id") String id) {
+    public final String add(Model model, @PathVariable("id") String id) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         updateModel(dataSet, model, State.ADD);
+        updateModel(dataSet, model, null, State.ADD);
         return "dataset/add:: #dataset-modal";
     }
 
     @GetMapping(path = "{id}/view")
-    public String view(Model model, @PathVariable("id") String id) {
+    public final String view(Model model, @PathVariable("id") String id) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         updateModel(dataSet, model, State.VIEW);
-        findModel(dataSet, model, id);
+        M dataSetModel = findModel(dataSet, model, id);
+        updateModel(dataSet, model, dataSetModel, State.VIEW);
         return "dataset/view :: #dataset-modal";
     }
 
     @GetMapping(path = "{id}/edit")
-    public String edit(Model model, @PathVariable("id") String id) {
+    public final String edit(Model model, @PathVariable("id") String id) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         updateModel(dataSet, model, State.EDIT);
-        findModel(dataSet, model, id);
+        M dataSetModel = findModel(dataSet, model, id);
+        updateModel(dataSet, model, dataSetModel, State.VIEW);
         return "dataset/view:: #dataset-modal";
     }
 
     @GetMapping(path = "{id}/delete")
-    public String delete(Model model, @PathParam("id") String id) {
+    public final String delete(Model model, @PathParam("id") String id) {
         return "dataset/browse";
     }
 
@@ -119,6 +123,18 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      */
     protected void updateActions(Menu menu) {
         // empty on purpose
+    }
+
+    /**
+     * Subclasses can update the controller model with additional variables.
+     *
+     * @param dataSet         the data set
+     * @param controllerModel the model used by controller/template
+     * @param dataSetModel    the model return by the data set, will be present only for {@link State#EDIT} and {@link State#VIEW}.
+     * @param state           the state of the data set
+     */
+    protected void updateModel(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel, State state) {
+        // empty by default
     }
 
     /**
@@ -240,11 +256,12 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         }
     }
 
-    private void findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id) {
+    private M findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id) {
         CompositeIdentifier<M, Field<M>, ID> compositeId = dataSet.getMetadata().getId(id);
         Optional<M> dataSetModel = dataSet.findById(compositeId.toId());
         if (dataSetModel.isPresent()) {
             model.addAttribute("model", dataSetModel.get());
+            return dataSetModel.get();
         } else {
             throw new ResponseStatusException(HttpStatusCode.valueOf(404), "A model with identifier '" + id + "' does not exist");
         }
