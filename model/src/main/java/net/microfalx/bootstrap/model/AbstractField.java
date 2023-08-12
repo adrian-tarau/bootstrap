@@ -16,8 +16,7 @@ import java.util.Map;
 import static net.microfalx.bootstrap.model.FieldUtils.TYPE_CONVERTER_MANAGER;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.StringUtils.isNotEmpty;
-import static net.microfalx.lang.StringUtils.toIdentifier;
+import static net.microfalx.lang.StringUtils.*;
 import static org.apache.commons.lang3.ClassUtils.isAssignable;
 
 /**
@@ -71,9 +70,17 @@ public abstract class AbstractField<M> implements Field<M> {
         String label = metadata.getI18n(getI18nPrefix() + ".label");
         if (StringUtils.isEmpty(label)) {
             Label labelAnnot = findAnnotation(Label.class);
-            if (labelAnnot != null) label = labelAnnot.value();
+            if (labelAnnot != null) {
+                return isNotEmpty(labelAnnot.icon()) && isEmpty(labelAnnot.value()) ? EMPTY_STRING : labelAnnot.value();
+            }
         }
         return isNotEmpty(label) ? label : StringUtils.beautifyCamelCase(getName());
+    }
+
+    @Override
+    public String getLabelIcon() {
+        Label labelAnnot = findAnnotation(Label.class);
+        return labelAnnot != null && isNotEmpty(labelAnnot.icon()) ? labelAnnot.icon() : null;
     }
 
     @Override

@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.web.template.tools;
 
 import net.microfalx.bootstrap.dataset.DataSet;
 import net.microfalx.bootstrap.dataset.DataSetException;
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.model.Field;
@@ -16,7 +17,9 @@ import java.util.Collection;
 
 import static net.microfalx.bootstrap.web.template.TemplateUtils.getModelAttribute;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -27,8 +30,12 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public static final String BOOLEAN_CHECKED = "<i class=\"far fa-check-square\"></i>";
     public static final String BOOLEAN_UNCHECKED = "<i class=\"far fa-square\"></i>";
 
-    public DataSetTool(IContext context) {
+    private DataSetService dataSetService;
+
+    public DataSetTool(IContext context, DataSetService dataSetService) {
         super(context);
+        requireNotEmpty(dataSetService);
+        this.dataSetService = dataSetService;
     }
 
     /**
@@ -117,6 +124,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
 
     /**
      * Returns whether the data set is in view mode.
+     *
      * @return {@code true} in view mode, {@code false} otherwise
      */
     public boolean isView() {
@@ -354,6 +362,21 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         } else {
             return dataSet.getDisplayValue(model, field);
         }
+    }
+
+    /**
+     * Returns the display value for a field of the model.
+     *
+     * @param model     the model
+     * @param fieldName the field name
+     * @return the display value
+     */
+    public String getDisplayValue(M model, String fieldName) {
+        if (model == null) return EMPTY_STRING;
+        requireNotEmpty(fieldName);
+        DataSet<M, F, ID> dataSet = getDataSet();
+        Field<M> field = dataSet.getMetadata().get(fieldName);
+        return dataSet.getDisplayValue(model, field);
     }
 
     /**

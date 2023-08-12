@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.dataset;
 
+import jakarta.persistence.Entity;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.server.PathParam;
 import net.microfalx.bootstrap.dataset.DataSet;
@@ -28,6 +29,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +51,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     @Autowired
     private DataSetService dataSetService;
+
+    @Autowired(required = false)
+    private PlatformTransactionManager transactionManager;
 
     @GetMapping()
     public final String browse(Model model,
@@ -88,8 +94,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     public final String view(Model model, @PathVariable("id") String id) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         updateModel(dataSet, model, State.VIEW);
-        M dataSetModel = findModel(dataSet, model, id);
-        updateModel(dataSet, model, dataSetModel, State.VIEW);
+        findModel(dataSet, model, id, State.VIEW);
         return "dataset/view :: #dataset-modal";
     }
 
@@ -97,8 +102,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     public final String edit(Model model, @PathVariable("id") String id) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         updateModel(dataSet, model, State.EDIT);
-        M dataSetModel = findModel(dataSet, model, id);
-        updateModel(dataSet, model, dataSetModel, State.VIEW);
+        findModel(dataSet, model, id, State.EDIT);
         return "dataset/view:: #dataset-modal";
     }
 
@@ -256,14 +260,36 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         }
     }
 
-    private M findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id) {
+    private void findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
+        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
+        if (transactionTemplate != null) {
+            transactionTemplate.execute(status -> {
+                doFindModel(dataSet, model, id, state);
+                return null;
+            });
+        } else {
+            doFindModel(dataSet, model, id, state);
+        }
+    }
+
+    private void doFindModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
         CompositeIdentifier<M, Field<M>, ID> compositeId = dataSet.getMetadata().getId(id);
-        Optional<M> dataSetModel = dataSet.findById(compositeId.toId());
-        if (dataSetModel.isPresent()) {
-            model.addAttribute("model", dataSetModel.get());
-            return dataSetModel.get();
+        Optional<M> result = dataSet.findById(compositeId.toId());
+        if (result.isPresent()) {
+            M dataSetModel = result.get();
+            updateModel(dataSet, model, dataSetModel, state);
+            model.addAttribute("model", dataSetModel);
         } else {
             throw new ResponseStatusException(HttpStatusCode.valueOf(404), "A model with identifier '" + id + "' does not exist");
+        }
+    }
+
+    private TransactionTemplate getTransactionTemplate(DataSet<M, Field<M>, ID> dataSet) {
+        Metadata<M, Field<M>, ID> metadata = dataSet.getMetadata();
+        if (transactionManager != null && metadata.hasAnnotation(Entity.class)) {
+            return new TransactionTemplate(transactionManager);
+        } else {
+            return null;
         }
     }
 

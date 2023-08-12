@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.template;
 
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.template.tools.*;
@@ -20,11 +21,13 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
 
     private final ApplicationService applicationService;
     private final MetadataService metadataService;
+    private final DataSetService dataSetService;
 
-    public ExpressionsDialect(ApplicationService applicationService, MetadataService metadataService) {
+    public ExpressionsDialect(ApplicationService applicationService, MetadataService metadataService, DataSetService dataSetService) {
         super("application");
         this.applicationService = applicationService;
         this.metadataService = metadataService;
+        this.dataSetService = dataSetService;
     }
 
     @Override
@@ -63,7 +66,7 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
             } else if (COMPONENT_OBJECT_NAME.equals(expressionObjectName)) {
                 return new ComponentTool(context);
             } else if (DATASET_OBJECT_NAME.equals(expressionObjectName)) {
-                return new DataSetTool<>(context);
+                return new DataSetTool<>(context, dataSetService);
             } else if (LINK_OBJECT_NAME.equals(expressionObjectName)) {
                 return new LinkTool(context);
             } else if (RESOURCE_OBJECT_NAME.equals(expressionObjectName)) {

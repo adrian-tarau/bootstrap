@@ -5,8 +5,9 @@
 <thead class="table-light" th:fragment="grid-header">
 <tr>
     <th scope="col" class="text-right">#</th>
-    <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}"
-        th:utext="${field.label}" th:attr="field=${field.name}"></th>
+    <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}" th:attr="field=${field.name}">
+        <span th:if="${field.labelIcon}" th:class="${field.labelIcon}"></span><span th:utext="${field.label}"></span>
+    </th>
     <th scope="col" class="text-center" th:if="${#dataset.hasActions}">Actions</th>
 </tr>
 </thead>

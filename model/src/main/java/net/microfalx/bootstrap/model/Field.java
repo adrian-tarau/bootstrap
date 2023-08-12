@@ -44,8 +44,15 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
      *
      * @return a non-null instance
      * @see net.microfalx.lang.annotation.I18n
+     * @see net.microfalx.lang.annotation.Label
      */
     String getLabel();
+
+    /**
+     * Returns the icon used along the label (in front of the label)
+     * @return the icon, null if not defined
+     */
+    String getLabelIcon();
 
     /**
      * Returns the description associated with a field.
