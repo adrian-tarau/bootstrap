@@ -21,33 +21,41 @@ import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.resource.Resource;
+import net.microfalx.resource.StreamResource;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static net.microfalx.lang.StringUtils.isEmpty;
-import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * Base class for all data set controllers.
  */
 public abstract class DataSetController<M, ID> extends NavigableController<M, ID> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSetController.class);
 
     @Autowired
     private DataSetService dataSetService;
@@ -62,19 +70,21 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                                @RequestParam(value = "filter", defaultValue = "") String filterParameter,
                                @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "browse", pageParameter, queryParameter, filterParameter, sortParameter);
         updateModel(dataSet, model, State.BROWSE);
         updateModel(dataSet, model, null, State.BROWSE);
         processParams(dataSet, model, pageParameter, queryParameter, filterParameter, sortParameter);
         return "dataset/browse";
     }
 
-    @GetMapping(path = "page")
+    @GetMapping("page")
     public final String next(Model model, HttpServletResponse response,
                              @RequestParam(value = "page", defaultValue = "0") int pageParameter,
                              @RequestParam(value = "query", defaultValue = "") String queryParameter,
                              @RequestParam(value = "filter", defaultValue = "") String filterParameter,
                              @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "next page", pageParameter, queryParameter, filterParameter, sortParameter);
         updateModel(dataSet, model, State.BROWSE);
         Page<M> page = processParams(dataSet, model, pageParameter, queryParameter, filterParameter, sortParameter);
         response.addHeader("X-DATASET-PAGE-INFO", DataSetTool.getPageInfo(page));
@@ -82,33 +92,48 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         return "dataset/page:: #dataset-page";
     }
 
-    @GetMapping(path = "{id}/add")
+    @GetMapping("{id}/add")
     public final String add(Model model, @PathVariable("id") String id) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "add", 0, null, null, null);
         updateModel(dataSet, model, State.ADD);
         updateModel(dataSet, model, null, State.ADD);
         return "dataset/add:: #dataset-modal";
     }
 
-    @GetMapping(path = "{id}/view")
+    @GetMapping("{id}/view")
     public final String view(Model model, @PathVariable("id") String id) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "view", 0, null, null, null);
         updateModel(dataSet, model, State.VIEW);
         findModel(dataSet, model, id, State.VIEW);
         return "dataset/view :: #dataset-modal";
     }
 
-    @GetMapping(path = "{id}/edit")
+    @GetMapping("{id}/edit")
     public final String edit(Model model, @PathVariable("id") String id) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "edit", 0, null, null, null);
         updateModel(dataSet, model, State.EDIT);
         findModel(dataSet, model, id, State.EDIT);
         return "dataset/view:: #dataset-modal";
     }
 
-    @GetMapping(path = "{id}/delete")
+    @GetMapping("{id}/delete")
     public final String delete(Model model, @PathParam("id") String id) {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "delete", 0, null, null, null);
         return "dataset/browse";
+    }
+
+    @PostMapping(value = "/upload", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public final void upload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) throws IOException {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "upload", 0, null, null, null);
+        upload(dataSet, redirectAttributes, StreamResource.create(file.getInputStream(), file.getOriginalFilename()));
+        String message = "File '" + file.getOriginalFilename() + "' was successfully uploaded";
+        redirectAttributes.addFlashAttribute("message", message);
     }
 
     /**
@@ -139,6 +164,28 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      */
     protected void updateModel(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel, State state) {
         // empty by default
+    }
+
+    /**
+     * Subclasses can use this method to handle a upload request file and provisioning (or update) an entry.
+     *
+     * @param dataSet  the data set
+     * @param model    the model used by controller/template
+     * @param resource the content of the uploaded file
+     */
+    protected void upload(DataSet<M, Field<M>, ID> dataSet, Model model, Resource resource) {
+        throw new DataSetException("Upload is not supported for " + dataSet.getName());
+    }
+
+    /**
+     * Subclasses can use this method to handle a download request to download the content behind a data set model.
+     *
+     * @param dataSet         the data set
+     * @param controllerModel the model used by controller/template
+     * @param dataSetModel    the model return by the data set, will be present only for {@link State#EDIT} and {@link State#VIEW}.
+     */
+    protected Resource download(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
+        throw new DataSetException("Download is not supported for ");
     }
 
     /**
@@ -213,23 +260,34 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Toolbar getToolBar(DataSet<M, Field<M>, ID> dataSet) {
         Toolbar toolbar = new Toolbar().setId("toolbar");
-        if (!dataSet.isReadOnly()) {
-            toolbar.add(new Button().setAction("add").setText("Add").setIcon("fa-solid fa-plus"));
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
+        if (!dataSet.isReadOnly() && dataSetAnnotation.canAdd()) {
+            toolbar.add(new Button().setAction("add").setText("Add").setIcon("fa-solid fa-plus").setPosition(1));
+        }
+        if (!dataSet.isReadOnly() && dataSetAnnotation.canUpload()) {
+            toolbar.add(new Button().setAction("upload").setText("Upload").setIcon("fa-solid fa-upload")
+                    .setCssClass("dataset-drop-zone").setPosition(2));
         }
         // if (toolbar.hasChildren()) toolbar.add(new Separator());
-        toolbar.add(new Button().setAction("print").setText("Print").setIcon("fa-solid fa-print"));
+        toolbar.add(new Button().setAction("print").setText("Print").setIcon("fa-solid fa-print").setPosition(100));
         //toolbar.add(new Separator());
-        toolbar.add(new Button().setAction("refresh").setText("Refresh").setIcon("fa-solid fa-arrows-rotate"));
+        toolbar.add(new Button().setAction("refresh").setText("Refresh").setIcon("fa-solid fa-arrows-rotate").setPosition(200));
         updateToolbar(toolbar);
         return toolbar;
     }
 
     private Menu getMenu(DataSet<M, Field<M>, ID> dataSet) {
         Menu menu = new Menu().setId("actions");
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         if (!dataSet.isReadOnly()) {
             menu.add(new Item().setAction("view").setText("View").setIcon("fa-solid fa-eye"));
             menu.add(new Item().setAction("edit").setText("Edit").setIcon("fa-solid fa-pen-to-square"));
-            menu.add(new Item().setAction("delete").setText("Delete").setIcon("fa-solid fa-trash-can"));
+            if (dataSetAnnotation.canDelete()) {
+                menu.add(new Item().setAction("delete").setText("Delete").setIcon("fa-solid fa-trash-can"));
+            }
+            if (dataSetAnnotation.canDownload()) {
+                menu.add(new Item().setAction("download").setText("Download").setIcon("fa-solid fa-download"));
+            }
         }
         updateActions(menu);
         return menu;
@@ -304,5 +362,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         model.addAttribute("sort", sort);
         model.addAttribute("index", new MutableLong(pagedModels.getPageable().getOffset() + 1));
         return pagedModels;
+    }
+
+    private void log(DataSet<M, Field<M>, ID> dataSet, String action, int page,
+                     String query, String filter, String sort) {
+        filter = StringUtils.defaultIfEmpty(filter, "<empty>");
+        sort = StringUtils.defaultIfEmpty(sort, "<empty>");
+        LOGGER.debug("{} data set {}, page {}, query {}, filter {}, sort {}", capitalizeWords(action), dataSet.getName(),
+                page, query, filter, sort);
     }
 }

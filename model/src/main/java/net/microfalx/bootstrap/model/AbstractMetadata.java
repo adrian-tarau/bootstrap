@@ -92,8 +92,8 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
         if (nameFields.isEmpty()) {
             Optional<F> firstString = fields.stream().filter(f -> f.getDataType() == Field.DataType.STRING).findFirst();
             if (firstString.isEmpty()) {
-                throw new FieldNotFoundException("At least one field must be annotated with @Name or at least one String field for model"
-                        + ClassUtils.getName(this));
+                throw new FieldNotFoundException("At least one field must be annotated with @Name " +
+                        "or at least one String field for model " + ClassUtils.getName(getModel()));
             }
             nameFields = Arrays.asList(firstString.get());
         }

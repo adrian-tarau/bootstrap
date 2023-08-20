@@ -22,6 +22,8 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
     private boolean visible;
     private boolean disabled;
     private boolean readOnly;
+    private String cssClass;
+    private String cssStyles;
     int position = -1;
 
     @Override
@@ -227,6 +229,46 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
      */
     public final C setPosition(int position) {
         this.position = position;
+        return self();
+    }
+
+    /**
+     * Returns the additional CSS classes to be added to the component when rendered.
+     *
+     * @return the class or classes separated by space, null or empty if no additional classes are set
+     */
+    public String getCssClass() {
+        return cssClass;
+    }
+
+    /**
+     * Changes the additional CSS classes to be added to the component when rendered.
+     *
+     * @param cssClass the class or classes separated by space, null or empty if not additional classes are set
+     * @return self
+     */
+    public C setCssClass(String cssClass) {
+        this.cssClass = cssClass;
+        return self();
+    }
+
+    /**
+     * Returns the additional CSS styles to be added to the component when rendered.
+     *
+     * @return the styles, null or empty if ni additional styles are set
+     */
+    public String getCssStyles() {
+        return cssStyles;
+    }
+
+    /**
+     * Changes the additional CSS styles to be added to the component when rendered.
+     *
+     * @param cssStyles the styles, null or empty if ni additional styles are set
+     * @return self
+     */
+    public C setCssStyles(String cssStyles) {
+        this.cssStyles = cssStyles;
         return self();
     }
 

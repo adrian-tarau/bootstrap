@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
+import static net.microfalx.lang.StringUtils.defaultIfNull;
+
 /**
  * Template utilities around components.
  */
@@ -52,5 +55,29 @@ public class ComponentTool extends AbstractTool {
      */
     public boolean isContainer(net.microfalx.bootstrap.web.component.Component<?> component) {
         return component instanceof Container;
+    }
+
+    /**
+     * Returns the CSS  classes configured for the component.
+     *
+     * @param component the component which provides the classes
+     * @return a new list of classes
+     */
+    public String getCssClass(net.microfalx.bootstrap.web.component.Component<?> component) {
+        return getCssClass(component, null);
+    }
+
+    /**
+     * Returns the final list of CSS classes by appending the component CSS classes to the an initial set of classes
+     *
+     * @param component      the component which provides the classes
+     * @param initialClasses the initial classes to be used with the component
+     * @return a new list of classes
+     */
+    public String getCssClass(net.microfalx.bootstrap.web.component.Component<?> component, String initialClasses) {
+        if (component == null) return initialClasses;
+        initialClasses = defaultIfNull(initialClasses, EMPTY_STRING);
+        initialClasses += " " + defaultIfNull(component.getCssClass(), EMPTY_STRING);
+        return initialClasses.trim();
     }
 }

@@ -1,7 +1,22 @@
 /*
-* The Data Set namespace
+* The Data Set Global Variables
  */
-var DataSet = DataSet || {};
+window.DataSet = window.DataSet || {};
+window.REQUEST_PATH = window.REQUEST_PATH || "/";
+
+/**
+ * Constants for alert yypes
+ * @type {string}
+ */
+const DATASET_ALERT_TYPE_INFO = "INFO";
+const DATASET_ALERT_TYPE_WARN = "WARN";
+const DATASET_ALERT_TYPE_ERROR = "ERROR";
+
+/**
+ * A CSS class used to tag the element which host the drag and drop area for upload
+ * @type {string}
+ */
+const DATASET_DROP_ZONE_CLASS = "dataset-drop-zone";
 
 /**
  * Takes a collection of parameters and queries the same end points with original parameters
@@ -124,6 +139,14 @@ DataSet.refresh = function () {
 }
 
 /**
+ * Opens an upload dialog and lets the user upload a file to add a new entry.
+ */
+DataSet.upload = function () {
+    $("div.dataset-drop-zone").click();
+    //DataSet.dropZone.processQueue();
+}
+
+/**
  * Shows an HTML fragment which contains a data set modal.
  * @param {String} html the modal
  */
@@ -172,21 +195,6 @@ DataSet.sort = function (field, direction) {
     DataSet.open(requestParams);
 }
 
-/**
- * Initialize global events.
- */
-DataSet.initEvents = function () {
-    $(document).on('click touchend', function (e) {
-        let target = $(e.target);
-        let located = false;
-        DataSet.getPopups().forEach(function (popup) {
-            if (target.is(popup)) located = true;
-        });
-        if (!located) {
-            DataSet.closePopups();
-        }
-    });
-}
 
 /**
  * Closes all open popups.
@@ -252,6 +260,64 @@ DataSet.save = function () {
 }
 
 /**
+ * Shows an informational message.
+ * @param {String} title the title
+ * @param {String} message the message to display, it can contain HTML tags
+ */
+DataSet.showInfoAlert = function (title, message) {
+    DataSet.showAlert(title, message, DATASET_ALERT_TYPE_INFO);
+}
+
+/**
+ * Shows a warning message.
+ * @param {String} title the title
+ * @param {String} message the message to display, it can contain HTML tags
+ */
+DataSet.showWarnAlert = function (title, message) {
+    DataSet.showAlert(title, message, DATASET_ALERT_TYPE_WARN);
+}
+
+/**
+ * Shows an error message.
+ * @param {String} title the title
+ * @param {String} message the message to display, it can contain HTML tags
+ */
+DataSet.showErrorAlert = function (title, message) {
+    DataSet.showAlert(title, message, DATASET_ALERT_TYPE_ERROR);
+}
+
+/**
+ * Shows an alert
+ * @param {String} title the title
+ * @param {String} message the message to display, it can contain HTML tags
+ * @param {String} type the type of alert
+ */
+DataSet.showAlert = function (title, message, type) {
+    type = type || "INFO";
+    let icon = "fa-solid fa-circle-info";
+    let color = "green";
+    switch (type) {
+        case 'WARN' :
+            icon = "fa-solid fa-triangle-exclamation";
+            color = "yellow";
+            break
+        case 'ERROR' :
+            icon = "fa-solid fa-circle-xmark";
+            color = "red";
+            break
+    }
+    iziToast.show({
+        title: title,
+        message: message,
+        icon: icon,
+        close: true,
+        timeout: 5000,
+        position: 'topRight',
+        color: color
+    });
+}
+
+/**
  * Validates whether a model identifier is set.
  */
 DataSet.checkIdentifier = function () {
@@ -263,6 +329,22 @@ DataSet.checkIdentifier = function () {
  */
 DataSet.initNotifications = function () {
     $("#message").delay(2000).fadeOut(1000);
+}
+
+/**
+ * Initialize global events.
+ */
+DataSet.initEvents = function () {
+    $(document).on('click touchend', function (e) {
+        let target = $(e.target);
+        let located = false;
+        DataSet.getPopups().forEach(function (popup) {
+            if (target.is(popup)) located = true;
+        });
+        if (!located) {
+            DataSet.closePopups();
+        }
+    });
 }
 
 /**
@@ -284,10 +366,37 @@ DataSet.initTables = function () {
 }
 
 /**
+ * Initializes the JS library which handles the file upload.
+ */
+DataSet.initUpload = function () {
+    let dropZone = new Dropzone("div." + DATASET_DROP_ZONE_CLASS, {
+        //autoProcessQueue: false,
+        createImageThumbnails: false,
+        disablePreviews: true,
+        url: REQUEST_PATH + "/upload"
+    });
+    dropZone.on("success", function (file) {
+        dropZone.removeFile(file);
+        DataSet.showInfoAlert("Upload", "File  '" + file.name + "' was uploaded successfully");
+    });
+    dropZone.on("error", function (file) {
+        DataSet.showInfoAlert("Upload", "Failed to upload file '" + file.name + "'");
+    });
+    dropZone.on("processing", function (file) {
+        // DataSet.showInfoAlert("Upload", "File '" + file.name + "' will be uploaded to the server");
+    });
+    dropZone.on("complete", function (file) {
+        // DataSet.showInfoAlert("Upload", "File '" + file.name + "' done'");
+    });
+    DataSet.dropZone = dropZone;
+}
+
+/**
  * Initializes the data set.
  */
 DataSet.init = function () {
     DataSet.initEvents();
     DataSet.initNotifications();
     DataSet.initTables();
+    DataSet.initUpload();
 }
