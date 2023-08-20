@@ -23,6 +23,7 @@
     <!-- Bootstrap  -->
     <asset-bundle id="bootstrap" path="bootstrap" version="5.3.0" name="Bootstrap">
         <depends-on-asset-bundle>jquery</depends-on-asset-bundle>
+
         <asset path="popper.js" type="script"/>
         <asset path="bootstrap.js" type="script"/>
         <asset path="bootstrap.css" type="stylesheet"/>
@@ -33,9 +34,23 @@
         <asset path="loader.css" type="stylesheet"/>
     </asset-bundle>
 
+    <asset-bundle id="misc" path="misc" version="1.0.0" name="Miscellaneous">
+        <depends-on-asset-bundle>jquery</depends-on-asset-bundle>
+
+        <asset path="dropzone.js" type="script"/>
+        <asset path="dropzone.css" type="stylesheet"/>
+
+        <asset path="iziToast.js" type="script"/>
+        <asset path="iziToast.css" type="stylesheet"/>
+
+        <asset path="pace.js" type="script"/>
+        <asset path="pace-theme-flash.css" type="stylesheet"/>
+    </asset-bundle>
+
     <!-- Adminator Theme  -->
     <asset-bundle id="adminator" path="adminator" version="2.0.0" name="Adminator" theme="Adminator">
         <depends-on-asset-bundle>bootstrap</depends-on-asset-bundle>
+
         <asset path="adminator.js" type="script"/>
         <asset path="adminator.css" type="stylesheet"/>
     </asset-bundle>
