@@ -14,24 +14,15 @@
     <asset-bundle id="jquery" path="jquery" version="3.7.0" name="JQuery">
         <asset path="jquery.js" type="script"/>
         <asset path="jquery-migrate.js" type="script"/>
+
         <asset path="jquery-ui.js" type="script"/>
         <asset path="jquery-ui.css" type="stylesheet"/>
+
         <asset path="jquery.datetimepicker.js" type="script"/>
         <asset path="jquery.datetimepicker.css" type="stylesheet"/>
-    </asset-bundle>
 
-    <!-- Bootstrap  -->
-    <asset-bundle id="bootstrap" path="bootstrap" version="5.3.0" name="Bootstrap">
-        <depends-on-asset-bundle>jquery</depends-on-asset-bundle>
-
-        <asset path="popper.js" type="script"/>
-        <asset path="bootstrap.js" type="script"/>
-        <asset path="bootstrap.css" type="stylesheet"/>
-    </asset-bundle>
-
-    <asset-bundle id="loader" path="misc" version="1.0.0" name="Loader" inline="true">
-        <asset path="loader.js" type="script"/>
-        <asset path="loader.css" type="stylesheet"/>
+        <asset path="jquery.form.js" type="script"/>
+        <asset path="jquery.sparkline.js" type="stylesheet"/>
     </asset-bundle>
 
     <asset-bundle id="misc" path="misc" version="1.0.0" name="Miscellaneous">
@@ -44,7 +35,23 @@
         <asset path="iziToast.css" type="stylesheet"/>
 
         <asset path="pace.js" type="script"/>
-        <asset path="pace-theme-flash.css" type="stylesheet"/>
+        <asset path="pace-theme-minimal.css" type="stylesheet"/>
+    </asset-bundle>
+
+    <!-- Bootstrap  -->
+    <asset-bundle id="bootstrap" path="bootstrap" version="5.3.0" name="Bootstrap">
+        <depends-on-asset-bundle>jquery</depends-on-asset-bundle>
+        <depends-on-asset-bundle>misc</depends-on-asset-bundle>
+        <depends-on-asset-bundle>glyphs</depends-on-asset-bundle>
+
+        <asset path="popper.js" type="script"/>
+        <asset path="bootstrap.js" type="script"/>
+        <asset path="bootstrap.css" type="stylesheet"/>
+    </asset-bundle>
+
+    <asset-bundle id="loader" path="misc" version="1.0.0" name="Loader" inline="true">
+        <asset path="loader.js" type="script"/>
+        <asset path="loader.css" type="stylesheet"/>
     </asset-bundle>
 
     <!-- Adminator Theme  -->

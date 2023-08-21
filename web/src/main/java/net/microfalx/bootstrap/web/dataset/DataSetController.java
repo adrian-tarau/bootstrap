@@ -28,6 +28,7 @@ import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +36,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.ui.Model;
@@ -123,6 +125,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     public final String delete(Model model, @PathParam("id") String id) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "delete", 0, null, null, null);
+        M dataSetModel = findModel(dataSet, model, id, State.BROWSE);
         return "dataset/browse";
     }
 
@@ -134,6 +137,18 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         upload(dataSet, redirectAttributes, StreamResource.create(file.getInputStream(), file.getOriginalFilename()));
         String message = "File '" + file.getOriginalFilename() + "' was successfully uploaded";
         redirectAttributes.addFlashAttribute("message", message);
+    }
+
+    @GetMapping(value = "{id}/download")
+    @ResponseBody()
+    public final ResponseEntity<InputStreamResource> download(Model model,  @PathVariable("id") String id) throws IOException {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "download", 0, null, null, null);
+        M dataSetModel = findModel(dataSet, model, id, State.BROWSE);
+        Resource resource = download(dataSet, model, dataSetModel);
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(resource.getMimeType()))
+                .header("Content-Disposition", "attachment; filename=\"" + resource.getFileName() + "\"")
+                .body(new InputStreamResource(resource.getInputStream()));
     }
 
     /**
@@ -185,7 +200,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @param dataSetModel    the model return by the data set, will be present only for {@link State#EDIT} and {@link State#VIEW}.
      */
     protected Resource download(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
-        throw new DataSetException("Download is not supported for ");
+        throw new DataSetException("Download is not supported for " + dataSet.getName());
     }
 
     /**
@@ -318,25 +333,23 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         }
     }
 
-    private void findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
+    private M findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
         TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
         if (transactionTemplate != null) {
-            transactionTemplate.execute(status -> {
-                doFindModel(dataSet, model, id, state);
-                return null;
-            });
+            return transactionTemplate.execute(status -> doFindModel(dataSet, model, id, state));
         } else {
-            doFindModel(dataSet, model, id, state);
+            return doFindModel(dataSet, model, id, state);
         }
     }
 
-    private void doFindModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
+    private M doFindModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
         CompositeIdentifier<M, Field<M>, ID> compositeId = dataSet.getMetadata().getId(id);
         Optional<M> result = dataSet.findById(compositeId.toId());
         if (result.isPresent()) {
             M dataSetModel = result.get();
             updateModel(dataSet, model, dataSetModel, state);
             model.addAttribute("model", dataSetModel);
+            return dataSetModel;
         } else {
             throw new ResponseStatusException(HttpStatusCode.valueOf(404), "A model with identifier '" + id + "' does not exist");
         }

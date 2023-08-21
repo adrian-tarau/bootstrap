@@ -3,6 +3,7 @@
  */
 window.DataSet = window.DataSet || {};
 window.REQUEST_PATH = window.REQUEST_PATH || "/";
+window.REQUEST_QUERY = window.REQUEST_QUERY || null;
 
 /**
  * Constants for alert yypes
@@ -19,16 +20,33 @@ const DATASET_ALERT_TYPE_ERROR = "ERROR";
 const DATASET_DROP_ZONE_CLASS = "dataset-drop-zone";
 
 /**
- * Takes a collection of parameters and queries the same end points with original parameters
- * plus the additional parameters
- * @param {Object }params the new parameters
+ * Takes a collection of parameters and creates a URI (path + query parameters).
+ *
+ * @param {Object} params the new parameters
+ * @param {String} [params] an optional path to add to the base URI
  */
-DataSet.open = function (params) {
+DataSet.uri = function (params, path) {
     let requestParams = $.extend({}, REQUEST_QUERY);
     requestParams = $.extend(requestParams, params);
-    let uri = REQUEST_PATH + "?" + $.param(requestParams);
-    console.info("Open data set " + uri);
-    window.location.href = uri;
+    let uri = REQUEST_PATH;
+    if (path) {
+        if (path.startsWith("/")) path.substring(1);
+        uri += "/" + path;
+    }
+    uri += "?" + $.param(requestParams);
+    console.info("Data Set URI: " + uri);
+    return uri;
+}
+
+/**
+ * Takes a collection of parameters and queries the same end points with original parameters
+ * plus the additional parameters
+ *
+ * @param {Object} params the new parameters
+ * @param {String} [params] an optional path to add to the base URI
+ */
+DataSet.open = function (params, path) {
+    window.location.href = DataSet.uri(params, path);
 }
 
 /**
@@ -57,7 +75,6 @@ DataSet.ajax = function (path, params, callback) {
 DataSet.loadPage = function (page) {
     page = parseInt(page);
     DataSet.ajax("page", {page: page}, function (data, status, xhr) {
-        console.log(data);
         $("#dataset-grid tbody").append(data);
         $("#more_results").attr("data-page", page + 1);
         $("#page_info").text(xhr.getResponseHeader('X-DATASET-PAGE-INFO'));
@@ -139,11 +156,18 @@ DataSet.refresh = function () {
 }
 
 /**
- * Opens an upload dialog and lets the user upload a file to add a new entry.
+ * Opens an upload dialog and lets the user upload a file to add a new model.
  */
 DataSet.upload = function () {
     $("div.dataset-drop-zone").click();
-    //DataSet.dropZone.processQueue();
+}
+
+/**
+ * Downloads a model.
+ */
+DataSet.download = function () {
+    let uri = DataSet.uri({}, DataSet.id + "/download");
+    $("#dataset-download").attr("src", uri);
 }
 
 /**
