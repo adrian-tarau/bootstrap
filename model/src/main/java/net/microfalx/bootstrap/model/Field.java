@@ -20,7 +20,7 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
      * @return the converted value
      */
     static <T> T from(Object value, Class<T> target) {
-        return FieldUtils.from(value, target);
+        return Converters.from(value, target);
     }
 
     /**
@@ -50,6 +50,7 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
 
     /**
      * Returns the icon used along the label (in front of the label)
+     *
      * @return the icon, null if not defined
      */
     String getLabelIcon();
@@ -224,8 +225,8 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
          */
         MODEL(false, false);
 
-        private boolean numeric;
-        private boolean temporal;
+        private final boolean numeric;
+        private final boolean temporal;
 
         DataType(boolean numeric, boolean temporal) {
             this.numeric = numeric;

@@ -6,6 +6,7 @@ import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Glue;
 import net.microfalx.lang.annotation.I18n;
 import net.microfalx.lang.annotation.Name;
+import net.microfalx.lang.annotation.Timestamp;
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     private F idField;
     private final List<F> idFields = new ArrayList<>();
     private final Map<String, F> idFieldsById = new HashMap<>();
+    private F timestampField;
     private Class<ID> idClass;
 
     MessageSource messageSource;
@@ -82,6 +84,13 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     }
 
     @Override
+    public final List<F> getFields(Field.DataType dataType) {
+        requireNonNull(dataType);
+        return getFields().stream().filter(field -> field.getDataType() == dataType).toList();
+    }
+
+
+    @Override
     public List<F> getIdFields() {
         return unmodifiableList(idFields);
     }
@@ -105,6 +114,11 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     public F findIdField() {
         if (idFields.size() > 1) throw new ModelException("Multiple identifier fields are present for " + getName());
         return idField != null ? idField : null;
+    }
+
+    @Override
+    public F findTimestampField() {
+        return timestampField;
     }
 
     @Override
@@ -184,6 +198,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
             idFieldsById.put(StringUtils.toIdentifier(field.getProperty()), field);
         }
         if (idFields.size() > 1) idField = null;
+        if (field.hasAnnotation(Timestamp.class)) timestampField = field;
     }
 
     /**

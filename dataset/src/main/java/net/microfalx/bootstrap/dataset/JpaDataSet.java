@@ -1,7 +1,11 @@
 package net.microfalx.bootstrap.dataset;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import net.microfalx.bootstrap.model.Filter;
+import net.microfalx.bootstrap.model.InvalidDataTypeExpression;
 import net.microfalx.bootstrap.model.JpaField;
 import net.microfalx.bootstrap.model.Metadata;
 import org.springframework.data.domain.Page;
@@ -25,6 +29,22 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
 
     public JpaDataSet(DataSetFactory<M, JpaField<M>, ID> factory, Metadata<M, JpaField<M>, ID> metadata) {
         super(factory, metadata);
+    }
+
+    @Override
+    public void validate(Filter filter) {
+        super.validate(filter);
+        Specification<M> specification = createSpecification(filter);
+        if (specification != null) {
+            EntityManager entityManager = getService(EntityManager.class);
+            CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+            CriteriaQuery<M> query = criteriaBuilder.createQuery(getMetadata().getModel());
+            try {
+                specification.toPredicate(query.from(getMetadata().getModel()), query, criteriaBuilder);
+            } catch (InvalidDataTypeExpression e) {
+                throw new DataSetException(e.getMessage(), e);
+            }
+        }
     }
 
     @Override
@@ -67,11 +87,12 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
         return repository.findAll(pageable);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Page<M> doFindAll(Pageable pageable, Filter filterable) {
-        if (repository instanceof JpaSpecificationExecutor && filterable != null) {
+        Specification<M> specification = createSpecification(filterable);
+        if (specification != null) {
             JpaSpecificationExecutor<M> executor = (JpaSpecificationExecutor<M>) repository;
-            Specification<M> specification = null;
             return executor.findAll(specification, pageable);
         } else {
             return findAll(pageable);
@@ -110,6 +131,19 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
 
     void setRepository(JpaRepository<M, ID> repository) {
         this.repository = repository;
+    }
+
+    private Specification<M> createSpecification(Filter filter) {
+        boolean hasFilters = filter != null && !filter.isEmpty();
+        if (hasFilters && !(repository instanceof JpaSpecificationExecutor)) {
+            throw new DataSetException("JPA Data Set " + getMetadata().getName() + "' data was requested with a filter " +
+                    "but the repository does not implement JpaSpecificationExecutor");
+        }
+        if (repository instanceof JpaSpecificationExecutor && hasFilters) {
+            return new JpaSpecificationBuilder<>(getMetadata(), filter).build();
+        } else {
+            return null;
+        }
     }
 
     public static class Factory<M, ID> extends PojoDataSetFactory<M, JpaField<M>, ID> {

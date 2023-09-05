@@ -37,7 +37,7 @@ public class FormatterUtils {
                 return NumberFormat.getIntegerInstance().format(((Number) value).longValue());
             }
         } else if (value instanceof Enum) {
-            return EnumUtils.toName((Enum)value);
+            return EnumUtils.toLabel((Enum)value);
         } else if (value instanceof Temporal) {
             return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value);
         } else {

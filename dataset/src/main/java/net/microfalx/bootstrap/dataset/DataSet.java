@@ -145,6 +145,16 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
     void setId(M model, ID id);
 
     /**
+     * Validates whether the filter is valid for the data set.
+     *
+     * This validation includes whether the fields exists or if the values of the filter are acceptble for the data set.
+     *
+     * @param filter the filter
+     * @throws DataSetException if the filter is not valid
+     */
+    void validate(Filter filter);
+
+    /**
      * Returns a page of results based on page information and a filter.
      *
      * @param pageable   the page information

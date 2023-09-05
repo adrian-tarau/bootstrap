@@ -14,6 +14,12 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 public interface ComparisonExpression extends Expression {
 
     /**
+     * A constant for an expression value which matches any value; such expressions are skipped when they are evaluated
+     * in memory or they are skipped when converted to other expressions.
+     */
+    String MATCH_ALL = "*";
+
+    /**
      * Creates a new comparison expression with an '=' operator.
      *
      * @param field the expression field
@@ -318,6 +324,7 @@ public interface ComparisonExpression extends Expression {
             sb.append("minimumOperands=").append(minimumOperands);
             sb.append(", maximumOperands=").append(maximumOperands);
             sb.append(", label='").append(label).append('\'');
+            sb.append(", name=").append(name());
             sb.append('}');
             return sb.toString();
         }

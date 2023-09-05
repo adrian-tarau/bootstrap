@@ -25,12 +25,13 @@ public class EnumFormatter<M, F extends Field<M>, T> extends AbstractFormatter<M
         if (value instanceof String) {
             enumValue = fromName(getEnumClass(field), (String) value, null);
             if (enumValue == null) return (String) value;
-
         } else if (value instanceof Number) {
             enumValue = fromOrdinal(getEnumClass(field), ((Number) value).intValue(), null);
             if (enumValue == null) return ObjectUtils.toString(value);
+        } else if (value instanceof Enum) {
+            enumValue = (Enum) value;
         }
-        return enumValue != null ? toName(enumValue) : asString(value);
+        return enumValue != null ? toLabel(enumValue) : asString(value);
     }
 
     private Class<Enum> getEnumClass(F field) {

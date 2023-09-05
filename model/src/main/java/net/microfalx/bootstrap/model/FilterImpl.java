@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.model;
 import static net.microfalx.lang.ArgumentUtils.requireBounded;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
-class FilterImpl implements Filter {
+class FilterImpl extends AbstractComparisonExpressionLocator implements Filter {
 
     private final Expression expression;
     private final int offset;
@@ -29,7 +29,7 @@ class FilterImpl implements Filter {
     }
 
     @Override
-    public Expression getExpression() {
+    public Expression getRootExpression() {
         return expression;
     }
 
@@ -73,5 +73,10 @@ class FilterImpl implements Filter {
                 ", offset=" + offset +
                 ", limit=" + limit +
                 '}';
+    }
+
+    @Override
+    public Expression getExpression() {
+        return expression;
     }
 }

@@ -46,11 +46,26 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
     List<F> getNameFields();
 
     /**
+     * Returns all fields with a given data type.
+     *
+     * @param dataType the data type
+     * @return a non-null list
+     */
+    List<F> getFields(Field.DataType dataType);
+
+    /**
      * Returns the field which identifies the record.
      *
      * @return the field, null if there is no identifier
      */
     F findIdField();
+
+    /**
+     * Returns the field which identifies the (main) timestamp.
+     *
+     * @return the field, null if there is no field which holds the timestamp
+     */
+    F findTimestampField();
 
     /**
      * Returns a field by its name or property name, if exists.
@@ -79,6 +94,7 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
 
     /**
      * Returns the class representing the model identifier.
+     *
      * @return a non-null instance
      */
     Class<ID> getIdClass();

@@ -4,7 +4,7 @@ import java.util.*;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
-class LogicalExpressionImpl implements LogicalExpression {
+class LogicalExpressionImpl extends AbstractComparisonExpressionLocator implements LogicalExpression {
 
     private final List<Expression> expressions;
     private final Operator operator;
@@ -52,6 +52,20 @@ class LogicalExpressionImpl implements LogicalExpression {
     }
 
     @Override
+    public LogicalExpression operator(LogicalExpression.Operator operator) {
+        requireNonNull(operator);
+        return new LogicalExpressionImpl(operator, new ArrayList<>(expressions));
+    }
+
+    @Override
+    public LogicalExpression append(Expression expression) {
+        requireNonNull(expression);
+        LogicalExpressionImpl copy = copy();
+        copy.expressions.add(expression);
+        return copy;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -64,11 +78,20 @@ class LogicalExpressionImpl implements LogicalExpression {
         return Objects.hash(expressions, operator);
     }
 
+    private LogicalExpressionImpl copy() {
+        return new LogicalExpressionImpl(operator, new ArrayList<>(expressions));
+    }
+
     @Override
     public String toString() {
         return "LogicalExpressionImpl{" +
                 "expressions=" + expressions +
                 ", operator=" + operator +
                 '}';
+    }
+
+    @Override
+    Expression getRootExpression() {
+        return this;
     }
 }

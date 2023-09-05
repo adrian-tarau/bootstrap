@@ -1,26 +1,28 @@
 package net.microfalx.bootstrap.core.async;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @Configuration
 @EnableAsync
 @EnableScheduling
 public class AsyncConfig {
 
+    @Autowired
+    private AsyncProperties properties = new AsyncProperties();
+
     @Bean
-    public ThreadPoolTaskScheduler getTaskScheduler() {
-        ThreadPoolTaskScheduler executor = new ThreadPoolTaskScheduler();
-        executor.setThreadNamePrefix("bootstrap");
-        executor.initialize();
-        ScheduledThreadPoolExecutor poolExecutor = executor.getScheduledThreadPoolExecutor();
-        poolExecutor.setCorePoolSize(5);
-        poolExecutor.setMaximumPoolSize(10);
-        return executor;
+    public TaskExecutor getTaskExecutor() {
+        return new TaskExecutorFactory().setProperties(properties).setSuffix("exec").createExecutor();
+    }
+
+    @Bean
+    public TaskScheduler getTaskScheduler() {
+        return new TaskExecutorFactory().setProperties(properties).setSuffix("sch").createScheduler();
     }
 }

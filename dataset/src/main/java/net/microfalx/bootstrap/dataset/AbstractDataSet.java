@@ -9,17 +9,23 @@ import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
 import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Label;
 import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.ReadOnly;
 import net.microfalx.lang.annotation.Visible;
 import org.apache.commons.lang3.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.Temporal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +40,8 @@ import static net.microfalx.lang.StringUtils.defaultIfEmpty;
  */
 @net.microfalx.bootstrap.dataset.annotation.DataSet
 public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements DataSet<M, F, ID> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
 
     private final DataSetFactory<M, F, ID> factory;
     private final Metadata<M, F, ID> metadata;
@@ -169,12 +177,10 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                     return ((net.microfalx.bootstrap.dataset.Lookup) lookupModel.get()).getName();
                 }
             }
-            if (isJdkType(value)) {
-                if (value instanceof Enum) {
-                    return ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
-                } else {
-                    return FormatterUtils.basicFormatting(value, formattableAnnot);
-                }
+            if (value instanceof Enum) {
+                return ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
+            } else if (isJdkType(value)) {
+                return FormatterUtils.basicFormatting(value, formattableAnnot);
             } else {
                 MetadataService metadataService = applicationContext.getBean(MetadataService.class);
                 Metadata modelMetadata = metadataService.getMetadata(value.getClass());
@@ -201,6 +207,47 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public final void setId(M model, ID id) {
         new CompositeIdentifier<>(metadata, model);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Override
+    public void validate(Filter filter) {
+        LOGGER.debug("Validate filter " + filter);
+        List<ComparisonExpression> comparisonExpressions = filter.getComparisonExpressions();
+        for (ComparisonExpression comparisonExpression : comparisonExpressions) {
+            Object value = comparisonExpression.getValue();
+            LOGGER.debug(" - " + comparisonExpression.getField() + " = " + value);
+            F field = getMetadata().find(comparisonExpression.getField());
+            if (field == null) {
+                throw new DataSetException("A field with name '" + comparisonExpression.getField() + "' does not exist in data set " + getName());
+            }
+            if (ComparisonExpression.MATCH_ALL.equals(value)) continue;
+            try {
+                switch (field.getDataType()) {
+                    case ENUM:
+                        if (!(value instanceof Enum<?>)) {
+                            Enum<?> resolvedEnum = EnumUtils.fromName((Class<Enum>) field.getDataClass(), Field.from(value, String.class));
+                            LOGGER.debug("   - " + resolvedEnum);
+                        }
+                        break;
+                    case DATE:
+                        if (!(value instanceof Temporal)) {
+                            LocalDate date = Field.from(value, LocalDate.class);
+                            LOGGER.debug("   - " + date);
+                        }
+                        break;
+                    case DATE_TIME:
+                        if (!(value instanceof Temporal)) {
+                            LocalDateTime dateTime = Field.from(value, LocalDateTime.class);
+                            LOGGER.debug("   - " + dateTime);
+                        }
+                        break;
+                }
+            } catch (Exception e) {
+                throw new DataSetException("A data conversion failure occurred for field with name '"
+                        + comparisonExpression.getField() + "', reason: " + e.getMessage());
+            }
+        }
     }
 
     @Override

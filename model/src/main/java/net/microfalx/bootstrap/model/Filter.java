@@ -8,7 +8,7 @@ import java.util.Collections;
 /**
  * Abstraction filter information.
  */
-public interface Filter extends Nameable, Descriptable {
+public interface Filter extends Nameable, Descriptable, ComparisonExpressionLocator {
 
     /**
      * A constant for no limit for pagination.
@@ -52,6 +52,8 @@ public interface Filter extends Nameable, Descriptable {
      * @return a non-null instance
      */
     Expression getExpression();
+
+
 
     /**
      * Returns the index of the first model and it used to paginate

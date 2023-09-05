@@ -6,7 +6,7 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 
-public interface LogicalExpression extends Expression {
+public interface LogicalExpression extends Expression, ComparisonExpressionLocator {
 
     static Expression[] EMPTY = new Expression[0];
 
@@ -97,6 +97,22 @@ public interface LogicalExpression extends Expression {
     Operator getOperator();
 
     /**
+     * Changes the operator.
+     *
+     * @param operator the new operator
+     * @return a new instance with a different operator
+     */
+    LogicalExpression operator(LogicalExpression.Operator operator);
+
+    /**
+     * Adds a new expression to the end of the logical expression
+     *
+     * @param expression the new expression
+     * @return a new instance with an additional expression
+     */
+    LogicalExpression append(Expression expression);
+
+    /**
      * An enum for an operator
      */
     enum Operator {
@@ -124,6 +140,15 @@ public interface LogicalExpression extends Expression {
 
         public String getLabel() {
             return label;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("Operator{");
+            sb.append(", label='").append(label).append('\'');
+            sb.append(", name=").append(name());
+            sb.append('}');
+            return sb.toString();
         }
     }
 }

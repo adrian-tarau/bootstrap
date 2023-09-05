@@ -1,15 +1,20 @@
 package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.StringUtils;
 import org.springframework.util.AntPathMatcher;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import static java.util.Arrays.stream;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ObjectUtils.isEmpty;
 
 /**
  * A class which filters a list of models.
@@ -71,35 +76,89 @@ public class ModelFilter<M> {
 
     private boolean evaluateComparisonExpression(M model, ComparisonExpression comparisonExpression) {
         Field<M> field = metadata.get(comparisonExpression.getField());
-        Object fieldValue = Field.from(field.get(model), field.getDataClass());
-        return switch (comparisonExpression.getOperator()) {
-            case NOT_EQUAL -> !comparisonExpression.getValue().equals(fieldValue);
-            case EQUAL -> comparisonExpression.getValue().equals(fieldValue);
-            case REGEX -> regexMatch(ObjectUtils.toString(comparisonExpression.getValue()),
-                    ObjectUtils.toString(fieldValue));
-            case LIKE -> globMatch(ObjectUtils.toString(comparisonExpression.getValue()),
-                    ObjectUtils.toString(fieldValue));
-            case CONTAINS -> ObjectUtils.toString(fieldValue)
-                    .contains(ObjectUtils.toString(comparisonExpression.getValue()));
-            case BETWEEN -> evaluateBetweenExpression(comparisonExpression, fieldValue);
-            case LESS -> toDouble(fieldValue) < toDouble(comparisonExpression.getValue());
-            case LESS_OR_EQUAL -> toDouble(fieldValue) <= toDouble(comparisonExpression.getValue());
-            case GREATER -> toDouble(fieldValue) > toDouble(comparisonExpression.getValue());
-            case GREATER_OR_EQUAL -> toDouble(fieldValue) >= toDouble(comparisonExpression.getValue());
-            case NOT_IN -> !isIn(comparisonExpression, fieldValue);
-            case IN -> isIn(comparisonExpression, fieldValue);
-            case NOT_NULL -> !isEmpty(fieldValue);
-            case NULL -> isEmpty(fieldValue);
-        };
+        Object fieldValue = field.get(model);
+        Object expressionValue = comparisonExpression.getValue();
+        if (ComparisonExpression.MATCH_ALL.equals(expressionValue)) return true;
+        ComparisonExpression.Operator operator = comparisonExpression.getOperator();
+        if (operator == ComparisonExpression.Operator.BETWEEN) {
+            return evaluateBetweenExpression(field, comparisonExpression, fieldValue);
+        }
+        if (operator == ComparisonExpression.Operator.NULL) {
+            return fieldValue == null;
+        }
+        if (operator == ComparisonExpression.Operator.NOT_NULL) {
+            return fieldValue != null;
+        } else {
+            if (expressionValue == null && fieldValue == null) return true;
+            if (expressionValue == null || fieldValue == null) return false;
+            expressionValue = Field.from(expressionValue, field.getDataClass());
+            switch (operator) {
+                case NOT_EQUAL:
+                    return !expressionValue.equals(fieldValue);
+                case EQUAL:
+                    return expressionValue.equals(fieldValue);
+                case REGEX:
+                    return regexMatch(ObjectUtils.toString(expressionValue),
+                            ObjectUtils.toString(fieldValue));
+                case LIKE:
+                    return globMatch(ObjectUtils.toString(expressionValue),
+                            ObjectUtils.toString(fieldValue));
+                case CONTAINS:
+                    return StringUtils.contains(ObjectUtils.toString(fieldValue),
+                            ObjectUtils.toString(expressionValue));
+                case LESS:
+                    return toDouble(fieldValue) < toDouble(comparisonExpression.getValue());
+                case LESS_OR_EQUAL:
+                    return toDouble(fieldValue) <= toDouble(comparisonExpression.getValue());
+                case GREATER:
+                    return toDouble(fieldValue) > toDouble(comparisonExpression.getValue());
+                case GREATER_OR_EQUAL:
+                    return toDouble(fieldValue) >= toDouble(comparisonExpression.getValue());
+                case NOT_IN:
+                    return !isIn(comparisonExpression, fieldValue);
+                case IN:
+                    return isIn(comparisonExpression, fieldValue);
+                default:
+                    throw new ModelException("Unhandled operator: " + operator);
+            }
+        }
     }
 
-    private boolean evaluateBetweenExpression(ComparisonExpression comparisonExpression, Object fieldValue) {
+    private boolean evaluateBetweenExpression(Field<M> field, ComparisonExpression comparisonExpression, Object fieldValue) {
         Object[] values = comparisonExpression.getValues();
-        Field.from(values[0], Double.class);
-        double numericValue = Field.from(fieldValue, Double.class);
-        double min = Field.from(values[0], Double.class);
-        double max = Field.from(values[1], Double.class);
-        return numericValue >= min && numericValue <= max;
+        if (field.getDataType().isTemporal()) {
+            Temporal temporalValue = Field.from(fieldValue, Temporal.class);
+            Temporal min = Field.from(values[0], Temporal.class);
+            Temporal max = Field.from(values[1], Temporal.class);
+            return compare(temporalValue, min) >= 0 && compare(temporalValue, max) <= 0;
+        } else {
+            double numericValue = Field.from(fieldValue, Double.class);
+            double min = Field.from(values[0], Double.class);
+            double max = Field.from(values[1], Double.class);
+            return numericValue >= min && numericValue <= max;
+        }
+    }
+
+    private int compare(Temporal temporal1, Temporal temporal2) {
+        if (temporal1 instanceof LocalDate) {
+            LocalDate localDate1 = (LocalDate) temporal1;
+            LocalDate localDate2 = (LocalDate) temporal2;
+            return localDate1.compareTo(localDate2);
+        } else if (temporal1 instanceof LocalDateTime) {
+            LocalDateTime localDateTime1 = (LocalDateTime) temporal1;
+            LocalDateTime localDateTime2 = (LocalDateTime) temporal2;
+            return localDateTime1.compareTo(localDateTime2);
+        } else if (temporal1 instanceof ZonedDateTime) {
+            ZonedDateTime zonedDateTime1 = (ZonedDateTime) temporal1;
+            ZonedDateTime zonedDateTime2 = (ZonedDateTime) temporal2;
+            return zonedDateTime1.compareTo(zonedDateTime2);
+        } else if (temporal1 instanceof OffsetDateTime) {
+            OffsetDateTime offsetDateTime1 = (OffsetDateTime) temporal1;
+            OffsetDateTime offsetDateTime2 = (OffsetDateTime) temporal2;
+            return offsetDateTime1.compareTo(offsetDateTime2);
+        } else {
+            return 0;
+        }
     }
 
     private boolean isIn(ComparisonExpression comparisonExpression, Object fieldValue) {

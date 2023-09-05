@@ -70,6 +70,22 @@ public @interface DataSet {
     boolean canDelete() default true;
 
     /**
+     * Returns the default time range.
+     * <p>
+     * By default, if the data set has a time component, a default range will be used using todays date.
+     *
+     * @return zero (no default range), one (one day) or two (a range)
+     */
+    String[] range() default {"today"};
+
+    /**
+     * Returns the default query for this data set.
+     *
+     * @return the query, empty if no default query
+     */
+    String defaultQuery() default "";
+
+    /**
      * Returns the template to be used to render the data instead of the default one.
      *
      * @return the view, empty if not set
