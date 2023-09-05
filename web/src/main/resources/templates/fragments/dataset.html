@@ -55,8 +55,15 @@
             <div class="dataset-drop-zone"></div>
             <div class="mR-10"><span id="page_info" class="badge rounded-pill bg-success p-10"
                                      th:text="${#dataset.getPageInfo()}"></span></div>
-            <form class="d-flex" role="search">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <form class="d-flex" role="search" th:attr="onsubmit='return DataSet.search()'">
+                <div id="daterange" class="form-control me-2 text-nowrap"
+                     style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%"
+                    th:if="${hasTimeRange}">
+                    <i class="fa fa-calendar"></i>&nbsp;
+                    <span></span> <i class="fa fa-caret-down"></i>
+                    <span class="d-none" th:text="${daterange}"></span>
+                </div>
+                <input id="query" class="form-control me-2" type="search" placeholder="Search" aria-label="Search" th:value="${query}">
                 <button class="btn btn-outline-success text-nowrap" type="submit"><i
                         class="fa-solid fa-magnifying-glass icon-font-grow"></i><span class="mL-5">Search</span>
                 </button>
@@ -64,6 +71,7 @@
         </div>
     </div>
     <iframe id="dataset-download" class="d-none"></iframe>
+    <p id="dataset-message" class="d-none" th:if="${message}" th:utext="${message}"></p>
 </nav>
 
 <div class="ta-c bdT w-100 p-20" th:fragment="grid-next-page" th:if="${#dataset.hasNext()}">

@@ -1,5 +1,9 @@
 package net.microfalx.bootstrap.test.annotation;
 
+import net.microfalx.bootstrap.search.IndexProperties;
+import net.microfalx.bootstrap.search.IndexService;
+import net.microfalx.bootstrap.search.SearchProperties;
+import net.microfalx.bootstrap.search.SearchService;
 import net.microfalx.bootstrap.web.application.ApplicationProperties;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.container.WebContainerService;
@@ -14,7 +18,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@ContextConfiguration(classes = {WebContainerService.class, ApplicationService.class, ApplicationProperties.class})
+@ContextConfiguration(classes = {WebContainerService.class, ApplicationService.class, ApplicationProperties.class,
+        IndexService.class, IndexProperties.class, SearchService.class, SearchProperties.class})
 @BootstrapServiceTest
 public @interface BootstrapApplicationTest {
 }

@@ -4,10 +4,6 @@ import net.microfalx.bootstrap.core.async.AsyncConfig;
 import net.microfalx.bootstrap.core.config.I18nConfig;
 import net.microfalx.bootstrap.resource.ResourceProperties;
 import net.microfalx.bootstrap.resource.ResourceService;
-import net.microfalx.bootstrap.search.IndexProperties;
-import net.microfalx.bootstrap.search.IndexService;
-import net.microfalx.bootstrap.search.SearchProperties;
-import net.microfalx.bootstrap.search.SearchService;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,8 +19,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@ContextConfiguration(classes = {ResourceService.class, ResourceProperties.class,
-        IndexService.class, IndexProperties.class, SearchService.class, SearchProperties.class})
+@ContextConfiguration(classes = {ResourceService.class, ResourceProperties.class})
 @Import({I18nConfig.class, AsyncConfig.class})
 @OverrideAutoConfiguration(enabled = false)
 @ImportAutoConfiguration

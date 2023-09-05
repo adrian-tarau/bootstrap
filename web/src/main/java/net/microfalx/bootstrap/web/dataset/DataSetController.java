@@ -8,10 +8,8 @@ import net.microfalx.bootstrap.dataset.DataSetException;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
-import net.microfalx.bootstrap.model.CompositeIdentifier;
-import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.model.Filter;
-import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.bootstrap.dataset.annotation.Searchable;
+import net.microfalx.bootstrap.model.*;
 import net.microfalx.bootstrap.web.component.Button;
 import net.microfalx.bootstrap.web.component.Item;
 import net.microfalx.bootstrap.web.component.Menu;
@@ -43,9 +41,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -59,6 +57,10 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetController.class);
 
+    private static final String MESSAGE_ATTR = "message";
+    private static final String INVALID_FILTER_PREFIX = "Invalid filter: ";
+    private static final String DATE_RANGE_SEPARATOR = "|";
+
     @Autowired
     private DataSetService dataSetService;
 
@@ -68,29 +70,31 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @GetMapping()
     public final String browse(Model model,
                                @RequestParam(value = "page", defaultValue = "0") int pageParameter,
+                               @RequestParam(value = "range", defaultValue = "") String rangeParameter,
                                @RequestParam(value = "query", defaultValue = "") String queryParameter,
-                               @RequestParam(value = "filter", defaultValue = "") String filterParameter,
                                @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        log(dataSet, "browse", pageParameter, queryParameter, filterParameter, sortParameter);
+        log(dataSet, "browse", pageParameter, rangeParameter, queryParameter, sortParameter);
         updateModel(dataSet, model, State.BROWSE);
         updateModel(dataSet, model, null, State.BROWSE);
-        processParams(dataSet, model, pageParameter, queryParameter, filterParameter, sortParameter);
+        processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         return "dataset/browse";
     }
 
     @GetMapping("page")
     public final String next(Model model, HttpServletResponse response,
                              @RequestParam(value = "page", defaultValue = "0") int pageParameter,
+                             @RequestParam(value = "range", defaultValue = "") String rangeParameter,
                              @RequestParam(value = "query", defaultValue = "") String queryParameter,
-                             @RequestParam(value = "filter", defaultValue = "") String filterParameter,
                              @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        log(dataSet, "next page", pageParameter, queryParameter, filterParameter, sortParameter);
+        log(dataSet, "next page", pageParameter, rangeParameter, queryParameter, sortParameter);
         updateModel(dataSet, model, State.BROWSE);
-        Page<M> page = processParams(dataSet, model, pageParameter, queryParameter, filterParameter, sortParameter);
+        Page<M> page = processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         response.addHeader("X-DATASET-PAGE-INFO", DataSetTool.getPageInfo(page));
         response.addHeader("X-DATASET-PAGE-INFO-EXTENDED", DataSetTool.getPageAndRecordInfo(page));
+        if (model.containsAttribute(MESSAGE_ATTR))
+            response.addHeader("X-DATASET-MESSAGE", (String) model.getAttribute(MESSAGE_ATTR));
         return "dataset/page:: #dataset-page";
     }
 
@@ -131,17 +135,17 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     @PostMapping(value = "/upload", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    public final void upload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) throws IOException {
+    public final void upload(@RequestParam("file") MultipartFile file, Model model) throws IOException {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "upload", 0, null, null, null);
-        upload(dataSet, redirectAttributes, StreamResource.create(file.getInputStream(), file.getOriginalFilename()));
+        upload(dataSet, model, StreamResource.create(file.getInputStream(), file.getOriginalFilename()));
         String message = "File '" + file.getOriginalFilename() + "' was successfully uploaded";
-        redirectAttributes.addFlashAttribute("message", message);
+        model.addAttribute("message", message);
     }
 
     @GetMapping(value = "{id}/download")
     @ResponseBody()
-    public final ResponseEntity<InputStreamResource> download(Model model,  @PathVariable("id") String id) throws IOException {
+    public final ResponseEntity<InputStreamResource> download(Model model, @PathVariable("id") String id) throws IOException {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "download", 0, null, null, null);
         M dataSetModel = findModel(dataSet, model, id, State.BROWSE);
@@ -230,10 +234,6 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private Page<M> extractModels(Filter filter, Pageable pageable) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         return dataSet.findAll(pageable, filter);
-    }
-
-    private Filter getFilter(String filterParameter) {
-        return null;
     }
 
     private Sort getSort(String value) {
@@ -365,23 +365,140 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     private Page<M> processParams(DataSet<M, Field<M>, ID> dataSet, Model model,
-                                  int pageParameter, String queryParameter, String filterParameter, String sortParameter) {
-        Filter filter = getFilter(filterParameter);
+                                  int pageParameter, String rangeParameter, String queryParameter, String sortParameter) {
         Sort sort = getSort(sortParameter);
         Pageable page = getPage(pageParameter, sort);
+        Filter filter = getFilter(dataSet, model, rangeParameter, queryParameter);
         Page<M> pagedModels = extractModels(filter, page);
         model.addAttribute("page", pagedModels);
-        model.addAttribute("query", queryParameter);
+        model.addAttribute("query", defaultIfEmpty(queryParameter, getDefaultQuery(dataSet)));
         model.addAttribute("sort", sort);
         model.addAttribute("index", new MutableLong(pagedModels.getPageable().getOffset() + 1));
+        model.addAttribute("hasTimeRange", hasTimeRange(dataSet));
         return pagedModels;
     }
 
+    private String getDefaultQuery(DataSet<M, Field<M>, ID> dataSet) {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
+        return dataSetAnnotation.defaultQuery();
+    }
+
+    private Filter getFilter(DataSet<M, Field<M>, ID> dataSet, Model model, String rangeParameter, String queryParameter) {
+        String defaultQuery = getDefaultQuery(dataSet);
+        if (isNotEmpty(defaultQuery)) {
+            QueryParser<M, Field<M>, ID> queryParser = createQueryParser(dataSet, defaultQuery);
+            if (!queryParser.isValid()) {
+                defaultQuery = null;
+                LOGGER.warn("Default query is not valid: " + queryParser.validate());
+            }
+        }
+        Filter filter = doGetFilter(dataSet, model, defaultIfEmpty(queryParameter, defaultQuery));
+        if (filter == null) filter = doGetFilter(dataSet, model, defaultQuery);
+        return addRangeFilter(dataSet, model, rangeParameter, filter);
+    }
+
+    private Filter doGetFilter(DataSet<M, Field<M>, ID> dataSet, Model model, String query) {
+        Filter filter = Filter.create();
+        QueryParser<M, Field<M>, ID> queryParser = createQueryParser(dataSet, query);
+        if (queryParser.isValid()) {
+            filter = Filter.create(queryParser.parse());
+        } else {
+            String reason = queryParser.validate();
+            model.addAttribute("message", INVALID_FILTER_PREFIX + reason);
+            LOGGER.warn("Failed to parse query '" + query + "', reason: " + reason);
+        }
+        try {
+            dataSet.validate(filter);
+        } catch (Exception e) {
+            filter = null;
+            String reason = e.getMessage();
+            model.addAttribute("message", INVALID_FILTER_PREFIX + reason);
+            String message = "Failed to validate query '" + query + "', reason: " + reason;
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(message, e);
+            } else {
+                LOGGER.warn(message);
+            }
+        }
+        return filter;
+    }
+
+    private Filter addRangeFilter(DataSet<M, Field<M>, ID> dataSet, Model model, String rangeParameter, Filter filter) {
+        if (!hasTimeRange(dataSet)) return filter;
+        String[] rangeParts = split(rangeParameter, DATE_RANGE_SEPARATOR);
+        if (rangeParts.length == 0) rangeParts = getDefaultRange(dataSet);
+        if (rangeParts.length == 0) return filter;
+        if (!(rangeParts.length == 1 || rangeParts.length == 2)) {
+            model.addAttribute("message", INVALID_FILTER_PREFIX + "date/time range requires two components");
+        } else {
+            Field<M> timestampField = dataSet.getMetadata().findTimestampField();
+            ZonedDateTime startTime;
+            ZonedDateTime endTime;
+            if (rangeParts.length == 1) {
+                startTime = Field.from(rangeParts[0], ZonedDateTime.class);
+                endTime = atEndOfDay(startTime);
+            } else {
+                startTime = Field.from(rangeParts[0], ZonedDateTime.class);
+                endTime = Field.from(rangeParts[1], ZonedDateTime.class);
+            }
+            model.addAttribute("daterange", startTime.toString() + "|" + endTime.toString());
+            Expression timeExpression = ComparisonExpression.between(timestampField.getName(), startTime, endTime);
+            LogicalExpression finalExpression = LogicalExpression.and(timeExpression, filter.getExpression());
+            filter = Filter.create(finalExpression, filter.getOffset(), filter.getLimit());
+        }
+        return filter;
+    }
+
+    private List<String> getStringFields(DataSet<M, Field<M>, ID> dataSet) {
+        return dataSet.getMetadata().getFields(Field.DataType.STRING).stream()
+                .filter(this::isSearchable).map(Field::getName)
+                .toList();
+    }
+
+    private boolean isSearchable(Field<M> field) {
+        Searchable searchableAnnot = field.findAnnotation(Searchable.class);
+        if (searchableAnnot != null) {
+            return searchableAnnot.value();
+        } else {
+            return true;
+        }
+    }
+
+    private String[] getDefaultRange(DataSet<M, Field<M>, ID> dataSet) {
+        String[] range = EMPTY_STRING_ARRAY;
+        String[] defaultRange = getDataSetAnnotation().range();
+        if (defaultRange.length > 0) {
+            range = new String[2];
+            if (defaultRange.length == 1) {
+                range[0] = Field.from(defaultRange[0], ZonedDateTime.class).toString();
+                range[1] = atEndOfDay(Field.from(defaultRange[0], ZonedDateTime.class)).toString();
+            } else if (defaultRange.length == 2) {
+                range[0] = Field.from(defaultRange[0], ZonedDateTime.class).toString();
+                range[1] = atEndOfDay(Field.from(defaultRange[1], ZonedDateTime.class)).toString();
+            }
+        }
+        return range;
+    }
+
+    private boolean hasTimeRange(DataSet<M, Field<M>, ID> dataSet) {
+        return dataSet.getMetadata().findTimestampField() != null;
+    }
+
+    private QueryParser<M, Field<M>, ID> createQueryParser(DataSet<M, Field<M>, ID> dataSet, String query) {
+        return new QueryParser<>(dataSet.getMetadata(), query)
+                .addDefaultFields(getStringFields(dataSet));
+    }
+
+    private ZonedDateTime atEndOfDay(ZonedDateTime dateTime) {
+        return dateTime.plusDays(1).minusSeconds(1);
+    }
+
     private void log(DataSet<M, Field<M>, ID> dataSet, String action, int page,
-                     String query, String filter, String sort) {
-        filter = StringUtils.defaultIfEmpty(filter, "<empty>");
-        sort = StringUtils.defaultIfEmpty(sort, "<empty>");
-        LOGGER.debug("{} data set {}, page {}, query {}, filter {}, sort {}", capitalizeWords(action), dataSet.getName(),
-                page, query, filter, sort);
+                     String range, String query, String sort) {
+        range = defaultIfEmpty(range, "<empty>");
+        query = defaultIfEmpty(query, "<empty>");
+        sort = defaultIfEmpty(sort, "<empty>");
+        LOGGER.debug("{} data set {}, page {}, range{}, query {}, sort {}", capitalizeWords(action), dataSet.getName(),
+                page, range, query, sort);
     }
 }

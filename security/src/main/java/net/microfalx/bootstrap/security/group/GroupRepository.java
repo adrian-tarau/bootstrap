@@ -2,11 +2,12 @@ package net.microfalx.bootstrap.security.group;
 
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @Transactional
-public interface GroupRepository extends JpaRepository<Group, Integer> {
+public interface GroupRepository extends JpaRepository<Group, Integer>, JpaSpecificationExecutor {
 
     /**
      * Locates a group by its name.

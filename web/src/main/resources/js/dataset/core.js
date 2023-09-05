@@ -12,6 +12,7 @@ window.REQUEST_QUERY = window.REQUEST_QUERY || null;
 const DATASET_ALERT_TYPE_INFO = "INFO";
 const DATASET_ALERT_TYPE_WARN = "WARN";
 const DATASET_ALERT_TYPE_ERROR = "ERROR";
+const DATE_RANGE_SEPARATOR = "|";
 
 /**
  * A CSS class used to tag the element which host the drag and drop area for upload
@@ -23,11 +24,10 @@ const DATASET_DROP_ZONE_CLASS = "dataset-drop-zone";
  * Takes a collection of parameters and creates a URI (path + query parameters).
  *
  * @param {Object} params the new parameters
- * @param {String} [params] an optional path to add to the base URI
+ * @param {String} [path] an optional path to add to the base URI
  */
 DataSet.uri = function (params, path) {
-    let requestParams = $.extend({}, REQUEST_QUERY);
-    requestParams = $.extend(requestParams, params);
+    let requestParams = DataSet.query(params);
     let uri = REQUEST_PATH;
     if (path) {
         if (path.startsWith("/")) path.substring(1);
@@ -36,6 +36,22 @@ DataSet.uri = function (params, path) {
     uri += "?" + $.param(requestParams);
     console.info("Data Set URI: " + uri);
     return uri;
+}
+
+/**
+ * Takes a collection of parameters and creates an object with all query parameters.
+ *
+ * @param {Object} params the new parameters
+ */
+DataSet.query = function (params) {
+    let requestParams = $.extend({}, REQUEST_QUERY);
+    requestParams = $.extend(requestParams, params);
+    requestParams["query"] = $("#query").val();
+    let timeFilter = DataSet.getTimeFilter();
+    if (timeFilter.length > 0) {
+        requestParams["range"] = timeFilter[0].toISOString() + DATE_RANGE_SEPARATOR + timeFilter[1].toISOString();
+    }
+    return requestParams;
 }
 
 /**
@@ -50,13 +66,21 @@ DataSet.open = function (params, path) {
 }
 
 /**
+ * Reloads the data set page.
+ */
+DataSet.reload = function () {
+    DataSet.open({});
+}
+
+/**
  * Takes a collection of parameters and queries the same end points with original parameters
- * plus the additional parameters
- * @param {Object }params the new parameters
+ * plus the additional parameters.
+ *
+ * @param {String} path the path
+ * @param {Object} params the new parameters
  */
 DataSet.ajax = function (path, params, callback) {
-    let requestParams = $.extend({}, REQUEST_QUERY);
-    requestParams = $.extend(requestParams, params);
+    let requestParams = DataSet.query(params);
     let uri = REQUEST_PATH + "/" + path;
     console.info("Ajax data set " + uri);
     $.get({
@@ -66,6 +90,27 @@ DataSet.ajax = function (path, params, callback) {
             callback.apply(this, [output, status, xhr]);
         }
     });
+}
+
+/**
+ * Triggers a query in the data set.
+ * @param {String } query the query to execute, if empty
+ */
+DataSet.search = function (query) {
+    if (!$.isEmptyObject(query)) $("#query").val(query);
+    DataSet.open("");
+    return false;
+}
+
+/**
+ * Returns the query parameter with a given name.
+ * @param {String} name the parameter name
+ */
+DataSet.getQueryParam = function (name) {
+    let url_string = location.href;
+    let url = new URL(url_string);
+    let val = url.searchParams.get(arguments[0]);
+    return val;
 }
 
 /**
@@ -352,7 +397,76 @@ DataSet.checkIdentifier = function () {
  * Initializes various notifications related components.
  */
 DataSet.initNotifications = function () {
-    $("#message").delay(2000).fadeOut(1000);
+    let text = $("#dataset-message").text();
+    if (!$.isEmptyObject(text)) {
+        DataSet.showErrorAlert("Query", text);
+    }
+}
+
+/**
+ * Returns whether the data set has a date/time filter.
+ * @return {Boolean} true if there is a date/time filter, false otherwie
+ */
+DataSet.hasTimeFilter = function () {
+    return $("#daterange").length;
+}
+
+/**
+ * Returns the time range filter.
+ *
+ * If there is no time filter, an empty range is returned.
+ *
+ * @return {Object[]} the start and end of the time range.
+ */
+DataSet.getTimeFilter = function () {
+    if (DataSet.hasTimeFilter()) {
+        let data = $('#daterange').data('daterangepicker');
+        let range = [data.startDate, data.endDate];
+        return range;
+    } else {
+        return [];
+    }
+}
+
+/**
+ * Initializes various fields related to data sets.
+ */
+DataSet.initFields = function () {
+    if (!DataSet.hasTimeFilter()) return;
+    let range = DataSet.getQueryParam('range');
+    if ($.isEmptyObject(range)) range = $('#daterange span.d-none').val();
+    let startDate = moment().startOf('day');
+    let endDate = moment().endOf('day');
+    if (!$.isEmptyObject(range)) {
+        console.log("Range: " + range);
+        let startEndRange = range.split(DATE_RANGE_SEPARATOR);
+        startDate = moment(startEndRange[0]);
+        endDate = moment(startEndRange.length === 2 ? startEndRange[1] : startDate);
+    }
+    console.log("Range: " + startDate + ", " + endDate);
+    let formatter = function (start, end) {
+        $('#daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+    };
+    $('#daterange').daterangepicker({
+        startDate: startDate,
+        endDate: endDate,
+        opens: 'right',
+        drops: 'down',
+        timePicker: true,
+        autoApply: true,
+        ranges: {
+            'Today': [moment().startOf('day'), moment().endOf('day')],
+            'Yesterday': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
+            'Last 7 Days': [moment().subtract(6, 'days').startOf('day'), moment().endOf('day')],
+            'Last 30 Days': [moment().subtract(29, 'days').startOf('day'), moment().endOf('day')],
+            'This Month': [moment().startOf('month').startOf('day'), moment().endOf('month').endOf('day')],
+            'Last Month': [moment().subtract(1, 'month').startOf('day').startOf('month'), moment().subtract(1, 'month').endOf('month').endOf('day')]
+        }
+    }, function (start, end, label) {
+        formatter(start, end);
+        DataSet.reload();
+    });
+    formatter(startDate, endDate);
 }
 
 /**
@@ -420,6 +534,7 @@ DataSet.initUpload = function () {
  */
 DataSet.init = function () {
     DataSet.initEvents();
+    DataSet.initFields();
     DataSet.initNotifications();
     DataSet.initTables();
     DataSet.initUpload();
