@@ -27,7 +27,7 @@ public class ResourceService implements InitializingBean {
     private File transientDirectory;
 
     @Autowired
-    private ResourceProperties properties;
+    private ResourceProperties properties = new ResourceProperties();
 
     /**
      * Returns a resource directory for persisted data.
