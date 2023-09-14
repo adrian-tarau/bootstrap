@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.security.audit;
 
+import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,10 +11,7 @@ import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.security.user.User;
-import net.microfalx.lang.annotation.Name;
-import net.microfalx.lang.annotation.Position;
-import net.microfalx.lang.annotation.ReadOnly;
-import net.microfalx.lang.annotation.Visible;
+import net.microfalx.lang.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -69,6 +67,7 @@ public class Audit {
     @NotNull
     @Position(1)
     @OrderBy(OrderBy.Direction.DESC)
+    @Timestamp
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "reference", nullable = false)

@@ -33,6 +33,20 @@ public class MetadataService implements InitializingBean {
     /**
      * Returns the metadata.
      *
+     * @param model the model
+     * @param <M>   the model type
+     * @param <F>   the field type
+     * @return a non-null instance
+     */
+    @SuppressWarnings("unchecked")
+    public <M, F extends Field<M>, ID> Metadata<M, F, ID> getMetadata(Object model) {
+        requireNonNull(model);
+        return getMetadata((Class<M>) model.getClass());
+    }
+
+    /**
+     * Returns the metadata.
+     *
      * @param modelClass the model class
      * @param <M>        the model type
      * @param <F>        the field type
@@ -47,6 +61,7 @@ public class MetadataService implements InitializingBean {
             metadata = (Metadata<M, F, ID>) provider.getMetadata(modelClass);
             if (metadata instanceof AbstractMetadata<M, F, ID> ametadata) {
                 ametadata.messageSource = messageSource;
+                ametadata.metadataService = this;
                 ametadata.initialize();
             }
             metadataCache.put(modelClass, metadata);

@@ -13,6 +13,13 @@ import java.util.List;
 public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String>, Nameable, Descriptable {
 
     /**
+     * Creates a new instance of the model.
+     *
+     * @return a non-null instance
+     */
+    M create();
+
+    /**
      * Returns the class supporting the model.
      *
      * @return a non-null instance
@@ -114,6 +121,34 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
      * @return a non-nul instance
      */
     CompositeIdentifier<M, F, ID> getId(String id);
+
+    /**
+     * Returns whether two models have the same fields.
+     * <p>
+     * If both models are NULL, they are considered identical.
+     *
+     * @param firstModel  the first model
+     * @param secondModel the second model
+     * @return {@code true} if identical, {@code false} otherwise
+     */
+    boolean identical(M firstModel, M secondModel);
+
+    /**
+     * Creates a shallow copy of the model.
+     *
+     * @param model the model
+     * @return a new instance with the same fields
+     */
+    M copy(M model);
+
+    /**
+     * Creates a shallow copy of the model.
+     *
+     * @param model the model
+     * @param deep  {@code true} to make a deep copy,  {@code false} otherwise
+     * @return a new instance, as a shallow or deep copy
+     */
+    M copy(M model, boolean deep);
 
     /**
      * Returns an annotation by its type.

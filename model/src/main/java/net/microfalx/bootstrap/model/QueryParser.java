@@ -5,6 +5,7 @@ import net.microfalx.lang.StringUtils;
 
 import java.util.*;
 
+import static net.microfalx.bootstrap.model.ComparisonExpression.contains;
 import static net.microfalx.bootstrap.model.ComparisonExpression.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -147,6 +148,8 @@ public final class QueryParser<M, F extends Field<M>, ID> {
                 }
             case LIKE:
                 return like(attributeName, attributeValueRaw);
+            case CONTAINS:
+                return contains(attributeName, attributeValueRaw);
             case NOT_EQUAL:
                 return ne(attributeName, attributeValueRaw);
             case LESS:
@@ -165,7 +168,7 @@ public final class QueryParser<M, F extends Field<M>, ID> {
     private ComparisonExpression.Operator getComparisonOperator(String value) {
         return switch (value) {
             case "=", "==" -> Operator.EQUAL;
-            case "~=", "=~" -> Operator.LIKE;
+            case "~" -> Operator.CONTAINS;
             case "!=" -> Operator.NOT_EQUAL;
             case "<" -> Operator.LESS;
             case "<=" -> Operator.LESS_OR_EQUAL;

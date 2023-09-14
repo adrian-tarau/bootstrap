@@ -60,6 +60,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private static final String MESSAGE_ATTR = "message";
     private static final String INVALID_FILTER_PREFIX = "Invalid filter: ";
     private static final String DATE_RANGE_SEPARATOR = "|";
+    private static final String BROWSE_VIEW = "dataset/browse";
 
     @Autowired
     private DataSetService dataSetService;
@@ -78,7 +79,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         updateModel(dataSet, model, State.BROWSE);
         updateModel(dataSet, model, null, State.BROWSE);
         processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
-        return "dataset/browse";
+        return BROWSE_VIEW;
     }
 
     @GetMapping("page")
@@ -104,7 +105,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         log(dataSet, "add", 0, null, null, null);
         updateModel(dataSet, model, State.ADD);
         updateModel(dataSet, model, null, State.ADD);
-        return "dataset/add:: #dataset-modal";
+        if (beforeAdd(dataSet, model)) {
+            return "dataset/add:: #dataset-modal";
+        } else {
+            return BROWSE_VIEW;
+        }
     }
 
     @GetMapping("{id}/view")
@@ -112,7 +117,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "view", 0, null, null, null);
         updateModel(dataSet, model, State.VIEW);
-        findModel(dataSet, model, id, State.VIEW);
+        M dataSetModel = findModel(dataSet, model, id, State.VIEW);
+        beforeView(dataSet, model, dataSetModel);
         return "dataset/view :: #dataset-modal";
     }
 
@@ -121,8 +127,12 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "edit", 0, null, null, null);
         updateModel(dataSet, model, State.EDIT);
-        findModel(dataSet, model, id, State.EDIT);
-        return "dataset/view:: #dataset-modal";
+        M dataSetModel = findModel(dataSet, model, id, State.EDIT);
+        if (beforeEdit(dataSet, model, dataSetModel)) {
+            return "dataset/view:: #dataset-modal";
+        } else {
+            return BROWSE_VIEW;
+        }
     }
 
     @GetMapping("{id}/delete")
@@ -130,6 +140,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "delete", 0, null, null, null);
         M dataSetModel = findModel(dataSet, model, id, State.BROWSE);
+        beforeDelete(dataSet, model, dataSetModel);
         return "dataset/browse";
     }
 
@@ -205,6 +216,52 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      */
     protected Resource download(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
         throw new DataSetException("Download is not supported for " + dataSet.getName());
+    }
+
+    /**
+     * Invoked before the view is rendered.
+     *
+     * @param dataSet         the data set
+     * @param controllerModel the model associated with the controller
+     * @param dataSetModel    the data set model for the selected entry
+     */
+    protected void beforeView(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
+        // empty by default
+    }
+
+    /**
+     * Invoked before the add view is displayed.
+     *
+     * @param dataSet         the data set
+     * @param controllerModel the model associated with the controller
+     * @return {@code true} to continue the add action, {@code false} otherwise
+     */
+    protected boolean beforeAdd(DataSet<M, Field<M>, ID> dataSet, Model controllerModel) {
+        return true;
+    }
+
+    /**
+     * Invoked before the edit view is displayed.
+     *
+     * @param dataSet         the data set
+     * @param controllerModel the model associated with the controller
+     * @param dataSetModel    the data set model for the selected entry
+     * @return {@code true} to continue the add action, {@code false} otherwise
+     */
+    protected boolean beforeEdit(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
+        return true;
+    }
+
+    /**
+     * Invoked before the delete is performed.
+     *
+     * @param dataSet         the data set
+     * @param controllerModel the model associated with the controller
+     * @param dataSetModel    the data set model for the selected entry
+     * @return {@code true} to continue the add action, {@code false} otherwise
+     */
+    protected boolean beforeDelete(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
+        return true;
     }
 
     /**
@@ -322,8 +379,10 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         String fieldsTemplate = "fragments/dataset";
         String fieldsFragment = "fields";
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
-        if (isNotEmpty(dataSetAnnotation.viewTemplate())) fieldsTemplate = dataSetAnnotation.viewTemplate();
-        if (isNotEmpty(dataSetAnnotation.viewFragment())) fieldsFragment = dataSetAnnotation.viewTemplate();
+        if (dataSet.getState() == State.VIEW) {
+            if (isNotEmpty(dataSetAnnotation.viewTemplate())) fieldsTemplate = dataSetAnnotation.viewTemplate();
+            if (isNotEmpty(dataSetAnnotation.viewFragment())) fieldsFragment = dataSetAnnotation.viewFragment();
+        }
         model.addAttribute("fieldsTemplate", fieldsTemplate);
         model.addAttribute("fieldsFragment", fieldsFragment);
         if (ObjectUtils.isNotEmpty(dataSetAnnotation.viewClasses())) {

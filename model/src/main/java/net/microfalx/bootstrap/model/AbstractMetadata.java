@@ -1,13 +1,10 @@
 package net.microfalx.bootstrap.model;
 
-import net.microfalx.lang.AnnotationUtils;
-import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 import net.microfalx.lang.annotation.Glue;
 import net.microfalx.lang.annotation.I18n;
 import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Timestamp;
-import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -19,6 +16,8 @@ import java.util.*;
 import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ClassUtils.isJdkClass;
+import static net.microfalx.lang.ObjectUtils.isNull;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 
 /**
@@ -42,6 +41,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     private F timestampField;
     private Class<ID> idClass;
 
+    MetadataService metadataService;
     MessageSource messageSource;
 
     public AbstractMetadata(Class<M> modelClass) {
@@ -76,6 +76,15 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     @Override
     public final Class<M> getModel() {
         return modelClass;
+    }
+
+    @Override
+    public M create() {
+        try {
+            return modelClass.newInstance();
+        } catch (Exception e) {
+            return ExceptionUtils.throwException(e);
+        }
     }
 
     @Override
@@ -166,6 +175,54 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     @Override
     public CompositeIdentifier<M, F, ID> getId(String id) {
         return new CompositeIdentifier<>(this, id);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Override
+    public boolean identical(M firstModel, M secondModel) {
+        if (firstModel == null && secondModel == null) return true;
+        if (isNull(firstModel, secondModel)) return false;
+        for (F field : fields) {
+            Object firstValue = field.get(firstModel);
+            Object secondValue = field.get(secondModel);
+            if (firstValue == null && secondValue == null) continue;
+            if (isNull(firstValue, secondValue)) return false;
+            Class<?> type = firstValue.getClass();
+            if (isJdkClass(type)) {
+                if (!ObjectUtils.equals(firstValue, secondValue)) return false;
+            } else {
+                Metadata metadata = metadataService.getMetadata(type);
+                if (!metadata.identical(firstValue, secondValue)) return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public M copy(M model) {
+        return copy(model, false);
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public M copy(M model, boolean deep) {
+        if (model == null) return null;
+        M newModel = create();
+        for (F field : fields) {
+            Object value = field.get(model);
+            if (value != null) {
+                if (deep) {
+                    if (ClassUtils.isJdkClass(value)) {
+                        value = ObjectUtils.copy(value);
+                    } else {
+                        Metadata metadata = metadataService.getMetadata(value);
+                        value = metadata.copy(value, true);
+                    }
+                }
+                field.set(newModel, value);
+            }
+        }
+        return newModel;
     }
 
     @Override

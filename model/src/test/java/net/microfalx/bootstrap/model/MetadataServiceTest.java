@@ -13,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,13 +68,34 @@ class MetadataServiceTest {
 
     @Test
     void getFieldValue() {
-        Person person = new Person();
-        person.setId(1);
-        person.setFirstName("John");
-        person.setLastName("Doe");
+        Person person = createPerson();
         Metadata<Person, Field<Person>, Integer> metadata = metadataService.getMetadata(Person.class);
         Field<Person> field = metadata.get("firstName");
         assertEquals("John", field.get(person));
+    }
+
+    @Test
+    void identical() {
+        Person person1 = createPerson();
+        Person person2 = createPerson();
+        Metadata<Person, Field<Person>, Integer> metadata = metadataService.getMetadata(Person.class);
+        assertTrue(metadata.identical(null, null));
+        assertFalse(metadata.identical(person1, null));
+        assertFalse(metadata.identical(null, person2));
+        assertTrue(metadata.identical(person1, person2));
+        person1.setAge(10);
+        assertFalse(metadata.identical(person1, person2));
+        person1.setAge(20);
+        person2.setLastName("demo");
+        assertFalse(metadata.identical(person1, person2));
+    }
+
+    @Test
+    void copy() {
+        Person person1 = createPerson();
+        Metadata<Person, Field<Person>, Integer> metadata = metadataService.getMetadata(Person.class);
+        Person person2 = metadata.copy(person1);
+        assertTrue(metadata.identical(person1, person2));
     }
 
     private void assertI18n(Metadata<?, ? extends Field<?>, ?> metadata) {
@@ -86,10 +109,19 @@ class MetadataServiceTest {
         assertEquals("The first name of the person", field.getDescription());
     }
 
+    private Person createPerson() {
+        Person person = new Person();
+        person.setId(1);
+        person.setFirstName("John");
+        person.setLastName("Doe");
+        person.setAge(20);
+        return person;
+    }
+
     @Entity
     @Table(name = "person")
     @I18n("person")
-    private static class PersonJpa {
+    public static class PersonJpa {
 
         private int id;
 
@@ -159,7 +191,7 @@ class MetadataServiceTest {
         }
     }
 
-    private static class Person {
+    public static class Person {
 
         @Id
         private int id;
@@ -206,6 +238,19 @@ class MetadataServiceTest {
 
         public void setAge(int age) {
             this.age = age;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Person person = (Person) o;
+            return age == person.age && Objects.equals(firstName, person.firstName) && Objects.equals(lastName, person.lastName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(firstName, lastName, age);
         }
     }
 

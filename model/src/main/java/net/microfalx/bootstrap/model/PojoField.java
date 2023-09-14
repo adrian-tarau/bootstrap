@@ -30,7 +30,7 @@ public abstract class PojoField<M> extends AbstractField<M> {
         try {
             return getter.invoke(model);
         } catch (Throwable e) {
-            throw new ModelException("Failed to extract field '" + getName() + "' value", e);
+            throw new ModelException("Failed to get field '" + getName() + "' value", e);
         }
     }
 
@@ -39,9 +39,9 @@ public abstract class PojoField<M> extends AbstractField<M> {
         if (setter == null) throw new ModelException("The field '" + getName() + "' is read only");
         try {
             value = from(value, getDataClass());
-            getter.invoke(model, value);
+            setter.invoke(model, value);
         } catch (Throwable e) {
-            throw new ModelException("Failed to extract field '" + getName() + "' value", e);
+            throw new ModelException("Failed to set field '" + getName() + "' value", e);
         }
     }
 
