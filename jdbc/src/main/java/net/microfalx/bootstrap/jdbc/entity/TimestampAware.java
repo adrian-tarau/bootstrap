@@ -10,6 +10,8 @@ import lombok.ToString;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Visible;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -21,7 +23,10 @@ import java.time.LocalDateTime;
 @ToString
 @Getter
 @Setter
-public abstract class TimestampAware {
+public abstract class TimestampAware implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1541768280285586132L;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @NotNull

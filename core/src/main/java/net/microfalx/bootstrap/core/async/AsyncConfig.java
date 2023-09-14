@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class AsyncConfig {
 
-    @Autowired
+    @Autowired(required = false)
     private AsyncProperties properties = new AsyncProperties();
 
     @Bean
