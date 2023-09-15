@@ -445,12 +445,12 @@ DataSet.initFields = function () {
     }
     console.log("Range: " + startDate + ", " + endDate);
     let formatter = function (start, end) {
-        $('#daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+        $('#daterange span').html(start.format('L') + ' - ' + end.format('L'));
     };
     $('#daterange').daterangepicker({
         startDate: startDate,
         endDate: endDate,
-        opens: 'right',
+        opens: 'left',
         drops: 'down',
         timePicker: true,
         autoApply: true,
