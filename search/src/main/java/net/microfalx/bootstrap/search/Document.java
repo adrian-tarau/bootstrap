@@ -6,10 +6,15 @@ import net.microfalx.resource.ResourceFactory;
 import java.io.Serial;
 import java.io.Serializable;
 import java.net.URI;
+import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
 import java.util.*;
 
+import static net.microfalx.bootstrap.search.SearchUtils.NA_TIMESTAMP;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ObjectUtils.isEmpty;
+import static net.microfalx.lang.TimeUtils.fromMillis;
+import static net.microfalx.lang.TimeUtils.toMillis;
 
 /**
  * Holds a document.
@@ -35,8 +40,11 @@ public final class Document implements Serializable {
 
     private String owner;
 
-    private long createdTime = System.currentTimeMillis();
-    private long modifiedTime = createdTime;
+    long timestamp = NA_TIMESTAMP;
+    long createdAt = NA_TIMESTAMP;
+    long modifiedAt = NA_TIMESTAMP;
+    long receivedAt = NA_TIMESTAMP;
+    long sentAt = NA_TIMESTAMP;
 
     /**
      * A set of tags which can be used to locate items (they are indexed)
@@ -46,7 +54,7 @@ public final class Document implements Serializable {
     /**
      * A collection of (key,value) pairs which can store item attributes, and they can be searched (if searching is enabled)
      */
-    private Map<String, Attribute> attributes;
+    Map<String, Attribute> attributes;
 
     /**
      * A collection of (key,value) pairs which are stored with the item and serve as display labels for an item (they can be displayed in a drop down)
@@ -109,6 +117,7 @@ public final class Document implements Serializable {
 
     public void setBody(Resource body) {
         this.body = body;
+        this.bodyUri = body != null ? body.toURI() : null;
     }
 
     public URI getBodyUri() {
@@ -139,23 +148,53 @@ public final class Document implements Serializable {
         return this;
     }
 
-    public long getCreatedTime() {
-        return createdTime;
+    public ZonedDateTime getTimestamp() {
+        return fromMillis(timestamp);
     }
 
-    public Document setCreatedTime(long createdTime) {
-        this.createdTime = createdTime;
-
+    public Document setTimestamp(Temporal timestamp) {
+        requireNonNull(timestamp);
+        this.timestamp = toMillis(timestamp);
         return this;
     }
 
-    public long getModifiedTime() {
-        return modifiedTime;
+    public ZonedDateTime getCreatedAt() {
+        return fromMillis(createdAt);
     }
 
-    public Document setModifiedTime(long modifiedTime) {
-        this.modifiedTime = modifiedTime;
+    public Document setCreatedAt(Temporal createdAt) {
+        this.createdAt = createdAt != null ? toMillis(createdAt) : NA_TIMESTAMP;
+        this.timestamp = this.createdAt;
+        return this;
+    }
 
+    public ZonedDateTime getModifiedAt() {
+        return fromMillis(modifiedAt);
+    }
+
+    public Document setModifiedAt(Temporal modifiedAt) {
+        this.modifiedAt = modifiedAt != null ? toMillis(modifiedAt) : NA_TIMESTAMP;
+        this.timestamp = this.modifiedAt;
+        return this;
+    }
+
+    public ZonedDateTime getReceivedAt() {
+        return fromMillis(receivedAt);
+    }
+
+    public Document setReceivedAt(Temporal receivedAt) {
+        this.receivedAt = receivedAt != null ? toMillis(receivedAt) : NA_TIMESTAMP;
+        this.timestamp = this.receivedAt;
+        return this;
+    }
+
+    public ZonedDateTime getSentAt() {
+        return fromMillis(sentAt);
+    }
+
+    public Document setSentAt(Temporal sentAt) {
+        this.sentAt = sentAt != null ? toMillis(sentAt) : NA_TIMESTAMP;
+        this.timestamp = this.sentAt;
         return this;
     }
 
@@ -198,9 +237,9 @@ public final class Document implements Serializable {
         tags.remove(tag);
     }
 
-    public Map<String, Attribute> getAttributes() {
-        if (attributes == null) return Collections.emptyMap();
-        return Collections.unmodifiableMap(attributes);
+    public Collection<Attribute> getAttributes() {
+        if (attributes == null) return Collections.emptyList();
+        return attributes.values();
     }
 
     public int getAttributeCount() {
@@ -271,8 +310,9 @@ public final class Document implements Serializable {
                 ", description=" + description +
                 ", type='" + type + '\'' +
                 ", owner='" + owner + '\'' +
-                ", createdTime=" + createdTime +
-                ", modifiedTime=" + modifiedTime +
+                ", createdAt=" + createdAt +
+                ", modifiedAt=" + modifiedAt +
+                ", receivedAt=" + receivedAt +
                 ", tags=" + tags +
                 ", attributes=" + attributes +
                 ", labels=" + labels +

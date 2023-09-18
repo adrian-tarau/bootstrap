@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.search;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -19,6 +20,9 @@ public class SearchQuery implements Serializable {
     private String filter;
     private int start = 0;
     private int limit = 500;
+
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private boolean autoWildcard;
     private boolean allowLeadingWildcard;
@@ -72,6 +76,24 @@ public class SearchQuery implements Serializable {
     public SearchQuery setFilter(String filter) {
         this.filter = filter;
 
+        return this;
+    }
+
+    public ZonedDateTime getStartTime() {
+        return startTime;
+    }
+
+    public SearchQuery setStartTime(ZonedDateTime startTime) {
+        this.startTime = startTime;
+        return this;
+    }
+
+    public ZonedDateTime getEndTime() {
+        return endTime;
+    }
+
+    public SearchQuery setEndTime(ZonedDateTime endTime) {
+        this.endTime = endTime;
         return this;
     }
 

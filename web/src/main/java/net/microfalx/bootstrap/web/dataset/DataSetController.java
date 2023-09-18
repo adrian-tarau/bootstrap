@@ -61,6 +61,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private static final String INVALID_FILTER_PREFIX = "Invalid filter: ";
     private static final String DATE_RANGE_SEPARATOR = "|";
     private static final String BROWSE_VIEW = "dataset/browse";
+    private static final String FRAGMENT_SEPARATOR = "::";
 
     @Autowired
     private DataSetService dataSetService;
@@ -96,7 +97,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         response.addHeader("X-DATASET-PAGE-INFO-EXTENDED", DataSetTool.getPageAndRecordInfo(page));
         if (model.containsAttribute(MESSAGE_ATTR))
             response.addHeader("X-DATASET-MESSAGE", (String) model.getAttribute(MESSAGE_ATTR));
-        return "dataset/page:: #dataset-page";
+        return "dataset/page::#dataset-page";
     }
 
     @GetMapping("{id}/add")
@@ -106,7 +107,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         updateModel(dataSet, model, State.ADD);
         updateModel(dataSet, model, null, State.ADD);
         if (beforeAdd(dataSet, model)) {
-            return "dataset/add:: #dataset-modal";
+            return "dataset/add::#dataset-modal";
         } else {
             return BROWSE_VIEW;
         }
@@ -119,7 +120,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         updateModel(dataSet, model, State.VIEW);
         M dataSetModel = findModel(dataSet, model, id, State.VIEW);
         beforeView(dataSet, model, dataSetModel);
-        return "dataset/view :: #dataset-modal";
+        return "dataset/view::#dataset-modal";
     }
 
     @GetMapping("{id}/edit")
@@ -129,7 +130,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         updateModel(dataSet, model, State.EDIT);
         M dataSetModel = findModel(dataSet, model, id, State.EDIT);
         if (beforeEdit(dataSet, model, dataSetModel)) {
-            return "dataset/view:: #dataset-modal";
+            return "dataset/view::#dataset-modal";
         } else {
             return BROWSE_VIEW;
         }
@@ -216,6 +217,18 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      */
     protected Resource download(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
         throw new DataSetException("Download is not supported for " + dataSet.getName());
+    }
+
+    /**
+     * Invoked before rendering each model during browse.
+     *
+     * @param dataSet         the data set
+     * @param controllerModel the model associated with the controller
+     * @param dataSetModel    the data set model for the selected row
+     * @return {@code true} to continue the add action, {@code false} otherwise
+     */
+    protected boolean beforeBrowse(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
+        return true;
     }
 
     /**
@@ -367,6 +380,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private void updateModel(DataSet<M, Field<M>, ID> dataSet, Model model, State state) {
         dataSet.setState(state);
+        model.addAttribute("controller", this);
         model.addAttribute("dataset", dataSet);
         model.addAttribute("metadata", dataSet.getMetadata());
         model.addAttribute("toolbar", getToolBar(dataSet));
@@ -376,15 +390,23 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     private void updateModelTemplate(DataSet<M, Field<M>, ID> dataSet, Model model) {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         String fieldsTemplate = "fragments/dataset";
         String fieldsFragment = "fields";
-        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         if (dataSet.getState() == State.VIEW) {
-            if (isNotEmpty(dataSetAnnotation.viewTemplate())) fieldsTemplate = dataSetAnnotation.viewTemplate();
-            if (isNotEmpty(dataSetAnnotation.viewFragment())) fieldsFragment = dataSetAnnotation.viewFragment();
+            fieldsTemplate = getTemplateReference(dataSetAnnotation.viewTemplate(), fieldsTemplate, 0);
+            fieldsFragment = getTemplateReference(dataSetAnnotation.viewTemplate(), fieldsFragment, 1);
         }
         model.addAttribute("fieldsTemplate", fieldsTemplate);
         model.addAttribute("fieldsFragment", fieldsFragment);
+        String detailTemplate = null;
+        String detailFragment = "fields";
+        if (dataSet.getState() == State.BROWSE) {
+            detailTemplate = getTemplateReference(dataSetAnnotation.detailTemplate(), detailTemplate, 0);
+            detailFragment = getTemplateReference(dataSetAnnotation.detailTemplate(), detailFragment, 1);
+        }
+        model.addAttribute("detailTemplate", detailTemplate);
+        model.addAttribute("detailFragment", detailFragment);
         if (ObjectUtils.isNotEmpty(dataSetAnnotation.viewClasses())) {
             model.addAttribute("viewClasses", StringUtils.join(" ", dataSetAnnotation.viewClasses()));
         } else {
@@ -546,6 +568,23 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private QueryParser<M, Field<M>, ID> createQueryParser(DataSet<M, Field<M>, ID> dataSet, String query) {
         return new QueryParser<>(dataSet.getMetadata(), query)
                 .addDefaultFields(getStringFields(dataSet));
+    }
+
+    private String getTemplateReference(String template, String defaultValue, int index) {
+        if (isEmpty(template)) return defaultValue;
+        String[] parts = splitTemplateReferences(template);
+        if (index >= parts.length) return defaultValue;
+        return parts[index].trim();
+    }
+
+    private String[] splitTemplateReferences(String template) {
+        if (isEmpty(template)) return EMPTY_STRING_ARRAY;
+        int index = template.indexOf(FRAGMENT_SEPARATOR);
+        if (index == -1) return new String[]{template};
+        String[] parts = new String[2];
+        parts[0] = template.substring(0, index).trim();
+        parts[1] = template.substring(index + 2).trim();
+        return parts;
     }
 
     private ZonedDateTime atEndOfDay(ZonedDateTime dateTime) {

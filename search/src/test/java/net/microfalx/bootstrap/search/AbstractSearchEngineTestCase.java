@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.bootstrap.core.async.AsyncConfig;
-import net.microfalx.bootstrap.core.config.I18nConfig;
+import net.microfalx.bootstrap.core.i18n.I18nConfig;
 import net.microfalx.bootstrap.resource.ResourceProperties;
 import net.microfalx.bootstrap.resource.ResourceService;
 import org.springframework.boot.test.context.SpringBootTest;

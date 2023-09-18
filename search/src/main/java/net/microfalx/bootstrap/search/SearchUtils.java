@@ -2,15 +2,14 @@ package net.microfalx.bootstrap.search;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Various utilities for search engine
  */
-public class SearchUtilities {
+public class SearchUtils {
 
     public static final String ID_FIELD = "id";
     public static final String TYPE_FIELD = "type";
@@ -20,12 +19,18 @@ public class SearchUtilities {
     public static final String BODY_URI_FIELD = "body_uri";
     public static final String TAG_FIELD = "tag";
     public static final String OWNER_FIELD = "owner";
-    public static final String CREATED_TIME_FIELD = "created";
-    public static final String MODIFIED_TIME_FIELD = "modified";
+    public static final String STORED_SUFFIX_FIELD = "$stored";
+    public static final String TIMESTAMP_FIELD = "timestamp";
+    public static final String CREATED_AT_FIELD = "created";
+    public static final String MODIFIED_AT_FIELD = "modified";
+    public static final String RECEIVED_AT_FIELD = "received";
+    public static final String SENT_AT_FIELD = "sent";
     public static final String USER_DATA_FIELD = "data";
     public static final String LABEL_FIELD = "label";
 
     public static final String DEFAULT_FIELD = DESCRIPTION_FIELD;
+
+    public static final long NA_TIMESTAMP = 0;
 
     /**
      * A set containing all the standard field names
@@ -156,6 +161,18 @@ public class SearchUtilities {
         return false;
     }
 
+    /**
+     * Returns a collection of attributes sorted by label.
+     * @param attributes
+     * @return
+     */
+    public static Collection<Attribute> sort(Collection<Attribute> attributes) {
+        if (attributes == null) return Collections.emptyList();
+        List<Attribute> sortedAttributes = new ArrayList<>(attributes);
+        sortedAttributes.sort(Comparator.comparing(Attribute::getLabel));
+        return sortedAttributes;
+    }
+
     private final static String[] OPERATORS = new String[]{
             "and", "or", "not", "+", "!"
     };
@@ -173,12 +190,21 @@ public class SearchUtilities {
         STANDARD_FIELD_NAMES.add(NAME_FIELD);
         STANDARD_FIELD_NAMES.add(DESCRIPTION_FIELD);
         STANDARD_FIELD_NAMES.add(BODY_FIELD);
+        STANDARD_FIELD_NAMES.add(BODY_URI_FIELD);
         STANDARD_FIELD_NAMES.add(TYPE_FIELD);
         STANDARD_FIELD_NAMES.add(OWNER_FIELD);
         STANDARD_FIELD_NAMES.add(TAG_FIELD);
         STANDARD_FIELD_NAMES.add(USER_DATA_FIELD);
-        STANDARD_FIELD_NAMES.add(CREATED_TIME_FIELD);
-        STANDARD_FIELD_NAMES.add(MODIFIED_TIME_FIELD);
+        STANDARD_FIELD_NAMES.add(TIMESTAMP_FIELD);
+        STANDARD_FIELD_NAMES.add(TIMESTAMP_FIELD + STORED_SUFFIX_FIELD);
+        STANDARD_FIELD_NAMES.add(CREATED_AT_FIELD);
+        STANDARD_FIELD_NAMES.add(CREATED_AT_FIELD + STORED_SUFFIX_FIELD);
+        STANDARD_FIELD_NAMES.add(MODIFIED_AT_FIELD);
+        STANDARD_FIELD_NAMES.add(MODIFIED_AT_FIELD + STORED_SUFFIX_FIELD);
+        STANDARD_FIELD_NAMES.add(RECEIVED_AT_FIELD);
+        STANDARD_FIELD_NAMES.add(RECEIVED_AT_FIELD + STORED_SUFFIX_FIELD);
+        STANDARD_FIELD_NAMES.add(SENT_AT_FIELD);
+        STANDARD_FIELD_NAMES.add(SENT_AT_FIELD + STORED_SUFFIX_FIELD);
 
         FIELD_NAMES.addAll(STANDARD_FIELD_NAMES);
 

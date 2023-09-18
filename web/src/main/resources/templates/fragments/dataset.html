@@ -12,7 +12,7 @@
 </tr>
 </thead>
 
-<tr th:each="model : ${#dataset.getModels()}" th:fragment="grid-rows">
+<tr th:fragment="grid-row" th:class="${#dataset.getPrimaryRowClass(model)}">
     <td class="text-right" th:text="${#dataset.getCurrentIndex()}"></td>
     <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}">
         <span th:unless="${field.isName()}" th:utext="${#dataset.getDisplayValue(model, field)}"></span>
@@ -25,8 +25,18 @@
     </td>
 </tr>
 
+<tr th:fragment="grid-row-detail" th:if="${#dataset.hasDetails()}" th:class="${#dataset.getDetailsRowClass(model)}">
+    <td>&nbsp;</td>
+    <td th:colspan="${#dataset.getFields().size()}">
+        <div th:replace="~{ ${detailTemplate} :: ${detailFragment}}"></div>
+    </td>
+</tr>
+
 <tbody th:fragment="grid-body">
-<tr th:replace="~{ fragments/dataset :: grid-rows}"></tr>
+    <div th:each="model : ${#dataset.getModels()}" th:remove="tag">
+        <tr th:replace="~{ fragments/dataset :: grid-row}"></tr>
+        <tr th:replace="~{ fragments/dataset :: grid-row-detail}"></tr>
+    </div>
 </tbody>
 
 <table id="dataset-grid" class="table table-hover dataset-table" th:fragment="grid">

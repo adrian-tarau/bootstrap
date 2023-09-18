@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.lang.StringUtils;
+
 import java.io.Serial;
 import java.io.Serializable;
 
@@ -22,6 +24,8 @@ public class Attribute implements Serializable {
 
     private final String name;
     private final Object value;
+    String label;
+    String description;
     private int options = STORED_MASK;
 
     /**
@@ -127,12 +131,31 @@ public class Attribute implements Serializable {
     }
 
     /**
+     * Returns the label associated with the attribute (to be used in UI).
+     *
+     * @return a non-null instance
+     */
+    public String getLabel() {
+        if (label == null) label = StringUtils.capitalizeWords(name);
+        return label;
+    }
+
+    /**
      * Returns the value of the attribute.
      *
      * @return the value
      */
     public Object getValue() {
         return value;
+    }
+
+    /**
+     * Returns a description associated with the attribute (to be used in UI).
+     *
+     * @return the description, null if missing
+     */
+    public String getDescription() {
+        return description;
     }
 
     /**

@@ -1,11 +1,47 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.resource.ResourceService;
+import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.FormatterUtils;
+import net.microfalx.lang.StringUtils;
+import net.microfalx.metrics.Metrics;
+import net.microfalx.metrics.Timer;
+import net.microfalx.resource.FileResource;
+import net.microfalx.resource.Resource;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.*;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.store.NativeFSLockFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.RetryListener;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
  * A service used to execute full text searches.
@@ -15,24 +51,24 @@ public class SearchService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchService.class);
 
+    static Metrics METRICS = Metrics.of("search");
+
+
     @Autowired
-    private SearchProperties configuration;
+    private SearchProperties searchProperties;
 
     @Autowired
     private ResourceService resourceService;
 
-    /**
-     * Search the index for all items matching the query.
-     *
-     * @param query the query to the index
-     * @param start the start of first item
-     * @param limit the highest amount of items returned
-     * @return matching items
-     * @throws SearchException if the query cannot be executed
-     */
-    public SearchResult search(String query, int start, int limit) {
-        return null;
-    }
+    @Autowired
+    private I18nService i18nService;
+
+    private final Object lock = new Object();
+    private volatile SearchHolder searchHolder;
+
+    private final Collection<SearchListener> listeners = new CopyOnWriteArrayList<>();
+    private final Map<String, String> labels = new ConcurrentHashMap<>();
+    private final Map<String, String> description = new ConcurrentHashMap<>();
 
     /**
      * Search the index for all items matching the query.
@@ -42,7 +78,43 @@ public class SearchService implements InitializingBean {
      * @throws SearchException if the query cannot be executed
      */
     public SearchResult search(SearchQuery query) {
-        return null;
+        requireNonNull(query);
+
+        final QueryParser queryParser = createQueryParser();
+        queryParser.setAllowLeadingWildcard(query.isAllowLeadingWildcard() && searchProperties.isAllowLeadingWildcard());
+        String userQuery = SearchUtils.normalizeQuery(query.getQuery(), query.isAutoWildcard(), query.isAllowLeadingWildcard()).trim();
+
+        if (isNotEmpty(query.getFilter())) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("(").append(userQuery).append(") AND (").append(query.getFilter()).append(")");
+            userQuery = builder.toString();
+        }
+
+        try {
+            final Query parsedQuery = isEmpty(userQuery) ? new MatchAllDocsQuery() : queryParser.parse(userQuery);
+            final SearchResult result = new SearchResult(query);
+            result.setRewriteQuery(parsedQuery.toString());
+
+            LOGGER.info("Searching with query '" + query.getDescription() + "', normalized query: '" + userQuery + "', parsed query: '" + parsedQuery
+                    + "', auto-wildcard: " + query.isAutoWildcard() + ", leading wildcard: " + query.isAllowLeadingWildcard());
+
+            RetryTemplate retryTemplate = new RetryTemplate();
+            retryTemplate.registerListener(new RetryListener() {
+                @Override
+                public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+                    LOGGER.info("Searcher failure " + throwable.getMessage());
+                    releaseSearchHolder();
+                }
+            });
+            return retryTemplate.execute((RetryCallback<SearchResult, Exception>) context -> {
+                doSearch(parsedQuery, query, result);
+                return result;
+            });
+        } catch (ParseException e) {
+            throw new SearchException("Failed to parse query string: " + query, e);
+        } catch (Exception e) {
+            throw new SearchException("IO Exception during search for : " + query, e);
+        }
     }
 
     /**
@@ -56,8 +128,186 @@ public class SearchService implements InitializingBean {
         return null;
     }
 
+    /**
+     * Returns the label associated with a field.
+     *
+     * @param field the field
+     * @return the label
+     */
+    public String getLabel(String field) {
+        requireNonNull(field);
+        String label = labels.get(field);
+        if (label != null) return label;
+        for (SearchListener listener : listeners) {
+            label = listener.getLabel(field);
+            if (StringUtils.isNotEmpty(label)) break;
+        }
+        if (label == null) label = getI18n("label");
+        if (label == null) label = StringUtils.capitalizeWords(field);
+        labels.put(field, label);
+        return label;
+    }
+
+    /**
+     * Returns the description associated with a field.
+     *
+     * @param field the field
+     * @return the label
+     */
+    public String getDescription(String field) {
+        requireNonNull(field);
+        String label = labels.get(field);
+        if (label != null) return label;
+        for (SearchListener listener : listeners) {
+            label = listener.getDescription(field);
+            if (StringUtils.isNotEmpty(label)) break;
+        }
+        if (label == null) label = getI18n("description");
+        labels.put(field, label);
+        return label;
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
+        initListeners();
+    }
 
+    @SuppressWarnings("resource")
+    private void doSearch(Query luceneQuery, SearchQuery searchQuery, SearchResult result) throws IOException {
+        final IndexSearcher indexSearcher = getIndexSearcher();
+        final List<Document> items = new ArrayList<>();
+
+        TopDocs topDocs;
+        Timer timer = METRICS.startTimer("search");
+        try {
+            topDocs = indexSearcher.search(luceneQuery, searchQuery.getStart() + searchQuery.getLimit());
+            int startIndex = searchQuery.getStart();
+            int counter = searchQuery.getLimit();
+            DocumentMapper documentMapper = new DocumentMapper();
+            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+                if (startIndex-- > 0) continue;
+                org.apache.lucene.document.Document document = indexSearcher.doc(scoreDoc.doc);
+                Document translatedDocument = documentMapper.read(document);
+                items.add(translatedDocument);
+                if (counter-- == 0) break;
+            }
+        } finally {
+            timer.stop();
+        }
+        LOGGER.info("Found " + topDocs.totalHits + " total hit(s), took " + FormatterUtils.formatNumber(timer.getDuration()));
+
+        result.setDocuments(items);
+        result.setTotalHits(topDocs.totalHits.value);
+    }
+
+    private IndexSearcher getIndexSearcher() {
+        return getSearchHolder(false).getIndexSearcher();
+    }
+
+    /**
+     * Returns an structure which carries an {@link org.apache.lucene.search.IndexSearcher} and associated
+     * objects.
+     *
+     * @param reopen <code>true</code> to re-open the index reader, <code>false</code> to reuse the index reader
+     * @return a non-null instance
+     * @throws SearchException if the index cannot be opened
+     */
+    private SearchHolder getSearchHolder(boolean reopen) {
+        synchronized (lock) {
+            if (searchHolder == null || reopen) {
+                if (searchHolder != null) {
+                    releaseSearchHolder();
+                }
+                LOGGER.debug("Open searcher");
+                try (Timer ignored = METRICS.startTimer("open_searcher")) {
+                    try {
+                        searchHolder = new SearchHolder();
+                    } catch (IOException e) {
+                        return ExceptionUtils.throwException(e);
+                    }
+                }
+            }
+            return searchHolder;
+        }
+    }
+
+    private void releaseSearchHolder() {
+        LOGGER.debug("Release  searcher");
+        synchronized (lock) {
+            if (searchHolder != null) {
+                try (Timer ignored = METRICS.startTimer("release_searcher")) {
+                    searchHolder.release();
+                }
+                searchHolder = null;
+            }
+        }
+    }
+
+    private QueryParser createQueryParser() {
+        final QueryParser queryParser = Analyzers.createQueryParser(SearchUtils.DEFAULT_FIELD);
+        queryParser.setAllowLeadingWildcard(searchProperties.isAllowLeadingWildcard());
+        return queryParser;
+    }
+
+    private File getIndexDirectory() {
+        Resource resource = resourceService.getPersisted("index");
+        return ((FileResource) resource).getFile();
+    }
+
+    private void initListeners() {
+        LOGGER.info("Register listeners");
+        Collection<SearchListener> discoveredListeners = ClassUtils.resolveProviderInstances(SearchListener.class);
+        for (SearchListener discoveredListener : discoveredListeners) {
+            LOGGER.info(" - " + ClassUtils.getName(discoveredListener));
+        }
+    }
+
+    private String getI18n(String suffix) {
+        return i18nService.getText("search.field." + suffix);
+    }
+
+    /**
+     * Holds a {@link org.apache.lucene.index.IndexWriter} and any required structures.
+     */
+    private class SearchHolder {
+
+        private final IndexSearcher indexSearcher;
+        private final IndexReader indexReader;
+        private final Directory directory;
+
+        private final AtomicBoolean stale = new AtomicBoolean();
+        private final AtomicInteger useCount = new AtomicInteger(0);
+
+        private SearchHolder() throws IOException {
+            File indexDirectory = getIndexDirectory();
+            directory = new NIOFSDirectory(indexDirectory.toPath(), NativeFSLockFactory.getDefault());
+            try (Timer ignored = METRICS.startTimer("open_reader")) {
+                indexReader = DirectoryReader.open(directory);
+            }
+            try (Timer ignored = METRICS.startTimer("open_searcher")) {
+                indexSearcher = new IndexSearcher(indexReader);
+            }
+        }
+
+        public IndexReader getIndexReader() {
+            return indexReader;
+        }
+
+        public IndexSearcher getIndexSearcher() {
+            return indexSearcher;
+        }
+
+        public synchronized void release() {
+            try {
+                indexReader.close();
+            } catch (Exception e) {
+                LOGGER.error("Failed to close index reader", e);
+            }
+            try {
+                if (directory != null) directory.close();
+            } catch (IOException e) {
+                LOGGER.error("Failed to rollback index", e);
+            }
+        }
     }
 }

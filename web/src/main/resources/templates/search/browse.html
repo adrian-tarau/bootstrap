@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="fields">
+    <span th:each="attribute : ${model.attributes}">
+        <span class="badge rounded-pill text-bg-primary" th:text="${attribute.label}"></span>
+        <span th:text="${attribute.value}"></span>
+    </span>
+
+</div>
+</body>
+</html>

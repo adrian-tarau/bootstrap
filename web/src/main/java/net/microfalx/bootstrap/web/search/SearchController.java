@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping(value = "/search")
-@DataSet(model = SearchResult.class)
+@DataSet(model = SearchResult.class, detailTemplate="search/browse")
 public final class SearchController extends DataSetController<SearchResult, String> {
 
     @Autowired

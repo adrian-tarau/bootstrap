@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 /**
  * An annotation used to provide formatting rules or custom formatters to fields.
  */
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target({ElementType.FIELD, ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Formattable {

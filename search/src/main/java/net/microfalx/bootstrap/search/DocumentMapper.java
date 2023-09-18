@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
-import static net.microfalx.bootstrap.search.SearchUtilities.*;
+import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ObjectUtils.isEmpty;
 
 /**
@@ -24,33 +24,39 @@ class DocumentMapper {
      * @param document the item to index
      */
     public void write(IndexWriter indexWriter, Document document) throws IOException {
-        final org.apache.lucene.document.Document luceneDocument = new org.apache.lucene.document.Document();
+        final org.apache.lucene.document.Document ld = new org.apache.lucene.document.Document();
 
-        luceneDocument.add(new StringField(ID_FIELD, document.getId(), Field.Store.YES));
-        if (document.getName() != null) {
-            luceneDocument.add(new TextField(NAME_FIELD, normalizeText(document.getName()), Field.Store.YES));
-        }
-
-        if (document.getType() != null) {
-            luceneDocument.add(new TextField(TYPE_FIELD, document.getType(), Field.Store.YES));
-        }
-
-        if (document.getDescription() != null) {
-            luceneDocument.add(new TextField(DESCRIPTION_FIELD, normalizeText(document.getDescription()), Field.Store.YES));
-        }
+        ld.add(new StringField(ID_FIELD, document.getId(), Field.Store.YES));
+        if (document.getName() != null)
+            ld.add(new TextField(NAME_FIELD, normalizeText(document.getName()), Field.Store.YES));
+        if (document.getType() != null) ld.add(new TextField(TYPE_FIELD, document.getType(), Field.Store.YES));
+        if (document.getDescription() != null)
+            ld.add(new TextField(DESCRIPTION_FIELD, normalizeText(document.getDescription()), Field.Store.YES));
         if (document.getBody() != null) {
-            luceneDocument.add(new TextField(BODY_FIELD, normalizeText(document.getBody().loadAsString()), Field.Store.NO));
-            luceneDocument.add(new StringField(BODY_URI_FIELD, document.getBody().toURI().toASCIIString(), Field.Store.YES));
+            ld.add(new TextField(BODY_FIELD, normalizeText(document.getBody().loadAsString()), Field.Store.NO));
+            ld.add(new StringField(BODY_URI_FIELD, document.getBody().toURI().toASCIIString(), Field.Store.YES));
         }
 
-        if (document.getOwner() != null) {
-            luceneDocument.add(new TextField(OWNER_FIELD, document.getOwner(), Field.Store.YES));
+        if (document.getOwner() != null) ld.add(new TextField(OWNER_FIELD, document.getOwner(), Field.Store.YES));
+        if (document.timestamp > 0) {
+            ld.add(new LongPoint(TIMESTAMP_FIELD, document.timestamp));
+            ld.add(new StoredField(TIMESTAMP_FIELD + STORED_SUFFIX_FIELD, document.timestamp));
         }
-        if (document.getCreatedTime() > 0) {
-            luceneDocument.add(new LongPoint(CREATED_TIME_FIELD, document.getCreatedTime()));
+        if (document.createdAt > 0) {
+            ld.add(new LongPoint(CREATED_AT_FIELD, document.createdAt));
+            ld.add(new StoredField(CREATED_AT_FIELD + STORED_SUFFIX_FIELD, document.createdAt));
         }
-        if (document.getModifiedTime() > 0) {
-            luceneDocument.add(new LongPoint(MODIFIED_TIME_FIELD, document.getModifiedTime()));
+        if (document.modifiedAt > 0) {
+            ld.add(new LongPoint(MODIFIED_AT_FIELD, document.modifiedAt));
+            ld.add(new StoredField(MODIFIED_AT_FIELD + STORED_SUFFIX_FIELD, document.modifiedAt));
+        }
+        if (document.receivedAt > 0) {
+            ld.add(new LongPoint(RECEIVED_AT_FIELD, document.receivedAt));
+            ld.add(new StoredField(RECEIVED_AT_FIELD + STORED_SUFFIX_FIELD, document.receivedAt));
+        }
+        if (document.sentAt > 0) {
+            ld.add(new LongPoint(SENT_AT_FIELD, document.sentAt));
+            ld.add(new StoredField(SENT_AT_FIELD + STORED_SUFFIX_FIELD, document.sentAt));
         }
 
         if (!document.getTags().isEmpty()) {
@@ -58,34 +64,34 @@ class DocumentMapper {
             for (String tag : document.getTags()) {
                 tagBuilder.append(tag).append(' ');
             }
-            luceneDocument.add(new Field(TAG_FIELD, tagBuilder.toString(), TAG_TYPE));
+            ld.add(new Field(TAG_FIELD, tagBuilder.toString(), TAG_TYPE));
         }
 
         if (document.getData() != null) {
             // TODO implement me
             byte[] serializedData = null;
-            luceneDocument.add(new Field(USER_DATA_FIELD, serializedData, USER_DATA_TYPE));
+            ld.add(new Field(USER_DATA_FIELD, serializedData, USER_DATA_TYPE));
         }
 
-        for (Map.Entry<String, Attribute> entry : document.getAttributes().entrySet()) {
+        for (Map.Entry<String, Attribute> entry : document.attributes.entrySet()) {
             String name = entry.getKey();
-            if (SearchUtilities.isStandardFieldName(name)) {
+            if (SearchUtils.isStandardFieldName(name)) {
                 throw new IndexException("The item contains an attribute with a reserved name: " + name + ", item " + document);
             }
             Attribute attribute = entry.getValue();
             Object value = attribute.getValue();
             if (isEmpty(value)) value = StringUtils.EMPTY;
             FieldType type = TYPES[attribute.getOptions()];
-            luceneDocument.add(new Field(name, normalizeText(value.toString()), type));
+            ld.add(new Field(name, normalizeText(value.toString()), type));
         }
 
         if (document.getLabelCount() > 0) {
             // TODO implement me
             byte[] labels = null;
-            luceneDocument.add(new Field(LABEL_FIELD, new BytesRef(labels), LABEL_TYPE));
+            ld.add(new Field(LABEL_FIELD, new BytesRef(labels), LABEL_TYPE));
         }
 
-        indexWriter.updateDocument(new Term(ID_FIELD, document.getId()), luceneDocument);
+        indexWriter.updateDocument(new Term(ID_FIELD, document.getId()), ld);
     }
 
     /**
@@ -106,14 +112,16 @@ class DocumentMapper {
         item.setOwner(document.get(OWNER_FIELD));
         item.setType(document.get(TYPE_FIELD));
 
-        IndexableField createdTime = document.getField(CREATED_TIME_FIELD);
-        if (createdTime != null) {
-            item.setCreatedTime(createdTime.numericValue().longValue());
-        }
-        IndexableField modifiedTime = document.getField(MODIFIED_TIME_FIELD);
-        if (modifiedTime != null) {
-            item.setModifiedTime(modifiedTime.numericValue().longValue());
-        }
+        IndexableField timestamp = document.getField(TIMESTAMP_FIELD + STORED_SUFFIX_FIELD);
+        if (timestamp != null) item.timestamp = timestamp.numericValue().longValue();
+        IndexableField createdTime = document.getField(CREATED_AT_FIELD + STORED_SUFFIX_FIELD);
+        if (createdTime != null) item.createdAt = createdTime.numericValue().longValue();
+        IndexableField modifiedTime = document.getField(MODIFIED_AT_FIELD + STORED_SUFFIX_FIELD);
+        if (modifiedTime != null) item.modifiedAt = modifiedTime.numericValue().longValue();
+        IndexableField receivedTime = document.getField(RECEIVED_AT_FIELD + STORED_SUFFIX_FIELD);
+        if (receivedTime != null) item.receivedAt = receivedTime.numericValue().longValue();
+        IndexableField sentTime = document.getField(SENT_AT_FIELD + STORED_SUFFIX_FIELD);
+        if (sentTime != null) item.sentAt = sentTime.numericValue().longValue();
 
         String tagsValue = document.get(TAG_FIELD);
         if (StringUtils.isNotEmpty(tagsValue)) {
@@ -138,10 +146,7 @@ class DocumentMapper {
         }
 
         for (IndexableField field : document.getFields()) {
-            if (SearchUtilities.isStandardFieldName(field.name())) {
-                // skip default fields
-                continue;
-            }
+            if (SearchUtils.isStandardFieldName(field.name())) continue;
             IndexableFieldType fieldType = field.fieldType();
             String attrName = field.name();
             String attrValue = field.stringValue();

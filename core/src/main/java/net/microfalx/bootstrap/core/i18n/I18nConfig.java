@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.core.config;
+package net.microfalx.bootstrap.core.i18n;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

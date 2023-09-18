@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.model;
 
-import net.microfalx.bootstrap.core.config.I18nConfig;
+import net.microfalx.bootstrap.core.i18n.I18nConfig;
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

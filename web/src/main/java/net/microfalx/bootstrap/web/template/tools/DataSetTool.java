@@ -142,6 +142,15 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns whether the data has a row containing details about the model.
+     *
+     * @return {@code true} if has details, {@code false} otherwise
+     */
+    public boolean hasDetails() {
+        return getModelAttribute(context, "detailTemplate") != null;
+    }
+
+    /**
      * Returns whether the data set has more pages after the current one.
      *
      * @return {@code true} if there are more pages, {@code false} if this is the last one
@@ -187,6 +196,28 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         DataSet<M, F, ID> dataSet = getDataSet();
         if (dataSet.isReadOnly() || dataSet.getState() == State.VIEW) return true;
         return field.isReadOnly();
+    }
+
+    /**
+     * Returns the class for the row used to show the field of a model.
+     *
+     * @param model the current model
+     * @return the class
+     */
+    public String getPrimaryRowClass(M model) {
+        String css = null;
+        if (hasDetails()) css = "borderless";
+        return css;
+    }
+
+    /**
+     * Returns the class for the row used to show the details of a model.
+     *
+     * @param model the current model
+     * @return the class
+     */
+    public String getDetailsRowClass(M model) {
+        return "detail";
     }
 
     /**

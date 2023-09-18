@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.microfalx.bootstrap.search.SearchUtilities.ID_FIELD;
+import static net.microfalx.bootstrap.search.SearchUtils.ID_FIELD;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
@@ -300,9 +300,7 @@ public class IndexService implements InitializingBean {
         try {
             Directory directory = new NIOFSDirectory(getIndexDirectory().toPath());
             IndexWriter indexWriter = new IndexWriter(directory, writerConfig);
-            if (openMode == IndexWriterConfig.OpenMode.CREATE) {
-                indexWriter.commit();
-            }
+            if (openMode == IndexWriterConfig.OpenMode.CREATE) indexWriter.commit();
             LOGGER.debug("Create index writer, RAM Buffer " + writerConfig.getRAMBufferSizeMB() + " MB" +
                     ", Thread RAM Buffer " + writerConfig.getRAMPerThreadHardLimitMB() + " MB" +
                     ", Use compound files " + writerConfig.getUseCompoundFile());

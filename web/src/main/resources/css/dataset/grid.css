@@ -2,6 +2,16 @@
 
 }
 
+.dataset-table tr.borderless {
+    border-bottom: hidden !important;
+}
+
+.dataset-table tr.detail td {
+    font-size: smaller !important;
+    padding-top: 2px !important;;
+    padding-bottom: 4px !important;;
+}
+
 .dataset-table-resizer {
     position: absolute;
     top: 0;

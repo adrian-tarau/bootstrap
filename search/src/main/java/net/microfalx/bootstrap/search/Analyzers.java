@@ -40,7 +40,6 @@ public class Analyzers {
      */
     public static QueryParser createQueryParser(String defaultField) {
         requireNonNull(defaultField);
-
         QueryParserImpl queryParser = new QueryParserImpl(defaultField, createIndexAnalyzer());
         return queryParser;
     }
@@ -51,7 +50,7 @@ public class Analyzers {
      * @return a non-null instance
      */
     public static QueryParser createQueryParser() {
-        return createQueryParser(SearchUtilities.NAME_FIELD);
+        return createQueryParser(SearchUtils.NAME_FIELD);
     }
 
     static final class WhitespaceAndSpecialCharsAnalyzer extends Analyzer {

@@ -4,6 +4,10 @@ import java.lang.annotation.*;
 
 /**
  * An annotation used to provide information about a data set.
+ * <p>
+ * The template specific properties are passed directly to the template engine, and they are specific to
+ * each template engine. However, the Data Set uses conventions present in <i>Thymeleaf</i> rendering engine
+ * since it is the default template engine.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -86,18 +90,24 @@ public @interface DataSet {
     String defaultQuery() default "";
 
     /**
-     * Returns the template to be used to render the data instead of the default one.
+     * Returns the template to be used to render the details about a model in the grid.
+     * <p>
+     * The template can have a fragment attached to it, separated by {@code ::}. If the fragment is missing, it defaults
+     * to {@code fields}.
      *
-     * @return the view, empty if not set
+     * @return the view, empty if there are no details
      */
-    String viewTemplate() default "";
+    String detailTemplate() default "";
 
     /**
-     * Returns the view to be used to render the data instead of the default one.
+     * Returns the template to be used to render the model when the "view" action is executed.
+     * <p>
+     * The template can have a fragment attached to it, separated by {@code ::}. If the fragment is missing, it defaults
+     *      * to {@code fields}.
      *
-     * @return the view, empty if not set
+     * @return the view, empty to use default view
      */
-    String viewFragment() default "";
+    String viewTemplate() default "";
 
     /**
      * Returns an array of CSS classes to be applied to the view modal.

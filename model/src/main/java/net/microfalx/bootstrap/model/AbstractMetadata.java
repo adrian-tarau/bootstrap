@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
@@ -286,7 +287,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
      */
     protected final String getI18n(String key) {
         try {
-            return messageSource.getMessage(key, ObjectUtils.EMPTY_ARRAY, Locale.US);
+            return messageSource.getMessage(key, ObjectUtils.EMPTY_ARRAY, LocaleContextHolder.getLocale());
         } catch (NoSuchMessageException e) {
             LOGGER.debug("Missing i18n '" + key + "' for model " + getModel().getName());
             return null;
