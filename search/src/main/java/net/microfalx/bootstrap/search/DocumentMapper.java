@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
-import static net.microfalx.bootstrap.search.SearchUtils.*;
+import static net.microfalx.bootstrap.search.Document.*;
+import static net.microfalx.bootstrap.search.SearchUtils.normalizeText;
 import static net.microfalx.lang.ObjectUtils.isEmpty;
 
 /**
@@ -38,24 +39,24 @@ class DocumentMapper {
         }
 
         if (document.getOwner() != null) ld.add(new TextField(OWNER_FIELD, document.getOwner(), Field.Store.YES));
-        if (document.timestamp > 0) {
-            ld.add(new LongPoint(TIMESTAMP_FIELD, document.timestamp));
-            ld.add(new StoredField(TIMESTAMP_FIELD + STORED_SUFFIX_FIELD, document.timestamp));
-        }
         if (document.createdAt > 0) {
             ld.add(new LongPoint(CREATED_AT_FIELD, document.createdAt));
+            ld.add(new SortedNumericDocValuesField(CREATED_AT_FIELD + SORTED_SUFFIX_FIELD, document.createdAt));
             ld.add(new StoredField(CREATED_AT_FIELD + STORED_SUFFIX_FIELD, document.createdAt));
         }
         if (document.modifiedAt > 0) {
             ld.add(new LongPoint(MODIFIED_AT_FIELD, document.modifiedAt));
+            ld.add(new SortedNumericDocValuesField(MODIFIED_AT_FIELD + SORTED_SUFFIX_FIELD, document.modifiedAt));
             ld.add(new StoredField(MODIFIED_AT_FIELD + STORED_SUFFIX_FIELD, document.modifiedAt));
         }
         if (document.receivedAt > 0) {
             ld.add(new LongPoint(RECEIVED_AT_FIELD, document.receivedAt));
+            ld.add(new SortedNumericDocValuesField(RECEIVED_AT_FIELD + SORTED_SUFFIX_FIELD, document.receivedAt));
             ld.add(new StoredField(RECEIVED_AT_FIELD + STORED_SUFFIX_FIELD, document.receivedAt));
         }
         if (document.sentAt > 0) {
             ld.add(new LongPoint(SENT_AT_FIELD, document.sentAt));
+            ld.add(new SortedNumericDocValuesField(SENT_AT_FIELD + SORTED_SUFFIX_FIELD, document.sentAt));
             ld.add(new StoredField(SENT_AT_FIELD + STORED_SUFFIX_FIELD, document.sentAt));
         }
 
@@ -112,8 +113,6 @@ class DocumentMapper {
         item.setOwner(document.get(OWNER_FIELD));
         item.setType(document.get(TYPE_FIELD));
 
-        IndexableField timestamp = document.getField(TIMESTAMP_FIELD + STORED_SUFFIX_FIELD);
-        if (timestamp != null) item.timestamp = timestamp.numericValue().longValue();
         IndexableField createdTime = document.getField(CREATED_AT_FIELD + STORED_SUFFIX_FIELD);
         if (createdTime != null) item.createdAt = createdTime.numericValue().longValue();
         IndexableField modifiedTime = document.getField(MODIFIED_AT_FIELD + STORED_SUFFIX_FIELD);

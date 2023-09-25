@@ -5,6 +5,7 @@
     <asset-bundle id="dataset" path="dataset" name="DataSet">
         <depends-on-asset-bundle>bootstrap</depends-on-asset-bundle>
 
+        <asset path="bootstrap.css" type="stylesheet"/>
         <asset path="scroll_top.css" type="stylesheet"/>
         <asset path="sort.css" type="stylesheet"/>
         <asset path="component.css" type="stylesheet"/>
@@ -12,6 +13,7 @@
         <asset path="resizable.css" type="stylesheet"/>
         <asset path="formatting.css" type="stylesheet"/>
         <asset path="dropzone.css" type="stylesheet"/>
+        <asset path="search.css" type="stylesheet"/>
 
         <asset path="core.js" type="script"/>
         <asset path="ajax.js" type="script"/>

@@ -31,13 +31,16 @@ public class FormatterUtils {
                 return valueAsString;
             }
         } else if (value instanceof Number) {
+            if (formattable != null && !Formattable.AUTO.equals(formattable.negativeValue()) && ((Number) value).doubleValue() < 0) {
+                return formattable.NA;
+            }
             if (value instanceof Float || value instanceof Double) {
                 return NumberFormat.getNumberInstance().format(((Number) value).doubleValue());
             } else {
                 return NumberFormat.getIntegerInstance().format(((Number) value).longValue());
             }
         } else if (value instanceof Enum) {
-            return EnumUtils.toLabel((Enum)value);
+            return EnumUtils.toLabel((Enum) value);
         } else if (value instanceof Temporal) {
             return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value);
         } else {

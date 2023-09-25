@@ -1,11 +1,9 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.resource.ResourceService;
-import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.FormatterUtils;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.metrics.Timer;
 import net.microfalx.resource.FileResource;
@@ -22,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.RetryListener;
@@ -39,9 +38,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static net.microfalx.bootstrap.search.SearchUtils.isNumericField;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.StringUtils.isEmpty;
-import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * A service used to execute full text searches.
@@ -63,12 +62,41 @@ public class SearchService implements InitializingBean {
     @Autowired
     private I18nService i18nService;
 
+    private volatile AsyncTaskExecutor taskExecutor;
+
     private final Object lock = new Object();
     private volatile SearchHolder searchHolder;
 
+    private final Map<String, String> attributeClasses = new ConcurrentHashMap<>();
     private final Collection<SearchListener> listeners = new CopyOnWriteArrayList<>();
     private final Map<String, String> labels = new ConcurrentHashMap<>();
     private final Map<String, String> description = new ConcurrentHashMap<>();
+
+    /**
+     * Returns the executor used by the search service.
+     *
+     * @return a non-null instance
+     */
+    public AsyncTaskExecutor getTaskExecutor() {
+        if (taskExecutor == null) taskExecutor = TaskExecutorFactory.create("search").createExecutor();
+        return taskExecutor;
+    }
+
+    /**
+     * Returns the CSS class for a given attribute.
+     *
+     * @param attribute the attribute
+     * @return the class
+     */
+    public String getAttributeClasses(Attribute attribute) {
+        requireNonNull(attribute);
+        String classes = "search-attribute-name-" + toDashIdentifier(attribute.getName());
+        String valueClassPrefix = "search-attribute-value-" + toDashIdentifier(attribute.getName());
+        if (Document.SEVERITY_FIELD.equalsIgnoreCase(attribute.getName())) {
+            classes += " " + valueClassPrefix + "-" + toDashIdentifier(ObjectUtils.toString(attribute.getValue()));
+        }
+        return classes;
+    }
 
     /**
      * Search the index for all items matching the query.
@@ -167,20 +195,38 @@ public class SearchService implements InitializingBean {
         return label;
     }
 
+    /**
+     * Returns whether the attribute will be displayed in the search result.
+     *
+     * @param document  the search engine document
+     * @param attribute the attribute
+     * @return {@code true} if accepted, {@code false} otherwise
+     */
+    public boolean accept(Document document, Attribute attribute) {
+        requireNonNull(document);
+        requireNonNull(attribute);
+        for (SearchListener listener : listeners) {
+            if (!listener.accept(document, attribute)) return false;
+        }
+        return true;
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         initListeners();
+        initTaskExecutor();
     }
 
     @SuppressWarnings("resource")
     private void doSearch(Query luceneQuery, SearchQuery searchQuery, SearchResult result) throws IOException {
         final IndexSearcher indexSearcher = getIndexSearcher();
         final List<Document> items = new ArrayList<>();
+        final Sort sort = createSort(searchQuery);
 
         TopDocs topDocs;
         Timer timer = METRICS.startTimer("search");
         try {
-            topDocs = indexSearcher.search(luceneQuery, searchQuery.getStart() + searchQuery.getLimit());
+            topDocs = indexSearcher.search(luceneQuery, searchQuery.getStart() + searchQuery.getLimit(), sort);
             int startIndex = searchQuery.getStart();
             int counter = searchQuery.getLimit();
             DocumentMapper documentMapper = new DocumentMapper();
@@ -188,6 +234,7 @@ public class SearchService implements InitializingBean {
                 if (startIndex-- > 0) continue;
                 org.apache.lucene.document.Document document = indexSearcher.doc(scoreDoc.doc);
                 Document translatedDocument = documentMapper.read(document);
+                translatedDocument.setRelevance(Float.isNaN(scoreDoc.score) ? Document.NO_RELEVANCE : scoreDoc.score);
                 items.add(translatedDocument);
                 if (counter-- == 0) break;
             }
@@ -198,6 +245,22 @@ public class SearchService implements InitializingBean {
 
         result.setDocuments(items);
         result.setTotalHits(topDocs.totalHits.value);
+    }
+
+    private Sort createSort(SearchQuery searchQuery) {
+        SearchQuery.Sort querySort = searchQuery.getSort();
+        if (querySort.getType() == SearchQuery.Sort.Type.FIELD) {
+            String field = querySort.getField();
+            field = isNumericField(field) ? field + Document.SORTED_SUFFIX_FIELD : field;
+            SortField sortField = new SortedNumericSortField(field, SortField.Type.LONG, querySort.isReversed());
+            return new Sort(sortField);
+        } else if (querySort.getType() == SearchQuery.Sort.Type.RELEVANCE) {
+            return Sort.RELEVANCE;
+        } else if (querySort.getType() == SearchQuery.Sort.Type.INDEX_ORDER) {
+            return Sort.INDEXORDER;
+        } else {
+            throw new SearchException("Unknown sort type: " + querySort.getType());
+        }
     }
 
     private IndexSearcher getIndexSearcher() {
@@ -259,7 +322,12 @@ public class SearchService implements InitializingBean {
         Collection<SearchListener> discoveredListeners = ClassUtils.resolveProviderInstances(SearchListener.class);
         for (SearchListener discoveredListener : discoveredListeners) {
             LOGGER.info(" - " + ClassUtils.getName(discoveredListener));
+            this.listeners.add(discoveredListener);
         }
+    }
+
+    private void initTaskExecutor() {
+        taskExecutor = TaskExecutorFactory.create().setSuffix("search").createExecutor();
     }
 
     private String getI18n(String suffix) {

@@ -150,14 +150,28 @@ public class SearchQuery implements Serializable {
 
         private final Type type;
         private String field;
+        private boolean reversed;
 
         public Sort(Type type) {
             this.type = type;
         }
 
-        public Sort(Type type, String field) {
+        public Sort(Type type, String field, boolean reversed) {
             this.type = type;
             this.field = field;
+            this.reversed = reversed;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public String getField() {
+            return field;
+        }
+
+        public boolean isReversed() {
+            return reversed;
         }
 
         public enum Type {

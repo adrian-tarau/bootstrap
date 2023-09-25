@@ -8,3 +8,7 @@
     word-break: break-word;
     font-family: monospace
 }
+
+.dataset-table tags {
+    max-width: 800px;
+}

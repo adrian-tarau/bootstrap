@@ -32,6 +32,11 @@
     </td>
 </tr>
 
+<div th:fragment="grid-rows" th:each="model : ${#dataset.getModels()}" th:remove="tag">
+    <tr th:replace="~{ fragments/dataset :: grid-row}"></tr>
+    <tr th:replace="~{ fragments/dataset :: grid-row-detail}"></tr>
+</div>
+
 <tbody th:fragment="grid-body">
     <div th:each="model : ${#dataset.getModels()}" th:remove="tag">
         <tr th:replace="~{ fragments/dataset :: grid-row}"></tr>

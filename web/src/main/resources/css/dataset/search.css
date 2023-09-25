@@ -1,0 +1,68 @@
+/**
+    Document attributes
+ */
+
+.dataset-table .search-attributes .search-attribute-name-default {
+    color: #fff !important;
+    background-color: #3a5a40 !important;
+}
+
+.dataset-table .search-attributes .search-attribute-value-severity-error {
+    color: #fff !important;
+    background-color: #dc3545 !important;
+}
+
+.dataset-table .search-attributes .search-attribute-value-severity-warn {
+    color: #212529 !important;
+    background-color: #ffc107 !important;
+}
+
+.dataset-table .search-attributes .search-attribute-value-severity-info {
+    color: #212529 !important;
+    background-color: #0dcaf0!important;
+}
+
+.dataset-table .search-attributes .search-attribute-value-severity-debug {
+    color: #212529 !important;
+    background-color: #dedede !important;
+}
+
+.dataset-table .search-attributes .search-attribute-value-severity-trace {
+    color: #212529 !important;
+    background-color: #dedede !important;
+}
+
+.dataset-table .search-attributes .search-attribute-name-source {
+    color: #fff !important;
+    background-color: #6f1d1b !important;
+}
+
+.dataset-table .search-attributes .search-attribute-name-target {
+    color: #fff !important;
+    background-color: #99582a !important;
+}
+
+.dataset-table .search-attributes .search-attribute-name-application {
+    color: #fff !important;
+    background-color: #457b9d !important;
+}
+
+.dataset-table .search-attributes .search-attribute-name-domain {
+    color: #fff !important;
+    background-color: #283618 !important;
+}
+
+.dataset-table .search-attributes .search-attribute-name-os {
+    color: #fff !important;
+    background-color: #005f73 !important;
+}
+
+.dataset-table .search-attributes .search-attribute-name-platform {
+    color: #212529 !important;
+    background-color: #ccd5ae !important;
+}
+
+.dataset-table .search-attributes .search-attribute-name-server {
+    color: #212529 !important;
+    background-color: #81b29a !important;
+}

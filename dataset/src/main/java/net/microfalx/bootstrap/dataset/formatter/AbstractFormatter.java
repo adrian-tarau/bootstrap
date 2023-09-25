@@ -19,6 +19,7 @@ public abstract class AbstractFormatter<M, F extends Field<M>, T> implements For
     public String format(T value, F field, M model) {
         if (value == null) return getFormattable(field).nullValue();
         if (ObjectUtils.isEmpty(value)) return getFormattable(field).emptyValue();
+        if (value instanceof Number && ((Number) value).doubleValue() < 0) return getFormattable(field).negativeValue();
         return doFormat(value, field, model);
     }
 

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.search.Attribute;
 import net.microfalx.lang.annotation.*;
 
@@ -26,21 +27,26 @@ public class SearchResult {
 
     @Name
     @Position(2)
-    private String name;
+    @Formattable(maximumLength = 300, maximumLines = 2)
+    private String description;
 
     @Position(3)
     private String type;
 
+    @Position(10)
+    @Formattable(negativeValue = Formattable.NA)
+    private float relevance;
+
     @Visible(false)
     private String owner;
 
-    @Position(50)
-    @Formattable(maximumLength = 300, maximumLines = 2)
-    private String description;
-
     @Position(100)
+    private LocalDateTime createdAt;
+
+    @Position(101)
     @Timestamp
-    private LocalDateTime timestamp;
+    @OrderBy(OrderBy.Direction.DESC)
+    private LocalDateTime modifiedAt;
 
     @Visible(false)
     private Collection<Attribute> attributes = Collections.emptyList();

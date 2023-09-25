@@ -18,6 +18,11 @@ public @interface Formattable {
     String NA = "-";
 
     /**
+     * A value for "value not available"
+     */
+    String AUTO = "$AUTO$";
+
+    /**
      * Returns the maximum number of lines displayed for a field (if the field type is STRING)
      *
      * @return the number of lines, -1 for unlimited
@@ -44,6 +49,13 @@ public @interface Formattable {
      * @return the value
      */
     String emptyValue() default NA;
+
+    /**
+     * Returns the string to be used when the value is negative.
+     *
+     * @return the value
+     */
+    String negativeValue() default AUTO;
 
     /**
      * Returns the custom formatter to be used for a field.

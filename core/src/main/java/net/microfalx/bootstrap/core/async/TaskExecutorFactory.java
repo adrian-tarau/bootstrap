@@ -27,6 +27,22 @@ public class TaskExecutorFactory {
     private static final AtomicInteger POOL_ID = new AtomicInteger(1);
 
     private AsyncProperties properties = new AsyncProperties();
+    private float ratio = 1;
+
+    public static TaskExecutorFactory create() {
+        return new TaskExecutorFactory();
+    }
+
+    public static TaskExecutorFactory create(String suffix) {
+        return new TaskExecutorFactory().setSuffix(suffix);
+    }
+
+    public static TaskExecutorFactory create(AsyncProperties properties) {
+        return new TaskExecutorFactory().setProperties(properties);
+    }
+
+    TaskExecutorFactory() {
+    }
 
     public AsyncProperties getProperties() {
         return properties;
@@ -49,6 +65,11 @@ public class TaskExecutorFactory {
         return this;
     }
 
+    public TaskExecutorFactory setRatio(float ratio) {
+        this.ratio = ratio;
+        return this;
+    }
+
     public AsyncTaskExecutor createExecutor() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 
@@ -56,9 +77,9 @@ public class TaskExecutorFactory {
         taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
         taskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         taskExecutor.setAwaitTerminationSeconds((int) properties.getAwaitTermination().getSeconds());
-        taskExecutor.setCorePoolSize(properties.getCoreThreads());
-        taskExecutor.setMaxPoolSize(properties.getMaximumThreads());
-        taskExecutor.setQueueCapacity(properties.getQueueCapacity());
+        taskExecutor.setCorePoolSize((int) (properties.getCoreThreads() * ratio));
+        taskExecutor.setMaxPoolSize((int) (properties.getMaximumThreads() * ratio));
+        taskExecutor.setQueueCapacity((int) (properties.getQueueCapacity() * ratio));
         taskExecutor.initialize();
         LOGGER.info("Create task executor, prefix '{}', core threads {}, queue capacity {}", taskExecutor.getThreadNamePrefix(),
                 taskExecutor.getCorePoolSize(), taskExecutor.getQueueCapacity());
@@ -78,8 +99,8 @@ public class TaskExecutorFactory {
         taskExecutor.initialize();
 
         ScheduledThreadPoolExecutor poolExecutor = taskExecutor.getScheduledThreadPoolExecutor();
-        poolExecutor.setCorePoolSize(properties.getCoreThreads());
-        poolExecutor.setMaximumPoolSize(properties.getMaximumThreads());
+        poolExecutor.setCorePoolSize((int) (properties.getCoreThreads() * ratio));
+        poolExecutor.setMaximumPoolSize((int) (properties.getMaximumThreads() * ratio));
         poolExecutor.setKeepAliveTime(properties.getKeepAlive().toMillis(), TimeUnit.MILLISECONDS);
 
         LOGGER.info("Create task scheduler, prefix '{}', core threads {}", taskExecutor.getThreadNamePrefix(),

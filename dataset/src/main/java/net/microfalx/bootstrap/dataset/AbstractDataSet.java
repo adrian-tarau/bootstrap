@@ -6,6 +6,7 @@ import net.microfalx.bootstrap.dataset.annotation.Lookup;
 import net.microfalx.bootstrap.dataset.formatter.EnumFormatter;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
+import net.microfalx.bootstrap.dataset.formatter.NumberFormatter;
 import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ClassUtils;
@@ -179,6 +180,8 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
             }
             if (value instanceof Enum) {
                 return ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
+            } else if (value instanceof Number) {
+                return ((Formatter<M, Field<M>, Object>) NUMBER_FORMATTER).format(value, field, model);
             } else if (isJdkType(value)) {
                 return FormatterUtils.basicFormatting(value, formattableAnnot);
             } else {
@@ -461,4 +464,5 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     private static final Formatter<?, ?, ?> ENUM_FORMATTER = new EnumFormatter<>();
+    private static final Formatter<?, ?, ?> NUMBER_FORMATTER = new NumberFormatter<>();
 }

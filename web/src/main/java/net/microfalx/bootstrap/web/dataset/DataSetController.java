@@ -80,6 +80,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         updateModel(dataSet, model, State.BROWSE);
         updateModel(dataSet, model, null, State.BROWSE);
         processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
+        beforeBrowse(dataSet, model, null);
         return BROWSE_VIEW;
     }
 
@@ -95,8 +96,10 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Page<M> page = processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         response.addHeader("X-DATASET-PAGE-INFO", DataSetTool.getPageInfo(page));
         response.addHeader("X-DATASET-PAGE-INFO-EXTENDED", DataSetTool.getPageAndRecordInfo(page));
-        if (model.containsAttribute(MESSAGE_ATTR))
+        if (model.containsAttribute(MESSAGE_ATTR)) {
             response.addHeader("X-DATASET-MESSAGE", (String) model.getAttribute(MESSAGE_ATTR));
+        }
+        beforeBrowse(dataSet, model, null);
         return "dataset/page::#dataset-page";
     }
 

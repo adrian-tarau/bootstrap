@@ -4,29 +4,13 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
+import static net.microfalx.bootstrap.search.Document.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Various utilities for search engine
  */
 public class SearchUtils {
-
-    public static final String ID_FIELD = "id";
-    public static final String TYPE_FIELD = "type";
-    public static final String NAME_FIELD = "name";
-    public static final String DESCRIPTION_FIELD = "desc";
-    public static final String BODY_FIELD = "body";
-    public static final String BODY_URI_FIELD = "body_uri";
-    public static final String TAG_FIELD = "tag";
-    public static final String OWNER_FIELD = "owner";
-    public static final String STORED_SUFFIX_FIELD = "$stored";
-    public static final String TIMESTAMP_FIELD = "timestamp";
-    public static final String CREATED_AT_FIELD = "created";
-    public static final String MODIFIED_AT_FIELD = "modified";
-    public static final String RECEIVED_AT_FIELD = "received";
-    public static final String SENT_AT_FIELD = "sent";
-    public static final String USER_DATA_FIELD = "data";
-    public static final String LABEL_FIELD = "label";
 
     public static final String DEFAULT_FIELD = DESCRIPTION_FIELD;
 
@@ -36,6 +20,16 @@ public class SearchUtils {
      * A set containing all the standard field names
      */
     private static final Set<String> STANDARD_FIELD_NAMES = new HashSet<>();
+
+    /**
+     * A set containing all the core field names
+     */
+    private static final Set<String> DISPLAY_FIELD_NAMES = new HashSet<>();
+
+    /**
+     * A set containing all numeric field names
+     */
+    private static final Set<String> NUMERIC_FIELD_NAMES = new HashSet<>();
 
     /**
      * A set which contains all available field names extracted from index.
@@ -163,14 +157,40 @@ public class SearchUtils {
 
     /**
      * Returns a collection of attributes sorted by label.
-     * @param attributes
-     * @return
+     * <p>
+     * Some core attributes are always presented first: severity, source, target, etc
+     *
+     * @param attributes the attributes to sort
+     * @return a non-null instance with sorted attributes
      */
     public static Collection<Attribute> sort(Collection<Attribute> attributes) {
         if (attributes == null) return Collections.emptyList();
-        List<Attribute> sortedAttributes = new ArrayList<>(attributes);
+        List<Attribute> priorityAttributes = new ArrayList<>();
+        List<Attribute> sortedAttributes = new ArrayList<>();
+        Iterator<Attribute> attributeIterator = attributes.iterator();
+        while (attributeIterator.hasNext()) {
+            Attribute attribute = attributeIterator.next();
+            if (DISPLAY_FIELD_NAMES.contains(attribute.getName())) {
+                priorityAttributes.add(attribute);
+            } else {
+                sortedAttributes.add(attribute);
+            }
+        }
         sortedAttributes.sort(Comparator.comparing(Attribute::getLabel));
-        return sortedAttributes;
+        priorityAttributes.sort(Comparator.comparing(Attribute::getLabel));
+        priorityAttributes.addAll(sortedAttributes);
+        return priorityAttributes;
+    }
+
+    /**
+     * Returns whether the field represent one of the numerical fields.
+     *
+     * @param name the field name
+     * @return {@code true} if numeric, {@code false} otherwise
+     */
+    public static boolean isNumericField(String name) {
+        requireNonNull(name);
+        return NUMERIC_FIELD_NAMES.contains(name.toLowerCase());
     }
 
     private final static String[] OPERATORS = new String[]{
@@ -195,16 +215,27 @@ public class SearchUtils {
         STANDARD_FIELD_NAMES.add(OWNER_FIELD);
         STANDARD_FIELD_NAMES.add(TAG_FIELD);
         STANDARD_FIELD_NAMES.add(USER_DATA_FIELD);
-        STANDARD_FIELD_NAMES.add(TIMESTAMP_FIELD);
-        STANDARD_FIELD_NAMES.add(TIMESTAMP_FIELD + STORED_SUFFIX_FIELD);
         STANDARD_FIELD_NAMES.add(CREATED_AT_FIELD);
         STANDARD_FIELD_NAMES.add(CREATED_AT_FIELD + STORED_SUFFIX_FIELD);
+        STANDARD_FIELD_NAMES.add(CREATED_AT_FIELD + SORTED_SUFFIX_FIELD);
         STANDARD_FIELD_NAMES.add(MODIFIED_AT_FIELD);
         STANDARD_FIELD_NAMES.add(MODIFIED_AT_FIELD + STORED_SUFFIX_FIELD);
+        STANDARD_FIELD_NAMES.add(MODIFIED_AT_FIELD + SORTED_SUFFIX_FIELD);
         STANDARD_FIELD_NAMES.add(RECEIVED_AT_FIELD);
         STANDARD_FIELD_NAMES.add(RECEIVED_AT_FIELD + STORED_SUFFIX_FIELD);
+        STANDARD_FIELD_NAMES.add(RECEIVED_AT_FIELD + SORTED_SUFFIX_FIELD);
         STANDARD_FIELD_NAMES.add(SENT_AT_FIELD);
         STANDARD_FIELD_NAMES.add(SENT_AT_FIELD + STORED_SUFFIX_FIELD);
+        STANDARD_FIELD_NAMES.add(SENT_AT_FIELD + SORTED_SUFFIX_FIELD);
+
+        DISPLAY_FIELD_NAMES.add(SEVERITY_FIELD);
+        DISPLAY_FIELD_NAMES.add(SOURCE_FIELD);
+        DISPLAY_FIELD_NAMES.add(TARGET_FIELD);
+
+        NUMERIC_FIELD_NAMES.add(CREATED_AT_FIELD);
+        NUMERIC_FIELD_NAMES.add(MODIFIED_AT_FIELD);
+        NUMERIC_FIELD_NAMES.add(RECEIVED_AT_FIELD);
+        NUMERIC_FIELD_NAMES.add(SENT_AT_FIELD);
 
         FIELD_NAMES.addAll(STANDARD_FIELD_NAMES);
 

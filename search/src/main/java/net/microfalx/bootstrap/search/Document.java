@@ -28,6 +28,27 @@ import static net.microfalx.lang.TimeUtils.toMillis;
  */
 public final class Document implements Serializable {
 
+    public static final String ID_FIELD = "id";
+    public static final String TYPE_FIELD = "type";
+    public static final String NAME_FIELD = "name";
+    public static final String DESCRIPTION_FIELD = "desc";
+    public static final String BODY_FIELD = "body";
+    public static final String BODY_URI_FIELD = "body_uri";
+    public static final String TAG_FIELD = "tag";
+    public static final String OWNER_FIELD = "owner";
+    public static final String SOURCE_FIELD = "source";
+    public static final String TARGET_FIELD = "target";
+    static final String STORED_SUFFIX_FIELD = "$stored";
+    static final String SORTED_SUFFIX_FIELD = "$sorted";
+    public static final String CREATED_AT_FIELD = "created";
+    public static final String MODIFIED_AT_FIELD = "modified";
+    public static final String RECEIVED_AT_FIELD = "received";
+    public static final String SENT_AT_FIELD = "sent";
+    public static final String USER_DATA_FIELD = "data";
+    public static final String SEVERITY_FIELD = "severity";
+    public static final String LABEL_FIELD = "label";
+    public static final float NO_RELEVANCE = -1;
+
     @Serial
     private static final long serialVersionUID = -3913827551374244394L;
 
@@ -40,7 +61,6 @@ public final class Document implements Serializable {
 
     private String owner;
 
-    long timestamp = NA_TIMESTAMP;
     long createdAt = NA_TIMESTAMP;
     long modifiedAt = NA_TIMESTAMP;
     long receivedAt = NA_TIMESTAMP;
@@ -61,6 +81,7 @@ public final class Document implements Serializable {
      */
     Map<String, String> labels;
 
+    private float relevance;
     private Object data;
 
     public static Document create(String id) {
@@ -148,14 +169,12 @@ public final class Document implements Serializable {
         return this;
     }
 
-    public ZonedDateTime getTimestamp() {
-        return fromMillis(timestamp);
+    public float getRelevance() {
+        return relevance;
     }
 
-    public Document setTimestamp(Temporal timestamp) {
-        requireNonNull(timestamp);
-        this.timestamp = toMillis(timestamp);
-        return this;
+    public void setRelevance(float relevance) {
+        this.relevance = relevance;
     }
 
     public ZonedDateTime getCreatedAt() {
@@ -164,7 +183,7 @@ public final class Document implements Serializable {
 
     public Document setCreatedAt(Temporal createdAt) {
         this.createdAt = createdAt != null ? toMillis(createdAt) : NA_TIMESTAMP;
-        this.timestamp = this.createdAt;
+        if (this.modifiedAt == NA_TIMESTAMP) this.modifiedAt = this.createdAt;
         return this;
     }
 
@@ -174,7 +193,7 @@ public final class Document implements Serializable {
 
     public Document setModifiedAt(Temporal modifiedAt) {
         this.modifiedAt = modifiedAt != null ? toMillis(modifiedAt) : NA_TIMESTAMP;
-        this.timestamp = this.modifiedAt;
+        if (this.createdAt == NA_TIMESTAMP) this.createdAt = this.modifiedAt;
         return this;
     }
 
@@ -184,7 +203,6 @@ public final class Document implements Serializable {
 
     public Document setReceivedAt(Temporal receivedAt) {
         this.receivedAt = receivedAt != null ? toMillis(receivedAt) : NA_TIMESTAMP;
-        this.timestamp = this.receivedAt;
         return this;
     }
 
@@ -194,7 +212,6 @@ public final class Document implements Serializable {
 
     public Document setSentAt(Temporal sentAt) {
         this.sentAt = sentAt != null ? toMillis(sentAt) : NA_TIMESTAMP;
-        this.timestamp = this.sentAt;
         return this;
     }
 
@@ -251,6 +268,13 @@ public final class Document implements Serializable {
         requireNonNull(attribute);
         if (attributes == null) attributes = new HashMap<>();
         attributes.put(attribute.getName(), attribute);
+        return attribute;
+    }
+
+    public Attribute addAttributeIfAbsent(Attribute attribute) {
+        requireNonNull(attribute);
+        if (attributes == null) attributes = new HashMap<>();
+        attributes.putIfAbsent(attribute.getName(), attribute);
         return attribute;
     }
 

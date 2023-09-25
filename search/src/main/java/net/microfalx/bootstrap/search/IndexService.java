@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.search;
 
 import jakarta.annotation.PreDestroy;
+import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.resource.FileResource;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -22,7 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.microfalx.bootstrap.search.SearchUtils.ID_FIELD;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
@@ -43,8 +44,20 @@ public class IndexService implements InitializingBean {
     @Autowired
     private ResourceService resourceService;
 
+    private volatile AsyncTaskExecutor taskExecutor;
+
     private final Object lock = new Object();
     private volatile IndexHolder index;
+
+    /**
+     * Returns the executor used by the index service.
+     *
+     * @return a non-null instance
+     */
+    public AsyncTaskExecutor getTaskExecutor() {
+        if (taskExecutor == null) initTaskExecutor();
+        return taskExecutor;
+    }
 
     /**
      * Indexes a document and commits at the end.
@@ -135,7 +148,7 @@ public class IndexService implements InitializingBean {
         requireNonNull(itemId);
         doWithIndex(indexWriter -> {
             LOGGER.info("Deleting item with id: " + itemId);
-            indexWriter.deleteDocuments(new Term(ID_FIELD, itemId));
+            indexWriter.deleteDocuments(new Term(Document.ID_FIELD, itemId));
         });
     }
 
@@ -161,6 +174,7 @@ public class IndexService implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         openIndex();
+        initTaskExecutor();
     }
 
     @PreDestroy
@@ -308,6 +322,10 @@ public class IndexService implements InitializingBean {
         } catch (IOException e) {
             throw new IndexException("Failed to create the index", e);
         }
+    }
+
+    private void initTaskExecutor() {
+        taskExecutor = TaskExecutorFactory.create().setSuffix("index").createExecutor();
     }
 
     private boolean isItemValid(Document document) {

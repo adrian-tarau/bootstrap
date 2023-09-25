@@ -28,4 +28,15 @@ public interface SearchListener {
     default String getDescription(String field) {
         return null;
     }
+
+    /**
+     * Returns whether the attribute will be displayed in the search result.
+     *
+     * @param document  the search engine document
+     * @param attribute the attribute
+     * @return {@code true} if accepted, {@code false} otherwise
+     */
+    default boolean accept(Document document, Attribute attribute) {
+        return true;
+    }
 }

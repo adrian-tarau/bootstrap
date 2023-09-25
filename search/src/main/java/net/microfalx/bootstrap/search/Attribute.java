@@ -174,7 +174,8 @@ public class Attribute implements Serializable {
     @Override
     public String toString() {
         return "Attribute{" +
-                "value=" + value +
+                "name=" + name +
+                ", value=" + value +
                 ", options=" + options +
                 '}';
     }

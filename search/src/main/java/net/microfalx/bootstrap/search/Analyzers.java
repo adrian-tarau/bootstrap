@@ -50,7 +50,7 @@ public class Analyzers {
      * @return a non-null instance
      */
     public static QueryParser createQueryParser() {
-        return createQueryParser(SearchUtils.NAME_FIELD);
+        return createQueryParser(Document.NAME_FIELD);
     }
 
     static final class WhitespaceAndSpecialCharsAnalyzer extends Analyzer {

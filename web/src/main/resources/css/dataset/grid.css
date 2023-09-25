@@ -7,8 +7,8 @@
 }
 
 .dataset-table tr.detail td {
-    font-size: smaller !important;
-    padding-top: 2px !important;;
+    /*font-size: smaller !important;*/
+    padding-top: 2px !important;
     padding-bottom: 4px !important;;
 }
 
@@ -20,4 +20,35 @@
     left: auto;
     width: 16px;
     cursor: col-resize;
+}
+
+@media (min-width: 992px) {
+
+    .dataset-table .search-attributes {
+        max-width: 600px;
+    }
+
+}
+
+@media (min-width: 1200px) {
+
+    .dataset-table .search-attributes {
+        max-width: 900px;
+    }
+
+}
+@media (min-width: 1400px) {
+
+    .dataset-table .search-attributes {
+        max-width: 1100px;
+    }
+
+}
+
+@media (min-width: 1600px) {
+
+    .dataset-table .search-attributes {
+        max-width: 1300px;
+    }
+
 }
