@@ -2,7 +2,8 @@ package net.microfalx.bootstrap.search;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 import static net.microfalx.bootstrap.search.Document.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -20,11 +21,6 @@ public class SearchUtils {
      * A set containing all the standard field names
      */
     private static final Set<String> STANDARD_FIELD_NAMES = new HashSet<>();
-
-    /**
-     * A set containing all the core field names
-     */
-    private static final Set<String> DISPLAY_FIELD_NAMES = new HashSet<>();
 
     /**
      * A set containing all numeric field names
@@ -156,33 +152,6 @@ public class SearchUtils {
     }
 
     /**
-     * Returns a collection of attributes sorted by label.
-     * <p>
-     * Some core attributes are always presented first: severity, source, target, etc
-     *
-     * @param attributes the attributes to sort
-     * @return a non-null instance with sorted attributes
-     */
-    public static Collection<Attribute> sort(Collection<Attribute> attributes) {
-        if (attributes == null) return Collections.emptyList();
-        List<Attribute> priorityAttributes = new ArrayList<>();
-        List<Attribute> sortedAttributes = new ArrayList<>();
-        Iterator<Attribute> attributeIterator = attributes.iterator();
-        while (attributeIterator.hasNext()) {
-            Attribute attribute = attributeIterator.next();
-            if (DISPLAY_FIELD_NAMES.contains(attribute.getName())) {
-                priorityAttributes.add(attribute);
-            } else {
-                sortedAttributes.add(attribute);
-            }
-        }
-        sortedAttributes.sort(Comparator.comparing(Attribute::getLabel));
-        priorityAttributes.sort(Comparator.comparing(Attribute::getLabel));
-        priorityAttributes.addAll(sortedAttributes);
-        return priorityAttributes;
-    }
-
-    /**
      * Returns whether the field represent one of the numerical fields.
      *
      * @param name the field name
@@ -227,10 +196,6 @@ public class SearchUtils {
         STANDARD_FIELD_NAMES.add(SENT_AT_FIELD);
         STANDARD_FIELD_NAMES.add(SENT_AT_FIELD + STORED_SUFFIX_FIELD);
         STANDARD_FIELD_NAMES.add(SENT_AT_FIELD + SORTED_SUFFIX_FIELD);
-
-        DISPLAY_FIELD_NAMES.add(SEVERITY_FIELD);
-        DISPLAY_FIELD_NAMES.add(SOURCE_FIELD);
-        DISPLAY_FIELD_NAMES.add(TARGET_FIELD);
 
         NUMERIC_FIELD_NAMES.add(CREATED_AT_FIELD);
         NUMERIC_FIELD_NAMES.add(MODIFIED_AT_FIELD);

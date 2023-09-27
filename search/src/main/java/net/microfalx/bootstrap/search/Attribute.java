@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.search;
 
-import net.microfalx.lang.StringUtils;
+import net.microfalx.bootstrap.model.AbstractAttribute;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -13,7 +13,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * By default an attribute is only stored. If the attribute needs to be indexed (and possible tokenized),
  * use {@link #setIndexed(boolean)} and {@link #setTokenized(boolean)}.
  */
-public class Attribute implements Serializable {
+public class Attribute extends AbstractAttribute implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 8394382351374244394L;
@@ -22,11 +22,18 @@ public class Attribute implements Serializable {
     static final int TOKENIZED_MASK = 0x02;
     static final int STORED_MASK = 0x04;
 
-    private final String name;
-    private final Object value;
-    String label;
-    String description;
     private int options = STORED_MASK;
+
+    /**
+     * Creates an attribute instance from a generic attribute.
+     *
+     * @param attribute the attribute instance
+     * @return a non-null instance
+     */
+    public static Attribute create(net.microfalx.bootstrap.model.Attribute attribute) {
+        requireNonNull(attribute);
+        return new Attribute(attribute.getName(), attribute.getValue());
+    }
 
     /**
      * Creates an attribute instance.
@@ -40,9 +47,7 @@ public class Attribute implements Serializable {
     }
 
     private Attribute(String name, Object value) {
-        requireNonNull(name);
-        this.name = name;
-        this.value = value;
+        super(name, value);
     }
 
     /**
@@ -122,43 +127,6 @@ public class Attribute implements Serializable {
     }
 
     /**
-     * Returns the attribute name.
-     *
-     * @return a non-null instance
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Returns the label associated with the attribute (to be used in UI).
-     *
-     * @return a non-null instance
-     */
-    public String getLabel() {
-        if (label == null) label = StringUtils.capitalizeWords(name);
-        return label;
-    }
-
-    /**
-     * Returns the value of the attribute.
-     *
-     * @return the value
-     */
-    public Object getValue() {
-        return value;
-    }
-
-    /**
-     * Returns a description associated with the attribute (to be used in UI).
-     *
-     * @return the description, null if missing
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
      * Returns the options associated with the attribute.
      *
      * @return the options
@@ -174,8 +142,8 @@ public class Attribute implements Serializable {
     @Override
     public String toString() {
         return "Attribute{" +
-                "name=" + name +
-                ", value=" + value +
+                "name=" + getName() +
+                ", value=" + getValue() +
                 ", options=" + options +
                 '}';
     }

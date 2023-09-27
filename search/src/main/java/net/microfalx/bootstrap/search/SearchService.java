@@ -3,11 +3,15 @@ package net.microfalx.bootstrap.search;
 import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.resource.ResourceService;
-import net.microfalx.lang.*;
+import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.FormatterUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.metrics.Timer;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
+import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -40,7 +44,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.microfalx.bootstrap.search.SearchUtils.isNumericField;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.TimeUtils.toMillis;
 
 /**
  * A service used to execute full text searches.
@@ -83,22 +88,6 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * Returns the CSS class for a given attribute.
-     *
-     * @param attribute the attribute
-     * @return the class
-     */
-    public String getAttributeClasses(Attribute attribute) {
-        requireNonNull(attribute);
-        String classes = "search-attribute-name-" + toDashIdentifier(attribute.getName());
-        String valueClassPrefix = "search-attribute-value-" + toDashIdentifier(attribute.getName());
-        if (Document.SEVERITY_FIELD.equalsIgnoreCase(attribute.getName())) {
-            classes += " " + valueClassPrefix + "-" + toDashIdentifier(ObjectUtils.toString(attribute.getValue()));
-        }
-        return classes;
-    }
-
-    /**
      * Search the index for all items matching the query.
      *
      * @param query the query information
@@ -107,23 +96,12 @@ public class SearchService implements InitializingBean {
      */
     public SearchResult search(SearchQuery query) {
         requireNonNull(query);
-
-        final QueryParser queryParser = createQueryParser();
-        queryParser.setAllowLeadingWildcard(query.isAllowLeadingWildcard() && searchProperties.isAllowLeadingWildcard());
-        String userQuery = SearchUtils.normalizeQuery(query.getQuery(), query.isAutoWildcard(), query.isAllowLeadingWildcard()).trim();
-
-        if (isNotEmpty(query.getFilter())) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("(").append(userQuery).append(") AND (").append(query.getFilter()).append(")");
-            userQuery = builder.toString();
-        }
-
         try {
-            final Query parsedQuery = isEmpty(userQuery) ? new MatchAllDocsQuery() : queryParser.parse(userQuery);
+            final Query parsedQuery = createQuery(query);
             final SearchResult result = new SearchResult(query);
             result.setRewriteQuery(parsedQuery.toString());
 
-            LOGGER.info("Searching with query '" + query.getDescription() + "', normalized query: '" + userQuery + "', parsed query: '" + parsedQuery
+            LOGGER.info("Searching with query '" + query.getDescription() + "', normalized query: '" + getNormalizedQuery(query) + "', parsed query: '" + parsedQuery
                     + "', auto-wildcard: " + query.isAutoWildcard() + ", leading wildcard: " + query.isAllowLeadingWildcard());
 
             RetryTemplate retryTemplate = new RetryTemplate();
@@ -215,6 +193,38 @@ public class SearchService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         initListeners();
         initTaskExecutor();
+    }
+
+    private String getNormalizedQuery(SearchQuery query) {
+        String normalizedQuery = SearchUtils.normalizeQuery(query.getQuery(), query.isAutoWildcard(), query.isAllowLeadingWildcard()).trim();
+        if (isNotEmpty(query.getFilter())) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("(").append(normalizedQuery).append(") AND (").append(query.getFilter()).append(")");
+            normalizedQuery = builder.toString();
+        }
+        return normalizedQuery;
+    }
+
+    private Query createQuery(SearchQuery query) throws ParseException {
+        final String normalizedQuery = getNormalizedQuery(query);
+        final QueryParser queryParser = createQueryParser();
+        queryParser.setAllowLeadingWildcard(query.isAllowLeadingWildcard() && searchProperties.isAllowLeadingWildcard());
+        Query parsedQuery = null;
+        if (StringUtils.isNotEmpty(normalizedQuery)) parsedQuery = queryParser.parse(normalizedQuery);
+        Query timeQuery = null;
+        if (query.getStartTime() != null) {
+            timeQuery = LongPoint.newRangeQuery(Document.MODIFIED_AT_FIELD, toMillis(query.getStartTime()), toMillis(query.getEndTime()));
+        }
+        if (parsedQuery == null && timeQuery == null) {
+            return new MatchAllDocsQuery();
+        } else if (parsedQuery != null && timeQuery == null) {
+            return parsedQuery;
+        } else if (parsedQuery == null) {
+            return timeQuery;
+        } else {
+            return new BooleanQuery.Builder().add(parsedQuery, BooleanClause.Occur.MUST)
+                    .add(timeQuery, BooleanClause.Occur.MUST).build();
+        }
     }
 
     @SuppressWarnings("resource")

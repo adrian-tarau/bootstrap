@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.model.AbstractAttributes;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceFactory;
 
@@ -10,6 +11,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.*;
 
+import static net.microfalx.bootstrap.model.Attribute.registerAttributePriority;
 import static net.microfalx.bootstrap.search.SearchUtils.NA_TIMESTAMP;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ObjectUtils.isEmpty;
@@ -26,7 +28,7 @@ import static net.microfalx.lang.TimeUtils.toMillis;
  * <p>
  * Documents are indexed and stored by the IndexService and can be retrieved by the SearchService.
  */
-public final class Document implements Serializable {
+public final class Document extends AbstractAttributes<Attribute> implements Serializable {
 
     public static final String ID_FIELD = "id";
     public static final String TYPE_FIELD = "type";
@@ -70,11 +72,6 @@ public final class Document implements Serializable {
      * A set of tags which can be used to locate items (they are indexed)
      */
     private Set<String> tags;
-
-    /**
-     * A collection of (key,value) pairs which can store item attributes, and they can be searched (if searching is enabled)
-     */
-    Map<String, Attribute> attributes;
 
     /**
      * A collection of (key,value) pairs which are stored with the item and serve as display labels for an item (they can be displayed in a drop down)
@@ -254,54 +251,6 @@ public final class Document implements Serializable {
         tags.remove(tag);
     }
 
-    public Collection<Attribute> getAttributes() {
-        if (attributes == null) return Collections.emptyList();
-        return attributes.values();
-    }
-
-    public int getAttributeCount() {
-        if (attributes == null) return 0;
-        return attributes.size();
-    }
-
-    public Attribute addAttribute(Attribute attribute) {
-        requireNonNull(attribute);
-        if (attributes == null) attributes = new HashMap<>();
-        attributes.put(attribute.getName(), attribute);
-        return attribute;
-    }
-
-    public Attribute addAttributeIfAbsent(Attribute attribute) {
-        requireNonNull(attribute);
-        if (attributes == null) attributes = new HashMap<>();
-        attributes.putIfAbsent(attribute.getName(), attribute);
-        return attribute;
-    }
-
-    public Attribute addAttribute(String name, Object value) {
-        requireNonNull(name);
-        return addAttribute(Attribute.create(name, value));
-    }
-
-    public Attribute getAttribute(String name) {
-        requireNonNull(name);
-        if (attributes == null) return null;
-        return attributes.get(name);
-    }
-
-    public Attribute getAttribute(String name, Object defaultValue) {
-        requireNonNull(name);
-        Object value = getAttribute(name);
-        if (value == null) return Attribute.create(name, defaultValue);
-        return attributes.get(name);
-    }
-
-    public Attribute removeAttribute(String name) {
-        requireNonNull(name);
-        if (attributes == null) return null;
-        return attributes.remove(name);
-    }
-
     public Document addLabel(String name, String value) {
         requireNonNull(name);
         if (labels == null) labels = new HashMap<>();
@@ -327,6 +276,11 @@ public final class Document implements Serializable {
     }
 
     @Override
+    protected Attribute createAttribute(String name, Object value) {
+        return Attribute.create(name, value);
+    }
+
+    @Override
     public String toString() {
         return "Document{" +
                 "id='" + id + '\'' +
@@ -338,9 +292,15 @@ public final class Document implements Serializable {
                 ", modifiedAt=" + modifiedAt +
                 ", receivedAt=" + receivedAt +
                 ", tags=" + tags +
-                ", attributes=" + attributes +
+                ", attributes=" + toMap() +
                 ", labels=" + labels +
                 ", data=" + data +
                 '}';
+    }
+
+    static {
+        registerAttributePriority(SOURCE_FIELD, -9);
+        registerAttributePriority(TARGET_FIELD, -8);
+        registerAttributePriority(OWNER_FIELD, -7);
     }
 }

@@ -7,7 +7,6 @@ import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map;
 
 import static net.microfalx.bootstrap.search.Document.*;
 import static net.microfalx.bootstrap.search.SearchUtils.normalizeText;
@@ -74,12 +73,11 @@ class DocumentMapper {
             ld.add(new Field(USER_DATA_FIELD, serializedData, USER_DATA_TYPE));
         }
 
-        for (Map.Entry<String, Attribute> entry : document.attributes.entrySet()) {
-            String name = entry.getKey();
+        for (Attribute attribute : document) {
+            String name = attribute.getName();
             if (SearchUtils.isStandardFieldName(name)) {
                 throw new IndexException("The item contains an attribute with a reserved name: " + name + ", item " + document);
             }
-            Attribute attribute = entry.getValue();
             Object value = attribute.getValue();
             if (isEmpty(value)) value = StringUtils.EMPTY;
             FieldType type = TYPES[attribute.getOptions()];
