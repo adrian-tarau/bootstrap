@@ -29,11 +29,20 @@ public @interface DataSet {
     boolean virtual() default true;
 
     /**
+     * Returns whether the query should not be parsed.
+     * <p>
+     * If the query is not parsed, it is set into the filter under a field called "query".
+     *
+     * @return {@code true} to pass the raw query, {@code false} to parse the query and convert to expressions
+     */
+    boolean rawQuery() default false;
+
+    /**
      * Returns the default page size.
      *
      * @return a non-null instance
      */
-    int pageSize() default 50;
+    int pageSize() default 25;
 
     /**
      * Returns whether the data set allows the user to upload a file to add a new model.
@@ -103,7 +112,7 @@ public @interface DataSet {
      * Returns the template to be used to render the model when the "view" action is executed.
      * <p>
      * The template can have a fragment attached to it, separated by {@code ::}. If the fragment is missing, it defaults
-     *      * to {@code fields}.
+     * * to {@code fields}.
      *
      * @return the view, empty to use default view
      */

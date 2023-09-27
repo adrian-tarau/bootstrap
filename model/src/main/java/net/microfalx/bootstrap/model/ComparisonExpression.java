@@ -20,6 +20,11 @@ public interface ComparisonExpression extends Expression {
     String MATCH_ALL = "*";
 
     /**
+     * A generic field expression which carries the original filter
+     */
+    String QUERY = "query";
+
+    /**
      * Creates a new comparison expression with an '=' operator.
      *
      * @param field the expression field

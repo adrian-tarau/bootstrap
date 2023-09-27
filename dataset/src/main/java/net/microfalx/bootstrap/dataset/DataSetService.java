@@ -70,7 +70,13 @@ public final class DataSetService implements InitializingBean {
             }
         }
         if (dataSet != null) {
-            ((AbstractDataSet) dataSet).applicationContext = applicationContext;
+            AbstractDataSet abstractDataSet = (AbstractDataSet) dataSet;
+            abstractDataSet.applicationContext = applicationContext;
+            try {
+                abstractDataSet.afterPropertiesSet();
+            } catch (Exception e) {
+                throw new DataSetException("A data set for model " + ClassUtils.getName(modelClass) + " failed to be initialized", e);
+            }
             return dataSet;
         } else {
             throw new DataSetException("A data set cannot be created for model " + ClassUtils.getName(modelClass));

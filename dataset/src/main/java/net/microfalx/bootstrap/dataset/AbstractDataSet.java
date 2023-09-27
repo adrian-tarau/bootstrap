@@ -19,6 +19,7 @@ import net.microfalx.lang.annotation.Visible;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +41,7 @@ import static net.microfalx.lang.StringUtils.defaultIfEmpty;
  * Base class for all data sets.
  */
 @net.microfalx.bootstrap.dataset.annotation.DataSet
-public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements DataSet<M, F, ID> {
+public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements DataSet<M, F, ID>, InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
 
@@ -335,6 +336,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public final void deleteAll() {
         doDeleteAll();
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        // empty by default
     }
 
     /**
