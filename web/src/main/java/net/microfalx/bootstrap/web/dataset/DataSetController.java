@@ -223,15 +223,14 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     /**
-     * Invoked before rendering each model during browse.
+     * Invoked before rendering the grid for all models and for each model.
      *
      * @param dataSet         the data set
      * @param controllerModel the model associated with the controller
-     * @param dataSetModel    the data set model for the selected row
-     * @return {@code true} to continue the add action, {@code false} otherwise
+     * @param dataSetModel    the data set model for the selected row, null when invoked before any model is rendered
+     * @return {@code true} to continue the browse action, {@code false} otherwise
      */
-    protected boolean beforeBrowse(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
-        return true;
+    protected void beforeBrowse(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
     }
 
     /**
@@ -357,7 +356,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                     .setCssClass("dataset-drop-zone").setPosition(2));
         }
         // if (toolbar.hasChildren()) toolbar.add(new Separator());
-        toolbar.add(new Button().setAction("print").setText("Print").setIcon("fa-solid fa-print").setPosition(100));
+        //toolbar.add(new Button().setAction("print").setText("Print").setIcon("fa-solid fa-print").setPosition(100));
         //toolbar.add(new Separator());
         toolbar.add(new Button().setAction("refresh").setText("Refresh").setIcon("fa-solid fa-arrows-rotate").setPosition(200));
         updateToolbar(toolbar);
@@ -455,29 +454,39 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Filter filter = getFilter(dataSet, model, rangeParameter, queryParameter);
         Page<M> pagedModels = extractModels(filter, page);
         model.addAttribute("page", pagedModels);
-        model.addAttribute("query", defaultIfEmpty(queryParameter, getDefaultQuery(dataSet)));
+        model.addAttribute("query", defaultIfEmpty(queryParameter, getDefaultQuery()));
         model.addAttribute("sort", sort);
         model.addAttribute("index", new MutableLong(pagedModels.getPageable().getOffset() + 1));
         model.addAttribute("hasTimeRange", hasTimeRange(dataSet));
         return pagedModels;
     }
 
-    private String getDefaultQuery(DataSet<M, Field<M>, ID> dataSet) {
+    private String getDefaultQuery() {
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         return dataSetAnnotation.defaultQuery();
     }
 
+    private boolean useRawQuery() {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
+        return dataSetAnnotation.rawQuery();
+    }
+
     private Filter getFilter(DataSet<M, Field<M>, ID> dataSet, Model model, String rangeParameter, String queryParameter) {
-        String defaultQuery = getDefaultQuery(dataSet);
-        if (isNotEmpty(defaultQuery)) {
-            QueryParser<M, Field<M>, ID> queryParser = createQueryParser(dataSet, defaultQuery);
-            if (!queryParser.isValid()) {
-                defaultQuery = null;
-                LOGGER.warn("Default query is not valid: " + queryParser.validate());
+        Filter filter;
+        if (useRawQuery()) {
+            filter = Filter.create(ComparisonExpression.eq(ComparisonExpression.QUERY, queryParameter));
+        } else {
+            String defaultQuery = getDefaultQuery();
+            if (isNotEmpty(defaultQuery)) {
+                QueryParser<M, Field<M>, ID> queryParser = createQueryParser(dataSet, defaultQuery);
+                if (!queryParser.isValid()) {
+                    defaultQuery = null;
+                    LOGGER.warn("Default query is not valid: " + queryParser.validate());
+                }
             }
+            filter = doGetFilter(dataSet, model, defaultIfEmpty(queryParameter, defaultQuery));
+            if (filter == null) filter = doGetFilter(dataSet, model, defaultQuery);
         }
-        Filter filter = doGetFilter(dataSet, model, defaultIfEmpty(queryParameter, defaultQuery));
-        if (filter == null) filter = doGetFilter(dataSet, model, defaultQuery);
         return addRangeFilter(dataSet, model, rangeParameter, filter);
     }
 

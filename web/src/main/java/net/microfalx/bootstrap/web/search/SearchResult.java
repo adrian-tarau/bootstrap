@@ -6,7 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
-import net.microfalx.bootstrap.search.Attribute;
+import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.lang.annotation.*;
 
 import java.time.LocalDateTime;
@@ -49,5 +49,5 @@ public class SearchResult {
     private LocalDateTime modifiedAt;
 
     @Visible(false)
-    private Collection<Attribute> attributes = Collections.emptyList();
+    private Collection<? extends Attribute> attributes = Collections.emptyList();
 }

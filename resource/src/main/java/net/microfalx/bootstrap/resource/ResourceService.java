@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.resource.ResourceUtils.toUri;
 
 /**
  * A service which provides standard locations for resources.
@@ -25,6 +26,8 @@ public class ResourceService implements InitializingBean {
 
     private File persistedDirectory;
     private File transientDirectory;
+
+    private Resource sharedResource;
 
     @Autowired
     private ResourceProperties properties = new ResourceProperties();
@@ -67,6 +70,8 @@ public class ResourceService implements InitializingBean {
 
     /**
      * Returns the resource directory.
+     * <p>
+     * For shared resource, they can be access also as
      *
      * @param location the type of storage
      * @param name     the subdirectory name
@@ -75,7 +80,6 @@ public class ResourceService implements InitializingBean {
     public Resource get(ResourceLocation location, String name) {
         requireNonNull(location);
         requireNonNull(name);
-
         return switch (location) {
             case PERSISTED -> get(persistedDirectory, name);
             case TRANSIENT -> get(transientDirectory, name);
@@ -91,13 +95,18 @@ public class ResourceService implements InitializingBean {
     protected void initialize() {
         validateDirectory(persistedDirectory = new File(properties.getPersistedDirectory()));
         validateDirectory(transientDirectory = new File(properties.getTransientDirectory()));
+        initializeSharedResource();
         validateResource(getSharedResource(null));
     }
 
+    private void initializeSharedResource() {
+        UserPasswordCredential credential = UserPasswordCredential.create(properties.getSharedUserName(), properties.getSharedPassword());
+        sharedResource = ResourceFactory.resolve(toUri(properties.getSharedDirectory()), credential, Resource.Type.DIRECTORY);
+        ResourceFactory.setRoot(sharedResource);
+    }
 
     private Resource getSharedResource(String name) {
-        Resource resource = ResourceFactory.resolve(properties.getSharedDirectory(), UserPasswordCredential.create(properties.getSharedUserName(), properties.getSharedPassword()));
-        return name != null ? resource.resolve(name, Resource.Type.DIRECTORY) : resource;
+        return name != null ? SharedResource.directory(name) : sharedResource;
     }
 
     private Resource get(File directory, String name) {

@@ -5,32 +5,48 @@ import net.microfalx.bootstrap.dataset.DataSetException;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.Component;
+import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.resource.ClassPathResource;
+import net.microfalx.resource.Resource;
 import org.apache.commons.lang3.mutable.MutableLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.thymeleaf.context.IContext;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.microfalx.bootstrap.web.template.TemplateUtils.getModelAttribute;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
-import static net.microfalx.lang.StringUtils.EMPTY_STRING;
-import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * Template utilities around data sets
  */
 public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSetTool.class);
+
     public static final String BOOLEAN_CHECKED = "<i class=\"far fa-check-square\"></i>";
     public static final String BOOLEAN_UNCHECKED = "<i class=\"far fa-square\"></i>";
 
     private DataSetService dataSetService;
+
+    private final static AtomicBoolean attributeClassesInitialized = new AtomicBoolean();
+    private final static Queue<String> attributeClassesQueue = new LinkedBlockingQueue<>();
+    private final static Map<String, String> attributeClasses = new ConcurrentHashMap<>();
 
     public DataSetTool(IContext context, DataSetService dataSetService) {
         super(context);
@@ -110,6 +126,27 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         Page<M> page = getModelAttribute(context, "page");
         if (page == null) page = Page.empty();
         return page;
+    }
+
+    /**
+     * Returns the CSS class for a given attribute in the details row.
+     *
+     * @param attribute the attribute
+     * @return the class
+     */
+    public String getAttributeClasses(Attribute attribute) {
+        requireNonNull(attribute);
+        initializeColors();
+        String name = attribute.getName();
+        String classByValueKey = toDashIdentifier(name) + "_" + toDashIdentifier(attribute.asString());
+        String attributeClass = attributeClasses.get(classByValueKey);
+        if (attributeClass != null) return attributeClass;
+        attributeClass = attributeClasses.get(name.toLowerCase());
+        if (attributeClass == null) {
+            String availableClass = defaultIfNull(attributeClassesQueue.poll(), EMPTY_STRING);
+            attributeClasses.put(name.toLowerCase(), availableClass);
+        }
+        return defaultIfNull(attributeClass, EMPTY_STRING);
     }
 
     /**
@@ -459,8 +496,32 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
                 + " (" + formatNumber(page.getTotalElements()) + ")";
     }
 
+    private static void initializeColors() {
+        if (attributeClassesInitialized.compareAndSet(false, true)) {
+            synchronized (attributeClassesInitialized) {
+                if (attributeClassesQueue.isEmpty() && attributeClasses.isEmpty()) {
+                    for (int i = 1; i <= 30; i++) {
+                        attributeClassesQueue.offer("name-sample" + i);
+                    }
+                    try {
+                        Collection<Resource> resources = ClassPathResource.files("dataset_attribute_classes.txt").list();
+                        for (Resource resource : resources) {
+                            Properties properties = new Properties();
+                            properties.load(resource.getInputStream());
+                            properties.forEach((k, v) -> attributeClasses.put((String) k, (String) v));
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to load attribute classes", e);
+                    }
+                }
+            }
+        }
+    }
+
     private Component.Type getComponentType(Field<M> field) {
         Component componentAnnot = field.findAnnotation(Component.class);
         return componentAnnot != null ? componentAnnot.value() : Component.Type.TEXT_FIELD;
     }
+
+
 }

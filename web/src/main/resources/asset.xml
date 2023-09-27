@@ -13,7 +13,6 @@
         <asset path="resizable.css" type="stylesheet"/>
         <asset path="formatting.css" type="stylesheet"/>
         <asset path="dropzone.css" type="stylesheet"/>
-        <asset path="search.css" type="stylesheet"/>
 
         <asset path="core.js" type="script"/>
         <asset path="ajax.js" type="script"/>

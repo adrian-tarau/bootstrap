@@ -22,9 +22,236 @@
     cursor: col-resize;
 }
 
+/**
+    Data Set Attributes
+ */
+.dataset-attributes .name-default {
+    color: #fff !important;
+    background-color: #6c757d !important;
+}
+
+.dataset-attributes .value-severity-error {
+    color: #fff !important;
+    background-color: #dc3545 !important;
+}
+
+.dataset-attributes .value-severity-warn {
+    color: #212529 !important;
+    background-color: #ffc107 !important;
+}
+
+.dataset-attributes .value-severity-info {
+    color: #212529 !important;
+    background-color: #0dcaf0!important;
+}
+
+.dataset-attributes .value-severity-debug {
+    color: #212529 !important;
+    background-color: #dedede !important;
+}
+
+.dataset-attributes .value-severity-trace {
+    color: #212529 !important;
+    background-color: #dedede !important;
+}
+
+.dataset-attributes .name-source {
+    color: #fff !important;
+    background-color: #6f1d1b !important;
+}
+
+.dataset-attributes .name-target {
+    color: #fff !important;
+    background-color: #99582a !important;
+}
+
+.dataset-attributes .name-application {
+    color: #fff !important;
+    background-color: #457b9d !important;
+}
+
+.dataset-attributes .name-domain {
+    color: #fff !important;
+    background-color: #283618 !important;
+}
+
+.dataset-attributes .name-os {
+    color: #fff !important;
+    background-color: #005f73 !important;
+}
+
+.dataset-attributes .name-platform {
+    color: #212529 !important;
+    background-color: #ccd5ae !important;
+}
+
+.dataset-attributes .name-server {
+    color: #212529 !important;
+    background-color: #81b29a !important;
+}
+
+.dataset-attributes .name-sample1 {
+    color: #212529 !important;
+    background-color: #a2d2ff !important;
+}
+
+.dataset-attributes .name-sample2 {
+    color: #fff !important;
+    background-color: #370617 !important;
+}
+
+.dataset-attributes .name-sample3 {
+    color: #fff !important;
+    background-color: #2b2d42 !important;
+}
+
+.dataset-attributes .name-sample3 {
+    color: #fff !important;
+    background-color: #480ca8 !important;
+}
+
+.dataset-attributes .name-sample4 {
+    color: #fff !important;
+    background-color: #023e8a !important;
+}
+
+.dataset-attributes .name-sample5 {
+    color: #fff !important;
+    background-color: #4d908e !important;
+}
+
+.dataset-attributes .name-sample6 {
+    color: #fff !important;
+    background-color: #003566 !important;
+}
+
+.dataset-attributes .name-sample7 {
+    color: #fff !important;
+    background-color: #5a189a !important;
+}
+
+.dataset-attributes .name-sample8 {
+    color: #fff !important;
+    background-color: #2b9348 !important;
+}
+
+.dataset-attributes .name-sample9 {
+    color: #fff !important;
+    background-color: #778da9 !important;
+}
+
+.dataset-attributes .name-sample10 {
+    color: #fff !important;
+    background-color: #1b3a4b !important;
+}
+
+.dataset-attributes .name-sample11 {
+    color: #212529 !important;
+    background-color: #c9cba3 !important;
+}
+
+.dataset-attributes .name-sample12 {
+    color: #212529 !important;
+    background-color: #ccdbfd !important;
+}
+
+.dataset-attributes .name-sample13 {
+    color: #212529 !important;
+    background-color: #faf0ca !important;
+}
+
+.dataset-attributes .name-sample14 {
+    color: #212529 !important;
+    background-color: #cfe1b9 !important;
+}
+
+.dataset-attributes .name-sample15 {
+    color: #212529 !important;
+    background-color: #ffc4d6 !important;
+}
+
+.dataset-attributes .name-sample16 {
+    color: #212529 !important;
+    background-color: #c5dedd !important;
+}
+
+.dataset-attributes .name-sample17 {
+    color: #212529 !important;
+    background-color: #a3cef1 !important;
+}
+
+.dataset-attributes .name-sample18 {
+    color: #212529 !important;
+    background-color: #ff9e00 !important;
+}
+
+.dataset-attributes .name-sample19 {
+    color: #212529 !important;
+    background-color: #ffa5ab !important;
+}
+
+.dataset-attributes .name-sample20 {
+    color: #212529 !important;
+    background-color: #3dccc7 !important;
+}
+
+.dataset-attributes .name-sample21 {
+    color: #fff !important;
+    background-color: #7209b7 !important;
+}
+
+.dataset-attributes .name-sample22 {
+    color: #fff !important;
+    background-color: #005f73 !important;
+}
+
+.dataset-attributes .name-sample23 {
+    color: #fff !important;
+    background-color: #3a5a40 !important;
+}
+
+.dataset-attributes .name-sample24 {
+    color: #fff !important;
+    background-color: #00afb9 !important;
+}
+
+.dataset-attributes .name-sample25 {
+    color: #fff !important;
+    background-color: #9b5de5 !important;
+}
+
+.dataset-attributes .name-sample26 {
+    color: #fff !important;
+    background-color: #2ec4b6 !important;
+}
+
+.dataset-attributes .name-sample27 {
+    color: #fff !important;
+    background-color: #577590 !important;
+}
+
+.dataset-attributes .name-sample28 {
+    color: #fff !important;
+    background-color: #656d4a !important;
+}
+
+.dataset-attributes .name-sample29 {
+    color: #fff !important;
+    background-color: #1982c4 !important;
+}
+
+.dataset-attributes .name-sample30 {
+    color: #fff !important;
+    background-color: #588b8b !important;
+}
+
+/*
+  Tweaks based on resolution
+ */
+
 @media (min-width: 992px) {
 
-    .dataset-table .search-attributes {
+    .dataset-attributes-view {
         max-width: 600px;
     }
 
@@ -32,14 +259,14 @@
 
 @media (min-width: 1200px) {
 
-    .dataset-table .search-attributes {
+    .dataset-attributes-view {
         max-width: 900px;
     }
 
 }
 @media (min-width: 1400px) {
 
-    .dataset-table .search-attributes {
+    .dataset-attributes-view {
         max-width: 1100px;
     }
 
@@ -47,7 +274,7 @@
 
 @media (min-width: 1600px) {
 
-    .dataset-table .search-attributes {
+    .dataset-attributes-view {
         max-width: 1300px;
     }
 

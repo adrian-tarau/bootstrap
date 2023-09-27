@@ -5,7 +5,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import static net.microfalx.bootstrap.resource.ResourceLocation.*;
 import static net.microfalx.lang.JvmUtils.replacePlaceholders;
+import static net.microfalx.resource.ResourceUtils.normalizeFileSystemPath;
+import static net.microfalx.resource.ResourceUtils.toDirectory;
 
 /**
  * Holds configuration for resource service.
@@ -14,13 +17,13 @@ import static net.microfalx.lang.JvmUtils.replacePlaceholders;
 @ConfigurationProperties("bootstrap.resource")
 public class ResourceProperties {
 
-    @Value(ResourceLocation.PERSISTED_PATH)
+    @Value(PERSISTED_PATH)
     private String persistedDirectory;
 
-    @Value(ResourceLocation.TRANSIENT_PATH)
+    @Value(TRANSIENT_PATH)
     private String transientDirectory;
 
-    @Value(ResourceLocation.SHARED_PATH)
+    @Value(SHARED_PATH)
     private String sharedDirectory;
     private String sharedUserName;
     private String sharedPassword;
@@ -40,7 +43,7 @@ public class ResourceProperties {
      * @return a non-null instance
      */
     public String getPersistedDirectory() {
-        return StringUtils.defaultIfEmpty(persistedDirectory, replacePlaceholders(ResourceLocation.PERSISTED_PATH));
+        return toDirectory(StringUtils.defaultIfEmpty(persistedDirectory, replacePlaceholders(normalizeFileSystemPath(PERSISTED_PATH))));
     }
 
     /**
@@ -58,7 +61,7 @@ public class ResourceProperties {
      * @return a non-null instance
      */
     public String getTransientDirectory() {
-        return StringUtils.defaultIfEmpty(transientDirectory, replacePlaceholders(ResourceLocation.TRANSIENT_PATH));
+        return toDirectory(StringUtils.defaultIfEmpty(transientDirectory, replacePlaceholders(normalizeFileSystemPath(TRANSIENT_PATH))));
     }
 
     /**
@@ -77,7 +80,7 @@ public class ResourceProperties {
      * @return a non-null instance
      */
     public String getSharedDirectory() {
-        return StringUtils.defaultIfEmpty(sharedDirectory, replacePlaceholders(ResourceLocation.SHARED_PATH));
+        return toDirectory(StringUtils.defaultIfEmpty(sharedDirectory, replacePlaceholders(normalizeFileSystemPath(SHARED_PATH))));
     }
 
     /**
