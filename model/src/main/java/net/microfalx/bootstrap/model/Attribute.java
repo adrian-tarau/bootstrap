@@ -44,7 +44,7 @@ public interface Attribute extends Nameable, Descriptable, Comparable<Attribute>
      * @param priority the priority between 0 and 1000, 0 means high priority and 1000 means low priority
      */
     static void registerAttributePriority(String name, int priority) {
-        ModelUtils.registerAttributePriority(name, priority);
+        AttributeUtils.registerAttributePriority(name, priority);
     }
 
     /**

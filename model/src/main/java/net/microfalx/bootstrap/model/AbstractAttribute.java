@@ -6,7 +6,7 @@ import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 
 import static java.lang.Integer.compare;
-import static net.microfalx.bootstrap.model.ModelUtils.getAttributePriority;
+import static net.microfalx.bootstrap.model.AttributeUtils.getAttributePriority;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.capitalizeWords;
 

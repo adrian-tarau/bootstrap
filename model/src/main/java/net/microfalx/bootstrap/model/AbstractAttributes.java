@@ -12,6 +12,8 @@ import java.util.function.Function;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
+import static net.microfalx.bootstrap.model.AttributeUtils.decodeAttributes;
+import static net.microfalx.bootstrap.model.AttributeUtils.sortAndFilter;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ObjectUtils.defaultIfNull;
 
@@ -106,7 +108,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     @Override
     public void copyFrom(Resource resource) throws IOException {
         requireNonNull(resource);
-        ModelUtils.decodeAttributes(resource, this);
+        decodeAttributes(resource, this);
     }
 
     @Override
@@ -119,7 +121,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
 
     @Override
     public Collection<A> toCollection() {
-        return ModelUtils.sortAndFilter(attributes.values(), Integer.MAX_VALUE, null);
+        return sortAndFilter(attributes.values(), Integer.MAX_VALUE, null);
     }
 
     @Override
@@ -129,12 +131,12 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
 
     @Override
     public Collection<A> toCollection(int maximumCount, Function<A, Boolean> filter) {
-        return ModelUtils.sortAndFilter(attributes.values(), maximumCount, filter);
+        return sortAndFilter(attributes.values(), maximumCount, filter);
     }
 
     @Override
     public final Resource toJson() {
-        return ModelUtils.encodeAttributes(this);
+        return AttributeUtils.encodeAttributes(this);
     }
 
     @Override
