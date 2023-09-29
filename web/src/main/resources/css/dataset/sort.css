@@ -8,17 +8,19 @@ th.sortable::after {
     content: "\f0dc";
     position: absolute;
     right: 8px;
-    color: #bdbdbd;
+    color: #cdcdcd;
 }
 
 th.sortable.asc::after {
     content: "\f0d8";
+    color: #333;
 }
 
 th.sortable.desc::after {
     content: "\f0d7";
+    color: #333;
 }
 
 th.sortable:hover::after {
-    color: #333;
+    color: #777;
 }
