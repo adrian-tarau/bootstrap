@@ -54,6 +54,7 @@
         <module>test</module>
         <module>jdbc</module>
         <module>resource</module>
+        <module>help</module>
         <module>search</module>
         <module>js</module>
         <module>model</module>
@@ -83,6 +84,7 @@
         <lombok.version>1.18.28</lombok.version>
         <jodd.version>5.1.6</jodd.version>
         <lucene.version>9.7.0</lucene.version>
+        <flexmark.version>0.64.8</flexmark.version>
         <awaitility.version>4.2.0</awaitility.version>
         <datafaker.version>2.0.1</datafaker.version>
         <logback.version>2.0.7</logback.version>
@@ -284,6 +286,12 @@
                 <groupId>io.azam.ulidj</groupId>
                 <artifactId>ulidj</artifactId>
                 <version>${ulidj.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.vladsch.flexmark</groupId>
+                <artifactId>flexmark-all</artifactId>
+                <version>${flexmark.version}</version>
             </dependency>
 
             <!-- Tests -->
