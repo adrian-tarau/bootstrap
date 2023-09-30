@@ -160,4 +160,12 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     private void checkReadOnly() {
         if (readOnly) throw new UnsupportedOperationException("Attributes are read only");
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{" +
+                "attributes=" + attributes.size() +
+                ", readOnly=" + readOnly +
+                '}';
+    }
 }
