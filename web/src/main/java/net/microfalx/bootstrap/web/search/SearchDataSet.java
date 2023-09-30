@@ -18,11 +18,13 @@ import org.springframework.data.domain.Sort;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static net.microfalx.bootstrap.model.AttributeConstants.DEFAULT_MAXIMUM_ATTRIBUTES;
 import static net.microfalx.bootstrap.model.FieldConstants.CREATED_AT;
 import static net.microfalx.bootstrap.model.FieldConstants.MODIFIED_AT;
 import static net.microfalx.lang.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 
 @Provider
 public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchResult>, String> {
@@ -38,6 +40,12 @@ public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchRes
     @Override
     public void afterPropertiesSet() throws Exception {
         searchService = getService(SearchService.class);
+    }
+
+    @Override
+    protected Optional<SearchResult> doFindById(String id) {
+        SearchResult searchResult = convert(searchService.find(id));
+        return Optional.ofNullable(searchResult);
     }
 
     @Override
@@ -71,15 +79,23 @@ public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchRes
     }
 
     private SearchResult convert(Document document) {
+        if (document == null) return null;
         SearchResult result = new SearchResult();
         result.setId(document.getId());
         result.setCreatedAt(document.getCreatedAt().toLocalDateTime());
         result.setModifiedAt(document.getModifiedAt().toLocalDateTime());
-        result.setDescription(org.apache.commons.lang3.StringUtils.abbreviate(defaultIfEmpty(document.getDescription(), document.getName()), MAX_DESCRIPTION_LENGTH));
+        result.setName(document.getName());
+        result.setDescription(document.getDescription());
+        result.setTitle(abbreviate(defaultIfEmpty(document.getDescription(), document.getName()), MAX_DESCRIPTION_LENGTH));
         result.setType(document.getType());
+        result.setMimeType(document.getMimeType());
         result.setOwner(document.getOwner());
         result.setRelevance(document.getRelevance());
-        result.setAttributes(document.toCollection(DEFAULT_MAXIMUM_ATTRIBUTES, attribute -> searchService.accept(document, attribute)));
+        result.setLength(document.getLength());
+        result.setAttributeCount(document.toMap().size());
+        result.setTopAttributes(document.toCollection(DEFAULT_MAXIMUM_ATTRIBUTES, attribute -> searchService.accept(document, attribute)));
+        result.setAttributes(document.toCollection());
+        result.setBody(document.getBody());
         return result;
     }
 

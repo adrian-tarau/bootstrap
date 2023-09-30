@@ -15,7 +15,15 @@ public class SearchUtils {
 
     public static final String DEFAULT_FIELD = DESCRIPTION_FIELD;
 
+    /**
+     * A long value which represents "timestamp is not available"
+     */
     public static final long NA_TIMESTAMP = 0;
+
+    /**
+     * The maximum size for a field in lucene
+     */
+    public static final int MAX_FIELD_LENGTH = 32000;
 
     /**
      * A set containing all the standard field names
@@ -106,7 +114,9 @@ public class SearchUtils {
      * @param text the text to normalize
      * @return the normalized text
      */
-    public static String normalizeText(String text) {
+    public static String normalizeText(String text, boolean field) {
+        if (text == null) return null;
+        if (field) text = StringUtils.abbreviate(text, MAX_FIELD_LENGTH);
         return text;
     }
 
@@ -182,6 +192,8 @@ public class SearchUtils {
         STANDARD_FIELD_NAMES.add(BODY_URI_FIELD);
         STANDARD_FIELD_NAMES.add(TYPE_FIELD);
         STANDARD_FIELD_NAMES.add(OWNER_FIELD);
+        STANDARD_FIELD_NAMES.add(LENGTH_FIELD);
+        STANDARD_FIELD_NAMES.add(MIME_TYPE_FIELD);
         STANDARD_FIELD_NAMES.add(TAG_FIELD);
         STANDARD_FIELD_NAMES.add(USER_DATA_FIELD);
         STANDARD_FIELD_NAMES.add(CREATED_AT_FIELD);

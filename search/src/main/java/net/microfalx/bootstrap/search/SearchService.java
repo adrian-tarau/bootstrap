@@ -14,6 +14,7 @@ import net.microfalx.resource.Resource;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
@@ -88,6 +89,30 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * Finds one document by id.
+     *
+     * @param id the document identifier.
+     * @return the document, null if such
+     */
+    public Document find(String id) {
+        requireNonNull(id);
+        LOGGER.info("Searching for document with identifier  '" + id + "'");
+        try {
+            RetryTemplate retryTemplate = new RetryTemplate();
+            retryTemplate.registerListener(new RetryListener() {
+                @Override
+                public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+                    LOGGER.info("Find failure " + throwable.getMessage());
+                    releaseSearchHolder();
+                }
+            });
+            return retryTemplate.execute((RetryCallback<Document, Exception>) context -> doFind(id));
+        } catch (Exception e) {
+            throw new SearchException("Exception during find for '" + id + "'", e);
+        }
+    }
+
+    /**
      * Search the index for all items matching the query.
      *
      * @param query the query information
@@ -100,10 +125,8 @@ public class SearchService implements InitializingBean {
             final Query parsedQuery = createQuery(query);
             final SearchResult result = new SearchResult(query);
             result.setRewriteQuery(parsedQuery.toString());
-
             LOGGER.info("Searching with query '" + query.getDescription() + "', normalized query: '" + getNormalizedQuery(query) + "', parsed query: '" + parsedQuery
                     + "', auto-wildcard: " + query.isAutoWildcard() + ", leading wildcard: " + query.isAllowLeadingWildcard());
-
             RetryTemplate retryTemplate = new RetryTemplate();
             retryTemplate.registerListener(new RetryListener() {
                 @Override
@@ -119,7 +142,7 @@ public class SearchService implements InitializingBean {
         } catch (ParseException e) {
             throw new SearchException("Failed to parse query string: " + query, e);
         } catch (Exception e) {
-            throw new SearchException("IO Exception during search for : " + query, e);
+            throw new SearchException("Exception during search for : " + query, e);
         }
     }
 
@@ -227,6 +250,23 @@ public class SearchService implements InitializingBean {
         }
     }
 
+    private Document doFind(String id) throws IOException {
+        final IndexSearcher indexSearcher = getIndexSearcher();
+        Document translatedDocument = null;
+        try (Timer ignored = METRICS.startTimer("find")) {
+            TermQuery query = new TermQuery(new Term(Document.ID_FIELD, id));
+            TopDocs topDocs = indexSearcher.search(query, 1);
+            DocumentMapper documentMapper = new DocumentMapper();
+            if (topDocs.scoreDocs.length > 0) {
+                org.apache.lucene.document.Document document = indexSearcher.doc(topDocs.scoreDocs[0].doc);
+                translatedDocument = documentMapper.read(document);
+            }
+        }
+        if (translatedDocument != null)
+            LOGGER.info("Found document with identifier " + id + ", name " + translatedDocument.getName());
+        return translatedDocument;
+    }
+
     @SuppressWarnings("resource")
     private void doSearch(Query luceneQuery, SearchQuery searchQuery, SearchResult result) throws IOException {
         final IndexSearcher indexSearcher = getIndexSearcher();
@@ -234,8 +274,7 @@ public class SearchService implements InitializingBean {
         final Sort sort = createSort(searchQuery);
 
         TopDocs topDocs;
-        Timer timer = METRICS.startTimer("search");
-        try {
+        try (Timer ignored = METRICS.startTimer("search")) {
             topDocs = indexSearcher.search(luceneQuery, searchQuery.getStart() + searchQuery.getLimit(), sort);
             int startIndex = searchQuery.getStart();
             int counter = searchQuery.getLimit();
@@ -248,10 +287,8 @@ public class SearchService implements InitializingBean {
                 items.add(translatedDocument);
                 if (counter-- == 0) break;
             }
-        } finally {
-            timer.stop();
         }
-        LOGGER.info("Found " + topDocs.totalHits + " total hit(s), took " + FormatterUtils.formatNumber(timer.getDuration()));
+        LOGGER.info("Found " + topDocs.totalHits + " total hit(s), took " + FormatterUtils.formatNumber(Timer.last().getDuration()));
 
         result.setDocuments(items);
         result.setTotalHits(topDocs.totalHits.value);

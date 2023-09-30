@@ -28,14 +28,16 @@ class DocumentMapper {
 
         ld.add(new StringField(ID_FIELD, document.getId(), Field.Store.YES));
         if (document.getName() != null)
-            ld.add(new TextField(NAME_FIELD, normalizeText(document.getName()), Field.Store.YES));
+            ld.add(new TextField(NAME_FIELD, normalizeText(document.getName(), true), Field.Store.YES));
         if (document.getType() != null) ld.add(new TextField(TYPE_FIELD, document.getType(), Field.Store.YES));
         if (document.getDescription() != null)
-            ld.add(new TextField(DESCRIPTION_FIELD, normalizeText(document.getDescription()), Field.Store.YES));
+            ld.add(new TextField(DESCRIPTION_FIELD, normalizeText(document.getDescription(), true), Field.Store.YES));
         if (document.getBody() != null) {
-            ld.add(new TextField(BODY_FIELD, normalizeText(document.getBody().loadAsString()), Field.Store.NO));
+            ld.add(new TextField(BODY_FIELD, normalizeText(document.getBody().loadAsString(), false), Field.Store.NO));
             ld.add(new StringField(BODY_URI_FIELD, document.getBody().toURI().toASCIIString(), Field.Store.YES));
         }
+        ld.add(new StringField(MIME_TYPE_FIELD, document.getMimeType(), Field.Store.YES));
+        ld.add(new IntField(LENGTH_FIELD, document.getLength(), Field.Store.YES));
 
         if (document.getOwner() != null) ld.add(new TextField(OWNER_FIELD, document.getOwner(), Field.Store.YES));
         if (document.createdAt > 0) {
@@ -81,7 +83,7 @@ class DocumentMapper {
             Object value = attribute.getValue();
             if (isEmpty(value)) value = StringUtils.EMPTY;
             FieldType type = TYPES[attribute.getOptions()];
-            ld.add(new Field(name, normalizeText(value.toString()), type));
+            ld.add(new Field(name, normalizeText(value.toString(), true), type));
         }
 
         if (document.getLabelCount() > 0) {
@@ -110,6 +112,8 @@ class DocumentMapper {
         if (bodyUri != null) item.setBodyUri(URI.create(bodyUri));
         item.setOwner(document.get(OWNER_FIELD));
         item.setType(document.get(TYPE_FIELD));
+        item.setMimeType(document.get(MIME_TYPE_FIELD));
+        item.setLength(document.getField(LENGTH_FIELD).numericValue().intValue());
 
         IndexableField createdTime = document.getField(CREATED_AT_FIELD + STORED_SUFFIX_FIELD);
         if (createdTime != null) item.createdAt = createdTime.numericValue().longValue();

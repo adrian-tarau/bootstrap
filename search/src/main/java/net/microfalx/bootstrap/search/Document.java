@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.bootstrap.model.AbstractAttributes;
+import net.microfalx.lang.StringUtils;
+import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceFactory;
 
@@ -36,6 +38,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     public static final String DESCRIPTION_FIELD = "desc";
     public static final String BODY_FIELD = "body";
     public static final String BODY_URI_FIELD = "body_uri";
+    public static final String MIME_TYPE_FIELD = "mime_type";
     public static final String TAG_FIELD = "tag";
     public static final String OWNER_FIELD = "owner";
     public static final String SOURCE_FIELD = "source";
@@ -46,10 +49,13 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     public static final String MODIFIED_AT_FIELD = "modified";
     public static final String RECEIVED_AT_FIELD = "received";
     public static final String SENT_AT_FIELD = "sent";
+    public static final String LENGTH_FIELD = "length";
     public static final String USER_DATA_FIELD = "data";
     public static final String SEVERITY_FIELD = "severity";
     public static final String LABEL_FIELD = "label";
     public static final float NO_RELEVANCE = -1;
+
+    public static final String SYSTEM = "system";
 
     @Serial
     private static final long serialVersionUID = -3913827551374244394L;
@@ -59,6 +65,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     private String description;
     private Resource body;
     private URI bodyUri;
+    private String mimeType = MimeType.TEXT_PLAIN.toString();
     private String type;
 
     private String owner;
@@ -79,6 +86,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     Map<String, String> labels;
 
     private float relevance;
+    private int length = -1;
     private Object data;
 
     public static Document create(String id) {
@@ -136,6 +144,13 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     public void setBody(Resource body) {
         this.body = body;
         this.bodyUri = body != null ? body.toURI() : null;
+        this.mimeType = body != null ? body.getMimeType() : null;
+        try {
+            this.length = body != null ? (int) body.length() : -1;
+        } catch (Exception e) {
+            this.length = -1;
+            // do not care
+        }
     }
 
     public URI getBodyUri() {
@@ -144,6 +159,14 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
 
     public void setBodyUri(URI bodyUri) {
         this.bodyUri = bodyUri;
+    }
+
+    public String getMimeType() {
+        return StringUtils.defaultIfNull(mimeType, MimeType.TEXT_PLAIN.toString());
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
     }
 
     public String getType() {
@@ -170,8 +193,18 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
         return relevance;
     }
 
-    public void setRelevance(float relevance) {
+    public Document setRelevance(float relevance) {
         this.relevance = relevance;
+        return this;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public Document setLength(int length) {
+        this.length = length;
+        return this;
     }
 
     public ZonedDateTime getCreatedAt() {
