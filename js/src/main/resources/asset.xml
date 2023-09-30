@@ -51,6 +51,7 @@
 
         <asset path="popper.js" type="script"/>
         <asset path="bootstrap.js" type="script"/>
+        <asset path="tooltip.js" type="script"/>
         <asset path="bootstrap.css" type="stylesheet"/>
     </asset-bundle>
 

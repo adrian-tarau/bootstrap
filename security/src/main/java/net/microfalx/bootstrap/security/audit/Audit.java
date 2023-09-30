@@ -41,26 +41,31 @@ public class Audit {
     @NotNull
     @ManyToOne
     @Position(10)
+    @Description("The user which performed the action")
     private User user;
 
     @Column(name = "action", nullable = false)
     @NotBlank
     @Position(2)
+    @Description("The action performed by the user")
     private String action;
 
     @Column(name = "module", nullable = false)
     @NotBlank
     @Position(3)
+    @Description("The module where the action was executed")
     private String module;
 
     @Column(name = "category", nullable = false)
     @NotBlank
     @Position(4)
+    @Description("A category for the type of action executed by the user")
     private String category;
 
     @Column(name = "client_info", nullable = false)
     @NotBlank
     @Position(11)
+    @Description("The host/IP/proxy information received by the application from the web container")
     private String clientInfo;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -68,6 +73,7 @@ public class Audit {
     @Position(1)
     @OrderBy(OrderBy.Direction.DESC)
     @Timestamp
+    @Description("The timestamp when the action was performed")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "reference", nullable = false)

@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.I18n;
 import net.microfalx.lang.annotation.Label;
 
@@ -67,7 +68,7 @@ public abstract class AbstractField<M> implements Field<M> {
     @Override
     public final String getLabel() {
         String label = metadata.getI18n(getI18nPrefix() + ".label");
-        if (StringUtils.isEmpty(label)) {
+        if (isEmpty(label)) {
             Label labelAnnot = findAnnotation(Label.class);
             if (labelAnnot != null) {
                 return isNotEmpty(labelAnnot.icon()) && isEmpty(labelAnnot.value()) ? EMPTY_STRING : labelAnnot.value();
@@ -84,7 +85,17 @@ public abstract class AbstractField<M> implements Field<M> {
 
     @Override
     public String getDescription() {
-        return metadata.getI18n(getI18nPrefix() + ".description");
+        String description = metadata.getI18n(getI18nPrefix() + ".description");
+        if (isEmpty(description)) {
+            Description descriptionAnnot = findAnnotation(Description.class);
+            if (descriptionAnnot != null) {
+                description = descriptionAnnot.value();
+            }
+        }
+        if (isNotEmpty(description)) {
+            description = org.apache.commons.lang3.StringUtils.replaceOnce(description, "{name}", metadata.getName());
+        }
+        return StringUtils.isEmpty(description) ? null : description;
     }
 
     @Override

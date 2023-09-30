@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
+import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Position;
 
 @Entity
@@ -24,5 +25,6 @@ public class Group extends NamedTimestampAware {
 
     @Column(name = "enabled", nullable = false)
     @Position(10)
+    @Description("Indicates whether the {name} is enabled or disabled")
     private boolean enabled;
 }

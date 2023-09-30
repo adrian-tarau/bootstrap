@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
+import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Position;
 
@@ -23,11 +24,13 @@ public abstract class NamedTimestampAware extends TimestampAware {
     @NotBlank
     @Name
     @Position(5)
+    @Description("A name for a {name}")
     private String name;
 
     @Column(name = "description")
     @Position(1000)
     @Component(Component.Type.TEXT_AREA)
+    @Description("A description for a {name}")
     private String description;
 
 }

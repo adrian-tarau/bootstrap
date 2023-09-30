@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Visible;
 
@@ -32,11 +33,13 @@ public abstract class TimestampAware implements Serializable {
     @NotNull
     @Position(500)
     @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
+    @Description("The timestamp when the {name} was created")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "modified_at")
     @Position(501)
     @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
+    @Description("The timestamp when the {name} was last time modified")
     private LocalDateTime modifiedAt;
 
     @PrePersist
