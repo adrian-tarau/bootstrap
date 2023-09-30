@@ -9,7 +9,7 @@
         th:attr="field=${field.name}" data-bs-toggle="tooltip" th:title="${field.description}">
         <span th:if="${field.labelIcon}" th:class="${field.labelIcon}"></span><span th:utext="${field.label}"></span>
     </th>
-    <th scope="col" class="text-center" th:if="${#dataset.hasActions}">Actions</th>
+    <th scope="col" class="text-center" th:if="${#dataset.hasActions}" data-bs-toggle="tooltip" title="The actions available to interact with records">Actions</th>
 </tr>
 </thead>
 

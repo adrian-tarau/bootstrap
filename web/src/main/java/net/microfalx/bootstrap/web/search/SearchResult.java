@@ -34,31 +34,39 @@ public class SearchResult {
     @Name
     @Position(2)
     @Formattable(maximumLength = 300, maximumLines = 2)
+    @Description("The name or description of the document")
     private String title;
 
     @Position(3)
+    @Description("The owner of the document")
     private String owner;
 
     @Position(4)
+    @Description("The type of the document")
     private String type;
 
     @Position(10)
     @Formattable(negativeValue = Formattable.NA)
+    @Description("The relevance of the document when a text search is performed")
     private float relevance;
 
     @Position(20)
+    @Description("The length (size) of the document")
     private int length;
 
     @Position(25)
     @Label("Fields")
+    @Description("The number of fields present in the document")
     private int attributeCount;
 
     @Position(100)
+    @Description("The timestamp when the document was added")
     private LocalDateTime createdAt;
 
     @Position(101)
     @Timestamp
     @OrderBy(OrderBy.Direction.DESC)
+    @Description("The timestamp when the document was modified last time")
     private LocalDateTime modifiedAt;
 
     @Visible(false)

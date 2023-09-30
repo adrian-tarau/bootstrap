@@ -65,7 +65,7 @@ public class Audit {
     @Column(name = "client_info", nullable = false)
     @NotBlank
     @Position(11)
-    @Description("The host/IP/proxy information received by the application from the web container")
+    @Description("The host/IP/proxy received by the application from the web container")
     private String clientInfo;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -80,15 +80,18 @@ public class Audit {
     @NotBlank
     @Position(30)
     @Name
+    @Description("A reference to the action (the URI or the model identifier)")
     private String reference;
 
     @Column(name = "error_code", nullable = false)
     @NotBlank
     @Position(31)
+    @Description("The HTTP response code")
     private String errorCode;
 
     @Column(name = "description")
     @Position(1000)
     @Component(Component.Type.TEXT_AREA)
+    @Description("A (detailed) description of the action or the results of the action")
     private String description;
 }

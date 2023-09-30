@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
+import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Visible;
 
@@ -26,10 +27,12 @@ public class User extends NamedTimestampAware {
     @NotBlank
     @Position(1)
     @EqualsAndHashCode.Include
+    @Description("The user name associated with a {name}")
     private String userName;
 
     @Column(name = "enabled", nullable = false)
     @Position(10)
+    @Description("Indicates whether the {name} is enabled or disabled")
     private boolean enabled;
 
     @Column(name = "password", nullable = false)
@@ -39,5 +42,6 @@ public class User extends NamedTimestampAware {
 
     @Column(name = "email")
     @Position(20)
+    @Description("The email associated with a {name}")
     private String email;
 }
