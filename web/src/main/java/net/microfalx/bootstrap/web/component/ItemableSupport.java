@@ -12,6 +12,7 @@ public class ItemableSupport implements Itemable<ItemableSupport> {
     private final Component<?> owner;
 
     private String text;
+    private String description;
     private String icon;
     private Style style = Style.BOTH;
 
@@ -34,6 +35,17 @@ public class ItemableSupport implements Itemable<ItemableSupport> {
 
     public ItemableSupport setText(String text) {
         this.text = text;
+        return this;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public ItemableSupport setDescription(String description) {
+        this.description = description;
         return this;
     }
 

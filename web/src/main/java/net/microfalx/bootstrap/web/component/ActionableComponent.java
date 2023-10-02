@@ -78,6 +78,17 @@ public class ActionableComponent<C extends ActionableComponent<C>> extends Compo
     }
 
     @Override
+    public String getDescription() {
+        return actionable.getDescription();
+    }
+
+    @Override
+    public C setDescription(String description) {
+        actionable.setDescription(description);
+        return self();
+    }
+
+    @Override
     public final String getIcon() {
         return actionable.getIcon();
     }

@@ -30,6 +30,21 @@ public interface Itemable<I extends Itemable<I>> {
     I setText(String text);
 
     /**
+     * Returns the description of this itemable.
+     *
+     * @return the text
+     */
+    String getDescription();
+
+    /**
+     * Sets the description associated with this itemable.
+     *
+     * @param description the description
+     * @return self
+     */
+    I setDescription(String description);
+
+    /**
      * Returns the icon (class) associated with this itemable.
      *
      * @return the icon path or null if there is no icon

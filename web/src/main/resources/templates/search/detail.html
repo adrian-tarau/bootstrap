@@ -3,7 +3,7 @@
 <body>
 <div th:fragment="fields" class="dataset-attributes dataset-attributes-view">
     <span th:each="attribute : ${model.topAttributes}" th:class="|badge rounded-pill me-1 name-default ${#dataset.getAttributeClasses(attribute)}|">
-        <span th:text="${attribute.label}"></span><span>:&nbsp;</span>
+        <span th:text="${attribute.name}"></span><span>:&nbsp;</span>
         <span th:text="${attribute.value}"></span>
     </span>
 </div>

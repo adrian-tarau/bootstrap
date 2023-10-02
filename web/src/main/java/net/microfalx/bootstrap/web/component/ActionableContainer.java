@@ -77,6 +77,17 @@ public abstract class ActionableContainer<C extends ActionableContainer<C>> exte
     }
 
     @Override
+    public String getDescription() {
+        return actionable.getDescription();
+    }
+
+    @Override
+    public C setDescription(String description) {
+        actionable.setDescription(description);
+        return self();
+    }
+
+    @Override
     public String getIcon() {
         return actionable.getIcon();
     }

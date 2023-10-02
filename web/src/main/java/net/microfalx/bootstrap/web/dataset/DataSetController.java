@@ -148,7 +148,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         return "dataset/browse";
     }
 
-    @PostMapping(value = "/upload", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "upload", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public final void upload(@RequestParam("file") MultipartFile file, Model model) throws IOException {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
@@ -290,6 +290,24 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         return dataSetService.lookup((Class<M>) dataSetAnnot.model(), this);
     }
 
+    /**
+     * Finds a model by its identifier
+     *
+     * @param dataSet the data set
+     * @param model   the controller model
+     * @param id      the data set model identifier
+     * @param state   the state which triggered the request
+     * @return the model, null if it does not exist
+     */
+    protected final M findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
+        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
+        if (transactionTemplate != null) {
+            return transactionTemplate.execute(status -> doFindModel(dataSet, model, id, state));
+        } else {
+            return doFindModel(dataSet, model, id, state);
+        }
+    }
+
     private Pageable getPage(int page, Sort sort) {
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         return PageRequest.of(page, dataSetAnnotation.pageSize(), sort);
@@ -349,16 +367,18 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Toolbar toolbar = new Toolbar().setId("toolbar");
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         if (!dataSet.isReadOnly() && dataSetAnnotation.canAdd()) {
-            toolbar.add(new Button().setAction("add").setText("Add").setIcon("fa-solid fa-plus").setPosition(1));
+            toolbar.add(new Button().setAction("add").setText("Add").setIcon("fa-solid fa-plus").setPosition(1)
+                    .setDescription("Adds a new " + dataSet.getName()));
         }
         if (!dataSet.isReadOnly() && dataSetAnnotation.canUpload()) {
             toolbar.add(new Button().setAction("upload").setText("Upload").setIcon("fa-solid fa-upload")
-                    .setCssClass("dataset-drop-zone").setPosition(2));
+                    .setCssClass("dataset-drop-zone").setPosition(2).setDescription("Uploads a new " + dataSet.getName()));
         }
         // if (toolbar.hasChildren()) toolbar.add(new Separator());
         //toolbar.add(new Button().setAction("print").setText("Print").setIcon("fa-solid fa-print").setPosition(100));
         //toolbar.add(new Separator());
-        toolbar.add(new Button().setAction("refresh").setText("Refresh").setIcon("fa-solid fa-arrows-rotate").setPosition(200));
+        toolbar.add(new Button().setAction("refresh").setText("Refresh").setIcon("fa-solid fa-arrows-rotate").setPosition(200)
+                .setDescription("Refreshes the dashboard"));
         updateToolbar(toolbar);
         return toolbar;
     }
@@ -367,13 +387,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Menu menu = new Menu().setId("actions");
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         if (!dataSet.isReadOnly()) {
-            menu.add(new Item().setAction("view").setText("View").setIcon("fa-solid fa-eye"));
-            menu.add(new Item().setAction("edit").setText("Edit").setIcon("fa-solid fa-pen-to-square"));
+            menu.add(new Item().setAction("view").setText("View").setIcon("fa-solid fa-eye").setDescription("Views the "+dataSet.getName()));
+            menu.add(new Item().setAction("edit").setText("Edit").setIcon("fa-solid fa-pen-to-square").setDescription("Edits the "+dataSet.getName()));
             if (dataSetAnnotation.canDelete()) {
-                menu.add(new Item().setAction("delete").setText("Delete").setIcon("fa-solid fa-trash-can"));
+                menu.add(new Item().setAction("delete").setText("Delete").setIcon("fa-solid fa-trash-can").setDescription("Deletes the "+dataSet.getName()));
             }
             if (dataSetAnnotation.canDownload()) {
-                menu.add(new Item().setAction("download").setText("Download").setIcon("fa-solid fa-download"));
+                menu.add(new Item().setAction("download").setText("Download").setIcon("fa-solid fa-download").setDescription("Downloads the "+dataSet.getName()));
             }
         }
         updateActions(menu);
@@ -413,15 +433,6 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             model.addAttribute("viewClasses", StringUtils.join(" ", dataSetAnnotation.viewClasses()));
         } else {
             model.addAttribute("viewClasses", StringUtils.EMPTY_STRING);
-        }
-    }
-
-    private M findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
-        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
-        if (transactionTemplate != null) {
-            return transactionTemplate.execute(status -> doFindModel(dataSet, model, id, state));
-        } else {
-            return doFindModel(dataSet, model, id, state);
         }
     }
 

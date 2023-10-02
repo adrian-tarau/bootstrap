@@ -95,6 +95,17 @@ public class ActionableSupport implements Actionable<ActionableSupport> {
         return this;
     }
 
+    @Override
+    public String getDescription() {
+        return itemable.getDescription();
+    }
+
+    @Override
+    public ActionableSupport setDescription(String description) {
+        itemable.setDescription(description);
+        return this;
+    }
+
     public String getIcon() {
         return itemable.getIcon();
     }
