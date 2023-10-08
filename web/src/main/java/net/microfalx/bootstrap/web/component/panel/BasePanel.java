@@ -5,6 +5,7 @@ import net.microfalx.bootstrap.web.component.Toolbar;
 
 /**
  * Base container for all panels.
+ *
  * @param <C> the container type
  */
 public abstract class BasePanel<C extends BasePanel<C>> extends Container<C> {
@@ -20,32 +21,36 @@ public abstract class BasePanel<C extends BasePanel<C>> extends Container<C> {
         return title;
     }
 
-    public void setTitle(String title) {
+    public C setTitle(String title) {
         this.title = title;
+        return self();
     }
 
     public boolean isHeader() {
         return header;
     }
 
-    public void setHeader(boolean header) {
+    public C setHeader(boolean header) {
         this.header = header;
+        return self();
     }
 
     public boolean isCollapsible() {
         return collapsible;
     }
 
-    public void setCollapsible(boolean collapsible) {
+    public C setCollapsible(boolean collapsible) {
         this.collapsible = collapsible;
+        return self();
     }
 
     public boolean isCollapsed() {
         return collapsed;
     }
 
-    public void setCollapsed(boolean collapsed) {
+    public C setCollapsed(boolean collapsed) {
         this.collapsed = collapsed;
+        return self();
     }
 
     public Toolbar getTop() {
