@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.web.component.panel;
 
-public class Window extends BasePanel<Window> {
+public final class Window extends BasePanel<Window> {
 
     private boolean modal;
 

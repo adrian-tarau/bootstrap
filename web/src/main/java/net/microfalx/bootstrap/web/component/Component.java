@@ -17,8 +17,10 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
     private String id = generateIdentifier();
     private Container<?> parent;
     private String width;
+    private String maxWidth;
     private String height;
-    private String tooltip;
+    private String maxHeight;
+    private String description;
     private boolean visible;
     private boolean disabled;
     private boolean readOnly;
@@ -113,6 +115,25 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
     }
 
     /**
+     * Returns the maximum width of the component.
+     *
+     * @return the width (pixels, percentage, units), null if not set
+     */
+    public String getMaxWidth() {
+        return maxWidth;
+    }
+
+    /**
+     * Changes the width of the component
+     *
+     * @param maxWidth the maximum width (pixels, percentage, units), null if not set
+     */
+    public C setMaxWidth(String maxWidth) {
+        this.maxWidth = maxWidth;
+        return self();
+    }
+
+    /**
      * Returns the height of the component.
      *
      * @return the width (pixels, percentage, units), null if not set
@@ -124,10 +145,29 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
     /**
      * Changes the height of the component
      *
-     * @param height the width (pixels, percentage, units), null if not set
+     * @param height the height (pixels, percentage, units), null if not set
      */
     public C setHeight(String height) {
         this.height = height;
+        return self();
+    }
+
+    /**
+     * Returns the height of the component.
+     *
+     * @return the width (pixels, percentage, units), null if not set
+     */
+    public String getMaxHeight() {
+        return maxHeight;
+    }
+
+    /**
+     * Changes the maximum height of the component
+     *
+     * @param maxHeight the maximum height (pixels, percentage, units), null if not set
+     */
+    public C setMaxHeight(String maxHeight) {
+        this.maxHeight = maxHeight;
         return self();
     }
 
@@ -152,21 +192,23 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
     }
 
     /**
-     * Returns the tooltip associated with the component.
+     * Returns the description associated with the component.
+     * <p>
+     * The description is usually displayed as a tooltip, at least for fields.
      *
-     * @return the tooltip, null if not set
+     * @return the description, null if not set
      */
-    public String getTooltip() {
-        return tooltip;
+    public String getDescription() {
+        return description;
     }
 
     /**
-     * Changes the tooltip.
+     * Changes the description.
      *
-     * @param tooltip the tooltip
+     * @param description the description
      */
-    public C setTooltip(String tooltip) {
-        this.tooltip = tooltip;
+    public C setDescription(String description) {
+        this.description = description;
         return self();
     }
 
@@ -237,7 +279,7 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
      *
      * @return the class or classes separated by space, null or empty if no additional classes are set
      */
-    public String getCssClass() {
+    public final String getCssClass() {
         return cssClass;
     }
 
@@ -247,7 +289,7 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
      * @param cssClass the class or classes separated by space, null or empty if not additional classes are set
      * @return self
      */
-    public C setCssClass(String cssClass) {
+    public final C setCssClass(String cssClass) {
         this.cssClass = cssClass;
         return self();
     }
@@ -257,7 +299,7 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
      *
      * @return the styles, null or empty if ni additional styles are set
      */
-    public String getCssStyles() {
+    public final String getCssStyles() {
         return cssStyles;
     }
 
@@ -267,14 +309,14 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
      * @param cssStyles the styles, null or empty if ni additional styles are set
      * @return self
      */
-    public C setCssStyles(String cssStyles) {
+    public final C setCssStyles(String cssStyles) {
         this.cssStyles = cssStyles;
         return self();
     }
 
     @Override
     public String toString() {
-        return "Component{" +
+        return getClass().getSimpleName() + "{" +
                 "id='" + id + '\'' +
                 ", parent=" + (parent != null ? parent.getId() : null) +
                 ", width='" + width + '\'' +

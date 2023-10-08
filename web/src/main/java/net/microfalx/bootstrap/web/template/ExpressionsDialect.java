@@ -64,7 +64,7 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
             } else if (NAVIGATION_OBJECT_NAME.equals(expressionObjectName)) {
                 return new NavigationTool(context, applicationService);
             } else if (COMPONENT_OBJECT_NAME.equals(expressionObjectName)) {
-                return new ComponentTool(context);
+                return new ComponentTool(context, applicationService);
             } else if (DATASET_OBJECT_NAME.equals(expressionObjectName)) {
                 return new DataSetTool<>(context, dataSetService);
             } else if (LINK_OBJECT_NAME.equals(expressionObjectName)) {

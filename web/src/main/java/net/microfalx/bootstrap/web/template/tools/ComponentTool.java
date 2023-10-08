@@ -1,9 +1,15 @@
 package net.microfalx.bootstrap.web.template.tools;
 
+import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.component.Actionable;
 import net.microfalx.bootstrap.web.component.Component;
 import net.microfalx.bootstrap.web.component.Container;
+import net.microfalx.bootstrap.web.component.panel.BasePanel;
+import net.microfalx.bootstrap.web.component.renderer.ComponentRenderer;
+import net.microfalx.bootstrap.web.component.renderer.EmptyComponentRenderer;
 import net.microfalx.bootstrap.web.template.TemplateSecurityContext;
+import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.StringUtils;
 import org.thymeleaf.context.IContext;
 
 import java.util.ArrayList;
@@ -18,8 +24,12 @@ import static net.microfalx.lang.StringUtils.defaultIfNull;
  */
 public class ComponentTool extends AbstractTool {
 
-    public ComponentTool(IContext context) {
+    private ComponentRenderer renderer;
+    private ApplicationService applicationService;
+
+    public ComponentTool(IContext context, ApplicationService applicationService) {
         super(context);
+        this.applicationService = applicationService;
     }
 
     /**
@@ -33,8 +43,7 @@ public class ComponentTool extends AbstractTool {
         if (!(component instanceof Container)) return Collections.emptyList();
         Collection<net.microfalx.bootstrap.web.component.Component<?>> children = new ArrayList<>();
         for (net.microfalx.bootstrap.web.component.Component<?> child : ((Container<?>) component).getChildren()) {
-            if (child instanceof Actionable) {
-                Actionable<?> actionable = (Actionable<?>) child;
+            if (child instanceof Actionable<?> actionable) {
                 if (actionable.getRoles().isEmpty()) {
                     children.add(child);
                 } else if (securityContext.hasRoles(actionable.getRoles())) {
@@ -68,6 +77,20 @@ public class ComponentTool extends AbstractTool {
     }
 
     /**
+     * Returns whether the component supports a title and it the title is set (non-empty).
+     *
+     * @param component the component
+     * @return <code>true</code> if it has a title, <code>false</code> otherwise
+     */
+    public boolean hasTitle(net.microfalx.bootstrap.web.component.Component<?> component) {
+        if (component instanceof BasePanel<?> panel) {
+            return StringUtils.isNotEmpty(panel.getTitle());
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Returns the final list of CSS classes by appending the component CSS classes to the an initial set of classes
      *
      * @param component      the component which provides the classes
@@ -78,6 +101,36 @@ public class ComponentTool extends AbstractTool {
         if (component == null) return initialClasses;
         initialClasses = defaultIfNull(initialClasses, EMPTY_STRING);
         initialClasses += " " + defaultIfNull(component.getCssClass(), EMPTY_STRING);
+        initialClasses += " " + getRenderer().getCssClass(component);
         return initialClasses.trim();
+    }
+
+    /**
+     * Returns the template which renders a given component type.
+     *
+     * @param component the component
+     * @return the fragment
+     */
+    public String getComponentFragment(net.microfalx.bootstrap.web.component.Component<?> component) {
+        return "render-" + component.getType();
+    }
+
+    /**
+     * Returns the component renderer associated with the current theme.
+     *
+     * @return a non-null instance
+     */
+    private ComponentRenderer getRenderer() {
+        if (renderer == null) {
+            Collection<ComponentRenderer> componentRenderers = ClassUtils.resolveProviderInstances(ComponentRenderer.class);
+            for (ComponentRenderer componentRenderer : componentRenderers) {
+                if (componentRenderer.getId().equalsIgnoreCase(applicationService.getApplication().getTheme().getId())) {
+                    renderer = componentRenderer;
+                    break;
+                }
+            }
+            if (renderer == null) renderer = new EmptyComponentRenderer();
+        }
+        return renderer;
     }
 }

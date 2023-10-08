@@ -13,11 +13,11 @@ $(document).on({
             // ignore
         }
         if (jqxhr.status === 400) {
-            DataSet.showErrorAlert("Request", "A request (" + json.path + ") has invalid data");
+            Application.showErrorAlert("Request", "A request (" + json.path + ") has invalid data");
         } else if (jqxhr.status === 401) {
-            DataSet.showErrorAlert("Request", "A request (" + json.path + ") is not authorized");
+            Application.showErrorAlert("Request", "A request (" + json.path + ") is not authorized");
         } else {
-            DataSet.showErrorAlert("Request", "A request (" + json.path + "' failed with an error '" + json.error + "'");
+            Application.showErrorAlert("Request", "A request (" + json.path + "' failed with an error '" + json.error + "'");
         }
     }
 });

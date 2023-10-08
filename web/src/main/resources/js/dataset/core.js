@@ -2,16 +2,8 @@
 * The Data Set Global Variables
  */
 window.DataSet = window.DataSet || {};
-window.REQUEST_PATH = window.REQUEST_PATH || "/";
-window.REQUEST_QUERY = window.REQUEST_QUERY || null;
 
-/**
- * Constants for alert yypes
- * @type {string}
- */
-const DATASET_ALERT_TYPE_INFO = "INFO";
-const DATASET_ALERT_TYPE_WARN = "WARN";
-const DATASET_ALERT_TYPE_ERROR = "ERROR";
+
 const DATE_RANGE_SEPARATOR = "|";
 
 /**
@@ -27,15 +19,8 @@ const DATASET_DROP_ZONE_CLASS = "dataset-drop-zone";
  * @param {String} [path] an optional path to add to the base URI
  */
 DataSet.uri = function (params, path) {
-    let requestParams = DataSet.query(params);
-    let uri = REQUEST_PATH;
-    if (path) {
-        if (path.startsWith("/")) path.substring(1);
-        uri += "/" + path;
-    }
-    uri += "?" + $.param(requestParams);
-    console.info("Data Set URI: " + uri);
-    return uri;
+    params = DataSet.query(params);
+    return Application.uri(params, path);
 }
 
 /**
@@ -44,14 +29,13 @@ DataSet.uri = function (params, path) {
  * @param {Object} params the new parameters
  */
 DataSet.query = function (params) {
-    let requestParams = $.extend({}, REQUEST_QUERY);
-    requestParams = $.extend(requestParams, params);
-    requestParams["query"] = $("#query").val();
+    params = params || {};
+    params["query"] = $("#query").val();
     let timeFilter = DataSet.getTimeFilter();
     if (timeFilter.length > 0) {
-        requestParams["range"] = timeFilter[0].toISOString() + DATE_RANGE_SEPARATOR + timeFilter[1].toISOString();
+        params["range"] = timeFilter[0].toISOString() + DATE_RANGE_SEPARATOR + timeFilter[1].toISOString();
     }
-    return requestParams;
+    return params;
 }
 
 /**
@@ -59,10 +43,11 @@ DataSet.query = function (params) {
  * plus the additional parameters
  *
  * @param {Object} params the new parameters
- * @param {String} [params] an optional path to add to the base URI
+ * @param {String} [path] an optional path to add to the base URI
  */
 DataSet.open = function (params, path) {
-    window.location.href = DataSet.uri(params, path);
+    params = DataSet.query(params);
+    Application.open(params, path);
 }
 
 /**
@@ -78,18 +63,11 @@ DataSet.reload = function () {
  *
  * @param {String} path the path
  * @param {Object} params the new parameters
+ * @param {Function} callback the callback to be called with the response
  */
 DataSet.ajax = function (path, params, callback) {
-    let requestParams = DataSet.query(params);
-    let uri = REQUEST_PATH + "/" + path;
-    console.info("Ajax data set " + uri);
-    $.get({
-        data: requestParams,
-        url: uri,
-        success: function (output, status, xhr) {
-            callback.apply(this, [output, status, xhr]);
-        }
-    });
+    params = DataSet.query(params);
+    Application.ajax(path, params, callback)
 }
 
 /**
@@ -100,17 +78,6 @@ DataSet.search = function (query) {
     if (!$.isEmptyObject(query)) $("#query").val(query);
     DataSet.open("");
     return false;
-}
-
-/**
- * Returns the query parameter with a given name.
- * @param {String} name the parameter name
- */
-DataSet.getQueryParam = function (name) {
-    let url_string = location.href;
-    let url = new URL(url_string);
-    let val = url.searchParams.get(arguments[0]);
-    return val;
 }
 
 /**
@@ -329,64 +296,6 @@ DataSet.save = function () {
 }
 
 /**
- * Shows an informational message.
- * @param {String} title the title
- * @param {String} message the message to display, it can contain HTML tags
- */
-DataSet.showInfoAlert = function (title, message) {
-    DataSet.showAlert(title, message, DATASET_ALERT_TYPE_INFO);
-}
-
-/**
- * Shows a warning message.
- * @param {String} title the title
- * @param {String} message the message to display, it can contain HTML tags
- */
-DataSet.showWarnAlert = function (title, message) {
-    DataSet.showAlert(title, message, DATASET_ALERT_TYPE_WARN);
-}
-
-/**
- * Shows an error message.
- * @param {String} title the title
- * @param {String} message the message to display, it can contain HTML tags
- */
-DataSet.showErrorAlert = function (title, message) {
-    DataSet.showAlert(title, message, DATASET_ALERT_TYPE_ERROR);
-}
-
-/**
- * Shows an alert
- * @param {String} title the title
- * @param {String} message the message to display, it can contain HTML tags
- * @param {String} type the type of alert
- */
-DataSet.showAlert = function (title, message, type) {
-    type = type || "INFO";
-    let icon = "fa-solid fa-circle-info";
-    let color = "green";
-    switch (type) {
-        case 'WARN' :
-            icon = "fa-solid fa-triangle-exclamation";
-            color = "yellow";
-            break
-        case 'ERROR' :
-            icon = "fa-solid fa-circle-xmark";
-            color = "red";
-            break
-    }
-    iziToast.show({
-        title: title,
-        message: message,
-        icon: icon,
-        close: true,
-        timeout: 5000,
-        position: 'topRight',
-        color: color
-    });
-}
-
-/**
  * Validates whether a model identifier is set.
  */
 DataSet.checkIdentifier = function () {
@@ -433,7 +342,7 @@ DataSet.getTimeFilter = function () {
  */
 DataSet.initFields = function () {
     if (!DataSet.hasTimeFilter()) return;
-    let range = DataSet.getQueryParam('range');
+    let range = Application.getQueryParam('range');
     if ($.isEmptyObject(range)) range = $('#daterange span.d-none').val();
     let startDate = moment().startOf('day');
     let endDate = moment().endOf('day');

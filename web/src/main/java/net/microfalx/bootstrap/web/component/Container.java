@@ -55,13 +55,14 @@ public class Container<C extends Container<C>> extends Component<C> {
      * @param component the component
      * @param <CC>      the component type
      */
-    public final <CC extends Component<CC>> void add(CC component) {
+    public final <CC extends Component<CC>> C add(CC component) {
         requireNonNull(component);
-        if (find(component.getId()) != null) return;
+        if (find(component.getId()) != null) return self();
         children.add(component);
         component.setParent(this);
         if (component.getPosition() < 0) component.setPosition(children.size());
         children.sort(Comparator.comparingInt(Component::getPosition));
+        return self();
     }
 
     /**
@@ -70,9 +71,10 @@ public class Container<C extends Container<C>> extends Component<C> {
      * @param component the component
      * @param <CC>      the component type
      */
-    public final <CC extends Component<CC>> void remove(CC component) {
+    public final <CC extends Component<CC>> C remove(CC component) {
         requireNonNull(component);
         children.remove(component);
+        return self();
     }
 
     /**

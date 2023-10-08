@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="render-titleless (component)" th:remove="tag">
+    <div th:unless="${#component.hasTitle(component)}" th:remove="tag">
+        <div th:replace="~{ :: render-container-children (${component})}"></div>
+    </div>
+</div>
+
+<div th:fragment="render-row (component)" class="row gap-20 masonry pos-r">
+    <div class="masonry-item col-md-12" th:if="${#component.hasTitle(component)}">
+        <div class="bgc-white p-10 bd">
+            <h4 class="c-grey-900" th:text="${component.title}"></h4>
+            <div class="row gap-20 masonry pos-r mT-15">
+                <div th:replace="~{ :: render-container-children (${component})}"></div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="~{ :: render-titleless (${component})}"></div>
+</div>
+
+<div th:fragment="render-column (component)" th:remove="tag">
+    <div th:class="${#component.getCssClass(component, 'masonry-item')}">
+        <div class="bgc-white p-20 bd">
+            <div th:if="${#component.hasTitle(component)}" th:remove="tag">
+                <h6 class="c-grey-900" th:text="${component.title}"></h6>
+                <div class="mT-5">
+                    <div th:replace="~{ :: render-container-children (${component})}"></div>
+                </div>
+            </div>
+            <div th:replace="~{ :: render-titleless (${component})}"></div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="render-table (component)" th:remove="tag">
+    <table class="table table-responsive table-sm">
+        <thead th:if="${component.hasHeader()}">
+        <tr>
+            <th th:each="column : ${component.getColumns()}" th:text="${column.text}" scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${component.getRows()}">
+            <td th:each="column : ${component.getColumns()}">
+                <span th:unless="${row.isComponent(column)}" th:text="${row.getDisplayValue(column)}"></span>
+                <!--div th:if="${row.isComponent(column)}" th:replace="~{ fragments/component :: ${#component.getComponentFragment(dashboard)} (${row.getValue(column)})}"></div-->
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="render-dashboard(component)" th:remove="tag">
+    <div th:replace="~{ :: render-container-children (${component})}"></div>
+</div>
+
+<div th:fragment="render-container-children(component)" th:each="child : ${#component.getChildren(component)}" th:remove="tag">
+    <div th:replace="~{ :: ${#component.getComponentFragment(child)} (${child})}"></div>
+</div>
+
+</body>
+</html>
+

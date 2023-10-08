@@ -1,20 +1,17 @@
 package net.microfalx.bootstrap.web.controller;
 
 import net.microfalx.bootstrap.web.application.Asset;
+import net.microfalx.bootstrap.web.dashboard.DashboardController;
+import net.microfalx.bootstrap.web.dashboard.annotation.Dashboard;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
+@RequestMapping("/")
+@Dashboard("home")
 @Controller
-public final class HomeController {
-
-    @GetMapping("/")
-    public String home(Model model) {
-        model.addAttribute("user", SecurityContextHolder.getContext().getAuthentication());
-        return "index";
-    }
+public final class HomeController extends DashboardController {
 
     @GetMapping("favicon.ico")
     public ResponseEntity<Object> favicon() {
