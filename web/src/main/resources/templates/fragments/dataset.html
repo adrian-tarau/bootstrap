@@ -72,9 +72,8 @@
             <div class="mR-10"><span id="page_info" class="badge rounded-pill bg-success p-10"
                                      th:text="${#dataset.getPageInfo()}"></span></div>
             <form class="d-flex" role="search" th:attr="onsubmit='return DataSet.search()'">
-                <div id="daterange" class="form-control me-2 text-nowrap"
-                     style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%"
-                    th:if="${hasTimeRange}">
+                <div id="daterange" th:if="${hasTimeRange}" class="form-control me-2 text-nowrap"
+                     style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
                     <i class="fa fa-calendar"></i>&nbsp;
                     <span></span> <i class="fa fa-caret-down"></i>
                     <span class="d-none" th:text="${daterange}"></span>

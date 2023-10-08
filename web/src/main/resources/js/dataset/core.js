@@ -40,14 +40,14 @@ DataSet.query = function (params) {
 
 /**
  * Takes a collection of parameters and queries the same end points with original parameters
- * plus the additional parameters
+ * plus the additional parameters.
  *
  * @param {Object} params the new parameters
  * @param {String} [path] an optional path to add to the base URI
  */
 DataSet.open = function (params, path) {
     params = DataSet.query(params);
-    Application.open(params, path);
+    Application.openSelf(params, path);
 }
 
 /**
@@ -67,7 +67,7 @@ DataSet.reload = function () {
  */
 DataSet.ajax = function (path, params, callback) {
     params = DataSet.query(params);
-    Application.ajax(path, params, callback)
+    Application.ajax(path, params, callback, true)
 }
 
 /**

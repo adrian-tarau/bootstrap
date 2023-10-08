@@ -69,7 +69,9 @@
                 </a>
             </li>
             <li class="search-input active">
-                <input class="form-control" type="text" placeholder="Search...">
+                <form role="search" th:attr="onsubmit='return Application.search()'">
+                    <input id="search" class="form-control" type="text" placeholder="Search...">
+                </form>
             </li>
         </ul>
         <ul class="nav-right">

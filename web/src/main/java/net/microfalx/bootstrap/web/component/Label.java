@@ -3,9 +3,7 @@ package net.microfalx.bootstrap.web.component;
 /**
  * A simple text component.
  */
-public class Label extends Component<Label> {
-
-    private String text;
+public class Label extends ItemableComponent<Label> {
 
     public static Label create(String text) {
         return new Label().setText(text);
@@ -14,12 +12,4 @@ public class Label extends Component<Label> {
     private Label() {
     }
 
-    public String getText() {
-        return text;
-    }
-
-    public Label setText(String text) {
-        this.text = text;
-        return this;
-    }
 }

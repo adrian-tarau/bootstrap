@@ -31,9 +31,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -73,9 +75,10 @@ public class SearchService implements InitializingBean {
     private final Collection<SearchListener> listeners = new CopyOnWriteArrayList<>();
     private final Map<String, String> labels = new ConcurrentHashMap<>();
     private final Map<String, String> description = new ConcurrentHashMap<>();
-    private volatile Map<String, FieldStatistics> fieldStatistics = Collections.emptyMap();
+    private volatile Map<String, FieldStatistics> fieldStatistics = new HashMap<>();
     private volatile long lastFieldLoad = TimeUtils.oneDayAgo();
     private final AtomicBoolean fieldLoadingFlag = new AtomicBoolean();
+    private final CountDownLatch fieldLoadingLatch = new CountDownLatch(1);
 
     /**
      * Returns the executor used by the search service.
@@ -100,6 +103,7 @@ public class SearchService implements InitializingBean {
                 fieldLoadingFlag.set(false);
             }
         }
+        ConcurrencyUtils.await(fieldLoadingLatch, Duration.ofSeconds(10));
         List<FieldStatistics> statistics = new ArrayList<>(fieldStatistics.values());
         statistics.sort(Comparator.comparing(FieldStatistics::getDocumentCount).reversed());
         return statistics;
@@ -441,6 +445,7 @@ public class SearchService implements InitializingBean {
                 });
             } finally {
                 fieldLoadingFlag.set(false);
+                fieldLoadingLatch.countDown();
             }
             lastFieldLoad = System.currentTimeMillis();
         }
