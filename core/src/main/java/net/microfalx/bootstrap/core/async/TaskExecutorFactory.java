@@ -18,7 +18,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * A factory which builds a {@link ThreadPoolTaskScheduler} with the most common settings.
  * <p>
- * The settings can be customized using {@link AsyncProperties}.
+ * The settings can be customized using {@link AsynchronousProperties}.
  */
 public class TaskExecutorFactory {
 
@@ -26,7 +26,7 @@ public class TaskExecutorFactory {
 
     private static final AtomicInteger POOL_ID = new AtomicInteger(1);
 
-    private AsyncProperties properties = new AsyncProperties();
+    private AsynchronousProperties properties = new AsynchronousProperties();
     private float ratio = 1;
 
     public static TaskExecutorFactory create() {
@@ -37,18 +37,18 @@ public class TaskExecutorFactory {
         return new TaskExecutorFactory().setSuffix(suffix);
     }
 
-    public static TaskExecutorFactory create(AsyncProperties properties) {
+    public static TaskExecutorFactory create(AsynchronousProperties properties) {
         return new TaskExecutorFactory().setProperties(properties);
     }
 
     TaskExecutorFactory() {
     }
 
-    public AsyncProperties getProperties() {
+    public AsynchronousProperties getProperties() {
         return properties;
     }
 
-    public TaskExecutorFactory setProperties(AsyncProperties properties) {
+    public TaskExecutorFactory setProperties(AsynchronousProperties properties) {
         requireNonNull(properties);
         this.properties = properties;
         return this;

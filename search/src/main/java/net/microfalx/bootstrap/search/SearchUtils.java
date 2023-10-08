@@ -1,17 +1,24 @@
 package net.microfalx.bootstrap.search;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.index.*;
+import org.apache.lucene.util.BytesRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 
 import static net.microfalx.bootstrap.search.Document.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
  * Various utilities for search engine
  */
 public class SearchUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchUtils.class);
 
     public static final String DEFAULT_FIELD = DESCRIPTION_FIELD;
 
@@ -26,12 +33,17 @@ public class SearchUtils {
     public static final int MAX_FIELD_LENGTH = 32000;
 
     /**
-     * A set containing all the standard field names
+     * A set containing all the standard field names.
      */
     private static final Set<String> STANDARD_FIELD_NAMES = new HashSet<>();
 
     /**
-     * A set containing all numeric field names
+     * A set containing all the metadata field names.
+     */
+    private static final Set<String> METADATA_FIELD_NAMES = new HashSet<>();
+
+    /**
+     * A set containing all numeric field names.
      */
     private static final Set<String> NUMERIC_FIELD_NAMES = new HashSet<>();
 
@@ -49,6 +61,16 @@ public class SearchUtils {
      */
     public static boolean isStandardFieldName(String name) {
         return STANDARD_FIELD_NAMES.contains(name);
+    }
+
+    /**
+     * Returns whether the given field name is part of the metadata field names.
+     *
+     * @param name the field name
+     * @return <code>true</code> if a metadata field name, <code>false</code> otherwise
+     */
+    public static boolean isMetadataFieldName(String name) {
+        return METADATA_FIELD_NAMES.contains(name);
     }
 
     /**
@@ -172,6 +194,65 @@ public class SearchUtils {
         return NUMERIC_FIELD_NAMES.contains(name.toLowerCase());
     }
 
+    /**
+     * Returns the fields from an index.
+     *
+     * @param reader the reader
+     * @return the fields
+     */
+    public static Fields getFields(IndexReader reader) {
+        requireNonNull(reader);
+        final List<LeafReaderContext> leaves = reader.leaves();
+        final List<Fields> fields = new ArrayList<>(leaves.size());
+        final List<ReaderSlice> slices = new ArrayList<>(leaves.size());
+        for (final LeafReaderContext ctx : leaves) {
+            final LeafReader r = ctx.reader();
+            final Fields f = new LeafReaderFields(r);
+            fields.add(f);
+            slices.add(new ReaderSlice(ctx.docBase, r.maxDoc(), fields.size() - 1));
+        }
+        if (fields.size() == 1) {
+            return fields.get(0);
+        } else {
+            return new MultiFields(fields.toArray(Fields.EMPTY_ARRAY), slices.toArray(ReaderSlice.EMPTY_ARRAY));
+        }
+    }
+
+    /**
+     * Extracts fields and terms from an index.
+     *
+     * @param indexReader the reader
+     * @param fields      the map to collect fields
+     * @param maxTerms    the maximum number of terms per field
+     */
+    public static void extractFieldsAndTerms(IndexReader indexReader, Map<String, FieldStatistics> fields, int maxTerms) {
+        Fields luceneFields = SearchUtils.getFields(indexReader);
+        for (String fieldName : luceneFields) {
+            try {
+                Terms terms = luceneFields.terms(fieldName);
+                FieldStatistics fieldStatistic = new FieldStatistics(fieldName);
+                fieldStatistic.documentCount = terms.getDocCount();
+                fields.put(toIdentifier(fieldName), fieldStatistic);
+                fieldStatistic.termCount = (int) terms.size();
+                TermsEnum iterator = terms.iterator();
+                BytesRef byteRef;
+                int counter = maxTerms;
+                List<TermStatistics> termStatisticsList = new ArrayList<>();
+                while ((byteRef = iterator.next()) != null && counter-- > 0) {
+                    String term = byteRef.utf8ToString();
+                    Term termInstance = new Term(fieldName, byteRef);
+                    TermStatistics termStatistics = new TermStatistics(fieldName, term);
+                    termStatistics.frequency = indexReader.totalTermFreq(termInstance);
+                    termStatistics.count = indexReader.docFreq(termInstance);
+                    termStatisticsList.add(termStatistics);
+                }
+                fieldStatistic.setTerms(termStatisticsList);
+            } catch (IOException e) {
+                LOGGER.warn("Failed to extract terms for '" + fieldName + ", root cause: " + e.getMessage());
+            }
+        }
+    }
+
     private final static String[] OPERATORS = new String[]{
             "and", "or", "not", "+", "!"
     };
@@ -209,6 +290,13 @@ public class SearchUtils {
         STANDARD_FIELD_NAMES.add(SENT_AT_FIELD + STORED_SUFFIX_FIELD);
         STANDARD_FIELD_NAMES.add(SENT_AT_FIELD + SORTED_SUFFIX_FIELD);
 
+        METADATA_FIELD_NAMES.add(BODY_FIELD);
+        METADATA_FIELD_NAMES.add(BODY_URI_FIELD);
+        METADATA_FIELD_NAMES.add(CREATED_AT_FIELD);
+        METADATA_FIELD_NAMES.add(RECEIVED_AT_FIELD);
+        METADATA_FIELD_NAMES.add(MODIFIED_AT_FIELD);
+        METADATA_FIELD_NAMES.add(SENT_AT_FIELD);
+
         NUMERIC_FIELD_NAMES.add(CREATED_AT_FIELD);
         NUMERIC_FIELD_NAMES.add(MODIFIED_AT_FIELD);
         NUMERIC_FIELD_NAMES.add(RECEIVED_AT_FIELD);
@@ -216,6 +304,38 @@ public class SearchUtils {
 
         FIELD_NAMES.addAll(STANDARD_FIELD_NAMES);
 
+    }
+
+    private static class LeafReaderFields extends Fields {
+
+        private final LeafReader leafReader;
+        private final List<String> indexedFields;
+
+        LeafReaderFields(LeafReader leafReader) {
+            this.leafReader = leafReader;
+            this.indexedFields = new ArrayList<>();
+            for (FieldInfo fieldInfo : leafReader.getFieldInfos()) {
+                if (fieldInfo.getIndexOptions() != IndexOptions.NONE) {
+                    indexedFields.add(fieldInfo.name);
+                }
+            }
+            Collections.sort(indexedFields);
+        }
+
+        @Override
+        public Iterator<String> iterator() {
+            return Collections.unmodifiableList(indexedFields).iterator();
+        }
+
+        @Override
+        public int size() {
+            return indexedFields.size();
+        }
+
+        @Override
+        public Terms terms(String field) throws IOException {
+            return leafReader.terms(field);
+        }
     }
 
 }

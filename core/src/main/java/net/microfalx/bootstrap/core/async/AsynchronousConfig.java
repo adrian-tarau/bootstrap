@@ -11,10 +11,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Configuration
 @EnableAsync
 @EnableScheduling
-public class AsyncConfig {
+public class AsynchronousConfig {
 
     @Autowired(required = false)
-    private AsyncProperties properties = new AsyncProperties();
+    private AsynchronousProperties properties = new AsynchronousProperties();
 
     @Bean
     public TaskExecutor getTaskExecutor() {

@@ -9,7 +9,7 @@ import static net.microfalx.lang.ArgumentUtils.requireBounded;
 
 @Configuration
 @ConfigurationProperties("bootstrap.async")
-public class AsyncProperties {
+public class AsynchronousProperties {
 
     private int coreThreads = 5;
     private int maximumThreads = 8;

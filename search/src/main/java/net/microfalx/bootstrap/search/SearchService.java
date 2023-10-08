@@ -3,10 +3,7 @@ package net.microfalx.bootstrap.search;
 import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.resource.ResourceService;
-import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.FormatterUtils;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.metrics.Timer;
 import net.microfalx.resource.FileResource;
@@ -34,19 +31,19 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static net.microfalx.bootstrap.search.SearchUtils.isNumericField;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
-import static net.microfalx.lang.TimeUtils.toMillis;
+import static net.microfalx.lang.StringUtils.toIdentifier;
+import static net.microfalx.lang.TimeUtils.*;
 
 /**
  * A service used to execute full text searches.
@@ -57,7 +54,6 @@ public class SearchService implements InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchService.class);
 
     static Metrics METRICS = Metrics.of("search");
-
 
     @Autowired
     private SearchProperties searchProperties;
@@ -77,6 +73,9 @@ public class SearchService implements InitializingBean {
     private final Collection<SearchListener> listeners = new CopyOnWriteArrayList<>();
     private final Map<String, String> labels = new ConcurrentHashMap<>();
     private final Map<String, String> description = new ConcurrentHashMap<>();
+    private volatile Map<String, FieldStatistics> fieldStatistics = Collections.emptyMap();
+    private volatile long lastFieldLoad = TimeUtils.oneDayAgo();
+    private final AtomicBoolean fieldLoadingFlag = new AtomicBoolean();
 
     /**
      * Returns the executor used by the search service.
@@ -86,6 +85,36 @@ public class SearchService implements InitializingBean {
     public AsyncTaskExecutor getTaskExecutor() {
         if (taskExecutor == null) taskExecutor = TaskExecutorFactory.create("search").createExecutor();
         return taskExecutor;
+    }
+
+    /**
+     * Returns all fields available in the index.
+     *
+     * @return a non-null instance
+     */
+    public Collection<FieldStatistics> getFieldStatistics() {
+        if (millisSince(lastFieldLoad) > FIVE_MINUTE && fieldLoadingFlag.compareAndSet(false, true)) {
+            try {
+                getTaskExecutor().submit(new ExtractFieldStatsWorker());
+            } catch (Exception e) {
+                fieldLoadingFlag.set(false);
+            }
+        }
+        List<FieldStatistics> statistics = new ArrayList<>(fieldStatistics.values());
+        statistics.sort(Comparator.comparing(FieldStatistics::getDocumentCount).reversed());
+        return statistics;
+    }
+
+    /**
+     * Returns statistics about a field.
+     *
+     * @param name the field name
+     * @return the statistics
+     */
+    public FieldStatistics getFieldStatistics(String name) {
+        requireNonNull(name);
+        getFieldStatistics();
+        return fieldStatistics.computeIfAbsent(toIdentifier(name), s -> new FieldStatistics(name));
     }
 
     /**
@@ -218,6 +247,25 @@ public class SearchService implements InitializingBean {
         initTaskExecutor();
     }
 
+    private <T> T doWithIndex(String operation, Function<IndexReader, T> callback) {
+        RetryTemplate retryTemplate = new RetryTemplate();
+        retryTemplate.registerListener(new RetryListener() {
+            @Override
+            public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+                LOGGER.info("Failure detected during action '" + operation + "', root cause" + throwable.getMessage());
+                releaseSearchHolder();
+            }
+        });
+        try {
+            return retryTemplate.execute((RetryCallback<T, Exception>) context -> {
+                IndexReader indexReader = getIndexSearcher().getIndexReader();
+                return METRICS.time(toIdentifier(operation), (Supplier<T>) () -> callback.apply(indexReader));
+            });
+        } catch (Exception e) {
+            throw new SearchException("Exception during index operation : " + operation, e);
+        }
+    }
+
     private String getNormalizedQuery(SearchQuery query) {
         String normalizedQuery = SearchUtils.normalizeQuery(query.getQuery(), query.isAutoWildcard(), query.isAllowLeadingWildcard()).trim();
         if (isNotEmpty(query.getFilter())) {
@@ -342,7 +390,7 @@ public class SearchService implements InitializingBean {
     }
 
     private void releaseSearchHolder() {
-        LOGGER.debug("Release  searcher");
+        LOGGER.debug("Release searcher");
         synchronized (lock) {
             if (searchHolder != null) {
                 try (Timer ignored = METRICS.startTimer("release_searcher")) {
@@ -379,6 +427,23 @@ public class SearchService implements InitializingBean {
 
     private String getI18n(String suffix) {
         return i18nService.getText("search.field." + suffix);
+    }
+
+    private class ExtractFieldStatsWorker implements Runnable {
+
+        @Override
+        public void run() {
+            try {
+                fieldStatistics = doWithIndex("Get Fields", indexReader -> {
+                    Map<String, FieldStatistics> fieldStatistics = new HashMap<>();
+                    SearchUtils.extractFieldsAndTerms(indexReader, fieldStatistics, 30);
+                    return fieldStatistics;
+                });
+            } finally {
+                fieldLoadingFlag.set(false);
+            }
+            lastFieldLoad = System.currentTimeMillis();
+        }
     }
 
     /**

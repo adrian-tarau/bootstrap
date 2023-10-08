@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.test.annotation;
 
-import net.microfalx.bootstrap.core.async.AsyncConfig;
+import net.microfalx.bootstrap.core.async.AsynchronousConfig;
 import net.microfalx.bootstrap.core.i18n.I18nConfig;
 import net.microfalx.bootstrap.resource.ResourceProperties;
 import net.microfalx.bootstrap.resource.ResourceService;
@@ -20,7 +20,7 @@ import java.lang.annotation.*;
 @Documented
 @Inherited
 @ContextConfiguration(classes = {ResourceService.class, ResourceProperties.class})
-@Import({I18nConfig.class, AsyncConfig.class})
+@Import({I18nConfig.class, AsynchronousConfig.class})
 @OverrideAutoConfiguration(enabled = false)
 @ImportAutoConfiguration
 @SpringBootTest

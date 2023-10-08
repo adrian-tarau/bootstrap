@@ -42,7 +42,17 @@ public class AttributeUtils {
         String text = attribute.asString();
         if (!includeNumbers && Doubles.tryParse(text) != null) return false;
         if (!(attribute.getValue() instanceof String)) return true;
-        return text.length() < MAX_ATTRIBUTE_DISPLAY_LENGTH && (int) text.lines().count() == 1;
+        return isSingleLineAndShort(text);
+    }
+
+    /**
+     * Returns whether the text is small and has a single line.
+     *
+     * @param text the text to test
+     * @return <code>true</code> if single line and short, <code>false</code> otherwise
+     */
+    public static boolean isSingleLineAndShort(String text) {
+        return text == null ? false : text.length() < MAX_ATTRIBUTE_DISPLAY_LENGTH && (int) text.lines().count() == 1;
     }
 
     /**

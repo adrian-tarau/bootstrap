@@ -97,7 +97,7 @@ public class IndexService implements InitializingBean {
      */
     public int getPendingDocumentCount() {
         IndexHolder indexHolder = openIndex();
-        return (int) indexHolder.indexWriter.getPendingNumDocs();
+        return (int) (indexHolder.indexWriter.getPendingNumDocs() - getDocumentCount());
     }
 
     /**
