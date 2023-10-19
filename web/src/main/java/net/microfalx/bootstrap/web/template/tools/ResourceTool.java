@@ -14,6 +14,7 @@ import java.net.URI;
  * <p>
  * All methods return a safe value instead of failing.
  */
+@SuppressWarnings("unused")
 public class ResourceTool extends AbstractTool {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceTool.class);

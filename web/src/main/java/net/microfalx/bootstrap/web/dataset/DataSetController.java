@@ -367,17 +367,17 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Toolbar toolbar = new Toolbar().setId("toolbar");
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         if (!dataSet.isReadOnly() && dataSetAnnotation.canAdd()) {
-            toolbar.add(new Button().setAction("add").setText("Add").setIcon("fa-solid fa-plus").setPosition(1)
+            toolbar.add(new Button().setAction("dataset.add").setText("Add").setIcon("fa-solid fa-plus").setPosition(1)
                     .setDescription("Adds a new " + dataSet.getName()));
         }
         if (!dataSet.isReadOnly() && dataSetAnnotation.canUpload()) {
-            toolbar.add(new Button().setAction("upload").setText("Upload").setIcon("fa-solid fa-upload")
+            toolbar.add(new Button().setAction("dataset.upload").setText("Upload").setIcon("fa-solid fa-upload")
                     .setCssClass("dataset-drop-zone").setPosition(2).setDescription("Uploads a new " + dataSet.getName()));
         }
         // if (toolbar.hasChildren()) toolbar.add(new Separator());
         //toolbar.add(new Button().setAction("print").setText("Print").setIcon("fa-solid fa-print").setPosition(100));
         //toolbar.add(new Separator());
-        toolbar.add(new Button().setAction("refresh").setText("Refresh").setIcon("fa-solid fa-arrows-rotate").setPosition(200)
+        toolbar.add(new Button().setAction("dataset.refresh").setText("Refresh").setIcon("fa-solid fa-arrows-rotate").setPosition(200)
                 .setDescription("Refreshes the dashboard"));
         updateToolbar(toolbar);
         return toolbar;
@@ -387,13 +387,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Menu menu = new Menu().setId("actions");
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         if (!dataSet.isReadOnly()) {
-            menu.add(new Item().setAction("view").setText("View").setIcon("fa-solid fa-eye").setDescription("Views the "+dataSet.getName()));
-            menu.add(new Item().setAction("edit").setText("Edit").setIcon("fa-solid fa-pen-to-square").setDescription("Edits the "+dataSet.getName()));
+            menu.add(new Item().setAction("dataset.view").setText("View").setIcon("fa-solid fa-eye").setDescription("Views the "+dataSet.getName()));
+            menu.add(new Item().setAction("dataset.edit").setText("Edit").setIcon("fa-solid fa-pen-to-square").setDescription("Edits the "+dataSet.getName()));
             if (dataSetAnnotation.canDelete()) {
-                menu.add(new Item().setAction("delete").setText("Delete").setIcon("fa-solid fa-trash-can").setDescription("Deletes the "+dataSet.getName()));
+                menu.add(new Item().setAction("dataset.delete").setText("Delete").setIcon("fa-solid fa-trash-can").setDescription("Deletes the "+dataSet.getName()));
             }
             if (dataSetAnnotation.canDownload()) {
-                menu.add(new Item().setAction("download").setText("Download").setIcon("fa-solid fa-download").setDescription("Downloads the "+dataSet.getName()));
+                menu.add(new Item().setAction("dataset.download").setText("Download").setIcon("fa-solid fa-download").setDescription("Downloads the "+dataSet.getName()));
             }
         }
         updateActions(menu);

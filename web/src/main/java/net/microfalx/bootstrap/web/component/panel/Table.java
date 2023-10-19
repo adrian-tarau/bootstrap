@@ -123,7 +123,7 @@ public final class Table extends BasePanel<Table> {
 
     public static class Column {
 
-        private int index;
+        private final int index;
         private String text;
 
         public Column(int index, String text) {
@@ -141,6 +141,14 @@ public final class Table extends BasePanel<Table> {
 
         public void setText(String text) {
             this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return "Column{" +
+                    "index=" + index +
+                    ", text='" + text + '\'' +
+                    '}';
         }
     }
 }

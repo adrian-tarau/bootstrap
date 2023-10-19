@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.web.component;
 
+import net.microfalx.bootstrap.model.Parameters;
+
 import java.util.Set;
 
 /**
@@ -7,9 +9,8 @@ import java.util.Set;
  * <p/>
  * The action translates into the following action:
  * <ul>
- * <li>action is translated into a path and it is executed directly</li>
+ * <li>action is translated to an event and it is fired to the correct listeners</li>
  * <li>token is translated into the URL hash (can be combined with the action)</li>
- * <li>handler is executed as a JavaScript call to the current controller</li>
  * </ul>
  * </ul>
  */
@@ -17,6 +18,8 @@ public interface Actionable<A extends Actionable<A>> extends Itemable<A> {
 
     /**
      * Returns the action name associated with this actionable.
+     * <p>
+     * The action is converted to an event on the client side (JavaScript).
      *
      * @return the action or null if there is no action
      */
@@ -29,6 +32,23 @@ public interface Actionable<A extends Actionable<A>> extends Itemable<A> {
      * @return self
      */
     A setAction(String action);
+
+    /**
+     * Returns the target (controller path or URL) associated with this actionable.
+     * <p>
+     * The target can be a full URL instead of a controller path for external execution.
+     *
+     * @return the target or null if there is no target
+     */
+    String getTarget();
+
+    /**
+     * Set the target path or URL.
+     *
+     * @param target the target path or URL
+     * @return self
+     */
+    A setTarget(String target);
 
     /**
      * Returns the token (hash) pushed into the application history when the action is triggered.
@@ -44,21 +64,6 @@ public interface Actionable<A extends Actionable<A>> extends Itemable<A> {
      * @return self
      */
     A setToken(String token);
-
-    /**
-     * Returns the function name to be called  when this actionable triggers.
-     *
-     * @return the function name or null if there is no handler
-     */
-    String getHandler();
-
-    /**
-     * Sets the actionable handler function.
-     *
-     * @param handler the handler function
-     * @return self
-     */
-    A setHandler(String handler);
 
     /**
      * Returns the roles required for the action to be enabled.
@@ -88,4 +93,19 @@ public interface Actionable<A extends Actionable<A>> extends Itemable<A> {
      * @return self
      */
     A addRoles(String... roles);
+
+    /**
+     * Adds a new parameter to the action.
+     *
+     * @param name  the parameter name
+     * @param value the parameter value
+     */
+    A addParameter(String name, Object value);
+
+    /**
+     * Returns all registered parameters.
+     *
+     * @return a non-null instance
+     */
+    Parameters getParameters();
 }

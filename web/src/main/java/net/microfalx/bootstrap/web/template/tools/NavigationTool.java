@@ -9,6 +9,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * Template utilities around navigation.
  */
+@SuppressWarnings("unused")
 public class NavigationTool extends AbstractTool {
 
     private final ApplicationService applicationService;

@@ -5,6 +5,7 @@ import org.thymeleaf.context.IContext;
 /**
  * Template utilities around HTML.
  */
+@SuppressWarnings("unused")
 public class HtmlTool extends AbstractTool {
 
     public HtmlTool(IContext context) {

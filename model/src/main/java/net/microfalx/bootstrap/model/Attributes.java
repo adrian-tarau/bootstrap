@@ -40,67 +40,67 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
      * @param attribute the attribute
      * @return the attribute
      */
-    A addAttribute(A attribute);
+    A add(A attribute);
 
     /**
-     * Adds a new attribute, override the previous one if exists.
+     * Adds a new attribute/parameter, override the previous one if exists.
      *
      * @param name  the attribute name
      * @param value the attribute value
      * @return the attribute
      */
-    A addAttribute(String name, Object value);
+    A add(String name, Object value);
 
     /**
-     * Adds a new attribute if a previous attribute does not exist.
+     * Adds a new attribute/parameter if a previous attribute does not exist.
      *
      * @param attribute the attribute
      * @return the attribute, the original one if already exists
      */
-    A addAttributeIfAbsent(A attribute);
+    A addIfAbsent(A attribute);
 
     /**
-     * Adds a new attribute if a previous attribute does not exist.
+     * Adds a new attribute/parameter if a previous attribute does not exist.
      *
      * @param name  the attribute name
      * @param value the attribute value
      * @return the attribute, the original one if already exists
      */
-    A addAttributeIfAbsent(String name, Object value);
+    A addIfAbsent(String name, Object value);
 
     /**
-     * Removes an attribute with a given name.
+     * Removes an attribute/parameter with a given name.
      *
      * @param name the name
-     * @return the attribute, null if it does not exists
+     * @return the attribute, null if it does not exist
      */
-    A removeAttribute(String name);
+    A remove(String name);
 
     /**
-     * Returns an attribute by its name.
+     * Returns an attribute/parameter by its name.
      *
      * @param name the attribute name
      * @return a non-null instance
      */
-    A getAttribute(String name);
+    A get(String name);
 
     /**
-     * Returns an attribute by its name.
+     * Returns an attribute/parameter by its name.
      *
      * @param name the attribute name
      * @return a non-null instance
      */
-    A getAttribute(String name, Object defaultValue);
+    A get(String name, Object defaultValue);
 
     /**
-     * Copies the attributes from a map.
+     * Copies the attributes/parameters from a map.
      *
      * @param values the values
      */
     void copyFrom(Map<String, Object> values);
 
     /**
-     * Copies the attributes from JSON.
+     * Copies the attributes/parameters from JSON.
      *
      * @param resource the resource
      * @see #toJson()
@@ -108,35 +108,43 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
     void copyFrom(Resource resource) throws IOException;
 
     /**
-     * Copy the attributes from a different collection of attributes.
+     * Copy the attributes/parameters from a different collection of attributes.
      *
      * @param attributes the attributes
      */
     <AA extends Attribute> void copyFrom(Attributes<AA> attributes);
 
     /**
-     * Returns whether the attributes cannot be changed.
+     * Returns whether the attributes/parameters cannot be changed.
      *
      * @return {@code true} if read-only, {@code false} otherwise
      */
     boolean isReadOnly();
 
     /**
-     * Returns whether at least one attribute is registered.
+     * Returns whether there are no attributes/parameters.
      *
-     * @return {@code} true if has attributes, {@code false}
+     * @return {@code} true if empty, {@code false}
      */
-    boolean hasAttributes();
+    boolean isEmpty();
 
     /**
-     * Returns the attributes as a read-only map.
+     * Returns the attributes/parameters as a read-only map.
      *
      * @return a non-null instance
      */
     Map<String, A> toMap();
 
     /**
-     * Returns the attributes as a collection ordered by priority.
+     * Returns the attributes/parameter values in the order of the insertion.
+     *
+     * This is equivalent to {@link #toMap()#values()}.
+     * @return a non-null instance
+     */
+    Collection<Object> toValues();
+
+    /**
+     * Returns the attributes/parameters as a collection ordered by priority.
      *
      * @return a non-null instance
      * @see Attribute#registerAttributePriority(String, int)
@@ -144,7 +152,7 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
     Collection<A> toCollection();
 
     /**
-     * Returns a subset of the attributes as a collection ordered by priority.
+     * Returns a subset of the attributes/parameters as a collection ordered by priority.
      *
      * @param maximumCount the maximum number of entries returned
      * @return a non-null instance
@@ -153,7 +161,7 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
     Collection<A> toCollection(int maximumCount);
 
     /**
-     * Returns a subset of the attributes as a collection ordered by priority.
+     * Returns a subset of the attributes/parameters as a collection ordered by priority.
      *
      * @param maximumCount the maximum number of entries returned
      * @return a non-null instance
@@ -162,7 +170,7 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
     Collection<A> toCollection(int maximumCount, Function<A, Boolean> filter);
 
     /**
-     * Converts the attributes to JSON.
+     * Converts the attributes/parameters to JSON.
      *
      * @return a non-null instance
      */

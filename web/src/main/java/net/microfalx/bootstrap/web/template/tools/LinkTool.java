@@ -8,6 +8,7 @@ import java.util.Map;
 /**
  * Tools around links.
  */
+@SuppressWarnings("unused")
 public class LinkTool extends AbstractTool {
 
     public LinkTool(IContext context) {
@@ -32,7 +33,7 @@ public class LinkTool extends AbstractTool {
         Map<String, Object> params = new HashMap<>();
         Map<String, String[]> originalParams = getWebContext().getExchange().getRequest().getParameterMap();
         originalParams.forEach((k, v) -> {
-            if (v!= null && v.length == 1) {
+            if (v != null && v.length == 1) {
                 params.put(k, v[0]);
             } else {
                 params.put(k, v);

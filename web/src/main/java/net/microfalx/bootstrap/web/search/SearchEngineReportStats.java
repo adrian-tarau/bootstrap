@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.search;
 import com.google.common.collect.Iterables;
 import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.search.*;
+import net.microfalx.bootstrap.web.component.Link;
 import net.microfalx.bootstrap.web.component.panel.Column;
 import net.microfalx.bootstrap.web.component.panel.Row;
 import net.microfalx.bootstrap.web.component.panel.Table;
@@ -110,13 +111,17 @@ class SearchEngineReportStats {
         title = StringUtils.replaceOnce(title, "{limit}", Integer.toString(limit));
         FieldStatistics fieldStatistics = searchService.getFieldStatistics(fieldName);
         List<TermStatistics> terms = fieldStatistics.getTerms();
-        return Column.create(3).setTitle(title).add(createTermsTable(terms));
+        return Column.create(3).setTitle(title).add(createTermsTable(fieldName, terms));
     }
 
-    private Table createTermsTable(List<TermStatistics> terms) {
+    private Table createTermsTable(String fieldName, List<TermStatistics> terms) {
         Iterable<TermStatistics> limitedTerms = Iterables.limit(terms, limit);
         return Table.create("Value", "Count").setMaxHeight("300")
-                .addRows(table -> limitedTerms.forEach(term -> table.addRow(abbreviate(term.getName(), MAX_ATTRIBUTE_DISPLAY_LENGTH),
+                .addRows(table -> limitedTerms.forEach(term -> table.addRow(termLink(fieldName, abbreviate(term.getName(), MAX_ATTRIBUTE_DISPLAY_LENGTH)),
                         term.getCount())));
+    }
+
+    private Link termLink(String fieldName, String term) {
+        return Link.action(term, "search").addParameter("query", fieldName + ": " + term);
     }
 }

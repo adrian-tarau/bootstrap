@@ -35,6 +35,7 @@ import static net.microfalx.lang.StringUtils.*;
 /**
  * Template utilities around data sets
  */
+@SuppressWarnings("unused")
 public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetTool.class);
@@ -42,7 +43,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public static final String BOOLEAN_CHECKED = "<i class=\"far fa-check-square\"></i>";
     public static final String BOOLEAN_UNCHECKED = "<i class=\"far fa-square\"></i>";
 
-    private DataSetService dataSetService;
+    private final DataSetService dataSetService;
 
     private final static AtomicBoolean attributeClassesInitialized = new AtomicBoolean();
     private final static Queue<String> attributeClassesQueue = new LinkedBlockingQueue<>();

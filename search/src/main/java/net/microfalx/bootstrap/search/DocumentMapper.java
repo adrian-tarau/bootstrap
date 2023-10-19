@@ -153,7 +153,7 @@ class DocumentMapper {
             String attrValue = field.stringValue();
 
             int options = 0;
-            Attribute attribute = item.addAttribute(attrName, attrValue);
+            Attribute attribute = item.add(attrName, attrValue);
             if (fieldType.indexOptions() != IndexOptions.NONE) options |= Attribute.INDEXED_MASK;
             if (fieldType.tokenized()) options |= Attribute.TOKENIZED_MASK;
             if (fieldType.stored()) options |= Attribute.STORED_MASK;

@@ -93,7 +93,7 @@ final class AssetBundleManager {
                 for (Asset asset : assetBundle.getAssets()) {
                     if (asset.getType() != type) continue;
                     if (header) {
-                        writer.append("/*\nAsset: ").append(asset.getName()).append(", path ")
+                        writer.append("\n\n/*\nAsset: ").append(asset.getName()).append(", path ")
                                 .append(asset.getPath()).append("\n*/\n\n");
                     }
                     writer.append(asset.getResource().loadAsString());

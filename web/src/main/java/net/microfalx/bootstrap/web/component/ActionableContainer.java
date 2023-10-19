@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.web.component;
 
+import net.microfalx.bootstrap.model.Parameters;
+
 import java.util.Set;
 
 /**
@@ -23,6 +25,17 @@ public abstract class ActionableContainer<C extends ActionableContainer<C>> exte
     }
 
     @Override
+    public String getTarget() {
+        return actionable.getTarget();
+    }
+
+    @Override
+    public C setTarget(String target) {
+        this.actionable.setTarget(target);
+        return self();
+    }
+
+    @Override
     public String getToken() {
         return actionable.getToken();
     }
@@ -30,17 +43,6 @@ public abstract class ActionableContainer<C extends ActionableContainer<C>> exte
     @Override
     public C setToken(String token) {
         actionable.setToken(token);
-        return self();
-    }
-
-    @Override
-    public String getHandler() {
-        return actionable.getHandler();
-    }
-
-    @Override
-    public C setHandler(String handler) {
-        actionable.setToken(handler);
         return self();
     }
 
@@ -107,5 +109,16 @@ public abstract class ActionableContainer<C extends ActionableContainer<C>> exte
     public C setStyle(Style style) {
         actionable.setStyle(style);
         return self();
+    }
+
+    @Override
+    public C addParameter(String name, Object value) {
+        actionable.addParameter(name, value);
+        return self();
+    }
+
+    @Override
+    public Parameters getParameters() {
+        return actionable.getParameters();
     }
 }

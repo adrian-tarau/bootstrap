@@ -89,4 +89,15 @@ public abstract class AbstractAttribute implements Attribute, Comparable<Attribu
             return getName().compareToIgnoreCase(o.getName());
         }
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{" +
+                "name='" + name + '\'' +
+                ", value=" + value +
+                ", label='" + label + '\'' +
+                ", description='" + description + '\'' +
+                ", parent=" + parent +
+                '}';
+    }
 }

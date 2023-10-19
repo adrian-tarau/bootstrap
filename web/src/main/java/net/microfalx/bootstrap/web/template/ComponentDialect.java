@@ -4,6 +4,7 @@ import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.IProcessor;
+import org.thymeleaf.processor.element.AbstractAttributeTagProcessor;
 import org.thymeleaf.processor.element.AbstractElementTagProcessor;
 import org.thymeleaf.processor.element.IElementTagStructureHandler;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -39,10 +40,30 @@ public class ComponentDialect extends AbstractProcessorDialect {
 
     }
 
+    private abstract class BaseAttributeProcessor extends AbstractAttributeTagProcessor {
+
+        public BaseAttributeProcessor(String attributeName) {
+            super(TemplateMode.HTML, DIALECT_PREFIX, null, true, attributeName, true, PRECEDENCE, true);
+        }
+
+    }
+
     private class RenderTagProcessor extends BaseTagProcessor {
 
         public RenderTagProcessor() {
             super("render");
+        }
+
+        @Override
+        protected void doProcess(ITemplateContext context, IProcessableElementTag tag, IElementTagStructureHandler structureHandler) {
+            System.out.println("Stop");
+        }
+    }
+
+    private class ActionableRenderTagProcessor extends BaseTagProcessor {
+
+        public ActionableRenderTagProcessor() {
+            super("action");
         }
 
         @Override

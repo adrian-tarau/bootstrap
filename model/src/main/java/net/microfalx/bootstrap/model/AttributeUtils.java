@@ -110,7 +110,7 @@ public class AttributeUtils {
             } else {
                 value = valueNode.textValue();
             }
-            attributes.addAttribute(name, value);
+            attributes.add(name, value);
         }
         return attributes;
     }

@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.bootstrap.model.AbstractAttributes;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
@@ -16,7 +17,6 @@ import java.util.*;
 import static net.microfalx.bootstrap.model.Attribute.registerAttributePriority;
 import static net.microfalx.bootstrap.search.SearchUtils.NA_TIMESTAMP;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ObjectUtils.isEmpty;
 import static net.microfalx.lang.TimeUtils.fromMillis;
 import static net.microfalx.lang.TimeUtils.toMillis;
 
@@ -272,7 +272,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     }
 
     public Document addTags(String... tags) {
-        if (isEmpty(tags)) return this;
+        if (ObjectUtils.isEmpty(tags)) return this;
         if (this.tags == null) this.tags = new HashSet<>();
         this.tags.addAll(Arrays.asList(tags));
         return this;

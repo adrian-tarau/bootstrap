@@ -62,7 +62,7 @@ class IndexServiceTest extends AbstractSearchEngineTestCase {
         for (int i = 1; i <= count; i++) {
             Document document = new Document("test" + i, "Test " + i);
             document.addTag("tag1");
-            document.addAttribute("location", "Here");
+            document.add("location", "Here");
             document.setDescription(faker.shakespeare().asYouLikeItQuote());
             documents.add(document);
         }

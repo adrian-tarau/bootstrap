@@ -10,7 +10,7 @@ window.REQUEST_QUERY = window.REQUEST_QUERY || null;
  *
  * @param {Object} params the new parameters
  */
-Application.query = function (params) {
+Application.getQuery = function (params) {
     let requestParams = $.extend({}, REQUEST_QUERY);
     requestParams = $.extend(requestParams, params);
     return requestParams;
@@ -25,18 +25,19 @@ Application.query = function (params) {
  * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI to the current page (self)
  * @param {Boolean} [options.params=true] an optional boolean, to include the parameters in the URI
  */
-Application.uri = function (params, path, options) {
+Application.getUri = function (params, path, options) {
     options = options || {};
     options.self = (typeof options.self === 'undefined') ? true : options.self;
     options.params = (typeof options.params === 'undefined') ? true : options.params;
-    params = self ? Application.query(params) : params;
-    let uri = self ? REQUEST_PATH : "";
+    params = options.self ? this.getQuery(params) : params;
+    let uri = options.self ? REQUEST_PATH : "/";
     if (path) {
+        if (!uri.endsWith("/")) uri += "/";
         if (path.startsWith("/")) path = path.substring(1);
-        uri += "/" + path;
+        uri += path;
     }
     if (options.params) uri += "?" + $.param(params);
-    console.info("Application URI: " + uri);
+    Logger.debug("Resolve URI for path '" + path + "', params '" + Utils.toString(params) + "', uri '" + uri + "'");
     return uri;
 }
 
@@ -48,24 +49,28 @@ Application.uri = function (params, path, options) {
  * @param {String} [path] an optional path to add to the base URI
  */
 Application.openSelf = function (params, path) {
-    window.location.href = Application.uri(params, path, {self: true});
+    let uri = this.getUri(params, path, {self: true});
+    Logger.info("Open '" + uri + "'");
+    window.location.href = uri;
 }
 
 /**
- * Takes a collection of parameters and opens a page at requested path.
+ * Takes a collection of parameters and opens a page at requested path, outside the current page.
  *
  * @param {Object} params the new parameters
  * @param {String} [path] an optional path to add to the base URI
  */
 Application.open = function (params, path) {
-    window.location.href = Application.uri(params, path, {self: false});
+    let uri = this.getUri(params, path, {self: false});
+    Logger.info("Open '" + uri + "'");
+    window.location.href = uri;
 }
 
 /**
  * Reloads the current page.
  */
 Application.reload = function () {
-    Application.openSelf({});
+    this.openSelf({});
 }
 
 /**
@@ -78,9 +83,9 @@ Application.reload = function () {
  * @param {Boolean} [self=true] an optional boolean, to calculate the URI to the current page (self)
  */
 Application.ajax = function (path, params, callback, self) {
-    let requestParams = Application.query(params);
-    let uri = Application.uri({}, path, {self: self, params : false});
-    console.info("Ajax Request: " + uri);
+    let requestParams = this.getQuery(params);
+    let uri = this.getUri({}, path, {self: self, params: false});
+    Logger.info("Ajax Request: " + uri);
     $.get({
         data: requestParams,
         url: uri,
@@ -98,21 +103,91 @@ Application.ajax = function (path, params, callback, self) {
 Application.getQueryParam = function (name) {
     let url_string = location.href;
     let url = new URL(url_string);
-    let val = url.searchParams.get(arguments[0]);
-    return val;
+    return url.searchParams.get(arguments[0]);
 }
 
 /**
- * Triggers a search.
+ * Executes a given action.
  *
- * @param {String} query the query passed to the search engine (Apache Lucene syntax)
+ * @param {String} eventOrHandler the function to be called (handler) or the event to fire
+ * @param {{}} [arguments] the arguments passed to the action listener
  */
-Application.search = function (query) {
-    if ($.isEmptyObject(query)) query = $("#search").val();
-    let params = {
-        query: encodeURIComponent(query)
+Application.action = function (eventOrHandler) {
+    if (Utils.isEmpty(eventOrHandler)) throw new Error("An event or a handler/function is required");
+    let args = Array.prototype.slice.call(arguments, 1);
+    if (Utils.isFunction(Application[eventOrHandler])) {
+        Logger.info("Invoke handler '" + eventOrHandler + "'");
+        Application[eventOrHandler].apply(this, args);
+    } else {
+        args.unshift(eventOrHandler);
+        Application.fire.apply(this, args);
     }
-    Application.open(params, "/search")
 }
+
+/**
+ * Registers an event listener.
+ *
+ * @param {String} name the event name
+ * @param {Function} callback the function to be called when the event it is triggered.
+ */
+Application.bind = function (name, callback) {
+    Logger.debug("Bind event " + name);
+    this.listeners = this.listeners || {};
+    this.listeners[name] = this.listeners[name] || []
+    this.listeners[name].push(callback);
+}
+
+/**
+ * Registers an event listener.
+ *
+ * @param {String} name the event name
+ * @param {Function} [callback] the function to be called when the event it is triggered.
+ */
+Application.unbind = function (name, callback) {
+    Logger.debug("Bind event " + name);
+    let listeners = this.getListeners(name);
+    let index = listeners.indexOf(callback);
+    if (index !== -1) listeners.splice(index, 1);
+}
+
+/**
+ * Fires an event to all listeners.
+ *
+ * @param {String} name the event name
+ * @param {{}} [arguments] the arguments to be passed to the event callback.
+ */
+Application.fire = function (name) {
+    Logger.debug("Fire event " + name + ", arguments " + Utils.toString(arguments));
+    let me = this;
+    let args = Array.prototype.slice.call(arguments, 1);
+    let listeners = this.getListeners(name);
+    for (const listener of listeners) {
+        setTimeout(function () {
+            listener.apply(me, args);
+        }, 5);
+    }
+}
+
+/**
+ * Returns the listeners associated with an event.
+ *
+ * @param {String} name the name of the event
+ * @return {Function[]} an array of listeners
+ */
+Application.getListeners = function (name) {
+    this.listeners = this.listeners || {};
+    this.listeners[name] = this.listeners[name] || [];
+    return this.listeners[name];
+}
+
+/**
+ * Initializes the application
+ */
+Application.initialize = function () {
+    Logger.debug("Initialize application, request path '" + REQUEST_PATH + "', request arguments '" + Utils.toString(REQUEST_QUERY) + "'");
+}
+
+// initialize application
+Application.initialize();
 
 

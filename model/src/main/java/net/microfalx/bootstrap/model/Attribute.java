@@ -20,7 +20,7 @@ public interface Attribute extends Nameable, Descriptable, Comparable<Attribute>
      * @return a non-null instance
      */
     static Attribute create(String name) {
-        return new DefaultAttribute(name, null);
+        return new DefaultAttributes.DefaultAttribute(name, null);
     }
 
     /**
@@ -31,7 +31,7 @@ public interface Attribute extends Nameable, Descriptable, Comparable<Attribute>
      * @return a non-null instance
      */
     static Attribute create(String name, Object value) {
-        return new DefaultAttribute(name, value);
+        return new DefaultAttributes.DefaultAttribute(name, value);
     }
 
     /**

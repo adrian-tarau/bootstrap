@@ -5,13 +5,13 @@ import net.microfalx.resource.Resource;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.*;
 import static net.microfalx.bootstrap.model.AttributeUtils.decodeAttributes;
 import static net.microfalx.bootstrap.model.AttributeUtils.sortAndFilter;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -19,6 +19,8 @@ import static net.microfalx.lang.ObjectUtils.defaultIfNull;
 
 /**
  * Base class for {@link Attributes}.
+ * <p>
+ * The attribute/parameters preserve the order of insertion.
  */
 public abstract class AbstractAttributes<A extends Attribute> implements Attributes<A> {
 
@@ -26,7 +28,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     private boolean readOnly;
 
     @Override
-    public final A addAttribute(A attribute) {
+    public final A add(A attribute) {
         requireNonNull(attribute);
         checkReadOnly();
         if (attribute instanceof AbstractAttribute) ((AbstractAttribute) attribute).parent = this;
@@ -35,13 +37,13 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     }
 
     @Override
-    public A addAttribute(String name, Object value) {
+    public A add(String name, Object value) {
         requireNonNull(name);
-        return addAttribute(createAttribute(name, value));
+        return add(createAttribute(name, value));
     }
 
     @Override
-    public final A addAttributeIfAbsent(A attribute) {
+    public final A addIfAbsent(A attribute) {
         requireNonNull(attribute);
         checkReadOnly();
         if (attribute instanceof AbstractAttribute) ((AbstractAttribute) attribute).parent = this;
@@ -50,13 +52,13 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     }
 
     @Override
-    public A addAttributeIfAbsent(String name, Object value) {
+    public A addIfAbsent(String name, Object value) {
         requireNonNull(name);
-        return addAttributeIfAbsent(createAttribute(name, value));
+        return addIfAbsent(createAttribute(name, value));
     }
 
     @Override
-    public final A removeAttribute(String name) {
+    public final A remove(String name) {
         requireNonNull(name);
         checkReadOnly();
         if (attributes == null) return null;
@@ -66,13 +68,13 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     }
 
     @Override
-    public final A getAttribute(String name) {
-        return getAttribute(name, null);
+    public final A get(String name) {
+        return get(name, null);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public final A getAttribute(String name, Object defaultValue) {
+    public final A get(String name, Object defaultValue) {
         requireNonNull(name);
         A attribute = attributes != null ? attributes.get(name.toLowerCase()) : null;
         if (attribute == null) attribute = (A) Attribute.create(name, defaultValue);
@@ -80,7 +82,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     }
 
     @Override
-    public final boolean hasAttributes() {
+    public final boolean isEmpty() {
         return !(attributes == null || attributes.isEmpty());
     }
 
@@ -96,13 +98,13 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     @Override
     public final void copyFrom(Map<String, Object> values) {
         if (values == null) return;
-        values.forEach(this::addAttribute);
+        values.forEach(this::add);
     }
 
     @Override
     public final <AA extends Attribute> void copyFrom(Attributes<AA> attributes) {
         if (attributes == null) return;
-        getRawAttributes(attributes).forEach(a -> addAttribute(a.getName(), a.getValue()));
+        getRawAttributes(attributes).forEach(a -> add(a.getName(), a.getValue()));
     }
 
     @Override
@@ -114,6 +116,11 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     @Override
     public final Map<String, A> toMap() {
         return attributes != null ? unmodifiableMap(attributes) : emptyMap();
+    }
+
+    @Override
+    public Collection<Object> toValues() {
+        return attributes != null ? unmodifiableCollection(attributes.values().stream().map(Attribute::getValue).collect(Collectors.toList())) : emptyList();
     }
 
     @SuppressWarnings("unchecked")
@@ -145,7 +152,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     }
 
     private Map<String, A> getOrCreateMap() {
-        if (attributes == null) attributes = new HashMap<>();
+        if (attributes == null) attributes = new LinkedHashMap<>();
         return attributes;
     }
 

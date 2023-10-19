@@ -17,7 +17,7 @@
     <td class="text-right" th:text="${#dataset.getCurrentIndex()}"></td>
     <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}">
         <span th:unless="${field.isName()}" th:utext="${#dataset.getDisplayValue(model, field)}"></span>
-        <a th:if="${field.isName()}" href="#" th:attr="onclick=|DataSet.performAction('view', null, '${#dataset.getId(model)}')|"
+        <a th:if="${field.isName()}" href="#" th:attr="onclick=|Application.action('dataset.view', '${#dataset.getId(model)}')|"
            th:utext="${#dataset.getDisplayValue(model, field)}"></a>
     </td>
     <td class="text-center" th:if="${#dataset.hasActions}">
@@ -52,7 +52,7 @@
 
 <div class="dropdown-menu" th:fragment="action-menu" id="dataset-actions">
     <a href="#" class="dropdown-item" th:each="action : ${#component.getChildren(actions)}"
-       th:attr="onclick=|DataSet.performAction('${action.action}', '${action.handler}')|">
+       th:attr="onclick=|Application.action('${action.action}')|">
         <i th:class="${action.icon}"></i><span th:text="${action.text}" class="ms-2"></span></a>
 </div>
 
@@ -63,7 +63,7 @@
                 <button type="button"
                         th:each="button : ${#component.getChildren(toolbar)}"
                         data-bs-toggle="tooltip" title="${button.description}"
-                        th:attr="onclick=|DataSet.performAction('${button.action}', '${button.handler}')|"
+                        th:attr="onclick=|Application.action('${button.action}')|"
                         th:class="${#component.getCssClass(button,'btn btn-primary btn-color mR-5')}">
                     <i th:class="${button.icon}"></i><span class="mL-5" th:text="${button.text}"></span>
                 </button>

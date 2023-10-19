@@ -14,6 +14,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * Template utilities around models ({@link net.microfalx.bootstrap.model.Metadata}.
  */
+@SuppressWarnings("unused")
 public class ModelTool extends AbstractTool {
 
     private final MetadataService metadataService;

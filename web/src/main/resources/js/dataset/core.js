@@ -3,7 +3,6 @@
  */
 window.DataSet = window.DataSet || {};
 
-
 const DATE_RANGE_SEPARATOR = "|";
 
 /**
@@ -20,7 +19,7 @@ const DATASET_DROP_ZONE_CLASS = "dataset-drop-zone";
  */
 DataSet.uri = function (params, path) {
     params = DataSet.query(params);
-    return Application.uri(params, path);
+    return Application.getUri(params, path);
 }
 
 /**
@@ -75,7 +74,7 @@ DataSet.ajax = function (path, params, callback) {
  * @param {String } query the query to execute, if empty
  */
 DataSet.search = function (query) {
-    if (!$.isEmptyObject(query)) $("#query").val(query);
+    if (Utils.isNotEmpty(query)) $("#query").val(query);
     DataSet.open("");
     return false;
 }
@@ -95,29 +94,11 @@ DataSet.loadPage = function (page) {
 }
 
 /**
- * Loads using AJAX the next page for a data set
- * @param {String} action the action to perform, it needs to be a function in the data set
- * @param {String} [handler] the function to perform
- * @param {String} [id] the model identifier
- */
-DataSet.performAction = function (action, handler, id) {
-    if (id) DataSet.id = id;
-    if (action) {
-        if ($.isFunction(DataSet[action])) {
-            console.info("Invoke action '" + action + "'");
-            DataSet[action].apply(this, arguments);
-        } else {
-            console.error("There is no action with name '" + action + "' registered");
-        }
-    }
-}
-
-/**
  * Views the current model.
  */
-DataSet.view = function () {
-    DataSet.checkIdentifier();
-    $.get(REQUEST_PATH + "/" + DataSet.id + "/view", function (data) {
+DataSet.view = function (id) {
+    DataSet.updateId(id);
+    $.get(REQUEST_PATH + "/" + DataSet.getId() + "/view", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -134,9 +115,9 @@ DataSet.add = function () {
 /**
  * Edit the current model.
  */
-DataSet.edit = function () {
-    DataSet.checkIdentifier();
-    $.get(REQUEST_PATH + "/" + DataSet.id + "/edit", function (data) {
+DataSet.edit = function (id) {
+    DataSet.updateId(id);
+    $.get(REQUEST_PATH + "/" + DataSet.getId() + "/edit", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -144,9 +125,9 @@ DataSet.edit = function () {
 /**
  * Delete the current model.
  */
-DataSet.delete = function () {
-    DataSet.checkIdentifier();
-    $.get(REQUEST_PATH + "/" + DataSet.id + "/delete", function (data) {
+DataSet.delete = function (id) {
+    DataSet.updateId(id);
+    $.get(REQUEST_PATH + "/" + DataSet.getId() + "/delete", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -154,8 +135,9 @@ DataSet.delete = function () {
 /**
  * Prints the current model.
  */
-DataSet.print = function () {
-    $.get(REQUEST_PATH + "/" + DataSet.id + "/add", function (data) {
+DataSet.print = function (id) {
+    DataSet.updateId(id);
+    $.get(REQUEST_PATH + "/" + DataSet.getId() + "/add", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -178,7 +160,7 @@ DataSet.upload = function () {
  * Downloads a model.
  */
 DataSet.download = function () {
-    let uri = DataSet.uri({}, DataSet.id + "/download");
+    let uri = DataSet.uri({}, DataSet.getId() + "/download");
     $("#dataset-download").attr("src", uri);
 }
 
@@ -187,7 +169,7 @@ DataSet.download = function () {
  * @param {String} html the modal
  */
 DataSet.loadModal = function (html) {
-    console.log(html);
+    Logger.debug(html);
     $('#dataset-modal').remove();
     $(document.body).append(html);
     let modal = new bootstrap.Modal('#dataset-modal', {});
@@ -296,10 +278,18 @@ DataSet.save = function () {
 }
 
 /**
- * Validates whether a model identifier is set.
+ * Return the current model identifier.
  */
-DataSet.checkIdentifier = function () {
-    if (!DataSet.id) throw new Error("An identifier for the current model is not registered");
+DataSet.getId = function () {
+    if (Utils.isEmpty(DataSet.id)) throw new Error("A model identifier is not provided");
+    return DataSet.id;
+}
+
+/**
+ * Validates and updated a model identifier.
+ */
+DataSet.updateId = function (id) {
+    if (Utils.isNotEmpty(id)) DataSet.id = id;
 }
 
 /**
@@ -307,9 +297,7 @@ DataSet.checkIdentifier = function () {
  */
 DataSet.initNotifications = function () {
     let text = $("#dataset-message").text();
-    if (!$.isEmptyObject(text)) {
-        DataSet.showErrorAlert("Query", text);
-    }
+    if (Utils.isNotEmpty(text)) Application.showErrorAlert("Query", text);
 }
 
 /**
@@ -343,16 +331,16 @@ DataSet.getTimeFilter = function () {
 DataSet.initFields = function () {
     if (!DataSet.hasTimeFilter()) return;
     let range = Application.getQueryParam('range');
-    if ($.isEmptyObject(range)) range = $('#daterange span.d-none').val();
+    if (Utils.isEmpty(range)) range = $('#daterange span.d-none').val();
     let startDate = moment().startOf('day');
     let endDate = moment().endOf('day');
-    if (!$.isEmptyObject(range)) {
-        console.log("Range: " + range);
+    if (Utils.isNotEmpty(range)) {
+        Logger.debug("Data Set Range Query: " + range);
         let startEndRange = range.split(DATE_RANGE_SEPARATOR);
         startDate = moment(startEndRange[0]);
         endDate = moment(startEndRange.length === 2 ? startEndRange[1] : startDate);
     }
-    console.log("Range: " + startDate + ", " + endDate);
+    Logger.debug("Data Set Range: " + startDate + ", " + endDate);
     let formatter = function (start, end) {
         $('#daterange span').html(start.format('L') + ' - ' + end.format('L'));
     };
@@ -376,6 +364,16 @@ DataSet.initFields = function () {
         DataSet.reload();
     });
     formatter(startDate, endDate);
+}
+
+/**
+ * Initializes data set specific actions.
+ */
+DataSet.initActions = function () {
+    Application.bind("dataset.view", DataSet.view);
+    Application.bind("dataset.add", DataSet.add);
+    Application.bind("dataset.edit", DataSet.edit);
+    Application.bind("dataset.delete", DataSet.delete);
 }
 
 /**
@@ -404,8 +402,8 @@ DataSet.initTables = function () {
         })
         .prepend("<div class='dataset-table-resizer'></div>")
         .resizable({
-            resizeHeight: false,
             handleSelector: "",
+            handles: 'e',
             onDragStart: function (e, $el, opt) {
                 return $(e.target).hasClass("resizer");
             }
@@ -441,10 +439,15 @@ DataSet.initUpload = function () {
 /**
  * Initializes the data set.
  */
-DataSet.init = function () {
+DataSet.initialize = function () {
+    Logger.debug("Initialize data set");
+    DataSet.initActions();
     DataSet.initEvents();
     DataSet.initFields();
     DataSet.initNotifications();
     DataSet.initTables();
     DataSet.initUpload();
 }
+
+// Initialize the data set
+DataSet.initialize();

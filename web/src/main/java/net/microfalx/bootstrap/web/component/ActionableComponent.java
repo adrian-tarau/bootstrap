@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.web.component;
 
+import net.microfalx.bootstrap.model.Parameters;
+
 import java.util.Set;
 
 /**
@@ -7,7 +9,7 @@ import java.util.Set;
  *
  * @param <C> the component type
  */
-public class ActionableComponent<C extends ActionableComponent<C>> extends Component<C> implements Actionable<C> {
+public abstract class ActionableComponent<C extends ActionableComponent<C>> extends Component<C> implements Actionable<C> {
 
     private final ActionableSupport actionable = new ActionableSupport(this);
 
@@ -23,6 +25,17 @@ public class ActionableComponent<C extends ActionableComponent<C>> extends Compo
     }
 
     @Override
+    public String getTarget() {
+        return actionable.getTarget();
+    }
+
+    @Override
+    public C setTarget(String target) {
+        actionable.setTarget(target);
+        return self();
+    }
+
+    @Override
     public final String getToken() {
         return actionable.getToken();
     }
@@ -30,17 +43,6 @@ public class ActionableComponent<C extends ActionableComponent<C>> extends Compo
     @Override
     public final C setToken(String token) {
         actionable.setToken(token);
-        return self();
-    }
-
-    @Override
-    public final String getHandler() {
-        return actionable.getHandler();
-    }
-
-    @Override
-    public final C setHandler(String handler) {
-        actionable.setToken(handler);
         return self();
     }
 
@@ -108,5 +110,16 @@ public class ActionableComponent<C extends ActionableComponent<C>> extends Compo
     public final C setStyle(Style style) {
         actionable.setStyle(style);
         return self();
+    }
+
+    @Override
+    public C addParameter(String name, Object value) {
+        actionable.addParameter(name, value);
+        return self();
+    }
+
+    @Override
+    public Parameters getParameters() {
+        return actionable.getParameters();
     }
 }

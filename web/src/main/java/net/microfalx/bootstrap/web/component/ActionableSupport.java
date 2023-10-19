@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.web.component;
 
+import net.microfalx.bootstrap.model.Parameters;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,9 +17,10 @@ public class ActionableSupport implements Actionable<ActionableSupport> {
     private final Component<?> owner;
     private String token;
     private String action;
-    private String handler;
+    private String target;
     private Set<String> roles;
     private ItemableSupport itemable;
+    private final Parameters parameters = Parameters.create();
 
     public ActionableSupport(Component<?> owner) {
         requireNonNull(owner);
@@ -41,6 +44,17 @@ public class ActionableSupport implements Actionable<ActionableSupport> {
     }
 
     @Override
+    public String getTarget() {
+        return target;
+    }
+
+    @Override
+    public ActionableSupport setTarget(String target) {
+        this.target = target;
+        return this;
+    }
+
+    @Override
     public String getToken() {
         return token;
     }
@@ -48,17 +62,6 @@ public class ActionableSupport implements Actionable<ActionableSupport> {
     @Override
     public ActionableSupport setToken(String token) {
         this.token = token;
-        return this;
-    }
-
-    @Override
-    public String getHandler() {
-        return handler;
-    }
-
-    @Override
-    public ActionableSupport setHandler(String handler) {
-        this.handler = handler;
         return this;
     }
 
@@ -125,13 +128,24 @@ public class ActionableSupport implements Actionable<ActionableSupport> {
     }
 
     @Override
+    public ActionableSupport addParameter(String name, Object value) {
+        parameters.add(name, value);
+        return this;
+    }
+
+    @Override
+    public Parameters getParameters() {
+        return parameters;
+    }
+
+    @Override
     public String toString() {
         return "ActionableSupport{" +
                 "owner=" + owner +
                 ", token='" + token + '\'' +
                 ", action='" + action + '\'' +
-                ", handler='" + handler + '\'' +
                 ", roles=" + roles +
+                ", parameters=" + parameters +
                 ", itemable=" + itemable +
                 '}';
     }

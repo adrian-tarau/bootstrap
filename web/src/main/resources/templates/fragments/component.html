@@ -45,11 +45,22 @@
         <tr th:each="row : ${component.getRows()}">
             <td th:each="column : ${component.getColumns()}">
                 <span th:unless="${row.isComponent(column)}" th:text="${row.getDisplayValue(column)}"></span>
-                <!--div th:if="${row.isComponent(column)}" th:replace="~{ fragments/component :: ${#component.getComponentFragment(dashboard)} (${row.getValue(column)})}"></div-->
+                <div th:if="${row.isComponent(column)}" th:remove="tag">
+                    <div th:replace="~{ fragments/component :: ${#component.getComponentFragment(row.getValue(column))} (${row.getValue(column)})}"></div>
+                </div>
             </td>
         </tr>
         </tbody>
     </table>
+</div>
+
+<div th:fragment="render-link (component)" th:remove="tag">
+    <a th:if="${component.action}" class="icon-link" href="#" th:attr="onclick=|Application.action('${component.action}' ${#component.getFunctionArguments(component)})|">
+        <i th:if="${#component.hasIcon(component)}" th:class="${#component.getIconClass(component)}"></i><span th:text="${component.text}"></span></a>
+</div>
+
+<div th:fragment="render-invalid-component(component)" th:remove="tag">
+    <span th:text="|Invalid component '${component}'|"></span>
 </div>
 
 <div th:fragment="render-dashboard(component)" th:remove="tag">

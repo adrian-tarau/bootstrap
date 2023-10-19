@@ -1,20 +1,25 @@
 package net.microfalx.bootstrap.web.template.tools;
 
+import net.microfalx.bootstrap.model.Parameters;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.component.Actionable;
 import net.microfalx.bootstrap.web.component.Component;
 import net.microfalx.bootstrap.web.component.Container;
+import net.microfalx.bootstrap.web.component.Itemable;
 import net.microfalx.bootstrap.web.component.panel.BasePanel;
 import net.microfalx.bootstrap.web.component.renderer.ComponentRenderer;
 import net.microfalx.bootstrap.web.component.renderer.EmptyComponentRenderer;
 import net.microfalx.bootstrap.web.template.TemplateSecurityContext;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.thymeleaf.context.IContext;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.defaultIfNull;
@@ -22,6 +27,7 @@ import static net.microfalx.lang.StringUtils.defaultIfNull;
 /**
  * Template utilities around components.
  */
+@SuppressWarnings("unused")
 public class ComponentTool extends AbstractTool {
 
     private ComponentRenderer renderer;
@@ -106,13 +112,80 @@ public class ComponentTool extends AbstractTool {
     }
 
     /**
-     * Returns the template which renders a given component type.
+     * Returns whether the component has an icon associated with it.
      *
      * @param component the component
+     * @return {@code true} if there is an icon, {@code false} otherwise
+     */
+    public boolean hasIcon(net.microfalx.bootstrap.web.component.Component<?> component) {
+        if (!(component instanceof Itemable<?> itemable)) return false;
+        return itemable.getStyle() != Itemable.Style.TEXT && StringUtils.isNotEmpty(itemable.getIcon());
+    }
+
+    /**
+     * Returns the CSS classes to represent to icon for the component.
+     *
+     * @param component the component
+     * @return the CSS classes, null if it has no icon
+     */
+    public String getIconClass(net.microfalx.bootstrap.web.component.Component<?> component) {
+        return hasIcon(component) ? ((Itemable<?>) component).getIcon() : null;
+    }
+
+    /**
+     * Returns arguments for a JavaScript function call from a component.
+     * <p>
+     * Only {@link Actionable} carries parameters which can be converted to arguments.
+     *
+     * @param component the component
+     * @return the arguments, empty string if parameters are empty or not available.
+     */
+    public String getFunctionArguments(net.microfalx.bootstrap.web.component.Component<?> component) {
+        if (!(component instanceof Actionable<?> actionable)) return EMPTY_STRING;
+        Parameters parameters = ((Actionable<?>) component).getParameters();
+        String convertedParams = parameters.toValues().stream()
+                .map(this::getJavaScriptValue).map(ObjectUtils::toString)
+                .collect(Collectors.joining(", "));
+        return ", " + convertedParams;
+    }
+
+    /**
+     * Returns the template which renders a given component type.
+     * <p>
+     * The method accepts any component but renders an HTML fragment to indicate the value is not a component if it is
+     * passed by mistake
+     *
+     * @param value the value
      * @return the fragment
      */
-    public String getComponentFragment(net.microfalx.bootstrap.web.component.Component<?> component) {
-        return "render-" + component.getType();
+    public String getComponentFragment(Object value) {
+        if (!(value instanceof net.microfalx.bootstrap.web.component.Component<?> component)) {
+            return "render-invalid-component";
+        } else {
+            return "render-" + component.getType();
+        }
+    }
+
+    /**
+     * Converts a Java object to a JavaScript object.
+     *
+     * @param value the original Java object
+     * @return the JavaScript object
+     */
+    private String getJavaScriptValue(Object value) {
+        if (value == null) {
+            return "null";
+        } else if (value instanceof String) {
+            return "'" + StringEscapeUtils.escapeEcmaScript((String) value) + "'";
+        } else if (value instanceof Number) {
+            if (value instanceof Double || value instanceof Float) {
+                return Double.toString(((Number) value).doubleValue());
+            } else {
+                return Long.toString(((Number) value).longValue());
+            }
+        } else {
+            return "'" + toJson(value) + "'";
+        }
     }
 
     /**
