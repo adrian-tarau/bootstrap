@@ -20,7 +20,7 @@ public class SearchUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchUtils.class);
 
-    public static final String DEFAULT_FIELD = DESCRIPTION_FIELD;
+    public static final String DEFAULT_FIELD = BODY_FIELD;
 
     /**
      * A long value which represents "timestamp is not available"
@@ -127,11 +127,6 @@ public class SearchUtils {
 
     /**
      * Normalizes text by eliminating or transforming characters.
-     * <p/>
-     * Current normalizations:
-     * <ul>
-     * <li>IPv4/IPv6 normalization (eliminated unwanted zeros</li>
-     * </ul>
      *
      * @param text the text to normalize
      * @return the normalized text

@@ -25,8 +25,8 @@ Application.Search.join = function (text) {
     if (Utils.isEmpty(text)) {
         Application.Search.query("");
     } else {
-        let currentText = $("#search").val();
-        text += " AND " + currentText;
+        let currentText = Application.getQueryParam("query");
+        if (Utils.isNotEmpty(currentText)) text += " AND " + currentText;
         Application.Search.query(text);
     }
 }

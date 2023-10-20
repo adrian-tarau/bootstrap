@@ -17,8 +17,8 @@ const DATASET_DROP_ZONE_CLASS = "dataset-drop-zone";
  * @param {Object} params the new parameters
  * @param {String} [path] an optional path to add to the base URI
  */
-DataSet.uri = function (params, path) {
-    params = DataSet.query(params);
+DataSet.getUri = function (params, path) {
+    params = this.getQuery(params);
     return Application.getUri(params, path);
 }
 
@@ -27,10 +27,10 @@ DataSet.uri = function (params, path) {
  *
  * @param {Object} params the new parameters
  */
-DataSet.query = function (params) {
+DataSet.getQuery = function (params) {
     params = params || {};
     params["query"] = $("#query").val();
-    let timeFilter = DataSet.getTimeFilter();
+    let timeFilter = this.getTimeFilter();
     if (timeFilter.length > 0) {
         params["range"] = timeFilter[0].toISOString() + DATE_RANGE_SEPARATOR + timeFilter[1].toISOString();
     }
@@ -45,7 +45,7 @@ DataSet.query = function (params) {
  * @param {String} [path] an optional path to add to the base URI
  */
 DataSet.open = function (params, path) {
-    params = DataSet.query(params);
+    params = this.getQuery(params);
     Application.openSelf(params, path);
 }
 
@@ -53,7 +53,7 @@ DataSet.open = function (params, path) {
  * Reloads the data set page.
  */
 DataSet.reload = function () {
-    DataSet.open({});
+    this.open({});
 }
 
 /**
@@ -65,7 +65,7 @@ DataSet.reload = function () {
  * @param {Function} callback the callback to be called with the response
  */
 DataSet.ajax = function (path, params, callback) {
-    params = DataSet.query(params);
+    params = this.getQuery(params);
     Application.ajax(path, params, callback, true)
 }
 
@@ -75,7 +75,7 @@ DataSet.ajax = function (path, params, callback) {
  */
 DataSet.search = function (query) {
     if (Utils.isNotEmpty(query)) $("#query").val(query);
-    DataSet.open("");
+    this.open("");
     return false;
 }
 
@@ -146,7 +146,7 @@ DataSet.print = function (id) {
  * Refresh the current view.
  */
 DataSet.refresh = function () {
-    DataSet.open({});
+    this.open({});
 }
 
 /**
@@ -160,7 +160,7 @@ DataSet.upload = function () {
  * Downloads a model.
  */
 DataSet.download = function () {
-    let uri = DataSet.uri({}, DataSet.getId() + "/download");
+    let uri = this.getUri({}, DataSet.getId() + "/download");
     $("#dataset-download").attr("src", uri);
 }
 
@@ -174,7 +174,7 @@ DataSet.loadModal = function (html) {
     $(document.body).append(html);
     let modal = new bootstrap.Modal('#dataset-modal', {});
     modal.show();
-    DataSet.registerModal(modal);
+    this.registerModal(modal);
 }
 
 /**
@@ -185,18 +185,18 @@ DataSet.loadModal = function (html) {
  */
 DataSet.showActions = function (event, id) {
     event.stopPropagation();
-    DataSet.closePopups();
-    DataSet.id = id;
+    this.closePopups();
+    this.id = id;
     let actions = $('#dataset-actions');
     let element = $(event.target);
-    if (DataSet.popper) {
-        DataSet.popper.destroy();
+    if (this.popper) {
+        this.popper.destroy();
     }
-    DataSet.popper = Popper.createPopper(element[0], actions[0], {
+    this.popper = Popper.createPopper(element[0], actions[0], {
         placement: 'bottom'
     });
-    DataSet.popper.update();
-    DataSet.registerPopup(actions);
+    this.popper.update();
+    this.registerPopup(actions);
     actions.show();
 }
 
@@ -210,7 +210,7 @@ DataSet.sort = function (field, direction) {
     let requestParams = $.extend({}, REQUEST_QUERY);
     let sort = field + "=" + direction;
     requestParams["sort"] = sort;
-    DataSet.open(requestParams);
+    this.open(requestParams);
 }
 
 
@@ -218,10 +218,10 @@ DataSet.sort = function (field, direction) {
  * Closes all open popups.
  */
 DataSet.closePopups = function () {
-    DataSet.getPopups().forEach(function (popup) {
+    this.getPopups().forEach(function (popup) {
         popup.hide();
     });
-    DataSet.popups = [];
+    this.popups = [];
 }
 
 /**
@@ -229,7 +229,7 @@ DataSet.closePopups = function () {
  * @param {Object} element a
  */
 DataSet.registerPopup = function (element) {
-    DataSet.getPopups().push(element);
+    this.getPopups().push(element);
 }
 
 /**
@@ -238,7 +238,7 @@ DataSet.registerPopup = function (element) {
  * @return {Object[]} the popups.
  */
 DataSet.getPopups = function () {
-    DataSet.popups = DataSet.popups || [];
+    this.popups = this.popups || [];
     return DataSet.popups;
 }
 
@@ -246,7 +246,7 @@ DataSet.getPopups = function () {
  * Closes last dialog.
  */
 DataSet.closeModal = function () {
-    let modal = DataSet.getModals().pop();
+    let modal = this.getModals().pop();
     if (modal) {
         modal.hide();
     }
@@ -257,7 +257,7 @@ DataSet.closeModal = function () {
  * @param {bootstrap.Modal} modal the modal instance
  */
 DataSet.registerModal = function (modal) {
-    DataSet.getModals().push(modal);
+    this.getModals().push(modal);
 }
 
 /**
@@ -266,30 +266,30 @@ DataSet.registerModal = function (modal) {
  * @return {bootstrap.Modal[]} the modals.
  */
 DataSet.getModals = function () {
-    DataSet.modals = DataSet.modals || [];
-    return DataSet.modals;
+    this.modals = this.modals || [];
+    return this.modals;
 }
 
 /**
  * Saves the current data set model
  */
 DataSet.save = function () {
-    DataSet.closeModal();
+    this.closeModal();
 }
 
 /**
  * Return the current model identifier.
  */
 DataSet.getId = function () {
-    if (Utils.isEmpty(DataSet.id)) throw new Error("A model identifier is not provided");
-    return DataSet.id;
+    if (Utils.isEmpty(this.id)) throw new Error("A model identifier is not provided");
+    return this.id;
 }
 
 /**
  * Validates and updated a model identifier.
  */
 DataSet.updateId = function (id) {
-    if (Utils.isNotEmpty(id)) DataSet.id = id;
+    if (Utils.isNotEmpty(id)) this.id = id;
 }
 
 /**
@@ -316,7 +316,7 @@ DataSet.hasTimeFilter = function () {
  * @return {Object[]} the start and end of the time range.
  */
 DataSet.getTimeFilter = function () {
-    if (DataSet.hasTimeFilter()) {
+    if (this.hasTimeFilter()) {
         let data = $('#daterange').data('daterangepicker');
         let range = [data.startDate, data.endDate];
         return range;
@@ -329,7 +329,7 @@ DataSet.getTimeFilter = function () {
  * Initializes various fields related to data sets.
  */
 DataSet.initFields = function () {
-    if (!DataSet.hasTimeFilter()) return;
+    if (!this.hasTimeFilter()) return;
     let range = Application.getQueryParam('range');
     if (Utils.isEmpty(range)) range = $('#daterange span.d-none').val();
     let startDate = moment().startOf('day');
@@ -441,12 +441,12 @@ DataSet.initUpload = function () {
  */
 DataSet.initialize = function () {
     Logger.debug("Initialize data set");
-    DataSet.initActions();
-    DataSet.initEvents();
-    DataSet.initFields();
-    DataSet.initNotifications();
-    DataSet.initTables();
-    DataSet.initUpload();
+    this.initActions();
+    this.initEvents();
+    this.initFields();
+    this.initNotifications();
+    this.initTables();
+    this.initUpload();
 }
 
 // Initialize the data set

@@ -271,7 +271,8 @@ public class SearchService implements InitializingBean {
     }
 
     private String getNormalizedQuery(SearchQuery query) {
-        String normalizedQuery = SearchUtils.normalizeQuery(query.getQuery(), query.isAutoWildcard(), query.isAllowLeadingWildcard()).trim();
+       // String normalizedQuery = SearchUtils.normalizeQuery(query.getQuery(), query.isAutoWildcard(), query.isAllowLeadingWildcard()).trim();
+        String normalizedQuery = query.getQuery();
         if (isNotEmpty(query.getFilter())) {
             StringBuilder builder = new StringBuilder();
             builder.append("(").append(normalizedQuery).append(") AND (").append(query.getFilter()).append(")");

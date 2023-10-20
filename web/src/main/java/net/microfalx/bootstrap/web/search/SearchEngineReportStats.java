@@ -68,6 +68,7 @@ class SearchEngineReportStats {
         row.add(getTypeStatistics());
         row.add(getSourceStatistics());
         row.add(getTargetStatistics());
+        row.add(getBodyStatistics());
     }
 
     Column getSeverityStatistics() {
@@ -88,6 +89,9 @@ class SearchEngineReportStats {
 
     Column getTypeStatistics() {
         return getFieldStatistics("Top {limit} Types", Document.TYPE_FIELD);
+    }
+    Column getBodyStatistics() {
+        return getFieldStatistics("Top {limit} Tokens", Document.BODY_FIELD);
     }
 
     Column termsStatistics() {
@@ -122,6 +126,6 @@ class SearchEngineReportStats {
     }
 
     private Link termLink(String fieldName, String term) {
-        return Link.action(term, "search").addParameter("query", fieldName + ": " + term);
+        return Link.action(term, "search").addParameter("query", fieldName + ": \"" + term+"\"");
     }
 }

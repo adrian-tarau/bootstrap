@@ -1,12 +1,27 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.resource.MimeType;
+import net.microfalx.resource.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.util.BytesRef;
+import org.apache.tika.detect.CompositeEncodingDetector;
+import org.apache.tika.detect.EncodingDetector;
+import org.apache.tika.detect.NonDetectingEncodingDetector;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.html.HtmlParser;
+import org.apache.tika.parser.html.charsetdetector.StandardHtmlEncodingDetector;
+import org.apache.tika.sax.ToTextContentHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import static net.microfalx.bootstrap.search.Document.*;
 import static net.microfalx.bootstrap.search.SearchUtils.normalizeText;
@@ -17,6 +32,8 @@ import static net.microfalx.lang.ObjectUtils.isEmpty;
  * the {@link Document} from a Lucene document.
  */
 class DocumentMapper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DocumentMapper.class);
 
     /**
      * Writes a document into the index.
@@ -33,7 +50,7 @@ class DocumentMapper {
         if (document.getDescription() != null)
             ld.add(new TextField(DESCRIPTION_FIELD, normalizeText(document.getDescription(), true), Field.Store.YES));
         if (document.getBody() != null) {
-            ld.add(new TextField(BODY_FIELD, normalizeText(document.getBody().loadAsString(), false), Field.Store.NO));
+            ld.add(new TextField(BODY_FIELD, normalizeBody(document), Field.Store.NO));
             ld.add(new StringField(BODY_URI_FIELD, document.getBody().toURI().toASCIIString(), Field.Store.YES));
         }
         ld.add(new StringField(MIME_TYPE_FIELD, document.getMimeType(), Field.Store.YES));
@@ -163,6 +180,45 @@ class DocumentMapper {
         return item;
     }
 
+    private String normalizeBody(Document document) throws IOException {
+        String mimeType = document.getMimeType();
+        if (MimeType.get(mimeType).isText()) {
+            return normalizeTextBody(document);
+        } else {
+            return StringUtils.EMPTY;
+        }
+    }
+
+    private String normalizeTextBody(Document document) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        builder.append(document.getName()).append('\n');
+        if (StringUtils.isNotEmpty(document.getDescription())) builder.append(document.getDescription()).append('\n');
+        MimeType mimeType = MimeType.get(document.getMimeType());
+        Resource body = document.getBody();
+        if (MimeType.TEXT_HTML.equals(mimeType)) {
+            HtmlParser parser = new HtmlParser(createEncodingDetector(mimeType));
+            StringWriter sw = new StringWriter();
+            try {
+                parser.parse(body.getInputStream(), new ToTextContentHandler(sw), new Metadata(), new ParseContext());
+                builder.append(sw);
+            } catch (Exception e) {
+                builder.append(body.loadAsString());
+                // any failure, log and just return the content as is
+                LOGGER.warn("Failed to parse HTML document: " + document.getBodyUri() + ", root cause: " + e.getMessage());
+            }
+        } else {
+            builder.append(body.loadAsString());
+        }
+        return builder.toString();
+    }
+
+    private EncodingDetector createEncodingDetector(MimeType mimeType) {
+        List<EncodingDetector> encodingDetectors = new ArrayList<>();
+        if (MimeType.TEXT_HTML.equals(mimeType)) encodingDetectors.add(new StandardHtmlEncodingDetector());
+        encodingDetectors.add(new NonDetectingEncodingDetector());
+        return new CompositeEncodingDetector(encodingDetectors);
+    }
+
     private static final FieldType TIME_TYPE;
     private static final FieldType TAG_TYPE;
     private static final FieldType USER_DATA_TYPE;
@@ -214,7 +270,6 @@ class DocumentMapper {
             type.setTokenized((Attribute.TOKENIZED_MASK & index) != 0);
             type.setStored((Attribute.STORED_MASK & index) != 0);
             type.setOmitNorms(true);
-            type.setIndexOptions(IndexOptions.DOCS);
             type.freeze();
 
             TYPES[index] = type;

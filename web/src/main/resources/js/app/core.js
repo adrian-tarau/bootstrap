@@ -157,9 +157,9 @@ Application.unbind = function (name, callback) {
  * @param {{}} [arguments] the arguments to be passed to the event callback.
  */
 Application.fire = function (name) {
-    Logger.debug("Fire event " + name + ", arguments " + Utils.toString(arguments));
     let me = this;
     let args = Array.prototype.slice.call(arguments, 1);
+    Logger.debug("Fire event " + name + ", arguments " + Utils.toString(args));
     let listeners = this.getListeners(name);
     for (const listener of listeners) {
         setTimeout(function () {

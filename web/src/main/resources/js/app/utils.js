@@ -165,7 +165,7 @@ Utils.toString = function (value, quoteStrings) {
             if (buffer.length > 2) buffer += ", ";
             buffer += Utils.toString(item);
         }
-        buffer += "["
+        buffer += "]"
         return buffer;
     } else if (Utils.isObject(value)) {
         let buffer = '{';

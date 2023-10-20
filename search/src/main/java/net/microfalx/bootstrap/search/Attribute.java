@@ -60,6 +60,14 @@ public class Attribute extends AbstractAttribute implements Serializable {
     }
 
     /**
+     * Enables all options.
+     */
+    public Attribute enableAll() {
+        setTokenized(true).setIndexed(true).setStored(true);
+        return this;
+    }
+
+    /**
      * Changes whether the attribute is tokenized.
      *
      * @param tokenized <code>true</code> if tokenized, <code>false</code> otherwise

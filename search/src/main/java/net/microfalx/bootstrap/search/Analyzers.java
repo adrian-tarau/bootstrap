@@ -1,11 +1,13 @@
 package net.microfalx.bootstrap.search;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.core.WhitespaceTokenizer;
-import org.apache.lucene.analysis.util.CharTokenizer;
-import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.analysis.classic.ClassicTokenizerFactory;
+import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
+import org.apache.lucene.analysis.core.StopFilterFactory;
+import org.apache.lucene.analysis.custom.CustomAnalyzer;
+import org.apache.lucene.analysis.en.EnglishPossessiveFilterFactory;
+import org.apache.lucene.analysis.en.PorterStemFilterFactory;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.Query;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -16,11 +18,13 @@ public class Analyzers {
 
     /**
      * Creates an analyzer used during searching.
+     * <p>
+     * Unless configuration is changed, the same analyzer used for indexing is used for searching too.
      *
      * @return a non-null instance
      */
     public static Analyzer createSearchAnalyzer() {
-        return new WhitespaceAndSpecialCharsAnalyzer();
+        return createIndexAnalyzer();
     }
 
     /**
@@ -29,7 +33,18 @@ public class Analyzers {
      * @return a non-null instance
      */
     public static Analyzer createIndexAnalyzer() {
-        return new WhitespaceAndSpecialCharsAnalyzer();
+        try {
+            CustomAnalyzer.Builder builder = CustomAnalyzer.builder(new SearchResourceLoader())
+                    .withTokenizer(ClassicTokenizerFactory.NAME)
+                    .addTokenFilter(EnglishPossessiveFilterFactory.NAME)
+                    .addTokenFilter(LowerCaseFilterFactory.NAME)
+                    .addTokenFilter(StopFilterFactory.NAME, "ignoreCase", "true",
+                            "words", "stopwords.txt", "format", "wordset")
+                    .addTokenFilter(PorterStemFilterFactory.NAME);
+            return builder.build();
+        } catch (Exception e) {
+            throw new IndexException("Could not create analyzer", e);
+        }
     }
 
     /**
@@ -40,7 +55,7 @@ public class Analyzers {
      */
     public static QueryParser createQueryParser(String defaultField) {
         requireNonNull(defaultField);
-        QueryParserImpl queryParser = new QueryParserImpl(defaultField, createIndexAnalyzer());
+        QueryParser queryParser = new QueryParser(defaultField, createIndexAnalyzer());
         return queryParser;
     }
 
@@ -50,70 +65,6 @@ public class Analyzers {
      * @return a non-null instance
      */
     public static QueryParser createQueryParser() {
-        return createQueryParser(Document.NAME_FIELD);
+        return createQueryParser(Document.BODY_FIELD);
     }
-
-    static final class WhitespaceAndSpecialCharsAnalyzer extends Analyzer {
-
-        public WhitespaceAndSpecialCharsAnalyzer() {
-        }
-
-        @Override
-        protected TokenStreamComponents createComponents(String fieldName) {
-            return new TokenStreamComponents(new WhitespaceTokenizer());
-        }
-    }
-
-    static final class QueryParserImpl extends QueryParser {
-
-        public QueryParserImpl(String f, Analyzer a) {
-            super(f, a);
-        }
-
-        @Override
-        protected Query getFieldQuery(String field, String queryText, boolean quoted) throws ParseException {
-            return super.getFieldQuery(field, queryText, quoted);
-        }
-    }
-
-    static final class WhitespaceAndSpecialCharsTokenizer extends CharTokenizer {
-
-        /**
-         * Collects only characters which are not white spaces or part of a list of special characters
-         *
-         * @see Character#isWhitespace
-         * @see #SPECIAL_TOKEN_CHARS
-         */
-        @Override
-        protected boolean isTokenChar(int c) {
-            return !(isSpecialChar((char) c) || Character.isWhitespace(c));
-        }
-
-    }
-
-    /**
-     * Returns whether the character is part of a list of special chars.
-     *
-     * @param c the character to validate
-     * @return <code>true</code> if special, <code>false</code> otherwise
-     */
-    private static boolean isSpecialChar(char c) {
-        for (char specialTokenChar : SPECIAL_TOKEN_CHARS) {
-            if (specialTokenChar == c) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    static final char[] SPECIAL_TOKEN_CHARS = new char[0];
-
-    /*static final char[] SPECIAL_TOKEN_CHARS = new char[]{
-            '(', ')',
-            '[', ']',
-            '/', '\\',
-            ',', '_', '-', '+', '=',
-            '!', '@', '#', '$', '%', '&', '*',
-            '"', '\'', '?'
-    };*/
 }
