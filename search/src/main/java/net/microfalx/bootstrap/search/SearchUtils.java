@@ -225,6 +225,7 @@ public class SearchUtils {
         for (String fieldName : luceneFields) {
             try {
                 Terms terms = luceneFields.terms(fieldName);
+                if (terms == null) continue;
                 FieldStatistics fieldStatistic = new FieldStatistics(fieldName);
                 fieldStatistic.documentCount = terms.getDocCount();
                 fields.put(toIdentifier(fieldName), fieldStatistic);
@@ -242,7 +243,7 @@ public class SearchUtils {
                     termStatisticsList.add(termStatistics);
                 }
                 fieldStatistic.setTerms(termStatisticsList);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOGGER.warn("Failed to extract terms for '" + fieldName + ", root cause: " + e.getMessage());
             }
         }

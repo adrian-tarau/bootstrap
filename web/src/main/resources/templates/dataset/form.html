@@ -1,0 +1,9 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default.html}">
+<body>
+<section layout:fragment="content">
+    <div th:replace="~{ fragments/form :: render}"></div>
+</section>
+</body>
+</html>

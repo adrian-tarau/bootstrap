@@ -256,7 +256,7 @@ public class SearchService implements InitializingBean {
         retryTemplate.registerListener(new RetryListener() {
             @Override
             public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-                LOGGER.info("Failure detected during action '" + operation + "', root cause" + throwable.getMessage());
+                LOGGER.info("Failure detected during action '" + operation + "', root cause: " + throwable.getMessage());
                 releaseSearchHolder();
             }
         });
@@ -271,7 +271,7 @@ public class SearchService implements InitializingBean {
     }
 
     private String getNormalizedQuery(SearchQuery query) {
-       // String normalizedQuery = SearchUtils.normalizeQuery(query.getQuery(), query.isAutoWildcard(), query.isAllowLeadingWildcard()).trim();
+        // String normalizedQuery = SearchUtils.normalizeQuery(query.getQuery(), query.isAutoWildcard(), query.isAllowLeadingWildcard()).trim();
         String normalizedQuery = query.getQuery();
         if (isNotEmpty(query.getFilter())) {
             StringBuilder builder = new StringBuilder();
