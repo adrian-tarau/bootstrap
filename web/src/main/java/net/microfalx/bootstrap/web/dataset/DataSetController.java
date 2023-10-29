@@ -16,6 +16,7 @@ import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.component.Toolbar;
 import net.microfalx.bootstrap.web.controller.NavigableController;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
+import net.microfalx.bootstrap.web.util.JsonFormResponse;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
@@ -38,15 +39,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.ui.Model;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static net.microfalx.lang.StringUtils.*;
 
@@ -103,8 +103,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         return "dataset/page::#dataset-page";
     }
 
-    @GetMapping("{id}/add")
-    public final String add(Model model, @PathVariable("id") String id) {
+    @GetMapping("add")
+    public final String add(Model model) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "add", 0, null, null, null);
         updateModel(dataSet, model, State.ADD);
@@ -168,6 +168,28 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(resource.getMimeType()))
                 .header("Content-Disposition", "attachment; filename=\"" + resource.getFileName() + "\"")
                 .body(new InputStreamResource(resource.getInputStream()));
+    }
+
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @ResponseBody()
+    public JsonFormResponse<?> save(Model model, @RequestBody MultiValueMap<String, String> fields) {
+        JsonFormResponse<?> response = JsonFormResponse.success();
+        M dataSetModel = bind(null, fields, response);
+        validate(dataSetModel, response);
+        if (response.isSuccess()) getDataSet().save(dataSetModel);
+        return response;
+    }
+
+    @PostMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @ResponseBody()
+    public JsonFormResponse<?> update(Model model, @PathVariable("id") String id, @RequestBody MultiValueMap<String, String> fields) {
+        if (StringUtils.isEmpty(id)) throw new ModelException("The model identifier is required");
+        JsonFormResponse<?> response = JsonFormResponse.success();
+        M dataSetModel = findModel(getDataSet(), model, id, State.EDIT);
+        dataSetModel = bind(dataSetModel, fields, response);
+        validate(dataSetModel, response);
+        if (response.isSuccess()) getDataSet().save(dataSetModel);
+        return response;
     }
 
     /**
@@ -280,6 +302,18 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     /**
+     * Invoked before the actual bind happens on the field.
+     *
+     * @param dataSet the data set
+     * @param field   the field
+     * @param value   the value
+     * @return the converted value
+     */
+    protected Object bind(DataSet<M, Field<M>, ID> dataSet, Field<M> field, Object value) {
+        return value;
+    }
+
+    /**
      * Returns the data set used with this controller.
      *
      * @return a non-null instance
@@ -387,13 +421,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Menu menu = new Menu().setId("actions");
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
         if (!dataSet.isReadOnly()) {
-            menu.add(new Item().setAction("dataset.view").setText("View").setIcon("fa-solid fa-eye").setDescription("Views the "+dataSet.getName()));
-            menu.add(new Item().setAction("dataset.edit").setText("Edit").setIcon("fa-solid fa-pen-to-square").setDescription("Edits the "+dataSet.getName()));
+            menu.add(new Item().setAction("dataset.view").setText("View").setIcon("fa-solid fa-eye").setDescription("Views the " + dataSet.getName()));
+            menu.add(new Item().setAction("dataset.edit").setText("Edit").setIcon("fa-solid fa-pen-to-square").setDescription("Edits the " + dataSet.getName()));
             if (dataSetAnnotation.canDelete()) {
-                menu.add(new Item().setAction("dataset.delete").setText("Delete").setIcon("fa-solid fa-trash-can").setDescription("Deletes the "+dataSet.getName()));
+                menu.add(new Item().setAction("dataset.delete").setText("Delete").setIcon("fa-solid fa-trash-can").setDescription("Deletes the " + dataSet.getName()));
             }
             if (dataSetAnnotation.canDownload()) {
-                menu.add(new Item().setAction("dataset.download").setText("Download").setIcon("fa-solid fa-download").setDescription("Downloads the "+dataSet.getName()));
+                menu.add(new Item().setAction("dataset.download").setText("Download").setIcon("fa-solid fa-download").setDescription("Downloads the " + dataSet.getName()));
             }
         }
         updateActions(menu);
@@ -447,6 +481,34 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         } else {
             throw new ResponseStatusException(HttpStatusCode.valueOf(404), "A model with identifier '" + id + "' does not exist");
         }
+    }
+
+    private void validate(M model, JsonFormResponse<?> response) {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        Map<Field<M>, String> dataSetErrors = dataSet.validate(model);
+        Map<String, String> errors = new HashMap<>();
+        dataSetErrors.forEach((f, e) -> errors.put(f.getName(), e));
+        response.addErrors(errors);
+    }
+
+    private M bind(M model, MultiValueMap<String, String> fields, JsonFormResponse<?> response) {
+        boolean edit = model != null;
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        if (model == null) model = dataSet.getMetadata().create();
+        for (Field<M> field : dataSet.getMetadata().getFields()) {
+            if (edit && field.isId()) continue;
+            List<String> values = fields.get(field.getName());
+            if (values == null) continue;
+            Object value = null;
+            if (values.size() == 1) {
+                value = Field.from(values.get(0), field.getDataClass());
+            } else {
+                // what to do here?
+            }
+            value = bind(dataSet, field, value);
+            field.set(model, value);
+        }
+        return model;
     }
 
     private TransactionTemplate getTransactionTemplate(DataSet<M, Field<M>, ID> dataSet) {

@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.validation.MapBindingResult;
+import org.springframework.validation.Validator;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
@@ -44,6 +46,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
 
     MetadataService metadataService;
     MessageSource messageSource;
+    Validator validator;
 
     public AbstractMetadata(Class<M> modelClass) {
         this.modelClass = modelClass;
@@ -227,6 +230,19 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     }
 
     @Override
+    public final Map<F, String> validate(M model) {
+        requireNonNull(model);
+        Map<F, String> errors = new HashMap<>();
+        validate(model, errors);
+        for (F field : getFields()) {
+            Object value = field.get(model);
+            validateCommon(model, field, value, errors);
+            validate(model, field, value, errors);
+        }
+        return errors;
+    }
+
+    @Override
     public <A extends Annotation> A findAnnotation(Class<A> annotationClass) {
         return modelClass.getAnnotation(annotationClass);
     }
@@ -292,6 +308,42 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
             LOGGER.debug("Missing i18n '" + key + "' for model " + getModel().getName());
             return null;
         }
+    }
+
+    /**
+     * Subclasses would perform additional validations on the model.
+     *
+     * @param model  the model
+     * @param errors the errors
+     */
+    protected void validate(M model, Map<F, String> errors) {
+        // empty by default
+    }
+
+    /**
+     * Subclasses would perform additional validations on a field.
+     *
+     * @param model  the model
+     * @param field  the field
+     * @param value  the value of the field
+     * @param errors the errors
+     */
+    protected void validate(M model, F field, Object value, Map<F, String> errors) {
+        // empty by default
+    }
+
+    /**
+     * Subclasses would perform additional validations on a field.
+     *
+     * @param model  the model
+     * @param field  the field
+     * @param value  the value of the field
+     * @param errors the errors
+     */
+    protected void validateCommon(M model, F field, Object value, Map<F, String> errors) {
+        Map<String, String> springErrorMap = new HashMap<>();
+        MapBindingResult springErrors = new MapBindingResult(springErrorMap, ClassUtils.getName(modelClass));
+        validator.validate(value, springErrors);
     }
 
     private void initI18n() {

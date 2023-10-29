@@ -120,7 +120,9 @@
                 <h5 class="modal-title" th:text="${dataset.name}"></h5>
             </div>
             <div class="modal-body">
-                <div th:replace="~{ ${fieldsTemplate} :: ${fieldsFragment}}"></div>
+                <form id="dataset-form">
+                    <div th:replace="~{ ${fieldsTemplate} :: ${fieldsFragment}}"></div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" th:attr="onclick=|DataSet.save()|" th:unless="${#dataset.isView()}">Save</button>

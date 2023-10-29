@@ -16,23 +16,34 @@ const DATASET_DROP_ZONE_CLASS = "dataset-drop-zone";
  *
  * @param {Object} params the new parameters
  * @param {String} [path] an optional path to add to the base URI
+ * @param {Object} [options] an optional object, to control how parameters are calculated
+ * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI to the current page (self)
+ * @param {Boolean} [options.params=true] an optional boolean, to include the parameters in the URI
  */
-DataSet.getUri = function (params, path) {
-    params = this.getQuery(params);
-    return Application.getUri(params, path);
+DataSet.getUri = function (params, path, options) {
+    params = this.getQuery(params, options);
+    return Application.getUri(params, path, options);
 }
 
 /**
  * Takes a collection of parameters and creates an object with all query parameters.
  *
  * @param {Object} params the new parameters
+ * @param {Object} [options] an optional object, to control how parameters are calculated
+ * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI to the current page (self)
+ * @param {Boolean} [options.params=true] an optional boolean, to include the parameters in the URI
  */
-DataSet.getQuery = function (params) {
+DataSet.getQuery = function (params, options) {
+    options = options || {};
+    options.self = (typeof options.self === 'undefined') ? true : options.self;
+    options.params = (typeof options.params === 'undefined') ? true : options.params;
     params = params || {};
-    params["query"] = $("#query").val();
-    let timeFilter = this.getTimeFilter();
-    if (timeFilter.length > 0) {
-        params["range"] = timeFilter[0].toISOString() + DATE_RANGE_SEPARATOR + timeFilter[1].toISOString();
+    if (options.params) {
+        params["query"] = $("#query").val();
+        let timeFilter = this.getTimeFilter();
+        if (timeFilter.length > 0) {
+            params["range"] = timeFilter[0].toISOString() + DATE_RANGE_SEPARATOR + timeFilter[1].toISOString();
+        }
     }
     return params;
 }
@@ -274,7 +285,22 @@ DataSet.getModals = function () {
  * Saves the current data set model
  */
 DataSet.save = function () {
-    this.closeModal();
+    let me = DataSet;
+    let url = Utils.isEmpty(me.id) ? DataSet.getUri({}, "", {params:false}) : DataSet.getUri({}, me.id, {params:false});
+    let closeModel = false;
+    let form = $('#dataset-form').ajaxSubmit({
+        url: url,
+        type: 'POST',
+        dataType: 'json',
+        error: function (jqXHR, textStatus, errorThrown) {
+            Logger.error("An error was encountered which submitting the form to " + url + ", error: " + errorThrown);
+        },
+        success: function (data, textStatus, jqXHR) {
+            Logger.info("Form was submitted successfully, response " + data);
+            me.reload();
+        }
+    });
+    if (closeModel) this.closeModal();
 }
 
 /**

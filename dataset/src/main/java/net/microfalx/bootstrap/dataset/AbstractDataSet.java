@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -211,6 +212,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public final void setId(M model, ID id) {
         new CompositeIdentifier<>(metadata, model);
+    }
+
+    @Override
+    public Map<F, String> validate(M model) {
+        return metadata.validate(model);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

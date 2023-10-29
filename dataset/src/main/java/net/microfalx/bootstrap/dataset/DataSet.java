@@ -12,6 +12,7 @@ import org.springframework.data.repository.ListPagingAndSortingRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * An abstract over a collection of records with CRUD support.
@@ -143,6 +144,14 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
      * @param id    the id
      */
     void setId(M model, ID id);
+
+    /**
+     * Validates a model.
+     *
+     * @param model the model
+     * @return the errors, empty if there are no errors
+     */
+    Map<F, String> validate(M model);
 
     /**
      * Validates whether the filter is valid for the data set.

@@ -6,6 +6,7 @@ import net.microfalx.lang.Nameable;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An interface which holds metadata about a model's fields.
@@ -149,6 +150,14 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
      * @return a new instance, as a shallow or deep copy
      */
     M copy(M model, boolean deep);
+
+    /**
+     * Validates a model.
+     *
+     * @param model the model
+     * @return the errors, empty if there are no errors
+     */
+    Map<F, String> validate(M model);
 
     /**
      * Returns an annotation by its type.

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.Validator;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +27,9 @@ public class MetadataService implements InitializingBean {
 
     @Autowired
     private MessageSource messageSource;
+
+    @Autowired
+    private Validator validator;
 
     private final List<MetadataProvider<?, ?, ?>> providers = new CopyOnWriteArrayList<>();
     private final Map<Class<?>, Metadata<?, ? extends Field<?>, ?>> metadataCache = new ConcurrentHashMap<>();
@@ -61,6 +65,7 @@ public class MetadataService implements InitializingBean {
             metadata = (Metadata<M, F, ID>) provider.getMetadata(modelClass);
             if (metadata instanceof AbstractMetadata<M, F, ID> ametadata) {
                 ametadata.messageSource = messageSource;
+                ametadata.validator = validator;
                 ametadata.metadataService = this;
                 ametadata.initialize();
             }
@@ -83,6 +88,19 @@ public class MetadataService implements InitializingBean {
      */
     public void clear() {
         metadataCache.clear();
+    }
+
+    /**
+     * Validates a model.
+     *
+     * @param model the model
+     * @return the errors, empty if there are no errors
+     */
+    @SuppressWarnings("unchecked")
+    public <M, F extends Field<M>, ID> Map<Field<M>, String> validate(M model) {
+        requireNonNull(model);
+        Metadata<M, F, ID> metadata = getMetadata(model);
+        return (Map<Field<M>, String>) metadata.validate(model);
     }
 
     @Override
