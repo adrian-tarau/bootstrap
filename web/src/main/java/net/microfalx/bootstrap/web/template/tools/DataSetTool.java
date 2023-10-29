@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.thymeleaf.context.IContext;
 
+import java.time.temporal.Temporal;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
@@ -225,15 +226,31 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
-     * Returns the class to be used with a header cell.
+     * Returns whether the field is read-only.
      *
      * @param field the field
-     * @return the input type
+     * @return {@code true} if read-only, {@code false} otherwise
      */
     public boolean isReadOnly(Field<M> field) {
         DataSet<M, F, ID> dataSet = getDataSet();
         if (dataSet.isReadOnly() || dataSet.getState() == State.VIEW) return true;
         return field.isReadOnly();
+    }
+
+    /**
+     * Returns whether the field is checked (it only applies to boolean type fields.
+     *
+     * @param model the model
+     * @param field the field
+     * @return {@code true} if checked, {@code false} if unchecked, {@code NULL} if the field is not a boolean
+     */
+    public Boolean isChecked(M model, Field<M> field) {
+        DataSet<M, F, ID> dataSet = getDataSet();
+        if (field.getDataType().isBoolean()) {
+            return Boolean.TRUE.equals(field.get(model));
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -282,13 +299,23 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
-     * Returns whether the field associated with the field should be an INPUT type.
+     * Returns whether the field associated with the field should be an INPUT type (everything except checkbox)
      *
      * @param field the field
      * @return {@code true} if of type INPUT, {@code false} otherwise
      */
     public boolean isInputField(Field<M> field) {
-        return isVisible(field) && getComponentType(field) == Component.Type.TEXT_FIELD;
+        return isVisible(field) && getComponentType(field) == Component.Type.TEXT_FIELD && !field.getDataType().isBoolean();
+    }
+
+    /**
+     * Returns whether the field associated with the field should be an INPUT type of type checkbox.
+     *
+     * @param field the field
+     * @return {@code true} if of type INPUT, {@code false} otherwise
+     */
+    public boolean isCheckboxField(Field<M> field) {
+        return isVisible(field) && getComponentType(field) == Component.Type.TEXT_FIELD && field.getDataType().isBoolean();
     }
 
     /**
@@ -347,11 +374,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public String getInputContainerClass(Field<M> field) {
         if (isVisible(field)) {
-            String classes = "col-sm-9";
-            if (field.getDataType().isBoolean()) {
-                classes += " form-check";
-            }
-            return classes.trim();
+            return "col-sm-9";
         } else {
             return "d-none";
         }
@@ -364,11 +387,11 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return the classes
      */
     public String getInputFieldClass(Field<M> field) {
-        String classes = "";
+        String classes = field.getDataType().isBoolean() ? EMPTY_STRING : "form-control-sm";
         if (field.getDataType().isBoolean()) {
             classes += " form-check-input";
         } else {
-            classes += " form-control-sm form-control";
+            classes += " form-control";
         }
         return classes.trim();
     }
@@ -425,9 +448,20 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public String getDisplayValue(M model, Field<M> field) {
         DataSet<M, F, ID> dataSet = getDataSet();
+        State state = dataSet.getState();
+        Object value = field.get(model);
+        if (value == null) return null;
         if (field.getDataType() == Field.DataType.BOOLEAN) {
-            boolean bool = Boolean.TRUE.equals(field.get(model));
-            return bool ? BOOLEAN_CHECKED : BOOLEAN_UNCHECKED;
+            if (state == State.VIEW) {
+                // the value attribute should be null during view for booleans since we are used checked attribute
+                return null;
+            } else {
+                // the value will use a check/uncheck glyph from FontAwesome
+                boolean bool = Boolean.TRUE.equals(value);
+                return bool ? BOOLEAN_CHECKED : BOOLEAN_UNCHECKED;
+            }
+        } else if (state == State.VIEW && value instanceof Temporal) {
+            return value.toString();
         } else {
             return dataSet.getDisplayValue(model, field);
         }
@@ -458,10 +492,12 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public String getValue(M model, Field<M> field) {
         if (model == null) return null;
         DataSet<M, F, ID> dataSet = getDataSet();
+        Object value = field.get(model);
+        if (value == null) return null;
         if (dataSet.getState() == State.VIEW || dataSet.getState() == State.BROWSE) {
             return getDisplayValue(model, field);
         } else {
-            return ObjectUtils.toString(field.get(model));
+            return ObjectUtils.toString(value);
         }
     }
 

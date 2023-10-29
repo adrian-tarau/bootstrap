@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.component;
 
+import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.StringUtils;
 
@@ -10,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @param <C> the component type
  */
-public abstract class Component<C extends Component<C>> implements Identifiable<String> {
+public abstract class Component<C extends Component<C>> implements Identifiable<String>, Descriptable {
 
     private static final AtomicInteger ID_GENERATOR = new AtomicInteger(1);
 

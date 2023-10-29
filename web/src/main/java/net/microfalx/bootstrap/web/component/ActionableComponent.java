@@ -4,6 +4,8 @@ import net.microfalx.bootstrap.model.Parameters;
 
 import java.util.Set;
 
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+
 /**
  * Base class for all components with an action.
  *
@@ -81,11 +83,12 @@ public abstract class ActionableComponent<C extends ActionableComponent<C>> exte
 
     @Override
     public String getDescription() {
-        return actionable.getDescription();
+        return defaultIfEmpty(actionable.getDescription(), super.getDescription());
     }
 
     @Override
     public C setDescription(String description) {
+        super.setDescription(description);
         actionable.setDescription(description);
         return self();
     }

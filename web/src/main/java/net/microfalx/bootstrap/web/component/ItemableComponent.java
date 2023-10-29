@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.web.component;
 
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+
 /**
  * Base class for all components represented as an item.
  *
@@ -44,6 +46,18 @@ public abstract class ItemableComponent<C extends ItemableComponent<C>> extends 
     @Override
     public final C setStyle(Style style) {
         itemable.setStyle(style);
+        return self();
+    }
+
+    @Override
+    public String getDescription() {
+        return defaultIfEmpty(itemable.getDescription(), super.getDescription());
+    }
+
+    @Override
+    public C setDescription(String description) {
+        super.setDescription(description);
+        itemable.setDescription(description);
         return self();
     }
 }

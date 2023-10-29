@@ -1,11 +1,13 @@
 package net.microfalx.bootstrap.web.component;
 
+import net.microfalx.lang.Descriptable;
+
 /**
  * An interface for components used as items in a container.
  * <p/>
  * Each item has a text, icon and a display style associated with it.
  */
-public interface Itemable<I extends Itemable<I>> {
+public interface Itemable<I extends Itemable<I>> extends Descriptable {
 
     /**
      * Returns whether the itemable has text.

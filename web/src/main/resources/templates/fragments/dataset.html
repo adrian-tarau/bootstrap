@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
 <body>
 
 <thead class="table-light" th:fragment="grid-header">
 <tr>
     <th scope="col" class="text-right">#</th>
     <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}"
-        th:attr="field=${field.name}" data-bs-toggle="tooltip" th:title="${field.description}">
+        th:attr="field=${field.name}" component:tooltip="${field}">
         <span th:if="${field.labelIcon}" th:class="${field.labelIcon}"></span><span th:utext="${field.label}"></span>
     </th>
-    <th scope="col" class="text-center" th:if="${#dataset.hasActions}" data-bs-toggle="tooltip" title="The actions available to interact with records">Actions</th>
+    <th scope="col" class="text-center" th:if="${#dataset.hasActions}" component:tooltip title="The actions available to interact with records">Actions</th>
 </tr>
 </thead>
 
@@ -52,7 +52,7 @@
 
 <div class="dropdown-menu" th:fragment="action-menu" id="dataset-actions">
     <a href="#" class="dropdown-item" th:each="action : ${#component.getChildren(actions)}"
-       th:attr="onclick=|Application.action('${action.action}')|">
+       th:attr="onclick=|Application.action('${action.action}')|" component:tooltip="${action.description}">
         <i th:class="${action.icon}"></i><span th:text="${action.text}" class="ms-2"></span></a>
 </div>
 
@@ -60,9 +60,8 @@
     <div class="container-fluid">
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <button type="button"
-                        th:each="button : ${#component.getChildren(toolbar)}"
-                        data-bs-toggle="tooltip" title="${button.description}"
+                <button th:each="button : ${#component.getChildren(toolbar)}" type="button"
+                        component:tooltip="${button}"
                         th:attr="onclick=|Application.action('${button.action}')|"
                         th:class="${#component.getCssClass(button,'btn btn-primary btn-color mR-5')}">
                     <i th:class="${button.icon}"></i><span class="mL-5" th:text="${button.text}"></span>
@@ -114,7 +113,7 @@
 </div>
 
 <div th:fragment="dialog" id="dataset-modal" tabindex="-1"
-     th:class="|modal modal-lg fade ${viewClasses}|" data-bs-backdrop="static" data-bs-keyboard="false">
+     th:class="|modal fade ${viewClasses}|" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
@@ -132,18 +131,21 @@
     </div>
 </div>
 
-<div th:fragment="fields" class="mb-3 row" th:each="field : ${#dataset.getFields()}">
-    <label th:attr="for=${field.name}" class="" th:class="${#dataset.getInputLabelClass(field)}"
-           th:text="${field.label}"></label>
+<div th:fragment="fields" class="mb-1 row" th:each="field : ${#dataset.getFields()}">
+    <label th:attr="for=${field.name}" th:class="${#dataset.getInputLabelClass(field)}" th:text="${field.label}"></label>
     <div th:class="${#dataset.getInputContainerClass(field)}">
-        <input th:class="${#dataset.getInputFieldClass(field)}" th:name="${field.name}"
-               th:type="${#dataset.getInputType(field)}"
-               th:readonly="${#dataset.isReadOnly(field)}" th:if="${#dataset.isInputField(field)}"
+        <input th:if="${#dataset.isInputField(field)}" th:name="${field.name}"
+               th:type="${#dataset.getInputType(field)}" th:class="${#dataset.getInputFieldClass(field)}"
+               th:readonly="${#dataset.isReadOnly(field)}" th:checked="${#dataset.isChecked(model, field)}"
                th:value="${#dataset.getValue(model, field)}">
-        <input type="hidden" th:name="${field.name}" th:unless="${#dataset.isVisible(field)}"
+        <input th:unless="${#dataset.isVisible(field)}" type="hidden" th:name="${field.name}"
                th:value="${#dataset.getValue(model, field)}">
-        <textarea th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}"
-                  th:name="${field.name}" th:if="${#dataset.isTextAreaField(field)}"
+        <div th:if="${#dataset.isCheckboxField(field)}" class="form-check">
+            <input th:name="${field.name}" th:type="${#dataset.getInputType(field)}" th:class="${#dataset.getInputFieldClass(field)}"
+                   th:readonly="${#dataset.isReadOnly(field)}" th:checked="${#dataset.isChecked(model, field)}">
+        </div>
+        <textarea th:if="${#dataset.isTextAreaField(field)}" th:name="${field.name}"
+                  th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}"
                   th:attr="rows=${#dataset.getInputRows(field)}"
                   th:text="${#dataset.getValue(model, field)}"></textarea>
     </div>

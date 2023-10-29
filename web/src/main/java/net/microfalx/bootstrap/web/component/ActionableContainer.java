@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.component;
 
 import net.microfalx.bootstrap.model.Parameters;
+import net.microfalx.lang.StringUtils;
 
 import java.util.Set;
 
@@ -80,11 +81,12 @@ public abstract class ActionableContainer<C extends ActionableContainer<C>> exte
 
     @Override
     public String getDescription() {
-        return actionable.getDescription();
+        return StringUtils.defaultIfEmpty(actionable.getDescription(), super.getDescription());
     }
 
     @Override
     public C setDescription(String description) {
+        super.setDescription(description);
         actionable.setDescription(description);
         return self();
     }
