@@ -1,36 +1,48 @@
 package net.microfalx.bootstrap.security.user;
 
-import net.microfalx.bootstrap.security.SecurityUtils;
 import net.microfalx.bootstrap.security.audit.Audit;
 import net.microfalx.bootstrap.security.audit.AuditContext;
 import net.microfalx.bootstrap.security.audit.AuditRepository;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.bootstrap.security.provisioning.SecuritySettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 import static net.microfalx.bootstrap.security.SecurityConstants.ANONYMOUS_USER;
+import static net.microfalx.bootstrap.security.SecurityUtils.getRandomPassword;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.capitalizeWords;
 
 /**
  * A service around user management.
  */
 @Service
-public class UserService {
+public class UserService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
+
+    private static final int DEFAULT_USER_COUNT = 2;
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private AuditRepository auditRepository;
+
+    @Autowired
+    private SecuritySettings settings;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Returns the entity which contains the user information for the user attached to the web session.
@@ -62,6 +74,11 @@ public class UserService {
         }
     }
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        createDefaultUsers();
+    }
+
     private Audit createAudit(AuditContext context) {
         User user = findUser(true);
         Audit audit = new Audit();
@@ -81,14 +98,8 @@ public class UserService {
         String userName = getUserName();
         User user = userRepository.findByUserName(userName);
         if (user == null && create) {
-            user = new User();
-            user.setUserName(userName);
-            user.setName(StringUtils.capitalizeWords(userName));
-            user.setPassword(SecurityUtils.getRandomPassword());
-            user.setDescription("A user with no permissions to access public resources");
-            user.setCreatedAt(LocalDateTime.now());
-            user.setEnabled(false);
-            userRepository.saveAndFlush(user);
+            user = createUser(userName, getRandomPassword(), capitalizeWords(userName),
+                    "A generated user with no permissions for auditing purposes");
         }
         return user;
     }
@@ -110,6 +121,34 @@ public class UserService {
             return (UserDetails) principal;
         } else {
             return null;
+        }
+    }
+
+    private User createUser(String userName, String password, String name, String description) {
+        User user = new User();
+        user.setUserName(userName);
+        user.setName(name);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setDescription(description);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setEnabled(true);
+        userRepository.saveAndFlush(user);
+        return user;
+    }
+
+    private void updateRoles(User user, GrantedAuthority... authorities) {
+
+    }
+
+    private void createDefaultUsers() {
+        try {
+            if (userRepository.count() >= DEFAULT_USER_COUNT) return;
+            createUser(settings.getAdminUserName(), settings.getAdminPassword(), capitalizeWords(settings.getAdminUserName()),
+                    "A default administrator");
+            createUser(settings.getGuestUserName(), settings.getGuestPassword(), capitalizeWords(settings.getGuestUserName()),
+                    "A user with no permissions to access public resources");
+        } catch (Exception e) {
+            LOGGER.error("Failed to create default users", e);
         }
     }
 }

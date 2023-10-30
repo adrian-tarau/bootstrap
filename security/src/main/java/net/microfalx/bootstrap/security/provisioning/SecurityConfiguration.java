@@ -4,9 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
@@ -15,6 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import javax.sql.DataSource;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfiguration {
 
     @Autowired
@@ -35,22 +39,31 @@ public class SecurityConfiguration {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         if (settings.isEnabled()) {
+            http.authorizeHttpRequests(auth -> auth.requestMatchers("/asset/**").permitAll());
             http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
-            http.csrf().disable();
-            http.headers().frameOptions().disable();
+            http.csrf(AbstractHttpConfigurer::disable);
+            http.formLogin(login -> login.loginPage("/auth").loginProcessingUrl("/auth/login")
+                    .usernameParameter("username").passwordParameter("password").permitAll());
+            http.logout(logout -> logout.clearAuthentication(true).invalidateHttpSession(true).logoutUrl("/auth/logout").permitAll());
+            updateAnonymous(http);
             return http.build();
         } else {
             http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-            http.csrf().disable();
-            http.headers().frameOptions().disable();
+            http.csrf(AbstractHttpConfigurer::disable);
+            http.headers(Customizer.withDefaults());
+            updateAnonymous(http);
             return http.build();
         }
+    }
+
+    private void updateAnonymous(HttpSecurity http) throws Exception {
+        http.anonymous(a -> a.principal("guest"));
     }
 
     private void updateUserInfoManager(JdbcUserDetailsManager manager) {

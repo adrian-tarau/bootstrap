@@ -43,12 +43,22 @@
                 <i class="ti-email mR-10"></i> <span>Messages</span>
             </a>
         </li>
-        <li role="separator" class="divider"></li>
-        <li>
-            <a href="/logout" class="d-b td-n pY-5 bgcH-grey-100 c-grey-700">
-                <i class="ti-power-off mR-10"></i> <span>Logout</span>
-            </a>
-        </li>
+        <div th:if="${#authentication.isAuthenticated()}" th:remove="tag">
+            <li role="separator" class="divider"></li>
+            <li>
+                <a href="/logout" class="d-b td-n pY-5 bgcH-grey-100 c-grey-700">
+                    <i class="ti-power-off mR-10"></i> <span>Logout</span>
+                </a>
+            </li>
+        </div>
+        <div th:unless="${#authentication.isAuthenticated()}" th:remove="tag">
+            <li role="separator" class="divider"></li>
+            <li>
+                <a href="/login" class="d-b td-n pY-5 bgcH-grey-100 c-grey-700">
+                    <i class="ti-power-off mR-10"></i> <span>Login</span>
+                </a>
+            </li>
+        </div>
     </ul>
 </li>
 
