@@ -8,6 +8,8 @@ import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.InvalidDataTypeExpression;
 import net.microfalx.bootstrap.model.JpaField;
 import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.lang.ExceptionUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -15,6 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,7 +52,11 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
 
     @Override
     public <S extends M> List<S> saveAll(Iterable<S> entities) {
-        return repository.saveAll(entities);
+        try {
+            return repository.saveAll(entities);
+        } catch (Exception e) {
+            return handleException("save all", e);
+        }
     }
 
     @Override
@@ -101,36 +108,68 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
 
     @Override
     protected <S extends M> S doSave(S model) {
-        return repository.save(model);
+        try {
+            return repository.save(model);
+        } catch (Exception e) {
+            return handleException("save", e);
+        }
     }
 
     @Override
     protected void doDeleteById(ID id) {
-        repository.deleteById(id);
+        try {
+            repository.deleteById(id);
+        } catch (Exception e) {
+            handleException("delete by id", e);
+        }
     }
 
     @Override
     protected void doDelete(M model) {
-        repository.delete(model);
+        try {
+            repository.delete(model);
+        } catch (Exception e) {
+            handleException("delete", e);
+        }
     }
 
     @Override
     protected void doDeleteAllById(Iterable<? extends ID> ids) {
-        repository.deleteAllById(ids);
+        try {
+            repository.deleteAllById(ids);
+        } catch (Exception e) {
+            handleException("delete all by id", e);
+        }
     }
 
     @Override
     protected void doDeleteAll(Iterable<? extends M> models) {
-        repository.deleteAll(models);
+        try {
+            repository.deleteAll(models);
+        } catch (Exception e) {
+            handleException("delete all", e);
+        }
     }
 
     @Override
     protected void doDeleteAll() {
-        repository.deleteAll();
+        try {
+            repository.deleteAll();
+        } catch (Exception e) {
+            handleException("delete all", e);
+        }
     }
 
     void setRepository(JpaRepository<M, ID> repository) {
         this.repository = repository;
+    }
+
+    private <T> T handleException(String action, Throwable throwable) {
+        if (throwable instanceof SQLIntegrityConstraintViolationException || throwable instanceof DataIntegrityViolationException) {
+            throw new DataSetConstraintViolationException("Failed to executed'" + action + "' due to constraints violation", throwable);
+        } else {
+            return ExceptionUtils.throwException(throwable);
+        }
     }
 
     private Specification<M> createSpecification(Filter filter) {

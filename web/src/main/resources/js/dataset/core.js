@@ -92,7 +92,7 @@ DataSet.search = function (query) {
 
 /**
  * Loads using AJAX the next page for a data set
- * @param {Integer} page the page number, first one starts at 1
+ * @param {Integer|String} page the page number, first one starts at 1
  */
 DataSet.loadPage = function (page) {
     page = parseInt(page);
@@ -138,9 +138,18 @@ DataSet.edit = function (id) {
  */
 DataSet.delete = function (id) {
     DataSet.updateId(id);
-    $.get(REQUEST_PATH + "/" + DataSet.getId() + "/delete", function (data) {
-        DataSet.loadModal(data);
-    });
+    $.ajax({
+        url: REQUEST_PATH + "/" + DataSet.getId() + "/delete",
+        dataType: "json",
+        type: 'DELETE',
+        success: function (json) {
+            if (json.success) {
+                DataSet.refresh();
+            } else {
+                Application.showErrorAlert("Delete", json.message);
+            }
+        }
+    })
 }
 
 /**
@@ -286,7 +295,7 @@ DataSet.getModals = function () {
  */
 DataSet.save = function () {
     let me = DataSet;
-    let url = Utils.isEmpty(me.id) ? DataSet.getUri({}, "", {params:false}) : DataSet.getUri({}, me.id, {params:false});
+    let url = Utils.isEmpty(me.id) ? DataSet.getUri({}, "", {params: false}) : DataSet.getUri({}, me.id, {params: false});
     let closeModel = false;
     let form = $('#dataset-form').ajaxSubmit({
         url: url,

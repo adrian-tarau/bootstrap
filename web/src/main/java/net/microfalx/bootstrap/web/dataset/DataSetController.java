@@ -2,11 +2,7 @@ package net.microfalx.bootstrap.web.dataset;
 
 import jakarta.persistence.Entity;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.websocket.server.PathParam;
-import net.microfalx.bootstrap.dataset.DataSet;
-import net.microfalx.bootstrap.dataset.DataSetException;
-import net.microfalx.bootstrap.dataset.DataSetService;
-import net.microfalx.bootstrap.dataset.State;
+import net.microfalx.bootstrap.dataset.*;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.dataset.annotation.Searchable;
 import net.microfalx.bootstrap.model.*;
@@ -17,6 +13,7 @@ import net.microfalx.bootstrap.web.component.Toolbar;
 import net.microfalx.bootstrap.web.controller.NavigableController;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.util.JsonFormResponse;
+import net.microfalx.bootstrap.web.util.JsonResponse;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
@@ -118,6 +115,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     @GetMapping("{id}/view")
     public final String view(Model model, @PathVariable("id") String id) {
+        throwIdentifierRequired(id);
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "view", 0, null, null, null);
         updateModel(dataSet, model, State.VIEW);
@@ -128,24 +126,45 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     @GetMapping("{id}/edit")
     public final String edit(Model model, @PathVariable("id") String id) {
+        throwIdentifierRequired(id);
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "edit", 0, null, null, null);
         updateModel(dataSet, model, State.EDIT);
         M dataSetModel = findModel(dataSet, model, id, State.EDIT);
-        if (beforeEdit(dataSet, model, dataSetModel)) {
-            return "dataset/view::#dataset-modal";
+        if (dataSetModel != null) {
+            if (beforeEdit(dataSet, model, dataSetModel)) {
+                return "dataset/view::#dataset-modal";
+            } else {
+                return BROWSE_VIEW;
+            }
         } else {
-            return BROWSE_VIEW;
+            return throwModelNotFound(id);
         }
     }
 
-    @GetMapping("{id}/delete")
-    public final String delete(Model model, @PathParam("id") String id) {
+    @DeleteMapping("{id}/delete")
+    @ResponseBody()
+    public final JsonResponse<?> delete(Model model, @PathVariable("id") String id) {
+        throwIdentifierRequired(id);
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "delete", 0, null, null, null);
         M dataSetModel = findModel(dataSet, model, id, State.BROWSE);
-        beforeDelete(dataSet, model, dataSetModel);
-        return "dataset/browse";
+        if (dataSetModel != null) {
+            if (beforeDelete(dataSet, model, dataSetModel)) {
+                try {
+                    dataSet.delete(dataSetModel);
+                } catch (Exception e) {
+                    if (e instanceof DataSetConstraintViolationException) {
+                        return JsonResponse.fail("Cannot removed since it is is in use");
+                    } else {
+                        return JsonResponse.fail(e.getMessage());
+                    }
+                }
+            }
+            return JsonResponse.success();
+        } else {
+            return throwModelNotFound(id);
+        }
     }
 
     @PostMapping(value = "upload", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -173,22 +192,24 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody()
     public JsonFormResponse<?> save(Model model, @RequestBody MultiValueMap<String, String> fields) {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
         JsonFormResponse<?> response = JsonFormResponse.success();
         M dataSetModel = bind(null, fields, response);
         validate(dataSetModel, response);
-        if (response.isSuccess()) getDataSet().save(dataSetModel);
+        if (response.isSuccess()) dataSet.save(dataSetModel);
         return response;
     }
 
     @PostMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody()
     public JsonFormResponse<?> update(Model model, @PathVariable("id") String id, @RequestBody MultiValueMap<String, String> fields) {
-        if (StringUtils.isEmpty(id)) throw new ModelException("The model identifier is required");
+        if (isEmpty(id)) throw new ModelException("The model identifier is required");
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
         JsonFormResponse<?> response = JsonFormResponse.success();
-        M dataSetModel = findModel(getDataSet(), model, id, State.EDIT);
+        M dataSetModel = findModel(dataSet, model, id, State.EDIT);
         dataSetModel = bind(dataSetModel, fields, response);
         validate(dataSetModel, response);
-        if (response.isSuccess()) getDataSet().save(dataSetModel);
+        if (response.isSuccess()) dataSet.save(dataSetModel);
         return response;
     }
 
@@ -674,6 +695,14 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private ZonedDateTime atEndOfDay(ZonedDateTime dateTime) {
         return dateTime.plusDays(1).minusSeconds(1);
+    }
+
+    private <T> T throwModelNotFound(String id) {
+        throw new DataSetException("A model with identifier '" + id + " does not exist");
+    }
+
+    private void throwIdentifierRequired(String id) {
+        if (isEmpty(id)) throw new ModelException("The model identifier is required");
     }
 
     private void log(DataSet<M, Field<M>, ID> dataSet, String action, int page,

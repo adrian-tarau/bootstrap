@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 public abstract class PageController {
 
     public static final String HOME = "index";
+    public static final String REDIRECT_HOME = "redirect:/";
+    public static final String REDIRECT_LOGIN = "redirect:/login";
 
     /**
      * Returns the name of the page.
