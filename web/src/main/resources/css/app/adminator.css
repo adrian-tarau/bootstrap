@@ -1,0 +1,11 @@
+.sidebar-menu > li.dropdown ul.dropdown-menu > li > a {
+    padding: 5px 5px !important;
+}
+
+.sidebar-menu > li.dropdown ul.dropdown-menu ul.dropdown-menu {
+    padding-left: 30px !important;
+}
+
+.sidebar-menu > li > a .icon-holder {
+    margin-right: 2px !important;
+}

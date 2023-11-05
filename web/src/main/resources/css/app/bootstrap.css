@@ -1,12 +1,16 @@
 .modal {
-    --bs-modal-width: 600px;
+    --bs-modal-width: 600px !important;
+}
+
+.dropdown-menu {
+    --bs-dropdown-font-size: 1rem !important;
 }
 
 @media (min-width: 992px) {
 
     .modal-lg,
     .modal-xl {
-        --bs-modal-width: 800px;
+        --bs-modal-width: 800px !important;
     }
 
 }
@@ -14,11 +18,11 @@
 @media (min-width: 1600px) {
 
     .modal-lg {
-        --bs-modal-width: 1200px;
+        --bs-modal-width: 1200px !important;
     }
 
     .modal-xl {
-        --bs-modal-width: 1540px;
+        --bs-modal-width: 1540px !important;
     }
 
 }
