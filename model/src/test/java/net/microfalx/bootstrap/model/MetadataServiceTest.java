@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.lang.annotation.I18n;
 import net.microfalx.lang.annotation.Id;
 import org.assertj.core.api.Assertions;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Objects;
@@ -20,9 +22,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class MetadataServiceTest {
 
-
     @InjectMocks
     private MetadataService metadataService;
+
+    @Spy
+    private I18nService i18nService;
 
     @BeforeEach
     void before() {

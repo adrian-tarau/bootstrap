@@ -299,13 +299,24 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Retutrns whether the field should use a text or a password field.
+     *
+     * @param field the field
+     * @return {@code true} if of type is text or password field, {@code false} otherwise
+     */
+    public boolean isTextField(Field<M> field) {
+        Component.Type componentType = getComponentType(field);
+        return componentType == Component.Type.TEXT_FIELD || componentType == Component.Type.PASSWORD;
+    }
+
+    /**
      * Returns whether the field associated with the field should be an INPUT type (everything except checkbox)
      *
      * @param field the field
      * @return {@code true} if of type INPUT, {@code false} otherwise
      */
     public boolean isInputField(Field<M> field) {
-        return isVisible(field) && getComponentType(field) == Component.Type.TEXT_FIELD && !field.getDataType().isBoolean();
+        return isVisible(field) && isTextField(field) && !field.getDataType().isBoolean();
     }
 
     /**
@@ -315,7 +326,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if of type INPUT, {@code false} otherwise
      */
     public boolean isCheckboxField(Field<M> field) {
-        return isVisible(field) && getComponentType(field) == Component.Type.TEXT_FIELD && field.getDataType().isBoolean();
+        return isVisible(field) && isTextField(field) && field.getDataType().isBoolean();
     }
 
     /**

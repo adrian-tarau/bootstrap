@@ -113,9 +113,25 @@ public class JsonFormResponse<T extends JsonFormResponse<T>> extends JsonRespons
      * @return self
      */
     public T addError(String fieldName, String message) {
+        return addError(fieldName, message, true);
+    }
+
+    /**
+     * Adds a new error message related with a form field.
+     *
+     * @param fieldName the field name
+     * @param message   the error message
+     * @param override  {@code true} to override the error message, {@code false} to ignore if an error already exists
+     * @return self
+     */
+    public T addError(String fieldName, String message, boolean override) {
         requireNotEmpty(fieldName);
         requireNotEmpty(fieldName);
-        this.errors.put(fieldName, message);
+        if (override) {
+            this.errors.put(fieldName, message);
+        } else {
+            this.errors.putIfAbsent(fieldName, message);
+        }
         setSuccess(false);
         return (T) this;
     }
@@ -166,9 +182,25 @@ public class JsonFormResponse<T extends JsonFormResponse<T>> extends JsonRespons
      * @return self
      */
     public T addWarning(String fieldName, String message) {
+        return addWarning(fieldName, message, true);
+    }
+
+    /**
+     * Adds a new error message related with a form field.
+     *
+     * @param fieldName the field name
+     * @param message   the error message
+     * @param override  {@code true} to override the error message, {@code false} to ignore if an error already exists
+     * @return self
+     */
+    public T addWarning(String fieldName, String message, boolean override) {
         requireNotEmpty(fieldName);
         requireNotEmpty(fieldName);
-        this.warnings.put(fieldName, message);
+        if (override) {
+            this.warnings.put(fieldName, message);
+        } else {
+            this.warnings.putIfAbsent(fieldName, message);
+        }
         setSuccess(false);
         return self();
     }

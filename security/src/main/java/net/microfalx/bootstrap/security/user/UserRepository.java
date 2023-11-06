@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Transactional
-public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutor {
+public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutor<User> {
 
     /**
      * Locates a user by its username.

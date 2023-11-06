@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
 
@@ -233,10 +234,10 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     public final Map<F, String> validate(M model) {
         requireNonNull(model);
         Map<F, String> errors = new HashMap<>();
+        validateSpring(model, errors);
         validate(model, errors);
         for (F field : getFields()) {
             Object value = field.get(model);
-            validateCommon(model, field, value, errors);
             validate(model, field, value, errors);
         }
         return errors;
@@ -336,14 +337,20 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
      * Subclasses would perform additional validations on a field.
      *
      * @param model  the model
-     * @param field  the field
-     * @param value  the value of the field
      * @param errors the errors
      */
-    protected void validateCommon(M model, F field, Object value, Map<F, String> errors) {
+    protected void validateSpring(M model, Map<F, String> errors) {
         Map<String, String> springErrorMap = new HashMap<>();
         MapBindingResult springErrors = new MapBindingResult(springErrorMap, ClassUtils.getName(modelClass));
-        validator.validate(value, springErrors);
+        validator.validate(model, springErrors);
+        springErrors.getAllErrors().forEach(error -> {
+            if (error instanceof FieldError fieldError) {
+                F field = get(fieldError.getField());
+                errors.put(field, StringUtils.capitalize(fieldError.getDefaultMessage()));
+            } else {
+                throw new ModelException("Model '" + model + " is invalid, message " + error.getDefaultMessage());
+            }
+        });
     }
 
     private void initI18n() {

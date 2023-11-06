@@ -301,15 +301,52 @@ DataSet.save = function () {
         url: url,
         type: 'POST',
         dataType: 'json',
+        beforeSubmit: function(data, form, options) {
+            DataSet.updateFormFields(data);
+            Logger.info("Before form submission, response " + Utils.toString(data));
+            // form data array is an array of objects with name and value properties
+            // [ { name: 'username', value: 'jresig' }, { name: 'password', value: 'secret' } ]
+        },
         error: function (jqXHR, textStatus, errorThrown) {
             Logger.error("An error was encountered which submitting the form to " + url + ", error: " + errorThrown);
         },
         success: function (data, textStatus, jqXHR) {
-            Logger.info("Form was submitted successfully, response " + data);
-            me.reload();
+            Logger.info("Form was submitted successfully, response " + Utils.toString(data));
+            if (data.success) {
+                me.reload();
+            } else {
+                $('#dataset-form input').removeClass('is-invalid').tooltip("dispose");
+                let errors = data.errors || {};
+                Application.showErrorAlert("Validation", "Form cannot be submitted with invalid values");
+                for(let field in errors) {
+                    let message = errors[field];
+                    let formField = $("#dataset-form input[name='"+field+"']");
+                    formField.addClass("is-invalid");
+                    Application.showTooltip(formField, message);
+                }
+            }
         }
     });
     if (closeModel) this.closeModal();
+}
+
+/**
+ * Updates for data before it is sent to the server
+ * @param {Array} data an array with object, one property "name" with the value
+ */
+DataSet.updateFormFields = function (data) {
+    let fieldNames = {};
+    for(let tuple of data) {
+        fieldNames[tuple["name"]] = true;
+    }
+    $('#dataset-form input').each(function(index){
+        if ($(this).attr("type") === "checkbox") {
+            let name = $(this).attr("name");
+            if (!fieldNames[name]) {
+                data.push({name : name, value : 'off'});
+            }
+        }
+    });
 }
 
 /**

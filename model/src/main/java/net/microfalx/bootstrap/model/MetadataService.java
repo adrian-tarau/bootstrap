@@ -1,12 +1,11 @@
 package net.microfalx.bootstrap.model;
 
-import net.microfalx.bootstrap.core.i18n.I18nConfig;
+import net.microfalx.bootstrap.core.i18n.I18nService;
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Validator;
 
@@ -26,10 +25,10 @@ public class MetadataService implements InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataService.class);
 
     @Autowired
-    private MessageSource messageSource;
+    private Validator validator;
 
     @Autowired
-    private Validator validator;
+    private I18nService i18nService;
 
     private final List<MetadataProvider<?, ?, ?>> providers = new CopyOnWriteArrayList<>();
     private final Map<Class<?>, Metadata<?, ? extends Field<?>, ?>> metadataCache = new ConcurrentHashMap<>();
@@ -64,7 +63,7 @@ public class MetadataService implements InitializingBean {
             MetadataProvider<M, Field<M>, ID> provider = find(modelClass);
             metadata = (Metadata<M, F, ID>) provider.getMetadata(modelClass);
             if (metadata instanceof AbstractMetadata<M, F, ID> ametadata) {
-                ametadata.messageSource = messageSource;
+                ametadata.messageSource = i18nService.getMessageSource();
                 ametadata.validator = validator;
                 ametadata.metadataService = this;
                 ametadata.initialize();
@@ -122,9 +121,6 @@ public class MetadataService implements InitializingBean {
     }
 
     private void initializeI18n() {
-        if (messageSource == null) {
-            messageSource = new I18nConfig().messageSource();
-        }
     }
 
     @SuppressWarnings("rawtypes")

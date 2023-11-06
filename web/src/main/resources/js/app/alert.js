@@ -67,3 +67,37 @@ Application.showAlert = function (title, message, type) {
         color: color
     });
 }
+
+/**
+ * Shows a tooltip on an element.
+ *
+ * @param {Object|String} element the element reference
+ * @param {String} message the message to display
+ */
+Application.showTooltip = function (element, message) {
+    if ($(element).length === 0) {
+        Logger.error("An element with identifier '" + element + "' does not exist");
+    } else {
+        let tooltip = new bootstrap.Tooltip($(element), {
+            title: message,
+            placement: 'right',
+            trigger: 'manual',
+            delay: {"show": 0, "hide": 2000},
+            customClass: 'alert-danger'
+        });
+        tooltip.show();
+    }
+}
+
+/**
+ * Hides a tooltip on an element.
+ *
+ * @param {Object|String} element the element reference
+ */
+Application.hideTooltip = function (element) {
+    if ($(element).length === 0) {
+        Logger.error("An element with identifier '" + element + "' does not exist");
+    } else {
+        $(element).tooltip("dispose");
+    }
+}

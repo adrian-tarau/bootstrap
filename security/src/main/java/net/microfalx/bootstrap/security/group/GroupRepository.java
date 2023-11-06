@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Transactional
-public interface GroupRepository extends JpaRepository<Group, Integer>, JpaSpecificationExecutor {
+public interface GroupRepository extends JpaRepository<Group, Integer>, JpaSpecificationExecutor<Group> {
 
     /**
      * Locates a group by its name.

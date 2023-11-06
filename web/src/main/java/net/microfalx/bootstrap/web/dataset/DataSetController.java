@@ -105,7 +105,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "add", 0, null, null, null);
         updateModel(dataSet, model, State.ADD);
-        updateModel(dataSet, model, null, State.ADD);
+        M dataSetModel = dataSet.getMetadata().create();
+        model.addAttribute("model", dataSetModel);
+        updateModel(dataSet, model, dataSetModel, State.ADD);
         if (beforeAdd(dataSet, model)) {
             return "dataset/add::#dataset-modal";
         } else {
@@ -195,8 +197,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         JsonFormResponse<?> response = JsonFormResponse.success();
         M dataSetModel = bind(null, fields, response);
-        validate(dataSetModel, response);
-        if (response.isSuccess()) dataSet.save(dataSetModel);
+        doValidate(dataSetModel, State.ADD, response);
+        if (response.isSuccess()) {
+            beforePersist(dataSet, dataSetModel, State.ADD);
+            dataSet.save(dataSetModel);
+        }
         return response;
     }
 
@@ -208,8 +213,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         JsonFormResponse<?> response = JsonFormResponse.success();
         M dataSetModel = findModel(dataSet, model, id, State.EDIT);
         dataSetModel = bind(dataSetModel, fields, response);
-        validate(dataSetModel, response);
-        if (response.isSuccess()) dataSet.save(dataSetModel);
+        doValidate(dataSetModel, State.EDIT, response);
+        if (response.isSuccess()) {
+            beforePersist(dataSet, dataSetModel, State.EDIT);
+            dataSet.save(dataSetModel);
+        }
         return response;
     }
 
@@ -232,7 +240,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     /**
-     * Subclasses can update the controller model with additional variables.
+     * Subclasses can update the controller model with additional variables and/or change the data set model.
      *
      * @param dataSet         the data set
      * @param controllerModel the model used by controller/template
@@ -332,6 +340,29 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      */
     protected Object bind(DataSet<M, Field<M>, ID> dataSet, Field<M> field, Object value) {
         return value;
+    }
+
+    /**
+     * Validates the model after the default validation.
+     *
+     * @param model    the model
+     * @param state    the current state of the data set
+     * @param response the JSON response
+     */
+    protected void validate(M model, State state, JsonFormResponse<?> response) {
+        // empty
+    }
+
+    /**
+     * Invoked before the model is persisted.
+     *
+     * @param dataSet the data set
+     * @param model   the model
+     * @param state   the data set state
+     * @return {@code true} to continue the add action, {@code false} otherwise
+     */
+    protected boolean beforePersist(DataSet<M, Field<M>, ID> dataSet, M model, State state) {
+        return true;
     }
 
     /**
@@ -504,12 +535,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         }
     }
 
-    private void validate(M model, JsonFormResponse<?> response) {
+    private void doValidate(M model, State state, JsonFormResponse<?> response) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         Map<Field<M>, String> dataSetErrors = dataSet.validate(model);
         Map<String, String> errors = new HashMap<>();
         dataSetErrors.forEach((f, e) -> errors.put(f.getName(), e));
         response.addErrors(errors);
+        validate(model, state, response);
     }
 
     private M bind(M model, MultiValueMap<String, String> fields, JsonFormResponse<?> response) {
