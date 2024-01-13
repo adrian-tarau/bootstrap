@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.resource;
 
 import net.microfalx.resource.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ import static net.microfalx.resource.ResourceUtils.toUri;
  */
 @Service
 public class ResourceService implements InitializingBean {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResourceService.class);
 
     private File persistedDirectory;
     private File transientDirectory;
@@ -97,6 +101,9 @@ public class ResourceService implements InitializingBean {
         validateDirectory(transientDirectory = new File(properties.getTransientDirectory()));
         initializeSharedResource();
         validateResource(getSharedResource(null));
+        LOGGER.info("Persisted resources directory {}", persistedDirectory);
+        LOGGER.info("Transient resources directory {}", transientDirectory);
+        LOGGER.info("Shared resources directory {}", getSharedResource(null));
     }
 
     private void initializeSharedResource() {
