@@ -103,7 +103,14 @@
     <div class="col-md-12">
         <div class="bgc-white bd bdrs-3 p-20 mB-20">
             <div>
-                <h3 class="c-grey-900" th:text="${dataset.name}"></h3>
+                <h3 class="c-grey-900">
+                    <span th:text="${dataset.name}"></span>
+                    <span th:if="${#help.hasHelp()}" class="float-end p-2">
+                        <a href="#" th:attr="onclick=|Application.help('${dataset.name}','${#help.getHelp()}')|" component:tooltip title="Opens the documentation for the current dashboards">
+                            <i class="fa-solid fa-circle-question text-primary"></i>
+                        </a>
+                    </span>
+                </h3>
                 <nav th:replace="~{ fragments/dataset :: toolbar}"></nav>
             </div>
             <table th:replace="~{ fragments/dataset :: grid}"></table>

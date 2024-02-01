@@ -74,6 +74,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                                @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "browse", pageParameter, rangeParameter, queryParameter, sortParameter);
+        updateHelp(model);
         updateModel(dataSet, model, State.BROWSE);
         updateModel(dataSet, model, null, State.BROWSE);
         processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);

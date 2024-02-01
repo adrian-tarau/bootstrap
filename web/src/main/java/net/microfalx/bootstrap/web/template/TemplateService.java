@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.web.template;
 
 import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.dataset.DataSetService;
+import net.microfalx.bootstrap.help.HelpService;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import org.slf4j.Logger;
@@ -26,12 +27,15 @@ public class TemplateService {
     private DataSetService dataSetService;
 
     @Autowired
+    private HelpService helpService;
+
+    @Autowired
     private SpringTemplateEngine templateEngine;
 
     @PostConstruct
     private void initialize() {
         templateEngine.addDialect(new SpringDataDialect());
-        templateEngine.addDialect(new ExpressionsDialect(applicationService, metadataService, dataSetService));
+        templateEngine.addDialect(new ExpressionsDialect(applicationService, metadataService, dataSetService, helpService));
         templateEngine.addDialect(new AssetDialect(applicationService));
         templateEngine.addDialect(new ComponentDialect());
         templateEngine.addDialect(new ApplicationDialect());

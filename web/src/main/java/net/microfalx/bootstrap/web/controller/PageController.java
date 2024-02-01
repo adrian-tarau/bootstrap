@@ -1,8 +1,10 @@
 package net.microfalx.bootstrap.web.controller;
 
+import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.annotation.Name;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.ui.Model;
 
 /**
  * A controller for an application page.
@@ -28,6 +30,19 @@ public abstract class PageController {
             String simpleName = getClass().getSimpleName();
             simpleName = StringUtils.replaceOnce(simpleName, "Controller", "");
             return net.microfalx.lang.StringUtils.beautifyCamelCase(simpleName);
+        }
+    }
+
+    /**
+     * Update the help reference.
+     *
+     * @param model the controller model
+     * @see Help
+     */
+    protected final void updateHelp(Model model) {
+        Help helpAnnot = AnnotationUtils.getAnnotation(this, Help.class);
+        if (helpAnnot != null) {
+            model.addAttribute("help", helpAnnot.value());
         }
     }
 }
