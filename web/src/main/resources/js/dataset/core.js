@@ -189,12 +189,7 @@ DataSet.download = function () {
  * @param {String} html the modal
  */
 DataSet.loadModal = function (html) {
-    Logger.debug(html);
-    $('#dataset-modal').remove();
-    $(document.body).append(html);
-    let modal = new bootstrap.Modal('#dataset-modal', {});
-    modal.show();
-    this.registerModal(modal);
+    Application.loadModal("dataset-modal", html);
 }
 
 /**
@@ -205,18 +200,16 @@ DataSet.loadModal = function (html) {
  */
 DataSet.showActions = function (event, id) {
     event.stopPropagation();
-    this.closePopups();
+    Application.closePopups();
     this.id = id;
     let actions = $('#dataset-actions');
     let element = $(event.target);
-    if (this.popper) {
-        this.popper.destroy();
-    }
+    if (this.popper) this.popper.destroy();
     this.popper = Popper.createPopper(element[0], actions[0], {
         placement: 'bottom'
     });
     this.popper.update();
-    this.registerPopup(actions);
+    Application.registerPopup(actions);
     actions.show();
 }
 
@@ -233,63 +226,6 @@ DataSet.sort = function (field, direction) {
     this.open(requestParams);
 }
 
-
-/**
- * Closes all open popups.
- */
-DataSet.closePopups = function () {
-    this.getPopups().forEach(function (popup) {
-        popup.hide();
-    });
-    this.popups = [];
-}
-
-/**
- * Registers a popup, which is used to validate if the user clicks outside the popup.
- * @param {Object} element a
- */
-DataSet.registerPopup = function (element) {
-    this.getPopups().push(element);
-}
-
-/**
- * Returns the registers popups.
- *
- * @return {Object[]} the popups.
- */
-DataSet.getPopups = function () {
-    this.popups = this.popups || [];
-    return DataSet.popups;
-}
-
-/**
- * Closes last dialog.
- */
-DataSet.closeModal = function () {
-    let modal = this.getModals().pop();
-    if (modal) {
-        modal.hide();
-    }
-}
-
-/**
- * Registers a modal, which is used to validate if the user clicks outside the popup.
- * @param {bootstrap.Modal} modal the modal instance
- */
-DataSet.registerModal = function (modal) {
-    this.getModals().push(modal);
-}
-
-/**
- * Returns the registers modals.
- *
- * @return {bootstrap.Modal[]} the modals.
- */
-DataSet.getModals = function () {
-    this.modals = this.modals || [];
-    return this.modals;
-}
-
 /**
  * Saves the current data set model
  */
@@ -301,7 +237,7 @@ DataSet.save = function () {
         url: url,
         type: 'POST',
         dataType: 'json',
-        beforeSubmit: function(data, form, options) {
+        beforeSubmit: function (data, form, options) {
             DataSet.updateFormFields(data);
             Logger.info("Before form submission, response " + Utils.toString(data));
             // form data array is an array of objects with name and value properties
@@ -318,16 +254,16 @@ DataSet.save = function () {
                 $('#dataset-form input').removeClass('is-invalid').tooltip("dispose");
                 let errors = data.errors || {};
                 Application.showErrorAlert("Validation", "Form cannot be submitted with invalid values");
-                for(let field in errors) {
+                for (let field in errors) {
                     let message = errors[field];
-                    let formField = $("#dataset-form input[name='"+field+"']");
+                    let formField = $("#dataset-form input[name='" + field + "']");
                     formField.addClass("is-invalid");
                     Application.showTooltip(formField, message);
                 }
             }
         }
     });
-    if (closeModel) this.closeModal();
+    if (closeModel) Application.closeModal();
 }
 
 /**
@@ -336,14 +272,14 @@ DataSet.save = function () {
  */
 DataSet.updateFormFields = function (data) {
     let fieldNames = {};
-    for(let tuple of data) {
+    for (let tuple of data) {
         fieldNames[tuple["name"]] = true;
     }
-    $('#dataset-form input').each(function(index){
+    $('#dataset-form input').each(function (index) {
         if ($(this).attr("type") === "checkbox") {
             let name = $(this).attr("name");
             if (!fieldNames[name]) {
-                data.push({name : name, value : 'off'});
+                data.push({name: name, value: 'off'});
             }
         }
     });
@@ -449,22 +385,6 @@ DataSet.initActions = function () {
 }
 
 /**
- * Initialize global events.
- */
-DataSet.initEvents = function () {
-    $(document).on('click touchend', function (e) {
-        let target = $(e.target);
-        let located = false;
-        DataSet.getPopups().forEach(function (popup) {
-            if (target.is(popup)) located = true;
-        });
-        if (!located) {
-            DataSet.closePopups();
-        }
-    });
-}
-
-/**
  * Transforms a plain tables into a resizable ones.
  */
 DataSet.initTables = function () {
@@ -514,7 +434,6 @@ DataSet.initUpload = function () {
 DataSet.initialize = function () {
     Logger.debug("Initialize data set");
     this.initActions();
-    this.initEvents();
     this.initFields();
     this.initNotifications();
     this.initTables();

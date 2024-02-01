@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset"
-      xmlns:application="https://net.microfalx/application">
+      xmlns:application="https://net.microfalx/application" xmlns:component="https://net.microfalx/component">
 
 <head th:fragment="header">
     <title th:text="${#application.name}"></title>
@@ -16,6 +16,14 @@
     <div class="spinner-border text-secondary mt-3" role="status" style="display: none" id="ajax">
         <span class="visually-hidden">Loading...</span>
     </div>
+</li>
+
+<li th:fragment="help">
+    <h3 class="pe-2 pt-2">
+        <a href="#" th:attr="onclick=|Application.help('Help','home')|" component:tooltip title="Opens the documentation for the application">
+            <i class="fa-solid fa-circle-question text-success"></i>
+        </a>
+    </h3>
 </li>
 
 <li class="dropdown" th:fragment="user">

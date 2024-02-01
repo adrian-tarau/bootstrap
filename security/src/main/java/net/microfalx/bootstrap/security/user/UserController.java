@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.security.user;
 
 import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
+import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("security/users")
 @DataSet(model = User.class)
+@Help("admin/security/user")
 public class UserController extends DataSetController<User, Integer> {
 
     @Autowired

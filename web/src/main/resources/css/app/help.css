@@ -1,0 +1,10 @@
+.help {
+}
+
+.help img {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
+    border-style: none;
+    box-shadow: 5px 5px 5px lightgray;
+}

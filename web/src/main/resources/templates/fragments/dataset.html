@@ -126,8 +126,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" th:attr="onclick=|DataSet.save()|" th:unless="${#dataset.isView()}">Save</button>
-                <button type="button" class="btn btn-secondary" th:attr="onclick=|DataSet.closeModal()|" th:unless="${#dataset.isView()}">Cancel</button>
-                <button type="button" class="btn btn-secondary" th:attr="onclick=|DataSet.closeModal()|" th:if="${#dataset.isView()}">Close</button>
+                <button type="button" class="btn btn-secondary" th:attr="onclick=|Application.closeModal()|" th:unless="${#dataset.isView()}">Cancel</button>
+                <button type="button" class="btn btn-secondary" th:attr="onclick=|Application.closeModal()|" th:if="${#dataset.isView()}">Close</button>
             </div>
         </div>
     </div>

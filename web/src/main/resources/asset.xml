@@ -10,6 +10,7 @@
         <asset path="scroll_top.css" type="stylesheet"/>
         <asset path="component.css" type="stylesheet"/>
         <asset path="dropzone.css" type="stylesheet"/>
+        <asset path="help.css" type="stylesheet"/>
 
         <asset path="utils.js" type="script"/>
         <asset path="logger.js" type="script"/>

@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.search;
 
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
+import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.model.AbstractAttribute;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.search.Attribute;
@@ -25,6 +26,7 @@ import static net.microfalx.bootstrap.model.AttributeUtils.shouldDisplayAsBadge;
 @Controller
 @RequestMapping(value = "/search")
 @DataSet(rawQuery = true, model = SearchResult.class, viewTemplate = "search/view", detailTemplate = "search/detail", viewClasses = "modal-xl")
+@Help("search")
 public final class SearchController extends DataSetController<SearchResult, String> {
 
     @Autowired

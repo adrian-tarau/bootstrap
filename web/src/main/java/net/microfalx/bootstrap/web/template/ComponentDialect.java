@@ -26,7 +26,7 @@ public class ComponentDialect extends AbstractProcessorDialect {
     private static final String DIALECT_PREFIX = "component";
     private static final String DIALECT_NAME = "Bootstrap Component";
     private static final int PRECEDENCE = 1000;
-    private static final int TOOLTIP_SHOW_DELAY = 1000;
+    private static final int TOOLTIP_SHOW_DELAY = 2000;
 
     public ComponentDialect() {
         super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE);

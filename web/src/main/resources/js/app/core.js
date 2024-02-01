@@ -107,6 +107,75 @@ Application.getQueryParam = function (name) {
 }
 
 /**
+ * Closes all open popups.
+ */
+Application.closePopups = function () {
+    this.getPopups().forEach(function (popup) {
+        popup.hide();
+    });
+    this.popups = [];
+}
+
+/**
+ * Registers a popup, which is used to validate if the user clicks outside the popup.
+ * @param {Object} element a
+ */
+Application.registerPopup = function (element) {
+    this.getPopups().push(element);
+}
+
+/**
+ * Returns the registers popups.
+ *
+ * @return {Object[]} the popups.
+ */
+Application.getPopups = function () {
+    this.popups = this.popups || [];
+    return this.popups;
+}
+
+/**
+ * Closes last dialog.
+ */
+Application.closeModal = function () {
+    let modal = this.getModals().pop();
+    if (modal) modal.hide();
+}
+
+/**
+ * Shows an HTML fragment which contains a data set modal.
+ *
+ * @param {String} id the identifier of the modal (DOM element)
+ * @param {String} html the modal
+ */
+Application.loadModal = function (id, html) {
+    Logger.debug(html);
+    $('#' + id).remove();
+    $(document.body).append(html);
+    let modal = new bootstrap.Modal('#' + id, {});
+    modal.show();
+    this.registerModal(modal);
+}
+
+/**
+ * Registers a modal, which is used to validate if the user clicks outside the popup.
+ * @param {bootstrap.Modal} modal the modal instance
+ */
+Application.registerModal = function (modal) {
+    this.getModals().push(modal);
+}
+
+/**
+ * Returns the registers modals.
+ *
+ * @return {bootstrap.Modal[]} the modals.
+ */
+Application.getModals = function () {
+    this.modals = this.modals || [];
+    return this.modals;
+}
+
+/**
  * Executes a given action.
  *
  * @param {String} eventOrHandler the function to be called (handler) or the event to fire
@@ -181,11 +250,28 @@ Application.getListeners = function (name) {
 }
 
 /**
+ * Initialize various global events
+ */
+Application.initEvents = function () {
+    let me = this;
+    $(document).on('click touchend', function (e) {
+        let target = $(e.target);
+        let located = false;
+        me.getPopups().forEach(function (popup) {
+            if (target.is(popup)) located = true;
+        });
+        if (!located) me.closePopups();
+    });
+}
+
+/**
  * Initializes the application
  */
 Application.initialize = function () {
     Logger.debug("Initialize application, request path '" + REQUEST_PATH + "', request arguments '" + Utils.toString(REQUEST_QUERY) + "'");
+    this.initEvents();
 }
+
 
 // initialize application
 Application.initialize();
