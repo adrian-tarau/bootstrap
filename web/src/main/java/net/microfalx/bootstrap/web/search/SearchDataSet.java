@@ -29,7 +29,7 @@ import static org.apache.commons.lang3.StringUtils.abbreviate;
 @Provider
 public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchResult>, String> {
 
-    private static final int MAX_DESCRIPTION_LENGTH = 150;
+    private static final int MAX_DESCRIPTION_LENGTH = 100;
 
     private SearchService searchService;
 

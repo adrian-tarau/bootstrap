@@ -1,7 +1,14 @@
 package net.microfalx.bootstrap.help;
 
+import com.vladsch.flexmark.ext.admonition.AdmonitionExtension;
+import com.vladsch.flexmark.ext.footnotes.FootnoteExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
+import com.vladsch.flexmark.ext.gfm.tasklist.TaskListExtension;
+import com.vladsch.flexmark.ext.gitlab.GitLabExtension;
+import com.vladsch.flexmark.ext.media.tags.MediaTagsExtension;
+import com.vladsch.flexmark.ext.resizable.image.ResizableImageExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
+import com.vladsch.flexmark.ext.typographic.TypographicExtension;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Node;
@@ -155,6 +162,9 @@ public class HelpService implements InitializingBean {
 
     private void registerExtensions(MutableDataSet options, String path) {
         options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create(),
+                AdmonitionExtension.create(), MediaTagsExtension.create(), FootnoteExtension.create(),
+                TaskListExtension.create(),ResizableImageExtension.create(), GitLabExtension.create(),
+                TypographicExtension.create(),
                 new HelpExtension(this, path)));
     }
 

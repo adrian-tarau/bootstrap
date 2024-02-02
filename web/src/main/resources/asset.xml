@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <assets xmlns="https://net.microfalx/xsd/asset-1.0.xsd">
 
-    <!-- DataSet  -->
+    <!-- Application  -->
     <asset-bundle id="app" path="app" name="Application">
         <depends-on-asset-bundle>bootstrap</depends-on-asset-bundle>
 
@@ -20,6 +20,17 @@
         <asset path="scroll_top.js" type="script"/>
         <asset path="search.js" type="script"/>
     </asset-bundle>
+
+    <!-- Application  -->
+    <asset-bundle id="help" path="help" name="Help">
+        <depends-on-asset-bundle>app</depends-on-asset-bundle>
+
+        <asset path="help.css" type="stylesheet"/>
+        <asset path="admonition.css" type="stylesheet"/>
+
+        <asset path="admonition.js" type="script"/>
+    </asset-bundle>
+
 
     <!-- DataSet  -->
     <asset-bundle id="dataset" path="dataset" name="DataSet">

@@ -1,10 +1,14 @@
 .help {
 }
 
+.help ul, .help ol, .help p {
+    margin-bottom: 0.7rem !important;
+}
+
 .help img {
     max-width: 100%;
     height: auto;
     vertical-align: middle;
-    border-style: none;
+    border: 1px solid var(--bs-border-color);
     box-shadow: 5px 5px 5px lightgray;
 }
