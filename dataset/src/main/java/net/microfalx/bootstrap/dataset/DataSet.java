@@ -89,12 +89,20 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
     boolean isReadOnly();
 
     /**
-     * Returns whether the field is read-only for this data set in the current mode.
+     * Returns whether the field is visible for this data set in the current mode.
      *
      * @param field the field
      * @return {@code true} if read-only, {@code false} otherwise
      */
     boolean isVisible(Field<M> field);
+
+    /**
+     * Returns whether the field is read-only for this data set in the current mode.
+     *
+     * @param field the field
+     * @return {@code true} if read-only, {@code false} otherwise
+     */
+    boolean isReadOnly(Field<M> field);
 
     /**
      * Returns a list with visible fields for the current state, sorted by position.

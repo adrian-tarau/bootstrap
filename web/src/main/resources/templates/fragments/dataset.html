@@ -106,7 +106,7 @@
                 <h3 class="c-grey-900">
                     <span th:text="${dataset.name}"></span>
                     <span th:if="${#help.hasHelp()}" class="float-end p-2">
-                        <a href="#" th:attr="onclick=|Application.help('${dataset.name}','${#help.getHelp()}')|" component:tooltip title="Opens the documentation for the current dashboards">
+                        <a href="#" th:attr="onclick=|Help.open('${dataset.name}','${#help.getHelp()}')|" component:tooltip title="Opens the documentation for the current dashboards">
                             <i class="fa-solid fa-circle-question text-primary"></i>
                         </a>
                     </span>
@@ -145,16 +145,16 @@
     <div th:class="${#dataset.getInputContainerClass(field)}">
         <input th:if="${#dataset.isInputField(field)}" th:name="${field.name}"
                th:type="${#dataset.getInputType(field)}" th:class="${#dataset.getInputFieldClass(field)}"
-               th:readonly="${#dataset.isReadOnly(field)}" th:checked="${#dataset.isChecked(model, field)}"
+               th:readonly="${#dataset.isReadOnly(field)}" th:disabled="${#dataset.isDisabled(field)}" th:checked="${#dataset.isChecked(model, field)}"
                th:value="${#dataset.getValue(model, field)}">
         <input th:unless="${#dataset.isVisible(field)}" type="hidden" th:name="${field.name}"
                th:value="${#dataset.getValue(model, field)}">
         <div th:if="${#dataset.isCheckboxField(field)}" class="form-check">
             <input th:name="${field.name}" th:type="${#dataset.getInputType(field)}" th:class="${#dataset.getInputFieldClass(field)}"
-                   th:readonly="${#dataset.isReadOnly(field)}" th:checked="${#dataset.isChecked(model, field)}">
+                   th:readonly="${#dataset.isReadOnly(field)}" th:disabled="${#dataset.isDisabled(field)}" th:checked="${#dataset.isChecked(model, field)}">
         </div>
         <textarea th:if="${#dataset.isTextAreaField(field)}" th:name="${field.name}"
-                  th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}"
+                  th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}" th:disabled="${#dataset.isDisabled(field)}"
                   th:attr="rows=${#dataset.getInputRows(field)}"
                   th:text="${#dataset.getValue(model, field)}"></textarea>
     </div>

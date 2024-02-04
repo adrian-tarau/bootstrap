@@ -139,6 +139,18 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public boolean isReadOnly(Field<M> field) {
+        requireNonNull(field);
+        ReadOnly readOnlyAnnot = field.findAnnotation(ReadOnly.class);
+        if (readOnlyAnnot == null || !readOnlyAnnot.value()) return false;
+        return switch (state) {
+            case ADD -> ArrayUtils.contains(readOnlyAnnot.modes(), ReadOnly.Mode.ADD);
+            case EDIT -> ArrayUtils.contains(readOnlyAnnot.modes(), ReadOnly.Mode.EDIT);
+            default -> false;
+        };
+    }
+
+    @Override
     public final List<Field<M>> getVisibleFields() {
         switch (state) {
             case BROWSE -> {

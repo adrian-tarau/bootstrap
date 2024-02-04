@@ -175,7 +175,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     public final void upload(@RequestParam("file") MultipartFile file, Model model) throws IOException {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "upload", 0, null, null, null);
-        upload(dataSet, model, StreamResource.create(file.getInputStream(), file.getOriginalFilename()));
+        upload(dataSet, model, StreamResource.create(file::getInputStream, file.getOriginalFilename()));
         String message = "File '" + file.getOriginalFilename() + "' was successfully uploaded";
         model.addAttribute("message", message);
     }

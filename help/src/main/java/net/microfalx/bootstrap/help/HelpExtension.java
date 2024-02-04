@@ -80,7 +80,7 @@ public class HelpExtension implements HtmlRenderer.HtmlRendererExtension {
         } catch (Exception e) {
             // if we cannot parse then leave it as is
         }
-        return link;
+        return link.withTarget("_blank").withStatus(LinkStatus.VALID);
     }
 
     class AttributeProviderImpl implements AttributeProvider {

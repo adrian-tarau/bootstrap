@@ -64,7 +64,7 @@ public abstract class PojoField<M> extends AbstractField<M> {
     void update(MethodHandle getter, MethodHandle setter) {
         this.getter = getter;
         this.setter = setter;
-        setReadOnly(setter == null || hasAnnotation(ReadOnly.class));
+        setReadOnly(setter == null || (hasAnnotation(ReadOnly.class) && findAnnotation(ReadOnly.class).value()));
     }
 
     protected boolean update(Member member) {

@@ -238,20 +238,6 @@ Application.fire = function (name) {
 }
 
 /**
- * Displays a help page.
- *
- * @param {String} title the title of the help article
- * @param {String} path the path
- */
-Application.help = function (title, path) {
-    let me = this;
-    Logger.debug("Show help '" + path + "'");
-    $.get("/help/view/" + path, {title:title}, function (data) {
-        me.loadModal("help-article", data);
-    });
-}
-
-/**
  * Returns the listeners associated with an event.
  *
  * @param {String} name the name of the event

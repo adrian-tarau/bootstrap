@@ -25,6 +25,8 @@ The search engine is built on top of Apache Lucene and it has an extensive [quer
 !!! tip
 The search engine will not produce an error if an unknown field will be used during search and it will produce an empty result set. 
 
+A standard English stop word list is used to removing common, non-meaningful words like _the_, _and_ and other prepositions, articles, etc. 
+
 ## Search Result
 
 By default, when the search dashboard is displayed, the search is restricted to the current day and there is no search expression. 
@@ -47,7 +49,7 @@ The name of the document (or description if the document does not have a name), 
 ![Document Body](images/search_view_body.png)
 _Figure 2. Typical view of a document body_
 
-The dialog shows the title, owner, type, created & modified timestamp and top custom fields. At the bottom of the dialog, the body of the document and a list of all fields is available for inspection.
+The dialog shows the _Title_, _Owner_, _Type_, _Created_ & _Modified_ timestamp and top custom fields. At the bottom of the dialog, the body of the document and a list of all fields is available for inspection.
 
 ![Document Body](images/search_view_fields.png)
 _Figure 3. Typical view of a document fields_

@@ -12,3 +12,24 @@
     border: 1px solid var(--bs-border-color);
     box-shadow: 5px 5px 5px lightgray;
 }
+
+.help img + em {
+    color: saddlebrown;
+    font-size: smaller;
+}
+
+@media (min-width: 992px) {
+
+    .modal-help {
+        --bs-modal-width: 800px !important;
+    }
+
+}
+
+@media (min-width: 1600px) {
+
+    .modal-help {
+        --bs-modal-width: 1000px !important;
+    }
+
+}

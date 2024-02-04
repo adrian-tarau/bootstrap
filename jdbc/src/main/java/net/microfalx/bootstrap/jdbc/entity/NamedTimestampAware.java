@@ -10,6 +10,7 @@ import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Position;
+import net.microfalx.lang.annotation.Width;
 
 /**
  * A base class for all entities which can be named and have timestamps.
@@ -25,12 +26,14 @@ public abstract class NamedTimestampAware extends TimestampAware {
     @Name
     @Position(5)
     @Description("A name for a {name}")
+    @Width("200px")
     private String name;
 
     @Column(name = "description")
     @Position(1000)
     @Component(Component.Type.TEXT_AREA)
     @Description("A description for a {name}")
+    @Width("300px")
     private String description;
 
 }

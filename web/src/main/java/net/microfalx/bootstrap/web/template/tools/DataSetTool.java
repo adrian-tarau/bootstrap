@@ -234,7 +234,22 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public boolean isReadOnly(Field<M> field) {
         DataSet<M, F, ID> dataSet = getDataSet();
         if (dataSet.isReadOnly() || dataSet.getState() == State.VIEW) return true;
-        return field.isReadOnly();
+        return dataSet.isReadOnly(field);
+    }
+
+    /**
+     * Returns whether the field is disabled.
+     *
+     * @param field the field
+     * @return {@code true} if disabled, {@code false} otherwise
+     */
+    public boolean isDisabled(Field<M> field) {
+        DataSet<M, F, ID> dataSet = getDataSet();
+        if (dataSet.getState() == State.VIEW) {
+            return false;
+        } else {
+            return isReadOnly(field);
+        }
     }
 
     /**

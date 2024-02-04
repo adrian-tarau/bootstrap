@@ -170,7 +170,7 @@ public class HelpService implements InitializingBean {
 
     private void updateOptions(MutableDataSet options) {
         // uncomment to convert soft-breaks to hard breaks
-        options.set(HtmlRenderer.SOFT_BREAK, HtmlRenderer.HARD_BREAK.getDefaultValue());
+        //options.set(HtmlRenderer.SOFT_BREAK, HtmlRenderer.HARD_BREAK.getDefaultValue());
         options.set(TablesExtension.CLASS_NAME, "table table-striped");
     }
 }

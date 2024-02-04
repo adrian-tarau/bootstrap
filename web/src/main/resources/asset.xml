@@ -16,6 +16,7 @@
         <asset path="logger.js" type="script"/>
         <asset path="core.js" type="script"/>
         <asset path="alert.js" type="script"/>
+        <asset path="help.js" type="script"/>
         <asset path="ajax.js" type="script"/>
         <asset path="scroll_top.js" type="script"/>
         <asset path="search.js" type="script"/>

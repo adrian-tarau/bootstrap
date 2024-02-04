@@ -166,7 +166,7 @@ DataSet.print = function (id) {
  * Refresh the current view.
  */
 DataSet.refresh = function () {
-    this.open({});
+    DataSet.search('');
 }
 
 /**
@@ -382,6 +382,9 @@ DataSet.initActions = function () {
     Application.bind("dataset.add", DataSet.add);
     Application.bind("dataset.edit", DataSet.edit);
     Application.bind("dataset.delete", DataSet.delete);
+    Application.bind("dataset.refresh", DataSet.refresh);
+    Application.bind("dataset.download", DataSet.download);
+    Application.bind("dataset.upload", DataSet.upload);
 }
 
 /**
@@ -414,13 +417,13 @@ DataSet.initUpload = function () {
     });
     dropZone.on("success", function (file) {
         dropZone.removeFile(file);
-        DataSet.showInfoAlert("Upload", "File  '" + file.name + "' was uploaded successfully");
+        Application.showInfoAlert("Upload", "File  '" + file.name + "' was uploaded successfully");
     });
     dropZone.on("error", function (file) {
-        DataSet.showInfoAlert("Upload", "Failed to upload file '" + file.name + "'");
+        Application.showErrorAlert("Upload", "Failed to upload file '" + file.name + "'");
     });
     dropZone.on("processing", function (file) {
-        // DataSet.showInfoAlert("Upload", "File '" + file.name + "' will be uploaded to the server");
+        Application.showInfoAlert("Upload", "File '" + file.name + "' will be uploaded to the server");
     });
     dropZone.on("complete", function (file) {
         // DataSet.showInfoAlert("Upload", "File '" + file.name + "' done'");
