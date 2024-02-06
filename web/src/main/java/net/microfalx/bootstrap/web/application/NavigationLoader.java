@@ -9,10 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.XmlUtils.*;
@@ -50,7 +47,7 @@ final class NavigationLoader {
         processPending();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private void processPending() {
         int iterations = 50;
         while (iterations-- > 0 && !pending.isEmpty()) {
@@ -64,11 +61,31 @@ final class NavigationLoader {
             }
             Container<?> parent = (Container<?>) navigation.find(pending.parent, true);
             if (parent == null) {
-                LOGGER.error("A parent ({}) could not be resolved in navigation '{}'", pending.parent, navigation.getText());
+                this.pending.offer(pending);
             } else {
-                parent.add(pending.child);
+                LOGGER.debug("Add child '" + pending.child.getId() + "' to parent '" + pending.parent + "'");
+                parent.add((Component) pending.child);
             }
         }
+        if (!pending.isEmpty()) {
+            LOGGER.error(pending.size() + " navigation entries could not be registered due to missing parents:");
+            for (Pending pending : this.pending) {
+                Menu navigation;
+                try {
+                    navigation = applicationService.getNavigation(pending.navigation);
+                } catch (Exception e) {
+                    continue;
+                }
+                LOGGER.error("A parent ({}) could not be resolved in navigation '{}' for entry '{}'", pending.parent, navigation.getId(), pending.child.getId());
+            }
+        }
+    }
+
+    private boolean hasPendingContainers() {
+        for (Pending pending : this.pending) {
+            if (pending.child instanceof Container<?>) return true;
+        }
+        return false;
     }
 
     private void loadNavigations(URL webDescriptor) throws IOException {
@@ -101,6 +118,7 @@ final class NavigationLoader {
                 default -> null;
             };
             if (parentComponent != null) {
+                LOGGER.debug("Parent '" + parentComponent + "' could not be located in navigation '" + navigation.getId() + ", queue");
                 pending.offer(new Pending(navigation.getId(), parentComponent, component));
             } else if (component != null) {
                 parent.add(component);
@@ -142,14 +160,26 @@ final class NavigationLoader {
 
     static class Pending {
 
-        private String navigation;
-        private String parent;
-        private Component child;
+        private final String navigation;
+        private final String parent;
+        private final Component<?> child;
 
-        Pending(String navigation, String parent, Component child) {
+        Pending(String navigation, String parent, Component<?> child) {
+            requireNonNull(navigation);
+            requireNonNull(parent);
+            requireNonNull(child);
             this.navigation = navigation;
             this.parent = parent;
             this.child = child;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", Pending.class.getSimpleName() + "[", "]")
+                    .add("navigation='" + navigation + "'")
+                    .add("parent='" + parent + "'")
+                    .add("child=" + child)
+                    .toString();
         }
     }
 }

@@ -103,7 +103,7 @@ public class ResourceService implements InitializingBean {
         validateResource(getSharedResource(null));
         LOGGER.info("Persisted resources directory {}", persistedDirectory);
         LOGGER.info("Transient resources directory {}", transientDirectory);
-        LOGGER.info("Shared resources directory {}", getSharedResource(null));
+        LOGGER.info("Shared resources directory {}", getSharedResource(null).toURI());
     }
 
     private void initializeSharedResource() {
