@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
 
 <li class="nav-item actived" th:fragment="menu-item">
     <a class="sidebar-link" th:href="@{${item.action}}">
@@ -70,7 +70,8 @@
             </li>
             <li class="search-input active">
                 <form role="search" th:attr="onsubmit='Application.Search.query(); return false'">
-                    <input id="search" class="form-control" autocomplete="off" type="text" placeholder="Search...">
+                    <input id="search" class="form-control" autocomplete="off" autofocus type="search" size="80"
+                           placeholder="Search..." th:value="${query}" component:tooltip title="A search expression based on fields">
                 </form>
             </li>
         </ul>

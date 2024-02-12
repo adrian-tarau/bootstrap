@@ -377,10 +377,9 @@ public class SearchService implements InitializingBean {
      */
     private SearchHolder getSearchHolder(boolean reopen) {
         synchronized (lock) {
+            reopen = reopen || (searchHolder != null && searchHolder.isStale());
             if (searchHolder == null || reopen) {
-                if (searchHolder != null) {
-                    releaseSearchHolder();
-                }
+                if (searchHolder != null) releaseSearchHolder();
                 LOGGER.debug("Open searcher");
                 try (Timer ignored = METRICS.startTimer("open_searcher")) {
                     try {
@@ -463,6 +462,7 @@ public class SearchService implements InitializingBean {
 
         private final AtomicBoolean stale = new AtomicBoolean();
         private final AtomicInteger useCount = new AtomicInteger(0);
+        private final long created = System.currentTimeMillis();
 
         private SearchHolder() throws IOException {
             File indexDirectory = getIndexDirectory();
@@ -494,6 +494,10 @@ public class SearchService implements InitializingBean {
             } catch (IOException e) {
                 LOGGER.error("Failed to rollback index", e);
             }
+        }
+
+        public boolean isStale() {
+            return millisSince(created) > searchProperties.getRefreshInterval().toMillis();
         }
     }
 }

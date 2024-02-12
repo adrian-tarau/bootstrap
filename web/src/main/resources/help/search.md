@@ -3,6 +3,9 @@ The _Search_ dashboard allows users to locate application data (documents) by en
 ![Search Dashboard](images/search_dashboard.png)
 _Figure 1. Typical view of the Search dashboard_
 
+!!! warning
+For performance reasons, the search engine refreshes periodically to load the newest document changes (default to 60 seconds). Documents added (or changed) since the last refresh are not available to the search engine.
+
 ## Fields
 
 Each document has the following standard (searchable) fields:

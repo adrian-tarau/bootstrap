@@ -9,11 +9,15 @@ window.Application.Search = window.Application.Search || {};
  * @param {String} text the query text passed to the search engine (Apache Lucene syntax)
  */
 Application.Search.query = function (text) {
-    if (Utils.isEmpty(text)) text = $("#search").val();
-    let params = {
-        query: text
+    if (DataSet.exists()) {
+       DataSet.search(text);
+    } else {
+        if (Utils.isEmpty(text)) text = $("#search").val();
+        let params = {
+            query: text
+        }
+        Application.open(params, "/search")
     }
-    Application.open(params, "/search")
 }
 
 /**

@@ -54,6 +54,7 @@
         <module>test</module>
         <module>jdbc</module>
         <module>resource</module>
+        <module>metrics</module>
         <module>help</module>
         <module>search</module>
         <module>js</module>
@@ -83,6 +84,7 @@
         <apache.httpclient.version>4.5.13</apache.httpclient.version>
         <apache.tika.version>2.9.1</apache.tika.version>
         <apache.commons.io.version>2.15.1</apache.commons.io.version>
+        <apache.commons.math.version>3.6.1</apache.commons.math.version>
         <lombok.version>1.18.30</lombok.version>
         <jodd.version>5.1.6</jodd.version>
         <lucene.version>9.9.1</lucene.version>
@@ -93,6 +95,7 @@
         <resource.version>1.0.0-SNAPSHOT</resource.version>
         <jdbcpool.version>1.0.0-SNAPSHOT</jdbcpool.version>
         <threadpool.version>1.0.0-SNAPSHOT</threadpool.version>
+        <metrics.version>1.0.0-SNAPSHOT</metrics.version>
         <!-- Tests -->
         <junit.version>5.10.1</junit.version>
         <assertj.version>3.25.1</assertj.version>
@@ -177,6 +180,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-math3</artifactId>
+                <version>${apache.commons.math.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-core</artifactId>
                 <version>${flyaway.version}</version>
@@ -250,6 +259,12 @@
             </dependency>
 
             <dependency>
+                <groupId>net.microfalx.metrics</groupId>
+                <artifactId>metrics</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>net.microfalx</groupId>
                 <artifactId>jdbcpool</artifactId>
                 <version>${object.pool.version}</version>
@@ -276,6 +291,12 @@
             <dependency>
                 <groupId>net.microfalx.resource</groupId>
                 <artifactId>resource-s3</artifactId>
+                <version>${resource.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.resource</groupId>
+                <artifactId>resource-rocksdb</artifactId>
                 <version>${resource.version}</version>
             </dependency>
 

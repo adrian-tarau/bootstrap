@@ -68,19 +68,23 @@
                 </button>
             </ul>
             <div class="dataset-drop-zone"></div>
-            <div class="mR-10"><span id="page_info" class="badge rounded-pill bg-success p-10"
-                                     th:text="${#dataset.getPageInfo()}"></span></div>
+            <div class="mR-10">
+                <span id="page_info" class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageInfo()}"
+               component:tooltip title="Displays the number of pages and number of records available using the current filter"></span>
+            </div>
             <form class="d-flex" role="search" th:attr="onsubmit='return DataSet.search()'">
                 <div id="daterange" th:if="${hasTimeRange}" class="form-control me-2 text-nowrap"
-                     style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+                     style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%"
+                     component:tooltip title="A time interval used to restrict the number of records">
                     <i class="fa fa-calendar"></i>&nbsp;
                     <span></span> <i class="fa fa-caret-down"></i>
                     <span class="d-none" th:text="${daterange}"></span>
                 </div>
-                <input id="query" class="form-control me-2" type="search" placeholder="Search" aria-label="Search" th:value="${query}">
-                <button class="btn btn-outline-success text-nowrap" type="submit"><i
-                        class="fa-solid fa-magnifying-glass icon-font-grow"></i><span class="mL-5">Search</span>
-                </button>
+                <!--input id="query" class="form-control me-2" type="search" placeholder="Search" aria-label="Search"
+                       size="30" th:value="${query}" component:tooltip title="Searches the dashboard using field expressions">
+                <button class="btn btn-outline-success text-nowrap" type="submit">
+                    <i class="fa-solid fa-magnifying-glass icon-font-grow"></i><span class="mL-5"></span>
+                </button-->
             </form>
         </div>
     </div>
@@ -106,7 +110,7 @@
                 <h3 class="c-grey-900">
                     <span th:text="${dataset.name}"></span>
                     <span th:if="${#help.hasHelp()}" class="float-end p-2">
-                        <a href="#" th:attr="onclick=|Help.open('${dataset.name}','${#help.getHelp()}')|" component:tooltip title="Opens the documentation for the current dashboards">
+                        <a href="#" th:attr="onclick=|Help.open('${dataset.name}','${#help.getHelp()}')|" component:tooltip title="Opens the documentation for the current dashboard">
                             <i class="fa-solid fa-circle-question text-primary"></i>
                         </a>
                     </span>

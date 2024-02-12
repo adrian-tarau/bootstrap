@@ -12,6 +12,13 @@ const DATE_RANGE_SEPARATOR = "|";
 const DATASET_DROP_ZONE_CLASS = "dataset-drop-zone";
 
 /**
+ * Returns whether the current page has a data set.
+ */
+DataSet.exists = function() {
+    return $("#dataset-download").length > 0;
+}
+
+/**
  * Takes a collection of parameters and creates a URI (path + query parameters).
  *
  * @param {Object} params the new parameters
@@ -39,7 +46,7 @@ DataSet.getQuery = function (params, options) {
     options.params = (typeof options.params === 'undefined') ? true : options.params;
     params = params || {};
     if (options.params) {
-        params["query"] = $("#query").val();
+        params["query"] = $("#search").val();
         let timeFilter = this.getTimeFilter();
         if (timeFilter.length > 0) {
             params["range"] = timeFilter[0].toISOString() + DATE_RANGE_SEPARATOR + timeFilter[1].toISOString();
@@ -85,7 +92,7 @@ DataSet.ajax = function (path, params, callback) {
  * @param {String } query the query to execute, if empty
  */
 DataSet.search = function (query) {
-    if (Utils.isNotEmpty(query)) $("#query").val(query);
+    if (Utils.isNotEmpty(query)) $("#search").val(query);
     this.open("");
     return false;
 }
