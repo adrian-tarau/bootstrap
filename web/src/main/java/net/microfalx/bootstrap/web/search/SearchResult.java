@@ -45,10 +45,10 @@ public class SearchResult {
     @Description("The type of the document")
     private String type;
 
-    @Position(10)
+    /*@Position(10)
     @Formattable(negativeValue = Formattable.NA)
     @Description("The relevance of the document when a text search is performed")
-    private float relevance;
+    private float relevance;*/
 
     @Position(20)
     @Description("The length (size) of the document")

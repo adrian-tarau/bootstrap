@@ -38,7 +38,7 @@ public class TemplateService {
         templateEngine.addDialect(new ExpressionsDialect(applicationService, metadataService, dataSetService, helpService));
         templateEngine.addDialect(new AssetDialect(applicationService));
         templateEngine.addDialect(new ComponentDialect());
-        templateEngine.addDialect(new ApplicationDialect());
+        templateEngine.addDialect(new ApplicationDialect(applicationService, dataSetService));
     }
 
 

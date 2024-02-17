@@ -54,6 +54,16 @@ public class SearchUtils {
     static final Set<String> FIELD_NAMES = new HashSet<>();
 
     /**
+     * The operator injected when the user clicks on a field value in the grid.
+     */
+    public final static String DEFAULT_FILTER_OPERATOR = ": ";
+
+    /**
+     * Returns the operator injected when the user clicks on a field value in the grid.
+     */
+    public final static char DEFAULT_FILTER_QUOTE_CHAR = '\'';
+
+    /**
      * Returns whether the given field name is part of the standard field names.
      *
      * @param name the field name

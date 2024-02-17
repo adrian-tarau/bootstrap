@@ -119,6 +119,17 @@ Utils.isDefined = function (value) {
 }
 
 /**
+ * Returns whether the value if defined or the default value.
+ *
+ * @param {Object} value the value to test.
+ * @param {Object} defaultValue the default value to test.
+ * @return {Object}
+ */
+Utils.defaultIfNotDefined = function (value, defaultValue) {
+    return Utils.isDefined(value) ? value : defaultValue;
+}
+
+/**
  * Returns an array if the value is not an array already.
  *
  * @param {Object} value the value to convert

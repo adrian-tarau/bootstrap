@@ -51,8 +51,10 @@
 
         <asset path="popper.js" type="script"/>
         <asset path="bootstrap.js" type="script"/>
+        <asset path="tippyjs.js" type="script"/>
         <asset path="tooltip.js" type="script"/>
         <asset path="bootstrap.css" type="stylesheet"/>
+        <asset path="tippyjs.css" type="stylesheet"/>
     </asset-bundle>
 
     <asset-bundle id="loader" path="misc" version="1.0.0" name="Loader" inline="true">

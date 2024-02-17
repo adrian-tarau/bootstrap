@@ -9,6 +9,7 @@ import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.apache.commons.lang3.mutable.MutableLong;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.thymeleaf.context.IContext;
 
+import java.io.IOException;
 import java.time.temporal.Temporal;
 import java.util.Collection;
 import java.util.Map;
@@ -26,6 +28,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static net.microfalx.bootstrap.web.template.TemplateUtils.getModelAttribute;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -63,9 +66,34 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public DataSet<M, F, ID> getDataSet() {
+        return getDataSet(true);
+    }
+
+    /**
+     * Returns the current data set.
+     *
+     * @param required {@code true} if the data set is required, {@code false} otherwise
+     * @return a non-null instance
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public DataSet<M, F, ID> getDataSet(boolean required) {
         DataSet dataset = getModelAttribute(context, "dataset");
-        if (dataset == null) throw new DataSetException("A data set is not available in the context");
+        if (dataset == null && required) throw new DataSetException("A data set is not available in the context");
         return dataset;
+    }
+
+    /**
+     * Returns the current data set annotation.
+     *
+     * @param required {@code true} if the annotation is required, {@code false} otherwise
+     * @return a non-null instance
+     */
+    public net.microfalx.bootstrap.dataset.annotation.DataSet getDataSetAnnotation(boolean required) {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = getModelAttribute(context, "dataset-annotation");
+        if (dataSetAnnot == null && required) {
+            throw new DataSetException("A @DataSet annotation is not available in the context");
+        }
+        return dataSetAnnot;
     }
 
     /**
@@ -117,6 +145,26 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public Iterable<M> getModels() {
         return getPage().getContent();
+    }
+
+    /**
+     * Returns the operator used by the filterable fields.
+     *
+     * @return a non-null instance  if the operator is available, null otherwise
+     */
+    public String getFilterableOperator() {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation(false);
+        return dataSetAnnotation != null ? dataSetAnnotation.filterOperator() : null;
+    }
+
+    /**
+     * Returns the quote character used by the filterable fields.
+     *
+     * @return a non-null instance  if the quote character is available, null otherwise
+     */
+    public String getFilterableQuoteChar() {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation(false);
+        return dataSetAnnotation != null ? String.valueOf(dataSetAnnotation.filterQuoteChar()) : null;
     }
 
     /**
@@ -429,6 +477,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return the class
      */
     public String getHeaderClass(Field<M> field) {
+        DataSet<M, F, ID> dataSet = getDataSet();
         String classes = "sortable";
         Sort sort = getSort();
         Sort.Order order = sort.getOrderFor(field.getName());
@@ -454,6 +503,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return the class
      */
     public String getCellClass(Field<M> field) {
+        DataSet<M, F, ID> dataSet = getDataSet();
         String classes = "";
         if (field.getDataType() == Field.DataType.BOOLEAN) {
             classes += " text-center";
@@ -461,6 +511,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
             classes += " text-right";
         }
         if (field.getDataType().isTemporal()) classes += " text-nowrap";
+        if (dataSet.isFilterable(field)) classes += " filterable";
         classes = classes.trim();
         return isNotEmpty(classes) ? classes : null;
     }
@@ -536,6 +587,35 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public String getId(M model) {
         DataSet<M, F, ID> dataSet = getDataSet();
         return dataSet.getCompositeId(model).toString();
+    }
+
+    /**
+     * Returns the tooltip for the search field.
+     *
+     * @return the tooltip
+     */
+    public String getSearchTooltip() {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation(false);
+        String resourcePath = null;
+        if (dataSetAnnotation != null && StringUtils.isNotEmpty(dataSetAnnotation.queryHelp())) {
+            resourcePath = dataSetAnnotation.queryHelp();
+        }
+        resourcePath = defaultIfEmpty(resourcePath, "/help/dataset/default.html");
+        Resource resource = ClassPathResource.file(resourcePath);
+        try {
+            String content = resource.loadAsString();
+            DataSet<M, F, ID> dataSet = getDataSet(false);
+            if (dataSet != null) {
+                String fieldNames = dataSet.getMetadata().getFields().stream()
+                        .filter(dataSet::isFilterable).map(Field::getName)
+                        .collect(Collectors.joining(", "));
+                content = org.apache.commons.lang3.StringUtils.replaceOnce(content, "${FIELDS}", fieldNames);
+            }
+            return content;
+        } catch (IOException e) {
+            LOGGER.error("Failed to create search tooltip for " + resourcePath, e);
+            return null;
+        }
     }
 
     /**

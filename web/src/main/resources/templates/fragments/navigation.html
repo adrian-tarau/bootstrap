@@ -70,8 +70,23 @@
             </li>
             <li class="search-input active">
                 <form role="search" th:attr="onsubmit='Application.Search.query(); return false'">
-                    <input id="search" class="form-control" autocomplete="off" autofocus type="search" size="80"
-                           placeholder="Search..." th:value="${query}" component:tooltip title="A search expression based on fields">
+                    <div class="input-group mb-3">
+                        <div class="dropdown" th:unless="${#lists.isEmpty(queryHistory)}">
+                            <a class="search-history mr-3" data-bs-toggle="dropdown" component:tooltip-text="A search history for the last 10 searches">
+                                <i class="fa-regular fa-square-caret-down"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><h6 class="dropdown-header">Search History</h6></li>
+                                <li th:each="queryItem : ${queryHistory}">
+                                    <a class="dropdown-item" href="#" th:text="${queryItem}" th:attr="onclick='Application.Search.click(this); return false'">Action</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <input id="search" class="form-control" autocomplete="off" type="text" size="80"
+                               placeholder="Search..." th:value="${query}" component:tooltip="${#dataset.getSearchTooltip()}"
+                               component:tooltip-placement="right" component:tooltip-delay="[2000, 2000]">
+
+                    </div>
                 </form>
             </li>
         </ul>

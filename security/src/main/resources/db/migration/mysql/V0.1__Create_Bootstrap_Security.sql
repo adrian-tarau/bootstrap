@@ -10,6 +10,17 @@ create table security_users
     description varchar(1000)
 ) ENGINE = InnoDB;
 
+create table security_users_settings
+(
+    username    varchar(50)  not null,
+    name        varchar(200) not null,
+    value       mediumblob   null,
+    created_at  datetime     not null,
+    modified_at datetime,
+    constraint pk$security_users_settings primary key (username, name),
+    constraint fk$security_users_settings$user foreign key (username) references security_users (username)
+) ENGINE = InnoDB;
+
 create table security_authorities
 (
     username   varchar(50) not null,
@@ -56,7 +67,7 @@ create table security_audit
     category    varchar(100)  not null,
     client_info varchar(100)  not null,
     reference   varchar(1000) not null,
-    error_code  varchar(100) not null,
+    error_code  varchar(100)  not null,
     created_at  datetime      not null,
     description varchar(1000),
     constraint fk$security_audit$user foreign key (username) references security_users (username)

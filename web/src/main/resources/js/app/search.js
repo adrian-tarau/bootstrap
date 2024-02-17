@@ -4,13 +4,22 @@
 window.Application.Search = window.Application.Search || {};
 
 /**
+ * Executes a search by extracting the search text from object was clicked on.
+ * @param element the element was clicked on
+ */
+Application.Search.click = function (element) {
+    let text = ($(element).text());
+    Application.Search.query(text);
+}
+
+/**
  * Executes a search with a given query.
  *
  * @param {String} text the query text passed to the search engine (Apache Lucene syntax)
  */
 Application.Search.query = function (text) {
     if (DataSet.exists()) {
-       DataSet.search(text);
+        DataSet.search(text);
     } else {
         if (Utils.isEmpty(text)) text = $("#search").val();
         let params = {

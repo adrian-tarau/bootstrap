@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.util;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +15,7 @@ import static java.util.Collections.unmodifiableMap;
  */
 public class JsonResponse<T extends JsonResponse<T>> implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -2814974262080434683L;
 
     /**

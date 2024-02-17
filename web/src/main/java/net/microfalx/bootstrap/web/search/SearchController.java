@@ -22,10 +22,14 @@ import java.util.List;
 
 import static net.microfalx.bootstrap.model.AttributeConstants.DEFAULT_MAXIMUM_ATTRIBUTES;
 import static net.microfalx.bootstrap.model.AttributeUtils.shouldDisplayAsBadge;
+import static net.microfalx.bootstrap.search.SearchUtils.DEFAULT_FILTER_OPERATOR;
+import static net.microfalx.bootstrap.search.SearchUtils.DEFAULT_FILTER_QUOTE_CHAR;
 
 @Controller
 @RequestMapping(value = "/search")
-@DataSet(rawQuery = true, model = SearchResult.class, viewTemplate = "search/view", detailTemplate = "search/detail", viewClasses = "modal-xl")
+@DataSet(rawQuery = true, model = SearchResult.class, viewTemplate = "search/view", detailTemplate = "search/detail",
+        viewClasses = "modal-xl", filterOperator = DEFAULT_FILTER_OPERATOR, filterQuoteChar = DEFAULT_FILTER_QUOTE_CHAR,
+queryHelp = "/help/dataset/search_engine.html")
 @Help("search")
 public final class SearchController extends DataSetController<SearchResult, String> {
 

@@ -14,6 +14,9 @@ Each document has the following standard (searchable) fields:
 * `desc`: The description associated with the document (optional)
 * `owner`: The owner of the document (module/service)
 * `tag`: The tags (keywords) associated with the document
+
+Most common custom fields available (depending on available features):
+* `severity`: The severity/important of the document
 * `source`: The source of the document (producer)
 * `target`: The target for the document (consumer/audience)
 
@@ -21,7 +24,9 @@ In addition to the standard fields above, documents can have any number of custo
 
 Each document has a _body_, which is made out of the description associated with the document and the _body of text_ provided with the document. This field is the default field used during searching, unless the field is provided with the searched text.
 
-## Query Syntax
+Fields can be used to search through the document using a _query_ (search expression) as described bellow.
+
+## Query
 
 The search engine is built on top of Apache Lucene and it has an extensive [query syntax](https://lucene.apache.org/core/9_9_2/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description). Most common search operation is to type the words into the search box, without any field reference. By default the _OR_ operator is applied between terms. 
 
@@ -30,7 +35,7 @@ The search engine will not produce an error if an unknown field will be used dur
 
 A standard English stop word list is used to removing common, non-meaningful words like _the_, _and_ and other prepositions, articles, etc. 
 
-## Search Result
+## Results
 
 By default, when the search dashboard is displayed, the search is restricted to the current day and there is no search expression. 
 

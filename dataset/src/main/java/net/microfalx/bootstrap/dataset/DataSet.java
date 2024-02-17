@@ -4,6 +4,7 @@ import net.microfalx.bootstrap.model.CompositeIdentifier;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +19,8 @@ import java.util.Map;
  * An abstract over a collection of records with CRUD support.
  */
 @NoRepositoryBean
-public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPagingAndSortingRepository<M, ID>, ListCrudRepository<M, ID> {
+public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>, Nameable,
+        ListPagingAndSortingRepository<M, ID>, ListCrudRepository<M, ID> {
 
     /**
      * Returns the factory which made this data set instance.
@@ -103,6 +105,24 @@ public interface DataSet<M, F extends Field<M>, ID> extends Nameable, ListPaging
      * @return {@code true} if read-only, {@code false} otherwise
      */
     boolean isReadOnly(Field<M> field);
+
+    /**
+     * Returns whether the field should be included in the search by value when searching for plain text in the
+     * search field.
+     *
+     * @param field the field
+     * @return {@code true} if read-only, {@code false} otherwise
+     */
+    boolean isSearchable(Field<M> field);
+
+    /**
+     * Returns whether the field should be used to add criteria to the filter by clicking on a field value
+     * in UI.
+     *
+     * @param field the field
+     * @return {@code true} if read-only, {@code false} otherwise
+     */
+    boolean isFilterable(Field<M> field);
 
     /**
      * Returns a list with visible fields for the current state, sorted by position.

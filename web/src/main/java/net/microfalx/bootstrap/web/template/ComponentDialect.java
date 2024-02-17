@@ -5,13 +5,13 @@ import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.dialect.springdata.util.Expressions;
 import org.thymeleaf.engine.AttributeName;
-import org.thymeleaf.model.AttributeValueQuotes;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.IProcessor;
 import org.thymeleaf.processor.element.AbstractAttributeTagProcessor;
 import org.thymeleaf.processor.element.AbstractElementTagProcessor;
 import org.thymeleaf.processor.element.IElementTagStructureHandler;
 import org.thymeleaf.templatemode.TemplateMode;
+import org.unbescape.html.HtmlEscape;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -37,6 +37,9 @@ public class ComponentDialect extends AbstractProcessorDialect {
         Set<IProcessor> processors = new HashSet<>();
         processors.add(new RenderTagProcessor());
         processors.add(new TooltipAttributeProcessor());
+        processors.add(new TooltipTextAttributeProcessor());
+        processors.add(new TooltipPlacementAttributeProcessor());
+        processors.add(new TooltipDelayAttributeProcessor());
         return processors;
     }
 
@@ -88,8 +91,6 @@ public class ComponentDialect extends AbstractProcessorDialect {
 
         @Override
         protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName, String attributeValue, IElementTagStructureHandler structureHandler) {
-            structureHandler.setAttribute("data-bs-toggle", "tooltip");
-            structureHandler.setAttribute("data-bs-delay", "{ \"show\": "+TOOLTIP_SHOW_DELAY+", \"hide\": 0 }", AttributeValueQuotes.SINGLE);
             Object value = null;
             String title = null;
             if (isNotEmpty(attributeValue)) value = Expressions.evaluate(context, attributeValue);
@@ -98,7 +99,51 @@ public class ComponentDialect extends AbstractProcessorDialect {
             } else if (value instanceof String) {
                 title = (String) value;
             }
-            if (isNotEmpty(title)) structureHandler.setAttribute("title", title);
+            if (isNotEmpty(title)) {
+                structureHandler.setAttribute("data-tippy-content", HtmlEscape.escapeHtml4Xml(title));
+            }
+        }
+    }
+
+    private class TooltipPlacementAttributeProcessor extends BaseAttributeProcessor {
+
+        public TooltipPlacementAttributeProcessor() {
+            super("tooltip-placement");
+        }
+
+        @Override
+        protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName, String attributeValue, IElementTagStructureHandler structureHandler) {
+            if (isNotEmpty(attributeValue)) {
+                structureHandler.setAttribute("data-tippy-placement", attributeValue);
+            }
+        }
+    }
+
+    private class TooltipDelayAttributeProcessor extends BaseAttributeProcessor {
+
+        public TooltipDelayAttributeProcessor() {
+            super("tooltip-delay");
+        }
+
+        @Override
+        protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName, String attributeValue, IElementTagStructureHandler structureHandler) {
+            if (isNotEmpty(attributeValue)) {
+                structureHandler.setAttribute("data-tippy-delay", attributeValue);
+            }
+        }
+    }
+
+    private class TooltipTextAttributeProcessor extends BaseAttributeProcessor {
+
+        public TooltipTextAttributeProcessor() {
+            super("tooltip-text");
+        }
+
+        @Override
+        protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName, String attributeValue, IElementTagStructureHandler structureHandler) {
+            if (isNotEmpty(attributeValue)) {
+                structureHandler.setAttribute("data-tippy-content", HtmlEscape.escapeHtml4Xml(attributeValue));
+            }
         }
     }
 

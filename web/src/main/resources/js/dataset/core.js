@@ -2,6 +2,8 @@
 * The Data Set Global Variables
  */
 window.DataSet = window.DataSet || {};
+window.DATASET_FILTERABLE_OPERATOR = window.DATASET_FILTERABLE_OPERATOR || " = ";
+window.DATASET_FILTERABLE_QUOTE_CHAR = window.DATASET_FILTERABLE_QUOTE_CHAR || "\"";
 
 const DATE_RANGE_SEPARATOR = "|";
 
@@ -14,7 +16,7 @@ const DATASET_DROP_ZONE_CLASS = "dataset-drop-zone";
 /**
  * Returns whether the current page has a data set.
  */
-DataSet.exists = function() {
+DataSet.exists = function () {
     return $("#dataset-download").length > 0;
 }
 
@@ -116,7 +118,7 @@ DataSet.loadPage = function (page) {
  */
 DataSet.view = function (id) {
     DataSet.updateId(id);
-    $.get(REQUEST_PATH + "/" + DataSet.getId() + "/view", function (data) {
+    $.get(APP_REQUEST_PATH + "/" + DataSet.getId() + "/view", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -125,7 +127,7 @@ DataSet.view = function (id) {
  * Adds the current model.
  */
 DataSet.add = function () {
-    $.get(REQUEST_PATH + "/add", function (data) {
+    $.get(APP_REQUEST_PATH + "/add", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -135,7 +137,7 @@ DataSet.add = function () {
  */
 DataSet.edit = function (id) {
     DataSet.updateId(id);
-    $.get(REQUEST_PATH + "/" + DataSet.getId() + "/edit", function (data) {
+    $.get(APP_REQUEST_PATH + "/" + DataSet.getId() + "/edit", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -146,7 +148,7 @@ DataSet.edit = function (id) {
 DataSet.delete = function (id) {
     DataSet.updateId(id);
     $.ajax({
-        url: REQUEST_PATH + "/" + DataSet.getId() + "/delete",
+        url: APP_REQUEST_PATH + "/" + DataSet.getId() + "/delete",
         dataType: "json",
         type: 'DELETE',
         success: function (json) {
@@ -164,7 +166,7 @@ DataSet.delete = function (id) {
  */
 DataSet.print = function (id) {
     DataSet.updateId(id);
-    $.get(REQUEST_PATH + "/" + DataSet.getId() + "/add", function (data) {
+    $.get(APP_REQUEST_PATH + "/" + DataSet.getId() + "/add", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -227,7 +229,7 @@ DataSet.showActions = function (event, id) {
  * @param {String}direction the new parameters
  */
 DataSet.sort = function (field, direction) {
-    let requestParams = $.extend({}, REQUEST_QUERY);
+    let requestParams = $.extend({}, APP_REQUEST_QUERY);
     let sort = field + "=" + direction;
     requestParams["sort"] = sort;
     this.open(requestParams);
@@ -410,6 +412,23 @@ DataSet.initTables = function () {
                 return $(e.target).hasClass("resizer");
             }
         });
+    $(".dataset-table").click(function (event) {
+        let target = $(event.target);
+        if (target.get(0).tagName === "SPAN") {
+            let text = target.text();
+            target = target.parent();
+            let tdIndex = target.index() + 1;
+            let th = $('.dataset-table tr').find('th:nth-child(' + tdIndex + ')');
+            let field = th.attr('field');
+            Logger.debug("Click on '" + text + "', index " + tdIndex + ", field " + field);
+            if (Utils.isNotEmpty(text) && Utils.isDefined(field)) {
+                let currentQuery = field + window.DATASET_FILTERABLE_OPERATOR + window.DATASET_FILTERABLE_QUOTE_CHAR + text + window.DATASET_FILTERABLE_QUOTE_CHAR;
+                let previousQuery = Application.getQueryParam("query");
+                if (Utils.isNotEmpty(previousQuery)) currentQuery += " AND " + previousQuery;
+                DataSet.search(currentQuery);
+            }
+        }
+    });
 }
 
 /**
@@ -420,7 +439,7 @@ DataSet.initUpload = function () {
         //autoProcessQueue: false,
         createImageThumbnails: false,
         disablePreviews: true,
-        url: REQUEST_PATH + "/upload"
+        url: APP_REQUEST_PATH + "/upload"
     });
     dropZone.on("success", function (file) {
         dropZone.removeFile(file);

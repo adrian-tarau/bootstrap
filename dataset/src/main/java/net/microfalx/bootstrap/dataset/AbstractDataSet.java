@@ -1,8 +1,10 @@
 package net.microfalx.bootstrap.dataset;
 
 import com.google.common.collect.Lists;
+import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.Lookup;
+import net.microfalx.bootstrap.dataset.annotation.Searchable;
 import net.microfalx.bootstrap.dataset.formatter.EnumFormatter;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
@@ -65,6 +67,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         this.factory = factory;
         this.metadata = metadata;
         initFromMetadata();
+    }
+
+    @Override
+    public String getId() {
+        return metadata.getId();
     }
 
     @Override
@@ -148,6 +155,23 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
             case EDIT -> ArrayUtils.contains(readOnlyAnnot.modes(), ReadOnly.Mode.EDIT);
             default -> false;
         };
+    }
+
+    @Override
+    public boolean isSearchable(Field<M> field) {
+        Searchable searchableAnnot = field.findAnnotation(Searchable.class);
+        boolean canBeSearched = field.getDataType() == Field.DataType.STRING;
+        return canBeSearched && (searchableAnnot == null || !searchableAnnot.value());
+    }
+
+    @Override
+    public boolean isFilterable(Field<M> field) {
+        Filterable filterableAnnot = field.findAnnotation(Filterable.class);
+        boolean canBeSearched = field.getDataType() == Field.DataType.STRING
+                || field.getDataType() == Field.DataType.ENUM
+                || field.getDataType() == Field.DataType.MODEL
+                || field.getDataType() == Field.DataType.BOOLEAN;
+        return canBeSearched && (filterableAnnot == null || !filterableAnnot.value());
     }
 
     @Override

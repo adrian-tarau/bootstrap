@@ -2,8 +2,8 @@
 * The Application Global Variables
  */
 window.Application = window.Application || {};
-window.REQUEST_PATH = window.REQUEST_PATH || "/";
-window.REQUEST_QUERY = window.REQUEST_QUERY || null;
+window.APP_REQUEST_PATH = window.APP_REQUEST_PATH || "/";
+window.APP_REQUEST_QUERY = window.APP_REQUEST_QUERY || null;
 
 /**
  * Takes a collection of parameters and creates an object with all query parameters.
@@ -11,7 +11,7 @@ window.REQUEST_QUERY = window.REQUEST_QUERY || null;
  * @param {Object} params the new parameters
  */
 Application.getQuery = function (params) {
-    let requestParams = $.extend({}, REQUEST_QUERY);
+    let requestParams = $.extend({}, APP_REQUEST_QUERY);
     requestParams = $.extend(requestParams, params);
     return requestParams;
 }
@@ -30,7 +30,7 @@ Application.getUri = function (params, path, options) {
     options.self = (typeof options.self === 'undefined') ? true : options.self;
     options.params = (typeof options.params === 'undefined') ? true : options.params;
     params = options.self ? this.getQuery(params) : params;
-    let uri = options.self ? REQUEST_PATH : "/";
+    let uri = options.self ? APP_REQUEST_PATH : "/";
     if (path) {
         if (!uri.endsWith("/")) uri += "/";
         if (path.startsWith("/")) path = path.substring(1);
@@ -268,7 +268,7 @@ Application.initEvents = function () {
  * Initializes the application
  */
 Application.initialize = function () {
-    Logger.debug("Initialize application, request path '" + REQUEST_PATH + "', request arguments '" + Utils.toString(REQUEST_QUERY) + "'");
+    Logger.debug("Initialize application, request path '" + APP_REQUEST_PATH + "', request arguments '" + Utils.toString(APP_REQUEST_QUERY) + "'");
     this.initEvents();
 }
 

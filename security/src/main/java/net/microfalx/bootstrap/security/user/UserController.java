@@ -31,6 +31,7 @@ public class UserController extends DataSetController<User, Integer> {
     @Override
     protected void validate(User model, State state, JsonFormResponse<?> response) {
         super.validate(model, state, response);
+        model.setUserName(model.getUserName().toLowerCase());
         if (state == State.ADD) {
             if (!ObjectUtils.equals(model.getPassword(), model.getRetypePassword())) {
                 response.addError("password", "Passwords must be the same", false);

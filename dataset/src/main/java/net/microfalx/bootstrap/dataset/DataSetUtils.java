@@ -11,6 +11,16 @@ import java.util.List;
 public class DataSetUtils {
 
     /**
+     * The operator injected when the user clicks on a field value in the grid.
+     */
+    public final static String DEFAULT_FILTER_OPERATOR = " = ";
+
+    /**
+     * Returns the operator injected when the user clicks on a field value in the grid.
+     */
+    public final static char DEFAULT_FILTER_QUOTE_CHAR = '\"';
+
+    /**
      * Creates a data set sort form a Spring Data sort.
      *
      * @param sort the initial sort

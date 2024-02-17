@@ -9,20 +9,20 @@
                     <span th:text="${title}"></span>
                 </h3>
                 <h4 class="float-end p-2">
-                    <a href="#" component:tooltip title="Navigates back one page within the current window"
+                    <a href="#" component:tooltip-text="Navigates back one page within the current window"
                        class="text-secondary" th:attr="onclick=|Help.back()|">
                         <i class="fa-solid fa-arrow-left"></i>
                     </a>
-                    <a href="#" component:tooltip title="Navigates forward one page within the current window"
+                    <a href="#" component:tooltip-text="Navigates forward one page within the current window"
                        class="text-secondary" th:attr="onclick=|Help.forward()|">
                         <i class="fa-solid fa-arrow-right"></i>
                     </a>
-                    <a href="#" component:tooltip title="Navigates to the home page of the current window"
+                    <a href="#" component:tooltip-text="Navigates to the home page of the current window"
                        class="text-secondary" th:attr="onclick=|Help.reload()|">
                         <i class="fa-solid fa-house"></i>
                     </a>
                     <span class="mx-2"></span>
-                    <a href="#" component:tooltip title="Closes the current window" data-bs-dismiss="modal"
+                    <a href="#" component:tooltip-text="Closes the current window" data-bs-dismiss="modal"
                        class="text-secondary">
                         <i class="fa-regular fa-circle-xmark"></i>
                     </a>

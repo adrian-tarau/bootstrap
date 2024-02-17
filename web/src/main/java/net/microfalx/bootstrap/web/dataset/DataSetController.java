@@ -11,7 +11,9 @@ import net.microfalx.bootstrap.web.component.Item;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.component.Toolbar;
 import net.microfalx.bootstrap.web.controller.NavigableController;
+import net.microfalx.bootstrap.web.preference.PreferenceService;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
+import net.microfalx.bootstrap.web.util.FieldHistory;
 import net.microfalx.bootstrap.web.util.JsonFormResponse;
 import net.microfalx.bootstrap.web.util.JsonResponse;
 import net.microfalx.lang.AnnotationUtils;
@@ -62,6 +64,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     @Autowired
     private DataSetService dataSetService;
+
+    @Autowired
+    private PreferenceService preferenceService;
 
     @Autowired(required = false)
     private PlatformTransactionManager transactionManager;
@@ -491,6 +496,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         dataSet.setState(state);
         model.addAttribute("controller", this);
         model.addAttribute("dataset", dataSet);
+        model.addAttribute("dataset-annotation", getDataSetAnnotation());
         model.addAttribute("metadata", dataSet.getMetadata());
         model.addAttribute("toolbar", getToolBar(dataSet));
         model.addAttribute("actions", getMenu(dataSet));
@@ -585,7 +591,15 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         model.addAttribute("sort", sort);
         model.addAttribute("index", new MutableLong(pagedModels.getPageable().getOffset() + 1));
         model.addAttribute("hasTimeRange", hasTimeRange(dataSet));
+        model.addAttribute("queryHistory", getHistory(dataSet, queryParameter));
         return pagedModels;
+    }
+
+    private List<String> getHistory(DataSet<M, Field<M>, ID> dataSet, String queryParameter) {
+        FieldHistory fieldHistory = new FieldHistory(preferenceService, dataSet.getId(), "query");
+        fieldHistory.add(queryParameter);
+        List<String> values = fieldHistory.get();
+        return values;
     }
 
     private String getDefaultQuery() {

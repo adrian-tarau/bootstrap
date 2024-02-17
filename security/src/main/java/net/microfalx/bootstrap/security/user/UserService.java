@@ -1,13 +1,17 @@
 package net.microfalx.bootstrap.security.user;
 
+import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.security.audit.Audit;
 import net.microfalx.bootstrap.security.audit.AuditContext;
 import net.microfalx.bootstrap.security.audit.AuditRepository;
 import net.microfalx.bootstrap.security.provisioning.SecuritySettings;
+import net.microfalx.bootstrap.web.preference.PreferenceService;
+import net.microfalx.bootstrap.web.preference.PreferenceStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,10 +20,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static net.microfalx.bootstrap.security.SecurityConstants.ANONYMOUS_USER;
 import static net.microfalx.bootstrap.security.SecurityUtils.getRandomPassword;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.capitalizeWords;
 
 /**
@@ -36,6 +42,9 @@ public class UserService implements InitializingBean {
     private UserRepository userRepository;
 
     @Autowired
+    private UserSettingRepository userSettingRepository;
+
+    @Autowired
     private AuditRepository auditRepository;
 
     @Autowired
@@ -43,6 +52,9 @@ public class UserService implements InitializingBean {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    ApplicationContext applicationContext;
 
     /**
      * Returns the entity which contains the user information for the user attached to the web session.
@@ -52,9 +64,63 @@ public class UserService implements InitializingBean {
      */
     public User getCurrentUser() {
         User user = findUser(false);
-        if (user == null) throw new SecurityException("A user with user name '" + getUserName()
+        if (user == null) throw new SecurityException("A user with user name '" + getCurrentUserName()
                 + "' could not be located");
         return user;
+    }
+
+    /**
+     * Returns a setting for the current user.
+     *
+     * @param name the setting name
+     * @return the setting, null if it does not exist
+     */
+    public byte[] getSetting(String name) {
+        return getSetting(getCurrentUser(), name);
+    }
+
+    /**
+     * Returns a setting for a given user.
+     *
+     * @param user the user
+     * @param name the setting name
+     * @return the setting, null if it does not exist
+     */
+    public byte[] getSetting(User user, String name) {
+        requireNonNull(user);
+        requireNotEmpty(name);
+        Optional<UserSetting> setting = userSettingRepository.findById(new UserSetting.Id(user.getUserName().toLowerCase(), name.toLowerCase()));
+        return setting.map(UserSetting::getValue).orElseGet(() -> null);
+    }
+
+    /**
+     * Changes a setting for the current user.
+     *
+     * @param name  the setting name
+     * @param value the setting value
+     */
+    public void setSetting(String name, byte[] value) {
+        setSetting(getCurrentUser(), name, value);
+    }
+
+    /**
+     * Changes a setting for a given user
+     *
+     * @param user  the user
+     * @param name  the setting name
+     * @param value the setting value
+     */
+    public void setSetting(User user, String name, byte[] value) {
+        requireNonNull(user);
+        requireNotEmpty(name);
+        UserSetting setting = new UserSetting();
+        setting.setUserName(user.getUserName().toLowerCase());
+        setting.setName(name.toLowerCase());
+        setting.setValue(value);
+        setting.setCreatedAt(LocalDateTime.now());
+        setting.setModifiedAt(LocalDateTime.now());
+        userSettingRepository.saveAndFlush(setting);
+
     }
 
     /**
@@ -70,13 +136,19 @@ public class UserService implements InitializingBean {
         try {
             auditRepository.saveAndFlush(audit);
         } catch (Exception e) {
-            LOGGER.error("Failed to audit action '" + context.getAction() + "' for user '" + getUserName() + "', details: " + context.getDescription(), e);
+            LOGGER.error("Failed to audit action '" + context.getAction() + "' for user '" + getCurrentUserName() + "', details: " + context.getDescription(), e);
         }
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
         createDefaultUsers();
+    }
+
+    @PostConstruct
+    protected void afterStartup() {
+        PreferenceService preferenceService = applicationContext.getBean(PreferenceService.class);
+        preferenceService.setStorage(new UserPreferenceListener());
     }
 
     private Audit createAudit(AuditContext context) {
@@ -95,8 +167,11 @@ public class UserService implements InitializingBean {
     }
 
     private User findUser(boolean create) {
-        String userName = getUserName();
-        User user = userRepository.findByUserName(userName);
+        return findUser(create, getCurrentUserName());
+    }
+
+    private User findUser(boolean create, String userName) {
+        User user = userRepository.findByUserName(userName.toLowerCase());
         if (user == null && create) {
             user = createUser(userName, getRandomPassword(), capitalizeWords(userName),
                     "A generated user with no permissions for auditing purposes");
@@ -104,7 +179,7 @@ public class UserService implements InitializingBean {
         return user;
     }
 
-    private String getUserName() {
+    private String getCurrentUserName() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
         if (principal instanceof UserDetails) {
@@ -126,7 +201,7 @@ public class UserService implements InitializingBean {
 
     private User createUser(String userName, String password, String name, String description) {
         User user = new User();
-        user.setUserName(userName);
+        user.setUserName(userName.toLowerCase());
         user.setName(name);
         user.setPassword(passwordEncoder.encode(password));
         user.setDescription(description);
@@ -149,6 +224,21 @@ public class UserService implements InitializingBean {
                     "A user with no permissions to access public resources");
         } catch (Exception e) {
             LOGGER.error("Failed to create default users", e);
+        }
+    }
+
+    private class UserPreferenceListener implements PreferenceStorage {
+
+        @Override
+        public void store(String userName, String name, byte[] value) {
+            User user = findUser(true, userName);
+            setSetting(user, name, value);
+        }
+
+        @Override
+        public byte[] load(String userName, String name) {
+            User user = findUser(true, userName);
+            return getSetting(user, name);
         }
     }
 }

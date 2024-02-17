@@ -8,11 +8,13 @@ window.Help = window.Help || {};
  *
  * @param {String} title the title of the help article
  * @param {String} path the path
+ * @param {String} [anchor] an optional anchor to jump into the document at a specific anchor
  */
-Help.open = function (title, path) {
-    let me = this;
-    Logger.debug("Show help '" + path + "'");
-    $.get("/help/view/" + path, {title: title}, function (data) {
+Help.open = function (title, path, anchor) {
+    Logger.debug("Show help '" + path + "', fra");
+    let params = {title: title};
+    if (Utils.isNotEmpty(anchor)) params["anchor"] = anchor;
+    $.get("/help/view/" + path, params, function (data) {
         Application.loadModal("help-article", data);
     });
 }
@@ -39,7 +41,7 @@ Help.forward = function () {
  */
 Help.reload = function () {
     let frame = this.getIFrame();
-    let url = $( frame ).attr( "origsrc" );
+    let url = $(frame).attr("origsrc");
     Logger.debug("Reload help '" + url + "'");
     frame.src = url;
 }

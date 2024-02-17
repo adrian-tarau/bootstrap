@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.web.controller;
 
 import net.microfalx.bootstrap.help.HelpNotFoundException;
 import net.microfalx.bootstrap.help.HelpService;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
@@ -51,9 +52,12 @@ public class HelpController extends PageController {
     }
 
     @GetMapping("/view/{*path}")
-    public String dialog(Model model, @PathVariable("path") String path, @RequestParam(value = "title") String title) {
+    public String dialog(Model model, @PathVariable("path") String path, @RequestParam(value = "title") String title,
+                         @RequestParam(value = "anchor", required = false) String anchor) {
         model.addAttribute("title", title);
-        model.addAttribute("path", "/help/article/" + removeStartSlash(path));
+        path = removeStartSlash(path);
+        if (StringUtils.isNotEmpty(anchor)) path += "#" + anchor;
+        model.addAttribute("path", "/help/article/" + path);
         return "help/article::#help-article";
     }
 

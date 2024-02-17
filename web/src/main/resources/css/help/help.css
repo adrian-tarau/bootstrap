@@ -5,6 +5,11 @@
     margin-bottom: 0.7rem !important;
 }
 
+.help a.anchor {
+    text-decoration: none;
+    color : inherit;
+}
+
 .help img {
     max-width: 100%;
     height: auto;

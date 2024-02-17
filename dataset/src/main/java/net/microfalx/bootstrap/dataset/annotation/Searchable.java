@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.dataset.annotation;
 import java.lang.annotation.*;
 
 /**
- * An annotation used to indicate which fields are searchable.
+ * An annotation used to indicate which fields are searchable just by typing any unqualified filter expression.
  * <p>
  * By default all {@link net.microfalx.bootstrap.model.Field.DataType#STRING} fields are searchable.
  */

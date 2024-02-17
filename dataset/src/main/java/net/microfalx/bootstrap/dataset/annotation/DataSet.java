@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.dataset.annotation;
 
+import net.microfalx.bootstrap.dataset.DataSetUtils;
+
 import java.lang.annotation.*;
 
 /**
@@ -90,6 +92,27 @@ public @interface DataSet {
      * @return zero (no default range), one (one day) or two (a range)
      */
     String[] range() default {"today"};
+
+    /**
+     * Returns the operator injected when the user clicks on a field value in the grid.
+     *
+     * @return the operator
+     */
+    String filterOperator() default DataSetUtils.DEFAULT_FILTER_OPERATOR;
+
+    /**
+     * Returns the operator injected when the user clicks on a field value in the grid.
+     *
+     * @return the operator
+     */
+    char filterQuoteChar() default DataSetUtils.DEFAULT_FILTER_QUOTE_CHAR;
+
+    /**
+     * Returns a resource path used to build the help (tooltip) for the search box
+     *
+     * @return the resource path, empty to use the default help
+     */
+    String queryHelp() default "";
 
     /**
      * Returns the default query for this data set.

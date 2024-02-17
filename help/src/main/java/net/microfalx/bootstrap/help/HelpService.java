@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.help;
 
 import com.vladsch.flexmark.ext.admonition.AdmonitionExtension;
+import com.vladsch.flexmark.ext.anchorlink.AnchorLinkExtension;
 import com.vladsch.flexmark.ext.footnotes.FootnoteExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
 import com.vladsch.flexmark.ext.gfm.tasklist.TaskListExtension;
@@ -164,7 +165,7 @@ public class HelpService implements InitializingBean {
         options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create(),
                 AdmonitionExtension.create(), MediaTagsExtension.create(), FootnoteExtension.create(),
                 TaskListExtension.create(),ResizableImageExtension.create(), GitLabExtension.create(),
-                TypographicExtension.create(),
+                TypographicExtension.create(), AnchorLinkExtension.create(),
                 new HelpExtension(this, path)));
     }
 
@@ -172,5 +173,8 @@ public class HelpService implements InitializingBean {
         // uncomment to convert soft-breaks to hard breaks
         //options.set(HtmlRenderer.SOFT_BREAK, HtmlRenderer.HARD_BREAK.getDefaultValue());
         options.set(TablesExtension.CLASS_NAME, "table table-striped");
+        options.set(HtmlRenderer.GENERATE_HEADER_ID, true);
+        options.set(AnchorLinkExtension.ANCHORLINKS_ANCHOR_CLASS, "anchor");
+        options.set(AnchorLinkExtension.ANCHORLINKS_SET_NAME, true);
     }
 }

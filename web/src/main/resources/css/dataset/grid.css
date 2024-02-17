@@ -12,6 +12,11 @@
     padding-bottom: 4px !important;;
 }
 
+.dataset-table .filterable span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .dataset-table-resizer {
     position: absolute;
     top: 0;
