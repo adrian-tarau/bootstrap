@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
 
-<li class="nav-item actived" th:fragment="menu-item">
-    <a class="sidebar-link" th:href="@{${item.action}}">
-                <span class="icon-holder">
-                    <i th:class="${item.icon}"></i>
-                </span>
+<li class="nav-item" th:fragment="menu-item">
+    <a class="sidebar-link" th:href="@{${item.action}}" th:classappend="${#component.getActiveClass(item)}">
+        <span class="icon-holder"><i th:class="${item.icon}"></i></span>
         <span class="title" th:text="${item.text}">Text</span>
     </a>
 </li>
@@ -18,7 +16,7 @@
         <span class="title" th:text="${item.text}">Menu</span>
         <span class="arrow"><i class="ti-angle-right"></i></span>
     </a>
-    <ul class="dropdown-menu">
+    <ul class="dropdown-menu" th:style="${#component.getActiveStyle(item)}">
         <div th:each="item : ${#component.getChildren(item)}" th:remove="tag">
             <div th:replace="~{ this :: (${#component.isContainer(item)} ? 'menu' : 'menu-item') }"></div>
         </div>

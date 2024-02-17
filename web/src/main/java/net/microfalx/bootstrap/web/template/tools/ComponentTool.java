@@ -31,10 +31,14 @@ import static net.microfalx.lang.StringUtils.defaultIfNull;
 public class ComponentTool extends AbstractTool {
 
     private ComponentRenderer renderer;
-    private ApplicationService applicationService;
+    private final ApplicationService applicationService;
+    private final LinkTool linkTool;
+    private final String action;
 
     public ComponentTool(IContext context, ApplicationService applicationService) {
         super(context);
+        this.linkTool = new LinkTool(context);
+        this.action = StringUtils.removeEndSlash(linkTool.getSelf());
         this.applicationService = applicationService;
     }
 
@@ -60,6 +64,60 @@ public class ComponentTool extends AbstractTool {
             }
         }
         return children;
+    }
+
+    /**
+     * Returns whether the component indicates based on the URI path that it should be active.
+     * <p>
+     * Mostly it applies to {@link Actionable}.
+     *
+     * @param component the component
+     * @return {@code true} if the component should be active, {@code false} otherwise
+     */
+    public boolean isActive(net.microfalx.bootstrap.web.component.Component<?> component) {
+        if (component instanceof Actionable<?> actionable) {
+            String action = actionable.getAction();
+            boolean active = ObjectUtils.equals(action, this.action);
+            if (active) return true;
+            if (component instanceof Container<?> container) {
+                for (net.microfalx.bootstrap.web.component.Component<?> child : ((Container<?>) component).getChildren()) {
+                    if (isActive(child)) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns the class or classes which shows an active component.
+     *
+     * @param component the component
+     * @return the class or classes if the component is active, null otherwise
+     * @see #isActive(Component)
+     */
+    public String getActiveClass(net.microfalx.bootstrap.web.component.Component<?> component) {
+        if (!isActive(component)) return null;
+        if (component instanceof Actionable<?> actionable) {
+            return component instanceof Container<?> container ? "d-block" : "active";
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the class or classes which shows an active component.
+     *
+     * @param component the component
+     * @return the class or classes if the component is active, null otherwise
+     * @see #isActive(Component)
+     */
+    public String getActiveStyle(net.microfalx.bootstrap.web.component.Component<?> component) {
+        if (!isActive(component)) return null;
+        if (component instanceof Actionable<?> && component instanceof Container<?>) {
+            return "display:block";
+        } else {
+            return null;
+        }
     }
 
     /**
