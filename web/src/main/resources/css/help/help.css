@@ -18,7 +18,7 @@
     box-shadow: 5px 5px 5px lightgray;
 }
 
-.help img + em {
+.help img + em, .help img + br + em {
     color: saddlebrown;
     font-size: smaller;
 }
