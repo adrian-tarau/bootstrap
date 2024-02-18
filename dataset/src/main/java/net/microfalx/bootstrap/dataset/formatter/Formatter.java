@@ -16,4 +16,13 @@ public interface Formatter<M, F extends Field<M>, T> {
      * @return the formatted value
      */
     String format(T value, F field, M model);
+
+    /**
+     * Parses the formatted value and returns the original value.
+     *
+     * @param text  the formatted value
+     * @param field the field
+     * @return the value
+     */
+    T parse(String text, F field);
 }

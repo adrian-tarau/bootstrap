@@ -2,16 +2,24 @@ package net.microfalx.bootstrap.web.dashboard;
 
 import net.microfalx.bootstrap.web.component.Component;
 import net.microfalx.lang.Initializable;
-import org.springframework.context.ApplicationContext;
 
 /**
- * Base class for all report providers
+ * Base class for all report providers.
  *
- * @param <C>
+ * @param <C> the component type.
  */
 public abstract class AbstractReportProvider<C extends Component<C>> implements ReportProvider<C>, Initializable {
 
-    ApplicationContext applicationContext;
+    DashboardService dashboardService;
+
+    /**
+     * Returns the dashboard service.
+     *
+     * @return a non-null instance
+     */
+    public final DashboardService getDashboardService() {
+        return dashboardService;
+    }
 
     /**
      * Finds a service by class.
@@ -21,7 +29,7 @@ public abstract class AbstractReportProvider<C extends Component<C>> implements 
      * @return the service instance
      */
     protected final <S> S getService(Class<S> serviceClass) {
-        return applicationContext.getBean(serviceClass);
+        return getDashboardService().getBean(serviceClass);
     }
 
     @Override

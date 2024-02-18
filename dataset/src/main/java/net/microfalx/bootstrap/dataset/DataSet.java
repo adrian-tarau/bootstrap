@@ -14,6 +14,7 @@ import org.springframework.data.repository.NoRepositoryBean;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * An abstract over a collection of records with CRUD support.
@@ -142,6 +143,16 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
     String getDisplayValue(M model, Field<M> field);
 
     /**
+     * Returns the value behind a value or display value for a field value.
+     *
+     * @param displayValue the display value
+     * @param field        the field
+     * @param <T>          the type of value
+     * @return the value
+     */
+    <T> T getValue(String displayValue, Field<M> field);
+
+    /**
      * Returns the model identifier.
      *
      * @param model the model
@@ -183,13 +194,21 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
 
     /**
      * Validates whether the filter is valid for the data set.
-     *
+     * <p>
      * This validation includes whether the fields exists or if the values of the filter are acceptble for the data set.
      *
      * @param filter the filter
      * @throws DataSetException if the filter is not valid
      */
     void validate(Filter filter);
+
+    /**
+     * Find first model with a given display name.
+     *
+     * @param displayValue the display value
+     * @return a non-null instance
+     */
+    Optional<M> findByDisplayValue(String displayValue);
 
     /**
      * Returns a page of results based on page information and a filter.

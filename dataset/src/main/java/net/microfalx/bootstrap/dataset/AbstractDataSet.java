@@ -22,7 +22,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -54,7 +53,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     private boolean readOnly;
     private State state = State.BROWSE;
 
-    ApplicationContext applicationContext;
+    DataSetService dataSetService;
     private List<Field<M>> browsableFields;
     private List<Field<M>> viewableFields;
     private List<Field<M>> editableFields;
@@ -161,7 +160,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     public boolean isSearchable(Field<M> field) {
         Searchable searchableAnnot = field.findAnnotation(Searchable.class);
         boolean canBeSearched = field.getDataType() == Field.DataType.STRING;
-        return canBeSearched && (searchableAnnot == null || !searchableAnnot.value());
+        return (canBeSearched && searchableAnnot == null) || (searchableAnnot != null && !searchableAnnot.value());
     }
 
     @Override
@@ -171,7 +170,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                 || field.getDataType() == Field.DataType.ENUM
                 || field.getDataType() == Field.DataType.MODEL
                 || field.getDataType() == Field.DataType.BOOLEAN;
-        return canBeSearched && (filterableAnnot == null || !filterableAnnot.value());
+        return (canBeSearched && filterableAnnot == null) || (filterableAnnot != null && !filterableAnnot.value());
     }
 
     @Override
@@ -203,29 +202,61 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         requireNonNull(field);
         if (model == null) return null;
         Object value = field.get(model);
+        if (value == null) return null;
+        String displayValue = null;
         Formattable formattableAnnot = field.findAnnotation(Formattable.class);
         if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
-            return createFormatter(field, formattableAnnot).format(value, (F) field, model);
+            displayValue = createFormatter(field, formattableAnnot).format(value, (F) field, model);
         } else {
-            if (value == null) return null;
             Lookup lookupAnnot = field.findAnnotation(Lookup.class);
             if (lookupAnnot != null) {
                 DataSet<?, ? extends Field<?>, Object> lookupDataSet = getDataSetService().lookup(lookupAnnot.model());
                 Optional<?> lookupModel = lookupDataSet.findById(value);
                 if (lookupModel.isPresent()) {
-                    return ((net.microfalx.bootstrap.dataset.Lookup) lookupModel.get()).getName();
+                    displayValue = ((net.microfalx.bootstrap.dataset.Lookup) lookupModel.get()).getName();
                 }
-            }
-            if (value instanceof Enum) {
-                return ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
+            } else if (value instanceof Enum) {
+                displayValue = ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
             } else if (value instanceof Number) {
-                return ((Formatter<M, Field<M>, Object>) NUMBER_FORMATTER).format(value, field, model);
+                displayValue = ((Formatter<M, Field<M>, Object>) NUMBER_FORMATTER).format(value, field, model);
             } else if (isJdkType(value)) {
-                return FormatterUtils.basicFormatting(value, formattableAnnot);
+                displayValue = FormatterUtils.basicFormatting(value, formattableAnnot);
             } else {
-                MetadataService metadataService = applicationContext.getBean(MetadataService.class);
+                MetadataService metadataService = dataSetService.getBean(MetadataService.class);
                 Metadata modelMetadata = metadataService.getMetadata(value.getClass());
-                return modelMetadata.getName(value);
+                displayValue = modelMetadata.getName(value);
+            }
+        }
+        if (displayValue != null && !isJdkType(value)) {
+            getDataSetService().registerByDisplayName(value, displayValue);
+        }
+        return displayValue;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Override
+    public <T> T getValue(String displayValue, Field<M> field) {
+        requireNonNull(field);
+        if (StringUtils.isEmpty(displayValue)) return null;
+        Formattable formattableAnnot = field.findAnnotation(Formattable.class);
+        if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
+            Formatter<M, F, T> formatter = (Formatter<M, F, T>) createFormatter(field, formattableAnnot);
+            return formatter.parse(displayValue, (F) field);
+        } else if (field.getDataType() == Field.DataType.ENUM) {
+            EnumFormatter formatter = new EnumFormatter<>((Class<Enum>) field.getDataClass());
+            return (T) formatter.parse(displayValue, field);
+        } else {
+            Lookup lookupAnnot = field.findAnnotation(Lookup.class);
+            if (lookupAnnot != null) {
+                DataSet<?, ? extends Field<?>, Object> lookupDataSet = getDataSetService().lookup(lookupAnnot.model());
+                Object value = lookupDataSet.findByDisplayValue(displayValue).orElse(null);
+                if (value instanceof net.microfalx.bootstrap.dataset.Lookup<?> lookup) {
+                    return (T) lookup.getId();
+                } else {
+                    return (T) value;
+                }
+            } else {
+                return (T) getDataSetService().resolve(field, displayValue);
             }
         }
     }
@@ -338,6 +369,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public Optional<M> findByDisplayValue(String displayValue) {
+        return doFindByDisplayValue(displayValue);
+    }
+
+    @Override
     public final <S extends M> S save(S model) {
         checkReadOnly();
         return doSave(model);
@@ -402,7 +438,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
      * @return the service instance
      */
     protected final <S> S getService(Class<S> serviceClass) {
-        return applicationContext.getBean(serviceClass);
+        return dataSetService.getBean(serviceClass);
     }
 
     protected List<M> doFindAll() {
@@ -439,6 +475,10 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     protected Page<M> doFindAll(Pageable pageable, Filter filterable) {
+        return throwUnsupported();
+    }
+
+    protected Optional<M> doFindByDisplayValue(String displayValue) {
         return throwUnsupported();
     }
 

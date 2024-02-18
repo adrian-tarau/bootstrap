@@ -2,8 +2,6 @@
 * The Data Set Global Variables
  */
 window.DataSet = window.DataSet || {};
-window.DATASET_FILTERABLE_OPERATOR = window.DATASET_FILTERABLE_OPERATOR || " = ";
-window.DATASET_FILTERABLE_QUOTE_CHAR = window.DATASET_FILTERABLE_QUOTE_CHAR || "\"";
 
 const DATE_RANGE_SEPARATOR = "|";
 
@@ -118,7 +116,7 @@ DataSet.loadPage = function (page) {
  */
 DataSet.view = function (id) {
     DataSet.updateId(id);
-    $.get(APP_REQUEST_PATH + "/" + DataSet.getId() + "/view", function (data) {
+    $.get(Application.getPath() + "/" + DataSet.getId() + "/view", function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -422,7 +420,7 @@ DataSet.initTables = function () {
             let field = th.attr('field');
             Logger.debug("Click on '" + text + "', index " + tdIndex + ", field " + field);
             if (Utils.isNotEmpty(text) && Utils.isDefined(field)) {
-                let currentQuery = field + window.DATASET_FILTERABLE_OPERATOR + window.DATASET_FILTERABLE_QUOTE_CHAR + text + window.DATASET_FILTERABLE_QUOTE_CHAR;
+                let currentQuery = field + DATASET_FILTERABLE_OPERATOR + DATASET_FILTERABLE_QUOTE_CHAR + text + DATASET_FILTERABLE_QUOTE_CHAR;
                 let previousQuery = Application.getQueryParam("query");
                 if (Utils.isNotEmpty(previousQuery)) currentQuery += " AND " + previousQuery;
                 DataSet.search(currentQuery);

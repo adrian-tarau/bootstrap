@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.security.user;
 
 import jakarta.annotation.PostConstruct;
+import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.security.audit.Audit;
 import net.microfalx.bootstrap.security.audit.AuditContext;
 import net.microfalx.bootstrap.security.audit.AuditRepository;
@@ -11,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,7 +32,7 @@ import static net.microfalx.lang.StringUtils.capitalizeWords;
  * A service around user management.
  */
 @Service
-public class UserService implements InitializingBean {
+public class UserService extends ApplicationContextSupport implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
@@ -52,9 +52,6 @@ public class UserService implements InitializingBean {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    ApplicationContext applicationContext;
 
     /**
      * Returns the entity which contains the user information for the user attached to the web session.
@@ -147,7 +144,7 @@ public class UserService implements InitializingBean {
 
     @PostConstruct
     protected void afterStartup() {
-        PreferenceService preferenceService = applicationContext.getBean(PreferenceService.class);
+        PreferenceService preferenceService = getBean(PreferenceService.class);
         preferenceService.setStorage(new UserPreferenceListener());
     }
 

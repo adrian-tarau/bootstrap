@@ -1,22 +1,24 @@
 package net.microfalx.bootstrap.dataset;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.support.Repositories;
 import org.springframework.stereotype.Service;
 
 import java.lang.ref.SoftReference;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -28,18 +30,17 @@ import static net.microfalx.lang.FormatterUtils.formatDateTime;
  * A service used to create data sets
  */
 @Service
-public final class DataSetService implements InitializingBean {
+public final class DataSetService extends ApplicationContextSupport implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
 
     private final Collection<DataSetFactory<?, ?, ?>> factories = new CopyOnWriteArrayList<>();
-    private final Map<Class<?>, SoftReference<CachedModels<?, ?>>> caches = new ConcurrentHashMap<>();
+    private final Map<Class<?>, SoftReference<CachedModelsById<?, ?>>> cachesById = new ConcurrentHashMap<>();
+    private final Map<Class<?>, SoftReference<CachedModelsByDisplayValue<?>>> cachesByDisplayName = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Repository<?, ?>> repositories = new ConcurrentHashMap<>();
 
     @Autowired
     private MetadataService metadataService;
-
-    @Autowired
-    ApplicationContext applicationContext;
 
     /**
      * Returns the metadata associated with a model.
@@ -48,6 +49,53 @@ public final class DataSetService implements InitializingBean {
      */
     public <M, F extends Field<M>, ID> Metadata<M, F, ID> getMetadata(Class<M> modelClass) {
         return metadataService.getMetadata(modelClass);
+    }
+
+    /**
+     * Returns the model identifier.
+     *
+     * @param model the model
+     * @return the identifier
+     */
+    @SuppressWarnings("unchecked")
+    public <M, ID> ID getId(M model) {
+        requireNonNull(model);
+        DataSet<M, Field<M>, ID> dataSet = lookup((Class<M>) model.getClass());
+        return dataSet.getId(model);
+    }
+
+    /**
+     * Resolves the value of a field based on the value or display value of a field.
+     * <p>
+     * If the field is of type {@link Field.DataType#MODEL} or the field has a {@link Lookup} or
+     * a {@link net.microfalx.bootstrap.dataset.formatter.Formatter} the method delegates the location to.
+     *
+     * @param field the field
+     * @param value the value or the display value
+     * @param <M>   the model
+     * @return the model, null if such a model cannot be located
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public <M> Object resolve(Field<M> field, Object value) {
+        requireNonNull(field);
+        if (ObjectUtils.isEmpty(value)) return null;
+        Class<M> modelClass = field.getMetadata().getModel();
+        Class<?> valueClass = value.getClass();
+        if (valueClass == field.getDataClass()) return value;
+        String displayValue = value.toString();
+        if (field.getDataType() == Field.DataType.MODEL) {
+            CachedModelsByDisplayValue<?> cache = getCacheByDisplayName(valueClass);
+            value = cache.models.getIfPresent(displayValue.toLowerCase());
+            if (value != null) return value;
+            DataSet fieldDataSet = lookup(field.getDataClass());
+            Optional<Object> result = fieldDataSet.findByDisplayValue(displayValue);
+            value = result.orElse(null);
+            if (value != null) registerByDisplayName(value, displayValue);
+        } else {
+            DataSet<M, ? extends Field<M>, Object> dataSet = lookup(modelClass);
+            value = dataSet.getValue(displayValue, field);
+        }
+        return value;
     }
 
     /**
@@ -71,7 +119,7 @@ public final class DataSetService implements InitializingBean {
         }
         if (dataSet != null) {
             AbstractDataSet abstractDataSet = (AbstractDataSet) dataSet;
-            abstractDataSet.applicationContext = applicationContext;
+            abstractDataSet.dataSetService = this;
             try {
                 abstractDataSet.afterPropertiesSet();
             } catch (Exception e) {
@@ -103,27 +151,84 @@ public final class DataSetService implements InitializingBean {
      * @param models the models
      * @param <M>    the model type
      */
-    <M, ID> void registerCache(CachedModels<M, ID> models) {
+    <M, ID> void registerCache(CachedModelsById<M, ID> models) {
         requireNonNull(models);
-        caches.put(models.modelClass, new SoftReference<>(models));
+        cachesById.put(models.modelClass, new SoftReference<>(models));
     }
 
     /**
-     * Returns a list of cached models from the cache.
+     * Returns a cache with models by id.
      *
      * @param modelClass the model class
      * @param <M>        the model type
      * @return the cached models, null if there is nothing in the cache
      */
     @SuppressWarnings("unchecked")
-    <M, ID> CachedModels<M, ID> getCached(Class<M> modelClass) {
+    <M, ID> CachedModelsById<M, ID> getCacheById(Class<M> modelClass) {
         requireNonNull(modelClass);
-        SoftReference<CachedModels<?, ?>> reference = caches.get(modelClass);
-        CachedModels<M, ID> holder = reference != null ? (CachedModels<M, ID>) reference.get() : null;
+        SoftReference<CachedModelsById<?, ?>> reference = cachesById.get(modelClass);
+        CachedModelsById<M, ID> holder = reference != null ? (CachedModelsById<M, ID>) reference.get() : null;
         return holder != null && !holder.isExpired() ? holder : null;
     }
 
-    protected void initialize() {
+    /**
+     * Returns a cache with models by display name.
+     *
+     * @param modelClass the model class
+     * @param <M>        the model type
+     * @return the cached models
+     */
+    @SuppressWarnings("unchecked")
+    <M> CachedModelsByDisplayValue<M> getCacheByDisplayName(Class<M> modelClass) {
+        requireNonNull(modelClass);
+        SoftReference<CachedModelsByDisplayValue<?>> reference = cachesByDisplayName.get(modelClass);
+        CachedModelsByDisplayValue<M> holder = reference != null ? (CachedModelsByDisplayValue<M>) reference.get() : null;
+        if (holder == null) {
+            holder = new CachedModelsByDisplayValue<>(modelClass);
+            cachesByDisplayName.put(modelClass, new SoftReference<>(holder));
+        }
+        return holder;
+    }
+
+    /**
+     * Registers a model in the cache by display name.
+     *
+     * @param model       the model
+     * @param displayName the display name
+     * @param <M>         the model type
+     */
+    @SuppressWarnings("unchecked")
+    <M> void registerByDisplayName(M model, String displayName) {
+        if (displayName == null) return;
+        requireNonNull(model);
+        requireNonNull(displayName);
+        CachedModelsByDisplayValue<M> cache = getCacheByDisplayName((Class<M>) model.getClass());
+        cache.models.put(displayName.toLowerCase(), model);
+    }
+
+    /**
+     * Returns a previously registered data repository.
+     *
+     * @param modelClass the model class
+     * @param <M>        the model type
+     * @param <ID>       the model identifier type
+     * @return the repository, null if does not exist
+     */
+    @SuppressWarnings("unchecked")
+    <M, ID> Repository<M, ID> getRepository(Class<M> modelClass) {
+        requireNonNull(modelClass);
+        Repository<M, ID> repository = (Repository<M, ID>) repositories.get(modelClass);
+        if (repository == null) {
+            Repositories repositories = new Repositories(getBeanFactory());
+            repository = (Repository<M, ID>) repositories.getRepositoryFor(modelClass).orElse(null);
+        }
+        if (repository == null) {
+            throw new DataSetException("A JPA repository for " + ClassUtils.getName(modelClass) + " is not registered");
+        }
+        return repository;
+    }
+
+    private void initialize() {
         discoverStaticFactories();
         discoverDynamicFactories();
         discoverDynamicLookups();
@@ -135,6 +240,9 @@ public final class DataSetService implements InitializingBean {
         ServiceLoader<DataSetFactory> scannedFactories = ServiceLoader.load(DataSetFactory.class);
         for (DataSetFactory<?, ?, ?> scannedFactory : scannedFactories) {
             LOGGER.info(" - " + ClassUtils.getName(scannedFactory));
+            if (scannedFactory instanceof AbstractDataSetFactory abstractfactory) {
+                abstractfactory.dataSetService = this;
+            }
             factories.add(scannedFactory);
         }
     }
@@ -159,7 +267,17 @@ public final class DataSetService implements InitializingBean {
         }
     }
 
-    static class CachedModels<M, ID> {
+    static class CachedModelsByDisplayValue<M> {
+
+        private final Class<M> modelClass;
+        private final Cache<String, M> models = CacheBuilder.newBuilder().maximumSize(1000).expireAfterWrite(Duration.ofSeconds(60)).build();
+
+        CachedModelsByDisplayValue(Class<M> modelClass) {
+            this.modelClass = modelClass;
+        }
+    }
+
+    static class CachedModelsById<M, ID> {
 
         private final Class<M> modelClass;
         private final List<M> models;
@@ -167,7 +285,7 @@ public final class DataSetService implements InitializingBean {
         private final Duration expiration;
         private final long created = System.currentTimeMillis();
 
-        CachedModels(Class<M> modelClass, List<M> models, Map<ID, M> modelsById, Duration expiration) {
+        CachedModelsById(Class<M> modelClass, List<M> models, Map<ID, M> modelsById, Duration expiration) {
             this.modelClass = modelClass;
             this.models = models;
             this.modelsById = modelsById;

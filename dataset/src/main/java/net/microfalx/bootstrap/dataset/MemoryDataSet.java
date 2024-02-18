@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.dataset;
 
 import net.microfalx.bootstrap.model.*;
+import net.microfalx.lang.ObjectUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -101,21 +102,31 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
         return new DataSetPage<>(pageable, sorter.apply());
     }
 
+    @Override
+    protected Optional<M> doFindByDisplayValue(String displayValue) {
+        Metadata<M, F, ID> metadata = getMetadata();
+        List<M> models = getCachedModels().getModels();
+        for (M model : models) {
+            String name = metadata.getName(model);
+            if (ObjectUtils.equals(name, displayValue)) return Optional.of(model);
+        }
+        return Optional.empty();
+    }
 
     /**
      * Returns the models associated with the data set.
      *
      * @return a non-null instance
      */
-    private final DataSetService.CachedModels<M, ID> getCachedModels() {
+    private final DataSetService.CachedModelsById<M, ID> getCachedModels() {
         DataSetService dataSetService = getDataSetService();
-        DataSetService.CachedModels<M, ID> cachedModels = dataSetService.getCached(getMetadata().getModel());
+        DataSetService.CachedModelsById<M, ID> cachedModels = dataSetService.getCacheById(getMetadata().getModel());
         if (cachedModels == null) {
             Collection<M> models = extractModels();
             if (models == null) models = Collections.emptyList();
             Map<ID, M> modelsMap = buildMap(models);
             List<M> modelsList = buildList(models);
-            cachedModels = new DataSetService.CachedModels<>(getMetadata().getModel(), modelsList, modelsMap, getExpiration());
+            cachedModels = new DataSetService.CachedModelsById<>(getMetadata().getModel(), modelsList, modelsMap, getExpiration());
             dataSetService.registerCache(cachedModels);
         }
         return cachedModels;
@@ -144,7 +155,6 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
         }
         return modelsMap;
     }
-
 
 
 }

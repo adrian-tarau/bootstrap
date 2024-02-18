@@ -18,11 +18,14 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  */
 class JpaSpecificationBuilder<M, F extends Field<M>, ID> implements Specification<M> {
 
+    private final DataSetService dataSetService;
     private final Metadata<M, F, ID> metadata;
     private final Filter filter;
 
-    public JpaSpecificationBuilder(Metadata<M, F, ID> metadata, Filter filter) {
+    public JpaSpecificationBuilder(DataSetService dataSetService, Metadata<M, F, ID> metadata, Filter filter) {
+        requireNonNull(dataSetService);
         requireNonNull(metadata);
+        this.dataSetService = dataSetService;
         this.metadata = metadata;
         this.filter = filter;
     }
@@ -79,7 +82,7 @@ class JpaSpecificationBuilder<M, F extends Field<M>, ID> implements Specificatio
             return criteriaBuilder.between(path, (Comparable) valueMin, (Comparable) valueMax);
         } else {
             if (ComparisonExpression.MATCH_ALL.equals(comparisonExpression.getValue())) return null;
-            Object value = Field.from(comparisonExpression.getValue(), field.getDataClass());
+            Object value = dataSetService.resolve(field, comparisonExpression.getValue());
             return switch (operator) {
                 case EQUAL -> criteriaBuilder.equal(path, value);
                 case NOT_EQUAL -> criteriaBuilder.notEqual(path, value);

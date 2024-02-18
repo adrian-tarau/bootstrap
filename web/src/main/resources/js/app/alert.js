@@ -63,6 +63,7 @@ Application.showAlert = function (title, message, type) {
         icon: icon,
         close: true,
         timeout: 5000,
+        maxWidth : 400,
         position: 'topRight',
         color: color
     });

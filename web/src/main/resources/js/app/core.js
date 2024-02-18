@@ -2,16 +2,22 @@
 * The Application Global Variables
  */
 window.Application = window.Application || {};
-window.APP_REQUEST_PATH = window.APP_REQUEST_PATH || "/";
-window.APP_REQUEST_QUERY = window.APP_REQUEST_QUERY || null;
+
+/**
+ * Returns the path of the current request.
+ * @return {string}
+ */
+Application.getPath = function () {
+    return APP_REQUEST_PATH || "/";
+}
 
 /**
  * Takes a collection of parameters and creates an object with all query parameters.
  *
- * @param {Object} params the new parameters
+ * @param {Object} [params] a collection of parameters to override/extend the request parameters
  */
 Application.getQuery = function (params) {
-    let requestParams = $.extend({}, APP_REQUEST_QUERY);
+    let requestParams = $.extend({}, APP_REQUEST_QUERY || null);
     requestParams = $.extend(requestParams, params);
     return requestParams;
 }
@@ -30,7 +36,7 @@ Application.getUri = function (params, path, options) {
     options.self = (typeof options.self === 'undefined') ? true : options.self;
     options.params = (typeof options.params === 'undefined') ? true : options.params;
     params = options.self ? this.getQuery(params) : params;
-    let uri = options.self ? APP_REQUEST_PATH : "/";
+    let uri = options.self ? this.getPath() : "/";
     if (path) {
         if (!uri.endsWith("/")) uri += "/";
         if (path.startsWith("/")) path = path.substring(1);
@@ -103,7 +109,19 @@ Application.ajax = function (path, params, callback, self) {
 Application.getQueryParam = function (name) {
     let url_string = location.href;
     let url = new URL(url_string);
-    return url.searchParams.get(arguments[0]);
+    return url.searchParams.get(name);
+}
+
+/**
+ * Returns the hash parameter with a given name.
+ *
+ * @param {String} name the parameter name
+ */
+Application.getHashParam = function (name) {
+    let hash = location.hash;
+    hash = hash && (hash.charAt(0) === '#') ? hash.slice(1) : hash;
+    const hashParams = new URLSearchParams(hash);
+    return hashParams.get(name);
 }
 
 /**
@@ -268,7 +286,7 @@ Application.initEvents = function () {
  * Initializes the application
  */
 Application.initialize = function () {
-    Logger.debug("Initialize application, request path '" + APP_REQUEST_PATH + "', request arguments '" + Utils.toString(APP_REQUEST_QUERY) + "'");
+    Logger.debug("Initialize application, request path '" + this.getPath() + "', request arguments '" + Utils.toString(this.getQuery()) + "'");
     this.initEvents();
 }
 

@@ -4,10 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import net.microfalx.bootstrap.model.Filter;
-import net.microfalx.bootstrap.model.InvalidDataTypeExpression;
-import net.microfalx.bootstrap.model.JpaField;
-import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.ExceptionUtils;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -107,6 +104,16 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
     }
 
     @Override
+    protected Optional<M> doFindByDisplayValue(String displayValue) {
+        List<JpaField<M>> nameFields = getMetadata().getNameFields();
+        if (nameFields.isEmpty()) return Optional.empty();
+        Filter filter = Filter.create(ComparisonExpression.eq(nameFields.iterator().next().getName(), displayValue));
+        Page<M> page = doFindAll(Pageable.ofSize(1), filter);
+        List<M> content = page.getContent();
+        return content.isEmpty() ? Optional.empty() : Optional.of(content.get(0));
+    }
+
+    @Override
     protected <S extends M> S doSave(S model) {
         try {
             return repository.save(model);
@@ -179,7 +186,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
                     "but the repository does not implement JpaSpecificationExecutor");
         }
         if (repository instanceof JpaSpecificationExecutor && hasFilters) {
-            return new JpaSpecificationBuilder<>(getMetadata(), filter).build();
+            return new JpaSpecificationBuilder<>(getDataSetService(), getMetadata(), filter).build();
         } else {
             return null;
         }
@@ -198,7 +205,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
             super.update(dataSet, parameters);
             JpaRepository<M, ID> repository = find(JpaRepository.class, parameters);
             if (repository == null) {
-                throw new DataSetException("A JPA repository is required to create a data set for " + dataSet.getMetadata().getName());
+                repository = (JpaRepository<M, ID>) dataSetService.getRepository(dataSet.getMetadata().getModel());
             }
             ((JpaDataSet<M, JpaField<M>>) dataSet).setRepository((JpaRepository<M, JpaField<M>>) repository);
         }

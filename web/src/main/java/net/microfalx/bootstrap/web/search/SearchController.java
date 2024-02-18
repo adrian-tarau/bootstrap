@@ -6,6 +6,7 @@ import net.microfalx.bootstrap.model.AbstractAttribute;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.search.Attribute;
 import net.microfalx.bootstrap.search.SearchService;
+import net.microfalx.bootstrap.search.TextExtractor;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.MimeType;
@@ -29,7 +30,7 @@ import static net.microfalx.bootstrap.search.SearchUtils.DEFAULT_FILTER_QUOTE_CH
 @RequestMapping(value = "/search")
 @DataSet(rawQuery = true, model = SearchResult.class, viewTemplate = "search/view", detailTemplate = "search/detail",
         viewClasses = "modal-xl", filterOperator = DEFAULT_FILTER_OPERATOR, filterQuoteChar = DEFAULT_FILTER_QUOTE_CHAR,
-queryHelp = "/help/dataset/search_engine.html")
+        queryHelp = "/help/dataset/search_engine.html")
 @Help("search")
 public final class SearchController extends DataSetController<SearchResult, String> {
 
@@ -52,7 +53,7 @@ public final class SearchController extends DataSetController<SearchResult, Stri
         String text = StringUtils.defaultIfEmpty(dataSetModel.getDescription(), dataSetModel.getName());
         if (MimeType.get(dataSetModel.getMimeType()).isText()) {
             try {
-                text = dataSetModel.getBody().loadAsString();
+                text = new TextExtractor(dataSetModel.getBody()).setForDisplay(true).execute();
             } catch (IOException e) {
                 text = "Resource '" + dataSetModel.getBody().toURI() + "' is unavailable";
             }

@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.dashboard;
 
 import net.microfalx.bootstrap.core.i18n.I18nService;
+import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.web.component.Component;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ClassUtils;
@@ -8,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,14 +24,11 @@ import static net.microfalx.lang.StringUtils.*;
  * A service which manages a collection of dashboards and their panels.
  */
 @Service
-public class DashboardService implements InitializingBean {
+public class DashboardService extends ApplicationContextSupport implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DashboardService.class);
 
     private Map<String, DashboardHolder> dashboards = new ConcurrentHashMap<>();
-
-    @Autowired
-    ApplicationContext applicationContext;
 
     @Autowired
     private I18nService i18nService;
@@ -70,7 +67,7 @@ public class DashboardService implements InitializingBean {
                 holder.description = getI18n(holder, "description");
                 holder.providers.add(reportProvider);
                 if (reportProvider instanceof AbstractReportProvider<?> abstractReportProvider) {
-                    abstractReportProvider.applicationContext = applicationContext;
+                    abstractReportProvider.dashboardService = this;
                     abstractReportProvider.initialize();
                 }
             }

@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.dataset.formatter;
 
 import net.microfalx.bootstrap.model.Field;
+import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.ObjectUtils;
 
 import static net.microfalx.lang.EnumUtils.*;
@@ -32,6 +33,11 @@ public class EnumFormatter<M, F extends Field<M>, T> extends AbstractFormatter<M
             enumValue = (Enum) value;
         }
         return enumValue != null ? toLabel(enumValue) : asString(value);
+    }
+
+    @Override
+    public T parse(String text, F field) {
+        return (T) EnumUtils.fromName(enumClass, text);
     }
 
     private Class<Enum> getEnumClass(F field) {
