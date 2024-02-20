@@ -11,7 +11,7 @@
             <div class="row">
                 <div class="col-md-2"><span class="fw-bold">Owner: </span><span class="fst-italic" th:text="${model.owner}"></span></div>
                 <div class="col-md-2"><span class="fw-bold">Type: </span><span class="fst-italic" th:text="${model.type}"></span></div>
-                <div class="col-md-4"></div>
+                <div class="col-md-4"><span class="fw-bold">Mime Type: </span><span class="fst-italic" th:text="${model.mimeType}"></span></div>
                 <div class="col-md-4"><span class="fw-bold">Modified At: </span><span class="fst-italic" th:text="${#temporals.format(model.modifiedAt)}"></span></div>
             </div>
         </div>
