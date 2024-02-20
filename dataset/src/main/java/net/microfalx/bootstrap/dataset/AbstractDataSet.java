@@ -160,7 +160,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     public boolean isSearchable(Field<M> field) {
         Searchable searchableAnnot = field.findAnnotation(Searchable.class);
         boolean canBeSearched = field.getDataType() == Field.DataType.STRING;
-        return (canBeSearched && searchableAnnot == null) || (searchableAnnot != null && !searchableAnnot.value());
+        return (canBeSearched && searchableAnnot == null) || (searchableAnnot != null && searchableAnnot.value());
     }
 
     @Override
@@ -170,7 +170,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                 || field.getDataType() == Field.DataType.ENUM
                 || field.getDataType() == Field.DataType.MODEL
                 || field.getDataType() == Field.DataType.BOOLEAN;
-        return (canBeSearched && filterableAnnot == null) || (filterableAnnot != null && !filterableAnnot.value());
+        return (canBeSearched && filterableAnnot == null) || (filterableAnnot != null && filterableAnnot.value());
     }
 
     @Override

@@ -10,7 +10,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * Holds a custom attribute for a document.
  * <p>
- * By default an attribute is only stored. If the attribute needs to be indexed (and possible tokenized),
+ * By default an attribute is only indexed and stored, but not tokenized. If the attribute needs to be indexed (and possible tokenized),
  * use {@link #setIndexed(boolean)} and {@link #setTokenized(boolean)}.
  */
 public class Attribute extends AbstractAttribute implements Serializable {
@@ -21,8 +21,9 @@ public class Attribute extends AbstractAttribute implements Serializable {
     static final int INDEXED_MASK = 0x01;
     static final int TOKENIZED_MASK = 0x02;
     static final int STORED_MASK = 0x04;
+    static final int POSITIONAL_MASK = 0x08;
 
-    private int options = STORED_MASK;
+    private int options = INDEXED_MASK | STORED_MASK;
 
     /**
      * Creates an attribute instance from a generic attribute.
@@ -51,20 +52,20 @@ public class Attribute extends AbstractAttribute implements Serializable {
     }
 
     /**
+     * Enables all options.
+     */
+    public Attribute enableAll() {
+        setTokenized(true).setIndexed(true).setStored(true).setPositional(true);
+        return this;
+    }
+
+    /**
      * Returns whether the attribute is tokenized.
      *
      * @return <code>true</code> if tokenized, <code>false</code> otherwise
      */
     public boolean isTokenized() {
         return (options & TOKENIZED_MASK) != 0;
-    }
-
-    /**
-     * Enables all options.
-     */
-    public Attribute enableAll() {
-        setTokenized(true).setIndexed(true).setStored(true);
-        return this;
     }
 
     /**
@@ -130,6 +131,34 @@ public class Attribute extends AbstractAttribute implements Serializable {
             options |= INDEXED_MASK;
         } else {
             options &= ~INDEXED_MASK;
+        }
+        return this;
+    }
+
+    /**
+     * Returns whether the position of each token from the value is stored.
+     * <p>
+     * If position of tokens is enabled, phrase searching is possible.
+     *
+     * @return <code>true</code> if indexed, <code>false</code> otherwise
+     */
+    public boolean isPositional() {
+        return (options & POSITIONAL_MASK) != 0;
+    }
+
+    /**
+     * Changes whether the position of each token is stored.
+     * <p>
+     * If position of tokens is enabled, phrase searching is possible.
+     *
+     * @param positional <code>true</code> if position of tokens is stored, <code>false</code> otherwise
+     * @return self
+     */
+    public Attribute setPositional(boolean positional) {
+        if (positional) {
+            options |= POSITIONAL_MASK;
+        } else {
+            options &= ~POSITIONAL_MASK;
         }
         return this;
     }

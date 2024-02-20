@@ -61,7 +61,7 @@ public class SearchUtils {
     /**
      * Returns the operator injected when the user clicks on a field value in the grid.
      */
-    public final static char DEFAULT_FILTER_QUOTE_CHAR = '\'';
+    public final static char DEFAULT_FILTER_QUOTE_CHAR = '"';
 
     /**
      * Returns whether the given field name is part of the standard field names.

@@ -32,7 +32,7 @@ Application.Search.query = function (text) {
 /**
  * Extracts the current query and appends another query.
  *
- * @param {String} text the query text passed to the search engine (Apache Lucene syntax)
+ * @param {String} text the new query text passed to the search
  */
 Application.Search.join = function (text) {
     if (Utils.isEmpty(text)) {
@@ -42,6 +42,16 @@ Application.Search.join = function (text) {
         if (Utils.isNotEmpty(currentText)) text += " AND " + currentText;
         Application.Search.query(text);
     }
+}
+
+/**
+ * Extracts the current query and appends another query.
+ *
+ * @param {String} field the field name
+ * @param {String} text the field value
+ */
+Application.Search.joinField = function (field, text) {
+    Application.Search.join(field + DATASET_FILTERABLE_OPERATOR + DATASET_FILTERABLE_QUOTE_CHAR + text + DATASET_FILTERABLE_QUOTE_CHAR);
 }
 
 // Bind events

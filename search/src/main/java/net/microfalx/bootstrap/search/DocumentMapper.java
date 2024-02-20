@@ -83,6 +83,9 @@ class DocumentMapper {
             Object value = attribute.getValue();
             if (isEmpty(value)) value = StringUtils.EMPTY;
             FieldType type = TYPES[attribute.getOptions()];
+            if (type == null) {
+                throw new IllegalStateException("Invalid type for attribute options: " + attribute.getOptions());
+            }
             ld.add(new Field(name, normalizeText(value.toString(), true), type));
         }
 
@@ -155,6 +158,9 @@ class DocumentMapper {
             int options = 0;
             Attribute attribute = item.add(attrName, attrValue);
             if (fieldType.indexOptions() != IndexOptions.NONE) options |= Attribute.INDEXED_MASK;
+            if (fieldType.indexOptions() == IndexOptions.DOCS_AND_FREQS_AND_POSITIONS) {
+                options |= Attribute.POSITIONAL_MASK;
+            }
             if (fieldType.tokenized()) options |= Attribute.TOKENIZED_MASK;
             if (fieldType.stored()) options |= Attribute.STORED_MASK;
             attribute.setOptions(options);
@@ -172,7 +178,7 @@ class DocumentMapper {
     private static final FieldType USER_DATA_TYPE;
     private static final FieldType INDEX_TYPE;
     private static final FieldType LABEL_TYPE;
-    private static final FieldType[] TYPES = new FieldType[9];
+    private static final FieldType[] TYPES = new FieldType[16];
 
     static {
         TIME_TYPE = new FieldType();
@@ -212,14 +218,20 @@ class DocumentMapper {
         LABEL_TYPE.setDocValuesType(DocValuesType.BINARY);
         LABEL_TYPE.freeze();
 
-        for (int index = 0; index < 9; index++) {
+        for (int index = 0; index < TYPES.length; index++) {
             FieldType type = new FieldType();
-            type.setIndexOptions((Attribute.INDEXED_MASK & index) != 0 ? IndexOptions.DOCS : IndexOptions.NONE);
-            type.setTokenized((Attribute.TOKENIZED_MASK & index) != 0);
-            type.setStored((Attribute.STORED_MASK & index) != 0);
-            type.setOmitNorms(true);
+            boolean indexed = (Attribute.INDEXED_MASK & index) != 0;
+            boolean tokenized = (Attribute.TOKENIZED_MASK & index) != 0;
+            boolean stored = (Attribute.STORED_MASK & index) != 0;
+            boolean positional = (Attribute.POSITIONAL_MASK & index) != 0;
+            if (indexed) {
+                type.setIndexOptions(positional ? IndexOptions.DOCS_AND_FREQS_AND_POSITIONS : IndexOptions.DOCS_AND_FREQS);
+            } else {
+                type.setIndexOptions(IndexOptions.NONE);
+            }
+            type.setTokenized(tokenized);
+            type.setStored(stored);
             type.freeze();
-
             TYPES[index] = type;
         }
     }
