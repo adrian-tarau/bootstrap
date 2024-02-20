@@ -89,6 +89,7 @@ public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchRes
         result.setTitle(abbreviate(defaultIfEmpty(document.getDescription(), document.getName()), MAX_DESCRIPTION_LENGTH));
         result.setType(document.getType());
         result.setMimeType(document.getMimeType());
+        result.setReference(document.getReference());
         result.setOwner(document.getOwner());
         //result.setRelevance(document.getRelevance());
         result.setLength(document.getLength());

@@ -80,4 +80,7 @@ public class SearchResult {
 
     @Visible(false)
     private Resource body;
+
+    @Visible(false)
+    private String reference;
 }

@@ -5,7 +5,13 @@
     <div class="container-fluid">
         <div class="row border rounded bg-body-secondary mb-3 p-3 fs-6">
             <div class="row">
-                <div class="col-md-8"><span class="fw-bold">Title: </span><span class="fst-italic" th:text="${model.title}"></span></div>
+                <div class="col-md-8"><span class="fw-bold">Title: </span>
+                    <span class="fst-italic" th:unless="${model.reference}" th:text="${model.title}"></span>
+                    <a target="_blank" th:href="${model.reference}" th:if="${model.reference}">
+                        <i class="fa-solid fa-link"></i>
+                        <span class="fst-italic" th:text="${model.title}"></span>
+                    </a>
+                </div>
                 <div class="col-md-4"><span class="fw-bold">Created At: </span><span class="fst-italic" th:text="${#temporals.format(model.createdAt)}"></span></div>
             </div>
             <div class="row">

@@ -1,6 +1,10 @@
 .help {
 }
 
+.help h1, .help h2, .help h3, .help h4, .help h5, .help h6 {
+    /*font-size: smaller;*/
+}
+
 .help ul, .help ol, .help p {
     margin-bottom: 0.7rem !important;
 }

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -31,6 +32,9 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class TextExtractor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DocumentMapper.class);
+
+    private static final int MAX_LINE_LENGTH = 160;
+    private static final String INSERT = "...";
 
     private final Document document;
     private final Resource body;
@@ -128,8 +132,15 @@ public class TextExtractor {
         objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         objectMapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
         JsonNode jsonNode = objectMapper.readTree(body.getReader());
+        AtomicInteger lineLength = new AtomicInteger();
         walkTree(jsonNode, (k, v) -> {
-            builder.append(v).append(' ');
+            builder.append(k).append(' ').append(v).append(' ');
+            lineLength.addAndGet(k.length());
+            lineLength.addAndGet(v.length());
+            if (lineLength.get() > MAX_LINE_LENGTH) {
+                builder.append('\n');
+                lineLength.set(0);
+            }
         });
     }
 

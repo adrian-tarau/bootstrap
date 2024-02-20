@@ -60,6 +60,7 @@ class DocumentMapper {
             ld.add(new SortedNumericDocValuesField(SENT_AT_FIELD + SORTED_SUFFIX_FIELD, document.sentAt));
             ld.add(new StoredField(SENT_AT_FIELD + STORED_SUFFIX_FIELD, document.sentAt));
         }
+        if (document.getReference() != null) ld.add(new StoredField(REFERENCE_FIELD, document.getReference()));
 
         if (!document.getTags().isEmpty()) {
             StringBuilder tagBuilder = new StringBuilder();
@@ -117,6 +118,7 @@ class DocumentMapper {
         item.setType(document.get(TYPE_FIELD));
         item.setMimeType(document.get(MIME_TYPE_FIELD));
         item.setLength(document.getField(LENGTH_FIELD).numericValue().intValue());
+        item.setReference(document.get(REFERENCE_FIELD));
 
         IndexableField createdTime = document.getField(CREATED_AT_FIELD + STORED_SUFFIX_FIELD);
         if (createdTime != null) item.createdAt = createdTime.numericValue().longValue();

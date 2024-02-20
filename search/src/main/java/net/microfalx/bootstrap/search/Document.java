@@ -39,6 +39,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     public static final String BODY_FIELD = "body";
     public static final String BODY_URI_FIELD = "body_uri";
     public static final String MIME_TYPE_FIELD = "mime_type";
+    public static final String REFERENCE_FIELD = "reference";
     public static final String TAG_FIELD = "tag";
     public static final String OWNER_FIELD = "owner";
     public static final String SOURCE_FIELD = "source";
@@ -69,6 +70,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     private String type;
 
     private String owner;
+    private String reference;
 
     long createdAt = NA_TIMESTAMP;
     long modifiedAt = NA_TIMESTAMP;
@@ -136,7 +138,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
 
     public Resource getBody() {
         if (body == null && bodyUri != null) {
-            body = ResourceFactory.resolve(bodyUri);
+            body = ResourceFactory.resolve(bodyUri).withMimeType(getMimeType());
         }
         return body;
     }
@@ -205,6 +207,14 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     public Document setLength(int length) {
         this.length = length;
         return this;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
     }
 
     public ZonedDateTime getCreatedAt() {

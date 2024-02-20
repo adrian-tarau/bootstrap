@@ -105,6 +105,7 @@ Application.ajax = function (path, params, callback, self) {
  * Returns the query parameter with a given name.
  *
  * @param {String} name the parameter name
+ * @return {String} the value of the parameter
  */
 Application.getQueryParam = function (name) {
     let url_string = location.href;
@@ -113,15 +114,35 @@ Application.getQueryParam = function (name) {
 }
 
 /**
+ * Returns the hash path from the current URI.
+ *
+ * @return {String} the path from has
+ */
+Application.getHashPath = function () {
+    let url = this.getHashUrl();
+    return url.pathname;
+}
+
+/**
  * Returns the hash parameter with a given name.
  *
  * @param {String} name the parameter name
+ * @return {String} the value of the parameter
  */
 Application.getHashParam = function (name) {
+    let url = this.getHashUrl();
+    return url.searchParams.get(name);
+}
+
+/**
+ * Returns an URL made out of the hash (as path and params)
+ * @return {URL} the URL
+ */
+Application.getHashUrl = function () {
     let hash = location.hash;
     hash = hash && (hash.charAt(0) === '#') ? hash.slice(1) : hash;
-    const hashParams = new URLSearchParams(hash);
-    return hashParams.get(name);
+    if (!hash.startsWith("/")) hash = "/" + hash;
+    return new URL("http://localhost" + hash);
 }
 
 /**

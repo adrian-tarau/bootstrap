@@ -115,6 +115,7 @@ DataSet.loadPage = function (page) {
  * Views the current model.
  */
 DataSet.view = function (id) {
+    Logger.info("View record '"+id+"'");
     DataSet.updateId(id);
     $.get(Application.getPath() + "/" + DataSet.getId() + "/view", function (data) {
         DataSet.loadModal(data);
@@ -125,6 +126,7 @@ DataSet.view = function (id) {
  * Adds the current model.
  */
 DataSet.add = function () {
+    Logger.info("Add a new record");
     $.get(APP_REQUEST_PATH + "/add", function (data) {
         DataSet.loadModal(data);
     });
@@ -134,6 +136,7 @@ DataSet.add = function () {
  * Edit the current model.
  */
 DataSet.edit = function (id) {
+    Logger.info("Edit record '"+id+"'");
     DataSet.updateId(id);
     $.get(APP_REQUEST_PATH + "/" + DataSet.getId() + "/edit", function (data) {
         DataSet.loadModal(data);
@@ -144,6 +147,7 @@ DataSet.edit = function (id) {
  * Delete the current model.
  */
 DataSet.delete = function (id) {
+    Logger.info("Delete record '"+id+"'");
     DataSet.updateId(id);
     $.ajax({
         url: APP_REQUEST_PATH + "/" + DataSet.getId() + "/delete",
@@ -456,6 +460,17 @@ DataSet.initUpload = function () {
 }
 
 /**
+ * Initializes the view based on URI (hash) parameters.
+ */
+DataSet.initFromUri = function () {
+    let path = Application.getHashPath();
+    if (path.startsWith("/view")) {
+        let parts = path.split("/");
+        if (parts.length > 2) DataSet.view(parts[2]);
+    }
+}
+
+/**
  * Initializes the data set.
  */
 DataSet.initialize = function () {
@@ -465,6 +480,7 @@ DataSet.initialize = function () {
     this.initNotifications();
     this.initTables();
     this.initUpload();
+    this.initFromUri();
 }
 
 // Initialize the data set
