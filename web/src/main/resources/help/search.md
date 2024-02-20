@@ -28,7 +28,7 @@ Fields can be used to search through the document using a _query_ (search expres
 
 ## Query
 
-The search engine is built on top of Apache Lucene and it has an extensive [query syntax](https://lucene.apache.org/core/9_9_2/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description). Most common search operation is to type the words into the search box, without any field reference. By default the _OR_ operator is applied between terms. 
+The search engine is built on top of Apache Lucene and it has an extensive [query syntax](lucene). Most common search operation is to type the words into the search box, without any field reference. By default the _OR_ operator is applied between terms. 
 
 !!! tip
 The search engine will not produce an error if an unknown field will be used during search and it will produce an empty result set. 
