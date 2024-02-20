@@ -53,7 +53,10 @@
                         <tbody>
                         <tr th:each="field : ${fields}">
                             <td th:text="${field.name}"></td>
-                            <td class="dataset-text-mono" th:text="${field.value}"></td>
+                            <td>
+                                <a href="#" th:attr="onclick=|Application.Search.joinField('${field.name}','${field.value}')|"><i class="fa-solid fa-filter"></i></a>
+                                <span class="dataset-text-mono" th:text="${field.value}"></span>
+                            </td>
                         </tr>
                         </tbody>
                     </table>
