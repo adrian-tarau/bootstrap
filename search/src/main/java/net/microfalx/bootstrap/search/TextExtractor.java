@@ -35,6 +35,8 @@ public class TextExtractor {
 
     private static final int MAX_LINE_LENGTH = 160;
     private static final String INSERT = "...";
+    private static final char NEW_LINE = '\n';
+    private static final char SPACE = ' ';
 
     private final Document document;
     private final Resource body;
@@ -120,7 +122,7 @@ public class TextExtractor {
         StringWriter sw = new StringWriter();
         try {
             parser.parse(body.getInputStream(), new ToTextContentHandler(sw), new Metadata(), new ParseContext());
-            builder.append(sw);
+            builder.append(removeRedundantNewLines(sw.toString()));
         } catch (Exception e) {
             // any failure, log and just return the content as is
             LOGGER.warn("Failed to parse HTML document: " + document.getBodyUri() + ", root cause: " + e.getMessage());
@@ -161,6 +163,22 @@ public class TextExtractor {
                 throw new IllegalStateException("Node must be one of value, array or object.");
             }
         }
+    }
+
+    private String removeRedundantNewLines(String text) {
+        StringBuilder builder = new StringBuilder();
+        char prevChar = NEW_LINE;
+        char[] charArray = text.toCharArray();
+        for (int i = 0; i < charArray.length; i++) {
+            char c = charArray[i];
+            if (c == NEW_LINE) {
+                if (!(prevChar == NEW_LINE || prevChar == SPACE)) builder.append(c);
+            } else {
+                builder.append(c);
+            }
+            prevChar = c;
+        }
+        return builder.toString();
     }
 
     private EncodingDetector createEncodingDetector(MimeType mimeType) {
