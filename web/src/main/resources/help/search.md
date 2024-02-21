@@ -57,7 +57,11 @@ The name of the document (or description if the document does not have a name), 
 ![Document Body](images/search_view_body.png)
 _Figure 2. Typical view of a document body_
 
-The dialog shows the _Title_, _Owner_, _Type_, _Created_ & _Modified_ timestamp and top custom fields. At the bottom of the dialog, the body of the document and a list of all fields is available for inspection.
+The dialog shows the _Title_, _Owner_, _Type_, _Created_ & _Modified_ timestamp and top custom fields. At the bottom of the dialog, the body of the document and a list of all fields is available for inspection.  The title is a link which shows the original document ingested by the search engine.
+
+!!! tip
+The body of a document consists in plain text, extracted based on the mime-type of the original content and it shows what was indexed by the search engine. To view the original document, click on the _Title_.
+
 
 ![Document Body](images/search_view_fields.png)
 _Figure 3. Typical view of a document fields_
