@@ -19,31 +19,29 @@ DataSet.exists = function () {
 }
 
 /**
- * Takes a collection of parameters and creates a URI (path + query parameters).
+ * Returns an URI to execute a data set request.
  *
- * @param {Object} params the new parameters
  * @param {String} [path] an optional path to add to the base URI
+ * @param {Object} params the new parameters
  * @param {Object} [options] an optional object, to control how parameters are calculated
- * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI to the current page (self)
- * @param {Boolean} [options.params=true] an optional boolean, to include the parameters in the URI
+ * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI to the current page (within the same resource)
+ * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the URI
  */
-DataSet.getUri = function (params, path, options) {
-    params = this.getQuery(params, options);
-    return Application.getUri(params, path, options);
+DataSet.getUri = function (path, params, options) {
+    params = this.getParams(params, options);
+    return Application.getUri(path, params, options);
 }
 
 /**
- * Takes a collection of parameters and creates an object with all query parameters.
+ * Returns all the parameters required for a data set data request.
  *
  * @param {Object} params the new parameters
  * @param {Object} [options] an optional object, to control how parameters are calculated
- * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI to the current page (self)
- * @param {Boolean} [options.params=true] an optional boolean, to include the parameters in the URI
+ * @param {Boolean} [options.params=false] an optional boolean, to include the filter parameters
  */
-DataSet.getQuery = function (params, options) {
-    options = options || {};
-    options.self = (typeof options.self === 'undefined') ? true : options.self;
-    options.params = (typeof options.params === 'undefined') ? true : options.params;
+DataSet.getParams = function (params, options) {
+    options = options || APP_AJAX_DEFAULT_OPTIONS;
+    options.params = Utils.isDefined(options.params) ? options.params : false;
     params = params || {};
     if (options.params) {
         params["query"] = $("#search").val();
@@ -56,35 +54,33 @@ DataSet.getQuery = function (params, options) {
 }
 
 /**
- * Takes a collection of parameters and queries the same end points with original parameters
- * plus the additional parameters.
+ * Opens a data set page, using the current request parameters with new parameters
  *
- * @param {Object} params the new parameters
- * @param {String} [path] an optional path to add to the base URI
+ * @param {String} [path] the path to add to the base URI
+ * @param {Object} params the parameter overrides
  */
-DataSet.open = function (params, path) {
-    params = this.getQuery(params);
-    Application.openSelf(params, path);
+DataSet.open = function (path, params) {
+    params = this.getParams(params, {params: true});
+    Application.openSelf(path, params);
 }
 
 /**
  * Reloads the data set page.
  */
 DataSet.reload = function () {
-    this.open({});
+    this.open("", {});
 }
 
 /**
- * Takes a collection of parameters and queries the same end points with original parameters
- * plus the additional parameters.
+ * Executes a GET request, which includes the parameters of the current requests
  *
  * @param {String} path the path
- * @param {Object} params the new parameters
+ * @param {Object} params the parameter overrides
  * @param {Function} callback the callback to be called with the response
  */
-DataSet.ajax = function (path, params, callback) {
-    params = this.getQuery(params);
-    Application.ajax(path, params, callback, true)
+DataSet.get = function (path, params, callback) {
+    params = this.getParams(params, {params: true});
+    Application.get(path, params, callback, {params: true})
 }
 
 /**
@@ -103,7 +99,7 @@ DataSet.search = function (query) {
  */
 DataSet.loadPage = function (page) {
     page = parseInt(page);
-    DataSet.ajax("page", {page: page}, function (data, status, xhr) {
+    DataSet.get("page", {page: page}, function (data, status, xhr) {
         $("#dataset-grid tbody").append(data);
         $("#more_results").attr("data-page", page + 1);
         $("#page_info").text(xhr.getResponseHeader('X-DATASET-PAGE-INFO'));
@@ -115,9 +111,9 @@ DataSet.loadPage = function (page) {
  * Views the current model.
  */
 DataSet.view = function (id) {
-    Logger.info("View record '"+id+"'");
+    Logger.info("View record '" + id + "'");
     DataSet.updateId(id);
-    $.get(Application.getPath() + "/" + DataSet.getId() + "/view", function (data) {
+    Application.get(DataSet.getId() + "/view", {}, function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -127,7 +123,7 @@ DataSet.view = function (id) {
  */
 DataSet.add = function () {
     Logger.info("Add a new record");
-    $.get(APP_REQUEST_PATH + "/add", function (data) {
+    Application.get("add", {}, function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -136,9 +132,9 @@ DataSet.add = function () {
  * Edit the current model.
  */
 DataSet.edit = function (id) {
-    Logger.info("Edit record '"+id+"'");
+    Logger.info("Edit record '" + id + "'");
     DataSet.updateId(id);
-    $.get(APP_REQUEST_PATH + "/" + DataSet.getId() + "/edit", function (data) {
+    Application.get(DataSet.getId() + "/edit", {},function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -147,20 +143,15 @@ DataSet.edit = function (id) {
  * Delete the current model.
  */
 DataSet.delete = function (id) {
-    Logger.info("Delete record '"+id+"'");
+    Logger.info("Delete record '" + id + "'");
     DataSet.updateId(id);
-    $.ajax({
-        url: APP_REQUEST_PATH + "/" + DataSet.getId() + "/delete",
-        dataType: "json",
-        type: 'DELETE',
-        success: function (json) {
-            if (json.success) {
-                DataSet.refresh();
-            } else {
-                Application.showErrorAlert("Delete", json.message);
-            }
+    Application.delete(DataSet.getId() + "/delete",{},  function (json) {
+        if (json.success) {
+            DataSet.refresh();
+        } else {
+            Application.showErrorAlert("Delete", json.message);
         }
-    })
+    }, {dataType: "json"});
 }
 
 /**
@@ -242,7 +233,8 @@ DataSet.sort = function (field, direction) {
  */
 DataSet.save = function () {
     let me = DataSet;
-    let url = Utils.isEmpty(me.id) ? DataSet.getUri({}, "", {params: false}) : DataSet.getUri({}, me.id, {params: false});
+    let path = Utils.isEmpty(me.id) ? "":me.id;
+    let url = DataSet.getUri(path, {}, {params: false});
     let closeModel = false;
     let form = $('#dataset-form').ajaxSubmit({
         url: url,

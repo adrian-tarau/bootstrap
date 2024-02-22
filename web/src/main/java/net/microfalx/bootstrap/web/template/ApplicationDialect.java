@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.template;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.search.SearchUtils;
 import net.microfalx.bootstrap.web.application.ApplicationService;
+import net.microfalx.bootstrap.web.container.WebContainerRequest;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.template.tools.LinkTool;
 import net.microfalx.lang.TextUtils;
@@ -18,6 +19,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 import java.util.HashSet;
 import java.util.Set;
 
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 
 /**
@@ -61,12 +63,15 @@ public class ApplicationDialect extends AbstractProcessorDialect {
 
         @Override
         protected void doProcess(ITemplateContext context, IProcessableElementTag tag, IElementTagStructureHandler structureHandler) {
+            WebContainerRequest containerRequest = WebContainerRequest.get();
             LinkTool linkTool = new LinkTool(context);
             DataSetTool dataSetTool = new DataSetTool(context, dataSetService);
             StringBuilder builder = new StringBuilder();
             builder.append(SCRIPT_START_TAG);
             builder.append("\nconst APP_REQUEST_PATH=\"").append(linkTool.getSelf()).append("\";");
             builder.append("\nconst APP_REQUEST_QUERY=").append(linkTool.toJson(linkTool.getQuery())).append(";");
+            String timeZone = containerRequest.hasTimeZone() ? containerRequest.getTimeZone().getId() : EMPTY_STRING;
+            builder.append("\nconst APP_TIME_ZONE=\"").append(timeZone).append("\";");
             String filterableOperator = defaultIfEmpty(dataSetTool.getFilterableOperator(), SearchUtils.DEFAULT_FILTER_OPERATOR);
             builder.append("\nconst DATASET_FILTERABLE_OPERATOR=\"").append(filterableOperator).append("\"");
             String filterableQuoteChar = defaultIfEmpty(dataSetTool.getFilterableQuoteChar(), String.valueOf(SearchUtils.DEFAULT_FILTER_QUOTE_CHAR));

@@ -25,7 +25,7 @@ Application.Search.query = function (text) {
         let params = {
             query: text
         }
-        Application.open(params, "/search")
+        Application.open("/search", params);
     }
 }
 

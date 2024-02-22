@@ -6,12 +6,71 @@ import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 
 import java.text.NumberFormat;
+import java.time.ZoneId;
 import java.time.temporal.Temporal;
+import java.util.Locale;
 
 /**
  * Various utilities around formatters.
  */
 public class FormatterUtils {
+
+    /**
+     * Holds the current time zone. If the thread runs in the context of a user request, it should hold the
+     * time zone of the user (regardless how is that obtained).
+     */
+    private static ThreadLocal<ZoneId> TIME_ZONE = ThreadLocal.withInitial(ZoneId::systemDefault);
+
+    /**
+     * Holds the current zone. If the thread runs in the context of a user request, , it should hold the
+     * locale of the user (regardless how is that obtained).
+     */
+    private static ThreadLocal<Locale> LOCALE = ThreadLocal.withInitial(Locale::getDefault);
+
+    /**
+     * Returns the time zone associated with the current thread.
+     *
+     * @return a non-null instance
+     */
+    public static ZoneId getTimeZone() {
+        return TIME_ZONE.get();
+    }
+
+    /**
+     * Changes the time zone associated with the current thread.
+     *
+     * @param locale the time zone, null to set to system default
+     */
+    public static void setTimeZone(ZoneId locale) {
+        if (locale == null) {
+            TIME_ZONE.remove();
+        } else {
+            TIME_ZONE.set(locale);
+        }
+    }
+
+
+    /**
+     * Returns the locale associated with the current thread.
+     *
+     * @return a non-null instance
+     */
+    public static Locale getLocale() {
+        return LOCALE.get();
+    }
+
+    /**
+     * Changes the locale associated with the current thread.
+     *
+     * @param locale the locale, null to set to system default
+     */
+    public static void setLocale(Locale locale) {
+        if (locale == null) {
+            LOCALE.remove();
+        } else {
+            LOCALE.set(locale);
+        }
+    }
 
     /**
      * Applies basic formatting rules.
@@ -42,7 +101,7 @@ public class FormatterUtils {
         } else if (value instanceof Enum) {
             return EnumUtils.toLabel((Enum) value);
         } else if (value instanceof Temporal) {
-            return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value);
+            return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value, getTimeZone());
         } else {
             return ObjectUtils.toString(value);
         }

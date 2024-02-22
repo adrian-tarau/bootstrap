@@ -4,6 +4,12 @@
 window.Application = window.Application || {};
 
 /**
+ * Default params for ajax requests.
+ */
+const APP_AJAX_DEFAULT_OPTIONS = {self: true, params: false};
+const APP_AJAX_DEFAULT_TIMEOUT = 30000;
+
+/**
  * Returns the path of the current request.
  * @return {string}
  */
@@ -23,18 +29,18 @@ Application.getQuery = function (params) {
 }
 
 /**
- * Takes a collection of parameters and creates a URI (path + query parameters).
+ * Returns an application URI.
  *
- * @param {Object} params the new parameters
  * @param {String} [path] an optional path to add to the base URI
+ * @param {Object} params the new parameters
  * @param {Object} [options] an optional object, to control how parameters are calculated
- * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI to the current page (self)
- * @param {Boolean} [options.params=true] an optional boolean, to include the parameters in the URI
+ * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI to the current page (within the same resource)
+ * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the URI
  */
-Application.getUri = function (params, path, options) {
-    options = options || {};
-    options.self = (typeof options.self === 'undefined') ? true : options.self;
-    options.params = (typeof options.params === 'undefined') ? true : options.params;
+Application.getUri = function (path, params, options) {
+    options = options || APP_AJAX_DEFAULT_OPTIONS;
+    options.self = Utils.isDefined(options.self) ? options.self : true;
+    options.params = Utils.isDefined(options.params) ? options.params : false;
     params = options.self ? this.getQuery(params) : params;
     let uri = options.self ? this.getPath() : "/";
     if (path) {
@@ -48,14 +54,14 @@ Application.getUri = function (params, path, options) {
 }
 
 /**
- * Takes a collection of parameters, merges them on top of the current parameters and opens a path under the same
- * path as the current page.
+ * Opens an application page, using the same path (or a sub-path) as the current page and possible
+ * additional parameters.
  *
- * @param {Object} params the new parameters
- * @param {String} [path] an optional path to add to the base URI
+ * @param {String} path an optional path to add to the base URI
+ * @param {Object} params the new parameters (overrides)
  */
-Application.openSelf = function (params, path) {
-    let uri = this.getUri(params, path, {self: true});
+Application.openSelf = function (path, params) {
+    let uri = this.getUri(path, params, {self: true, params: true});
     Logger.info("Open '" + uri + "'");
     window.location.href = uri;
 }
@@ -66,8 +72,8 @@ Application.openSelf = function (params, path) {
  * @param {Object} params the new parameters
  * @param {String} [path] an optional path to add to the base URI
  */
-Application.open = function (params, path) {
-    let uri = this.getUri(params, path, {self: false});
+Application.open = function (path, params) {
+    let uri = this.getUri(path, params, {self: false});
     Logger.info("Open '" + uri + "'");
     window.location.href = uri;
 }
@@ -76,28 +82,93 @@ Application.open = function (params, path) {
  * Reloads the current page.
  */
 Application.reload = function () {
-    this.openSelf({});
+    this.openSelf("", {});
 }
 
 /**
- * Takes a collection of parameters and queries the same end points with original parameters
- * plus the additional parameters.
+ * Executes an AJAX GET request.
  *
  * @param {String} path the path
- * @param {Object} params the new parameters
- * @param {Function} callback the callback to be called with the response
- * @param {Boolean} [self=true] an optional boolean, to calculate the URI to the current page (self)
+ * @param {Object} params the parameters
+ * @param {Function} callback the callback to be called with the successful response
+ * @param {Object} [options] an optional object, to control how parameters are calculated
+ * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
+ * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
+ * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.error] an optional function, to be called if the request fails
  */
-Application.ajax = function (path, params, callback, self) {
-    let requestParams = this.getQuery(params);
-    let uri = this.getUri({}, path, {self: self, params: false});
-    Logger.info("Ajax Request: " + uri);
-    $.get({
-        data: requestParams,
+Application.get = function (path, params, callback, options) {
+    Application.ajax('GET', path, params, callback, options);
+}
+
+/**
+ * Executes an AJAX POST request.
+ *
+ * @param {String} path the path
+ * @param {Object} params the parameters
+ * @param {Function} callback the callback to be called with the successful response
+ * @param {Object} [options] an optional object, to control how parameters are calculated
+ * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
+ * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
+ * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.error] an optional function, to be called if the request fails
+ */
+Application.post = function (path, params, callback, options) {
+    Application.ajax('POST', path, params, callback, options);
+}
+
+/**
+ * Executes an AJAX DELETE request.
+ *
+ * @param {String} path the path
+ * @param {Object} params the parameters
+ * @param {Function} callback the callback to be called with the successful response
+ * @param {Object} [options] an optional object, to control how parameters are calculated
+ * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
+ * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
+ * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.error] an optional function, to be called if the request fails
+ */
+Application.delete = function (path, params, callback, options) {
+    Application.ajax('DELETE', path, params, callback, options);
+}
+
+/**
+ * Executes an AJAX request.
+ *
+ * @param {String} type the HTTP verb
+ * @param {String} path the path
+ * @param {Object} params the parameters
+ * @param {Function} callback the callback to be called with the successful response
+ * @param {Object} [options] an optional object, to control how parameters are calculated
+ * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
+ * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
+ * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.error] an optional function, to be called if the request fails
+ */
+Application.ajax = function (type, path, params, callback, options) {
+    options = options || {};
+    options.self = Utils.isDefined(options.self) ? options.self : true;
+    options.params = Utils.isDefined(options.params) ? options.params : false;
+    options.error = Utils.defaultIfNotDefinedOrNull(options.error, function () {
+        // nothing to do for errors
+    });
+    options.dataType = Utils.defaultIfNotDefinedOrNull(options.dataType, "text");
+    params = options.self ? this.getQuery(params) : params;
+    type = Utils.defaultIfNotDefinedOrNull(type, "GET");
+    let uri = this.getUri(path, {}, options);
+    Logger.info("Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);
+    $.ajax({
         url: uri,
+        type: type,
+        data: params,
+        dataType: options.dataType,
+        timeout: APP_AJAX_DEFAULT_TIMEOUT,
+        headers: {"X-TimeZone": Application.getTimezoneOffset()},
         success: function (output, status, xhr) {
             callback.apply(this, [output, status, xhr]);
-        }
+        },
+        error: options.error
     });
 }
 
@@ -188,7 +259,7 @@ Application.closeModal = function () {
  * @param {String} html the modal
  */
 Application.loadModal = function (id, html) {
-    Logger.debug(html);
+    //Logger.debug(html);
     $('#' + id).remove();
     $(document.body).append(html);
     let modal = new bootstrap.Modal('#' + id, {});
@@ -212,6 +283,15 @@ Application.registerModal = function (modal) {
 Application.getModals = function () {
     this.modals = this.modals || [];
     return this.modals;
+}
+
+/**
+ * Returns the time zone offset.
+ *
+ * @return {number} offset in minutes since UTC
+ */
+Application.getTimezoneOffset = function () {
+    return new Date().getTimezoneOffset();
 }
 
 /**
@@ -304,11 +384,23 @@ Application.initEvents = function () {
 }
 
 /**
+ * Initialize time zone.
+ */
+Application.initTimeZone = function () {
+    if (Utils.isNotEmpty(APP_TIME_ZONE)) return;
+    Logger.info("Send client time zone '" + Application.getTimezoneOffset() + "'");
+    Application.post("time-zone", {}, function (data) {
+        // nothing to process
+    }, {self: false});
+}
+
+/**
  * Initializes the application
  */
 Application.initialize = function () {
     Logger.debug("Initialize application, request path '" + this.getPath() + "', request arguments '" + Utils.toString(this.getQuery()) + "'");
     this.initEvents();
+    this.initTimeZone();
 }
 
 

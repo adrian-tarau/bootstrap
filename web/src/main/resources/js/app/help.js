@@ -14,9 +14,9 @@ Help.open = function (title, path, anchor) {
     Logger.debug("Show help '" + path + "', fra");
     let params = {title: title};
     if (Utils.isNotEmpty(anchor)) params["anchor"] = anchor;
-    $.get("/help/view/" + path, params, function (data) {
+    Application.get("/help/view/" + path, params, function (data) {
         Application.loadModal("help-article", data);
-    });
+    }, {self: false});
 }
 
 /**
