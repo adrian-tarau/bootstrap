@@ -411,7 +411,7 @@ DataSet.initTables = function () {
         let parent = target.parent();
         if (target.get(0).tagName === "SPAN" && parent.get(0).tagName === "TD" && parent.hasClass("filterable")) {
             let text = target.text();
-            target = target.parent();
+            target = parent;
             let tdIndex = target.index() + 1;
             let th = $('.dataset-table tr').find('th:nth-child(' + tdIndex + ')');
             let field = th.attr('field');

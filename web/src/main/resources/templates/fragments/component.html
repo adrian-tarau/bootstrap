@@ -25,7 +25,7 @@
         <div class="bgc-white p-20 bd">
             <div th:if="${#component.hasTitle(component)}" th:remove="tag">
                 <h6 class="c-grey-900" th:text="${component.title}"></h6>
-                <div class="mT-5">
+                <div class="mT-5" th:style="${#component.getCssStyle(component)}">
                     <div th:replace="~{ :: render-container-children (${component})}"></div>
                 </div>
             </div>

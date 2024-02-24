@@ -277,6 +277,8 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
 
     /**
      * Returns the additional CSS classes to be added to the component when rendered.
+     * <p>
+     * The class is usually added to the top level element.
      *
      * @return the class or classes separated by space, null or empty if no additional classes are set
      */
@@ -297,6 +299,8 @@ public abstract class Component<C extends Component<C>> implements Identifiable<
 
     /**
      * Returns the additional CSS styles to be added to the component when rendered.
+     * <p>
+     * The styles are usually added to the body element.
      *
      * @return the styles, null or empty if ni additional styles are set
      */

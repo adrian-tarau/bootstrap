@@ -21,8 +21,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
-import static net.microfalx.lang.StringUtils.EMPTY_STRING;
-import static net.microfalx.lang.StringUtils.defaultIfNull;
+import static net.microfalx.bootstrap.web.component.renderer.ComponentRenderer.CSS_STYLE_SEPARATOR;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * Template utilities around components.
@@ -141,6 +141,16 @@ public class ComponentTool extends AbstractTool {
     }
 
     /**
+     * Returns the CSS  classes configured for the component.
+     *
+     * @param component the component which provides the classes
+     * @return a new list of classes
+     */
+    public String getCssStyle(net.microfalx.bootstrap.web.component.Component<?> component) {
+        return getCssStyle(component, null);
+    }
+
+    /**
      * Returns whether the component supports a title and it the title is set (non-empty).
      *
      * @param component the component
@@ -148,7 +158,7 @@ public class ComponentTool extends AbstractTool {
      */
     public boolean hasTitle(net.microfalx.bootstrap.web.component.Component<?> component) {
         if (component instanceof BasePanel<?> panel) {
-            return StringUtils.isNotEmpty(panel.getTitle());
+            return isNotEmpty(panel.getTitle());
         } else {
             return false;
         }
@@ -170,6 +180,30 @@ public class ComponentTool extends AbstractTool {
     }
 
     /**
+     * Returns the final list of CSS styles by appending the component CSS styles to the an initial set of styles
+     *
+     * @param component      the component which provides the classes
+     * @param initialClasses the initial classes to be used with the component
+     * @return a new list of classes
+     */
+    public String getCssStyle(net.microfalx.bootstrap.web.component.Component<?> component, String initialClasses) {
+        if (component == null) return initialClasses;
+        StringBuilder builder = new StringBuilder();
+        append(builder, nullIfEmpty(initialClasses), CSS_STYLE_SEPARATOR);
+        append(builder, nullIfEmpty(component.getCssStyles()), CSS_STYLE_SEPARATOR);
+        append(builder, nullIfEmpty(getRenderer().getCssStyle(component)), CSS_STYLE_SEPARATOR);
+        if (isNotEmpty(component.getMaxWidth())) {
+            append(builder, "max-width: " + component.getMaxWidth(), CSS_STYLE_SEPARATOR);
+            append(builder, "overflow-x: auto", CSS_STYLE_SEPARATOR);
+        }
+        if (isNotEmpty(component.getMaxHeight())) {
+            append(builder, "max-height: " + component.getMaxHeight(), CSS_STYLE_SEPARATOR);
+            append(builder, "overflow-y: auto", CSS_STYLE_SEPARATOR);
+        }
+        return builder.toString();
+    }
+
+    /**
      * Returns whether the component has an icon associated with it.
      *
      * @param component the component
@@ -177,7 +211,7 @@ public class ComponentTool extends AbstractTool {
      */
     public boolean hasIcon(net.microfalx.bootstrap.web.component.Component<?> component) {
         if (!(component instanceof Itemable<?> itemable)) return false;
-        return itemable.getStyle() != Itemable.Style.TEXT && StringUtils.isNotEmpty(itemable.getIcon());
+        return itemable.getStyle() != Itemable.Style.TEXT && isNotEmpty(itemable.getIcon());
     }
 
     /**

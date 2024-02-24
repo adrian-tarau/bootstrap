@@ -17,10 +17,11 @@ import static net.microfalx.lang.StringUtils.emptyIfNull;
  */
 public abstract class ComponentRenderer implements Identifiable<String>, Nameable {
 
+    public static final char CSS_STYLE_SEPARATOR = ';';
     private final Map<Class<?>, String> cssClasses = new HashMap<>();
 
     /**
-     * Returns the CSS  classes configured for the component.
+     * Returns the CSS classes configured for the component.
      *
      * @param component the component which provides the classes
      * @return a new list of classes
@@ -28,8 +29,20 @@ public abstract class ComponentRenderer implements Identifiable<String>, Nameabl
     public final <C extends Component<C>> String getCssClass(Component<C> component) {
         requireNonNull(component);
         String byTypeClasses = cssClasses.getOrDefault(component.getClass(), StringUtils.EMPTY_STRING);
-        byTypeClasses += emptyIfNull(doGetCssClass(component));
+        byTypeClasses += " " + emptyIfNull(doGetCssClass(component));
         return byTypeClasses.trim();
+    }
+
+    /**
+     * Returns the CSS styles configured for the component.
+     *
+     * @param component the component which provides the classes
+     * @return a new list of classes
+     */
+    public final <C extends Component<C>> String getCssStyle(Component<C> component) {
+        requireNonNull(component);
+        String styles = emptyIfNull(doGetCssStyle(component));
+        return styles.trim();
     }
 
     /**
@@ -51,6 +64,16 @@ public abstract class ComponentRenderer implements Identifiable<String>, Nameabl
      * @return a new list of classes
      */
     public <C extends Component<C>> String doGetCssClass(Component<C> component) {
+        return EMPTY_STRING;
+    }
+
+    /**
+     * Returns the CSS styles from component parameters.
+     *
+     * @param component the component which provides the classes
+     * @return a new list of classes
+     */
+    public <C extends Component<C>> String doGetCssStyle(Component<C> component) {
         return EMPTY_STRING;
     }
 

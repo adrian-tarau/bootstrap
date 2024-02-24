@@ -125,6 +125,7 @@ public final class Table extends BasePanel<Table> {
 
         private final int index;
         private String text;
+        private Direction direction = Direction.NONE;
 
         public Column(int index, String text) {
             this.index = index;
@@ -143,12 +144,44 @@ public final class Table extends BasePanel<Table> {
             this.text = text;
         }
 
+        public Direction getDirection() {
+            return direction;
+        }
+
+        public void setDirection(Direction direction) {
+            this.direction = direction;
+        }
+
         @Override
         public String toString() {
             return "Column{" +
                     "index=" + index +
+                    ", direction='" + direction + '\'' +
                     ", text='" + text + '\'' +
                     '}';
+        }
+
+        /**
+         * Enumeration for sort directions.
+         */
+        public enum Direction {
+
+            /**
+             * The values are not sorted
+             */
+            NONE,
+
+            /**
+             * The values will be sorted in ascending order.
+             */
+            ASC,
+
+            /**
+             * The values will be sorted in descending order.
+             */
+            DESC;
+
+
         }
     }
 }

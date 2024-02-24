@@ -48,7 +48,7 @@ Application.getUri = function (path, params, options) {
         if (path.startsWith("/")) path = path.substring(1);
         uri += path;
     }
-    if (options.params) uri += "?" + $.param(params);
+    if (Utils.isNotEmpty(params)) uri += "?" + $.param(params);
     Logger.debug("Resolve URI for path '" + path + "', params '" + Utils.toString(params) + "', uri '" + uri + "'");
     return uri;
 }

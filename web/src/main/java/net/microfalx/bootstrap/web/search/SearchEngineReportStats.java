@@ -27,7 +27,8 @@ import static org.apache.commons.lang3.StringUtils.abbreviate;
 class SearchEngineReportStats {
 
     public static final int TOP_100 = 100;
-    public static final int TOP_10 = 10;
+    public static final int TOP_10 = 20;
+    private static final String MAX_HEIGHT = "200px";
 
     private final IndexService indexService;
     private final SearchService searchService;
@@ -44,7 +45,7 @@ class SearchEngineReportStats {
 
     Column getIndexStatistics() {
         Collection<FieldStatistics> fieldStatistics = searchService.getFieldStatistics();
-        return Column.create(3).setTitle("Index")
+        return Column.create(3).setTitle("Index").setMaxHeight(MAX_HEIGHT)
                 .add(Table.create(2)
                         .addRow("Total Documents", indexService.getDocumentCount())
                         .addRow("Pending Documents", indexService.getPendingDocumentCount())
@@ -55,8 +56,8 @@ class SearchEngineReportStats {
     Column getFieldStatistics() {
         Iterable<FieldStatistics> fields = Iterables.limit(searchService.getFieldStatistics().stream()
                 .filter(f -> !isStandardFieldName(f.getName())).collect(Collectors.toList()), TOP_100);
-        return Column.create(5).setTitle("Top 100 Fields")
-                .add(Table.create("Name", "Documents").setMaxHeight("300")
+        return Column.create(5).setTitle("Top 100 Fields").setMaxHeight(MAX_HEIGHT)
+                .add(Table.create("Name", "Documents")
                         .addRows(table -> fields.forEach(fs -> table.addRow(abbreviate(fs.getName(), MAX_ATTRIBUTE_DISPLAY_LENGTH),
                                 fs.getDocumentCount())))
                 );
@@ -90,6 +91,7 @@ class SearchEngineReportStats {
     Column getTypeStatistics() {
         return getFieldStatistics("Top {limit} Types", Document.TYPE_FIELD);
     }
+
     Column getBodyStatistics() {
         return getFieldStatistics("Top {limit} Tokens", Document.BODY_FIELD);
     }
@@ -104,8 +106,8 @@ class SearchEngineReportStats {
             }
         }
         Iterable<TermStatistics> terms = Iterables.limit(priorityQueue, TOP_100);
-        return Column.create(7).setTitle("Top 100 Terms")
-                .add(Table.create("Name", "Field", "Documents", "Frequency").setMaxHeight("300")
+        return Column.create(7).setTitle("Top 100 Terms").setMaxHeight(MAX_HEIGHT)
+                .add(Table.create("Name", "Field", "Documents", "Frequency")
                         .addRows(table -> terms.forEach(term -> table.addRow(abbreviate(term.getName(), MAX_ATTRIBUTE_DISPLAY_LENGTH), term.getField(),
                                 term.getCount(), term.getFrequency())))
                 );
@@ -115,17 +117,17 @@ class SearchEngineReportStats {
         title = StringUtils.replaceOnce(title, "{limit}", Integer.toString(limit));
         FieldStatistics fieldStatistics = searchService.getFieldStatistics(fieldName);
         List<TermStatistics> terms = fieldStatistics.getTerms();
-        return Column.create(3).setTitle(title).add(createTermsTable(fieldName, terms));
+        return Column.create(3).setTitle(title).setMaxHeight(MAX_HEIGHT).add(createTermsTable(fieldName, terms));
     }
 
     private Table createTermsTable(String fieldName, List<TermStatistics> terms) {
         Iterable<TermStatistics> limitedTerms = Iterables.limit(terms, limit);
-        return Table.create("Value", "Count").setMaxHeight("300")
+        return Table.create("Value", "Count").setMaxHeight(MAX_HEIGHT)
                 .addRows(table -> limitedTerms.forEach(term -> table.addRow(termLink(fieldName, abbreviate(term.getName(), MAX_ATTRIBUTE_DISPLAY_LENGTH)),
                         term.getCount())));
     }
 
     private Link termLink(String fieldName, String term) {
-        return Link.action(term, "search").addParameter("query", fieldName + ": \"" + term+"\"");
+        return Link.action(term, "search").addParameter("query", fieldName + ": \"" + term + "\"");
     }
 }
