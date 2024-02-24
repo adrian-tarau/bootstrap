@@ -389,7 +389,7 @@ Application.initEvents = function () {
 Application.initTimeZone = function () {
     if (Utils.isNotEmpty(APP_TIME_ZONE)) return;
     Logger.info("Send client time zone '" + Application.getTimezoneOffset() + "'");
-    Application.post("time-zone", {}, function (data) {
+    Application.post("settings/session/time-zone", {}, function (data) {
         // nothing to process
     }, {self: false});
 }

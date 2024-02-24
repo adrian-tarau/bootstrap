@@ -134,7 +134,7 @@ DataSet.add = function () {
 DataSet.edit = function (id) {
     Logger.info("Edit record '" + id + "'");
     DataSet.updateId(id);
-    Application.get(DataSet.getId() + "/edit", {},function (data) {
+    Application.get(DataSet.getId() + "/edit", {}, function (data) {
         DataSet.loadModal(data);
     });
 }
@@ -145,7 +145,7 @@ DataSet.edit = function (id) {
 DataSet.delete = function (id) {
     Logger.info("Delete record '" + id + "'");
     DataSet.updateId(id);
-    Application.delete(DataSet.getId() + "/delete",{},  function (json) {
+    Application.delete(DataSet.getId() + "/delete", {}, function (json) {
         if (json.success) {
             DataSet.refresh();
         } else {
@@ -225,7 +225,7 @@ DataSet.sort = function (field, direction) {
     let requestParams = $.extend({}, APP_REQUEST_QUERY);
     let sort = field + "=" + direction;
     requestParams["sort"] = sort;
-    this.open(requestParams);
+    this.open("", requestParams);
 }
 
 /**
@@ -233,7 +233,7 @@ DataSet.sort = function (field, direction) {
  */
 DataSet.save = function () {
     let me = DataSet;
-    let path = Utils.isEmpty(me.id) ? "":me.id;
+    let path = Utils.isEmpty(me.id) ? "" : me.id;
     let url = DataSet.getUri(path, {}, {params: false});
     let closeModel = false;
     let form = $('#dataset-form').ajaxSubmit({
@@ -408,7 +408,8 @@ DataSet.initTables = function () {
         });
     $(".dataset-table").click(function (event) {
         let target = $(event.target);
-        if (target.get(0).tagName === "SPAN") {
+        let parent = target.parent();
+        if (target.get(0).tagName === "SPAN" && parent.get(0).tagName === "TD" && parent.hasClass("filterable")) {
             let text = target.text();
             target = target.parent();
             let tdIndex = target.index() + 1;

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -292,6 +293,7 @@ public final class ApplicationService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         initApplication();
         initAssets();
+        initTimeZone();
         initNavigation();
         initTheme();
         logApplication();
@@ -311,6 +313,22 @@ public final class ApplicationService implements InitializingBean {
     private void initAssets() {
         assetBundleManager.assetProperties = assetProperties;
         assetBundleManager.load();
+    }
+
+    private void initTimeZone() {
+        ZoneId systemZoneId = ZoneId.systemDefault();
+        ZoneId zoneId = systemZoneId;
+        String source = "OS";
+        if (isNotEmpty(applicationProperties.getTimeZone())) {
+            try {
+                zoneId = ZoneId.of(applicationProperties.getTimeZone());
+                source = "Application";
+            } catch (Exception e) {
+                LOGGER.error("Invalid application time zone : " + applicationProperties.getTimeZone());
+            }
+        }
+        TimeZone.setDefault(TimeZone.getTimeZone(zoneId));
+        LOGGER.info("Application Time Zone '{}', source '{}' - initial time zone '{}'", zoneId, source, systemZoneId);
     }
 
     private void initNavigation() {

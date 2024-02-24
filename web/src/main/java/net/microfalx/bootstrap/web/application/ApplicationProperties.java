@@ -27,6 +27,8 @@ public class ApplicationProperties {
     @NotBlank
     private String version = "1.0.0";
 
+    private String timeZone;
+
     public String getName() {
         return name;
     }
@@ -65,6 +67,14 @@ public class ApplicationProperties {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
     }
 
     @Override

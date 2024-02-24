@@ -42,7 +42,7 @@ public class WebContainerUtils {
             int minutes = Math.abs(Integer.parseInt(timeZone));
             int hours = (minutes / 60);
             minutes = (minutes % 60);
-            String sign = timeZone.startsWith("-") ? "-" : "+";
+            String sign = timeZone.startsWith("-") ? "+" : "-";
             return sign + StringUtils.leftPad(Integer.toString(hours), 2, '0') + ":" +
                     StringUtils.leftPad(Integer.toString(minutes), 2, '0');
         }
