@@ -15,10 +15,15 @@ Application.Search.click = function (element) {
 /**
  * Executes a search with a given query.
  *
- * @param {String} text the query text passed to the search engine (Apache Lucene syntax)
+ * If the current page is a data set, the expression is processed by a data set, otherwise it goes to the
+ * global search engine (Apache Lucene), unless it is explicitly asked to be the global engine.
+ *
+ * @param {String} text the query text
+ * @param {Boolean} [global] true to use the global search engine
  */
-Application.Search.query = function (text) {
-    if (DataSet.exists()) {
+Application.Search.query = function (text, global) {
+    global = Utils.defaultIfNotDefinedOrNull(global, false);
+    if (DataSet.exists() && !global) {
         DataSet.search(text);
     } else {
         if (Utils.isEmpty(text)) text = $("#search").val();
@@ -32,15 +37,16 @@ Application.Search.query = function (text) {
 /**
  * Extracts the current query and appends another query.
  *
- * @param {String} text the new query text passed to the search
+ * @param {String} text the new query text passed
+ * @param {Boolean} [global] true to use the global search engine
  */
-Application.Search.join = function (text) {
+Application.Search.join = function (text, global) {
     if (Utils.isEmpty(text)) {
-        Application.Search.query("");
+        Application.Search.query("", global);
     } else {
         let currentText = Application.getQueryParam("query");
         if (Utils.isNotEmpty(currentText)) text += " AND " + currentText;
-        Application.Search.query(text);
+        Application.Search.query(text, global);
     }
 }
 
@@ -49,9 +55,11 @@ Application.Search.join = function (text) {
  *
  * @param {String} field the field name
  * @param {String} text the field value
+ * @param {Boolean} [global] true to use the global search engine
  */
-Application.Search.joinField = function (field, text) {
-    Application.Search.join(field + DATASET_FILTERABLE_OPERATOR + DATASET_FILTERABLE_QUOTE_CHAR + text + DATASET_FILTERABLE_QUOTE_CHAR);
+Application.Search.joinField = function (field, text, global) {
+    let query = field + DATASET_FILTERABLE_OPERATOR + DATASET_FILTERABLE_QUOTE_CHAR + text + DATASET_FILTERABLE_QUOTE_CHAR;
+    Application.Search.join(query, global);
 }
 
 // Bind events

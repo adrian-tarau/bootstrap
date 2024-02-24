@@ -24,7 +24,7 @@ import static net.microfalx.lang.TimeUtils.toMillis;
  * Holds a document.
  * <p>
  * A document has a unique identifier, a name, possible a type and owner, creation and modification time. The description is
- * actually the body of the document.
+ * a short test describing the document, and it helps providing additional information outside the body of the document.
  * <p>
  * In addition to the core attributes above, a document can have optional attributes using {@link Attribute}.
  * <p>

@@ -128,7 +128,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
 
     @Override
     public Collection<A> toCollection() {
-        return sortAndFilter(attributes.values(), Integer.MAX_VALUE, null);
+        return attributes != null ? sortAndFilter(attributes.values(), Integer.MAX_VALUE, null) : emptyList();
     }
 
     @Override
@@ -138,7 +138,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
 
     @Override
     public Collection<A> toCollection(int maximumCount, Function<A, Boolean> filter) {
-        return sortAndFilter(attributes.values(), maximumCount, filter);
+        return attributes != null ? sortAndFilter(attributes.values(), maximumCount, filter) : emptyList();
     }
 
     @Override
