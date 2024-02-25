@@ -365,6 +365,13 @@ DataSet.initFields = function () {
         ranges: {
             'Today': [moment().startOf('day'), moment().endOf('day')],
             'Yesterday': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
+            'Last 5 Minutes': [moment().subtract(5, 'minutes'), moment().endOf('day')],
+            'Last 15 Minutes': [moment().subtract(15, 'minutes'), moment().endOf('day')],
+            'Last 30 Minutes': [moment().subtract(30, 'minutes'), moment().endOf('day')],
+            'Last 1 Hour': [moment().subtract(1, 'hours'), moment().endOf('day')],
+            'Last 4 Hours': [moment().subtract(4, 'hours'), moment().endOf('day')],
+            'Last 8 Hours': [moment().subtract(8, 'hours'), moment().endOf('day')],
+            'Last 2 Days': [moment().subtract(1, 'days').startOf('day'), moment().endOf('day')],
             'Last 7 Days': [moment().subtract(6, 'days').startOf('day'), moment().endOf('day')],
             'Last 30 Days': [moment().subtract(29, 'days').startOf('day'), moment().endOf('day')],
             'This Month': [moment().startOf('month').startOf('day'), moment().endOf('month').endOf('day')],
