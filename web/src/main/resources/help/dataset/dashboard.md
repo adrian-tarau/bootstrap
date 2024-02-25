@@ -1,6 +1,6 @@
 ## Workspace
 
-A typical dashboard is organized in the following sections:
+A typical dashboard to display a set of records (data set) is organized in the following sections:
 
 1. The title of the  dashboard
 2. The contextual help for the dashboard
@@ -14,7 +14,7 @@ _Figure 1. Typical view of an application dashboard_
 
 ## Fields
 
-A dashboard will display only the most important fields in the grid (due to limited space available), however, additional fields can be available to be used in search expressions. Most of the time, field names are similar to the label in the table header. and they are case-insensitive: _name_ and _Name_ represents the same field.
+A dashboard will display only the most important fields in the data grid (due to limited space available), however, additional fields can be available to be used in search expressions. Most of the time, field names are similar to the label in the table header. and they are case-insensitive: _name_ and _Name_ represents the same field.
 
 Fields can be used to search through the document using a _query_ (search expression) as described bellow.
 
