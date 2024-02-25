@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparingLong;
 import static net.microfalx.bootstrap.model.AttributeConstants.MAX_ATTRIBUTE_DISPLAY_LENGTH;
-import static net.microfalx.bootstrap.model.AttributeUtils.isSingleLineAndShort;
 import static net.microfalx.bootstrap.search.SearchUtils.isStandardFieldName;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
@@ -28,7 +27,9 @@ class SearchEngineReportStats {
 
     public static final int TOP_100 = 100;
     public static final int TOP_10 = 20;
+
     private static final String MAX_HEIGHT = "200px";
+    private static final int MAX_FIELD_LENGTH = 30;
 
     private final IndexService indexService;
     private final SearchService searchService;
@@ -45,11 +46,12 @@ class SearchEngineReportStats {
 
     Column getIndexStatistics() {
         Collection<FieldStatistics> fieldStatistics = searchService.getFieldStatistics();
-        return Column.create(3).setTitle("Index").setMaxHeight(MAX_HEIGHT)
+        return Column.create(3).setTitle("Index Statistics").setMaxHeight(MAX_HEIGHT)
                 .add(Table.create(2)
                         .addRow("Total Documents", indexService.getDocumentCount())
                         .addRow("Pending Documents", indexService.getPendingDocumentCount())
                         .addRow("Total Fields", fieldStatistics.size())
+                        .addRow("Total Terms", fieldStatistics.stream().mapToInt(FieldStatistics::getTermCount).sum())
                 );
     }
 
@@ -69,7 +71,6 @@ class SearchEngineReportStats {
         row.add(getTypeStatistics());
         row.add(getSourceStatistics());
         row.add(getTargetStatistics());
-        row.add(getBodyStatistics());
     }
 
     Column getSeverityStatistics() {
@@ -92,24 +93,27 @@ class SearchEngineReportStats {
         return getFieldStatistics("Top {limit} Types", Document.TYPE_FIELD);
     }
 
-    Column getBodyStatistics() {
-        return getFieldStatistics("Top {limit} Tokens", Document.BODY_FIELD);
-    }
-
     Column termsStatistics() {
-        PriorityQueue<TermStatistics> priorityQueue = new PriorityQueue<>(comparingLong(TermStatistics::getCount).reversed());
+        PriorityQueue<TermStatistics> priorityQueue = new PriorityQueue<>(comparingLong(TermStatistics::getCount));
         for (FieldStatistics fieldStatistic : searchService.getFieldStatistics()) {
             if (isStandardFieldName(fieldStatistic.getName())) continue;
             for (TermStatistics term : fieldStatistic.getTerms()) {
-                if (!isSingleLineAndShort(term.getName())) continue;
-                priorityQueue.add(term);
+                priorityQueue.offer(term);
+                if (priorityQueue.size() >= 5 * TOP_100) {
+                    priorityQueue.poll();
+                }
             }
         }
-        Iterable<TermStatistics> terms = Iterables.limit(priorityQueue, TOP_100);
+        while (priorityQueue.size() > TOP_100) {
+            priorityQueue.poll();
+        }
+        Iterable<TermStatistics> terms = priorityQueue.stream().sorted(comparingLong(TermStatistics::getCount).reversed()).toList();
         return Column.create(7).setTitle("Top 100 Terms").setMaxHeight(MAX_HEIGHT)
-                .add(Table.create("Name", "Field", "Documents", "Frequency")
-                        .addRows(table -> terms.forEach(term -> table.addRow(abbreviate(term.getName(), MAX_ATTRIBUTE_DISPLAY_LENGTH), term.getField(),
-                                term.getCount(), term.getFrequency())))
+                .add(Table.create("Field", "Value", "Documents")
+                        .addRows(table -> terms.forEach(term -> table
+                                .addRow(abbreviate(term.getField(), MAX_FIELD_LENGTH),
+                                        termLink(term.getField(), abbreviate(term.getValue(), MAX_ATTRIBUTE_DISPLAY_LENGTH)),
+                                        term.getCount())))
                 );
     }
 

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 
+import static java.util.Comparator.comparingLong;
 import static net.microfalx.bootstrap.search.Document.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.toIdentifier;
@@ -31,6 +32,16 @@ public class SearchUtils {
      * The maximum size for a field in lucene
      */
     public static final int MAX_FIELD_LENGTH = 32000;
+
+    /**
+     * The maximum number of term statistics tracked by field
+     */
+    public static final int MAX_TERMS_PER_FIELD = 20;
+
+    /**
+     * The maximum number of terms scanned from the index to extract statistics
+     */
+    public static final int MAX_TERMS_SCANNED = MAX_TERMS_PER_FIELD * 50;
 
     /**
      * A set containing all the standard field names.
@@ -233,6 +244,7 @@ public class SearchUtils {
     public static void extractFieldsAndTerms(IndexReader indexReader, Map<String, FieldStatistics> fields, int maxTerms) {
         Fields luceneFields = SearchUtils.getFields(indexReader);
         for (String fieldName : luceneFields) {
+            if (BODY_FIELD.equals(fieldName)) continue;
             try {
                 Terms terms = luceneFields.terms(fieldName);
                 if (terms == null) continue;
@@ -240,19 +252,28 @@ public class SearchUtils {
                 fieldStatistic.documentCount = terms.getDocCount();
                 fields.put(toIdentifier(fieldName), fieldStatistic);
                 fieldStatistic.termCount = (int) terms.size();
+                boolean countTerms = fieldStatistic.termCount <= 0;
+                if (countTerms) fieldStatistic.termCount = 0;
+                int maxTermsScanned = MAX_TERMS_SCANNED;
                 TermsEnum iterator = terms.iterator();
                 BytesRef byteRef;
-                int counter = maxTerms;
-                List<TermStatistics> termStatisticsList = new ArrayList<>();
-                while ((byteRef = iterator.next()) != null && counter-- > 0) {
+                PriorityQueue<TermStatistics> priorityQueue = new PriorityQueue<>(comparingLong(TermStatistics::getCount));
+                while ((byteRef = iterator.next()) != null && maxTermsScanned-- > 0) {
                     String term = byteRef.utf8ToString();
                     Term termInstance = new Term(fieldName, byteRef);
                     TermStatistics termStatistics = new TermStatistics(fieldName, term);
                     termStatistics.frequency = indexReader.totalTermFreq(termInstance);
                     termStatistics.count = indexReader.docFreq(termInstance);
-                    termStatisticsList.add(termStatistics);
+                    fieldStatistic.termCount += termStatistics.count;
+                    priorityQueue.add(termStatistics);
+                    if (priorityQueue.size() >= 5 * maxTerms) {
+                        priorityQueue.poll();
+                    }
                 }
-                fieldStatistic.setTerms(termStatisticsList);
+                while (priorityQueue.size() > maxTerms) {
+                    priorityQueue.poll();
+                }
+                fieldStatistic.setTerms(priorityQueue.stream().sorted(comparingLong(TermStatistics::getCount).reversed()).toList());
             } catch (Exception e) {
                 LOGGER.warn("Failed to extract terms for '" + fieldName + ", root cause: " + e.getMessage());
             }

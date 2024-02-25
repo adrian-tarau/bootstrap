@@ -66,8 +66,19 @@ public class IndexService implements InitializingBean {
      * @throws IndexException if the document cannot be indexed
      */
     public void index(Document document) {
+        index(document, true);
+    }
+
+    /**
+     * Indexes a document and commits at the end.
+     *
+     * @param document the document to index
+     * @param commit   true - wait to commit in batched documents, false - commit immediately
+     * @throws IndexException if the document cannot be indexed
+     */
+    public void index(Document document, boolean commit) {
         requireNonNull(document);
-        index(Collections.singleton(document));
+        index(Collections.singleton(document), commit);
     }
 
     /**

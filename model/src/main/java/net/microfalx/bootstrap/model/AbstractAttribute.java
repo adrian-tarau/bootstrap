@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.primitives.Doubles;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 
@@ -68,6 +69,20 @@ public abstract class AbstractAttribute implements Attribute, Comparable<Attribu
     @Override
     public final boolean isNull() {
         return value == null;
+    }
+
+    @Override
+    public boolean isNumber() {
+        if (isNull()) return false;
+        if (value instanceof Number) return false;
+        String text = value.toString();
+        return Doubles.tryParse(text) != null;
+    }
+
+    @Override
+    public boolean isSingleLine() {
+        if (!(value instanceof String)) return true;
+        return AttributeUtils.isSingleLineAndShort((String) value);
     }
 
     public final String getDescription() {

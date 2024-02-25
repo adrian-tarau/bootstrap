@@ -38,17 +38,18 @@ public class SearchResult {
     private String title;
 
     @Position(3)
-    @Description("The owner of the document")
+    @Description("The owner of the document (usually a service or a module)")
     private String owner;
 
     @Position(4)
-    @Description("The type of the document")
+    @Description("The type of the document (the data type)")
     private String type;
 
-    /*@Position(10)
+    @Position(10)
     @Formattable(negativeValue = Formattable.NA)
     @Description("The relevance of the document when a text search is performed")
-    private float relevance;*/
+    @Visible(false)
+    private float relevance;
 
     @Position(20)
     @Description("The length (size) of the document")
@@ -71,6 +72,9 @@ public class SearchResult {
 
     @Visible(false)
     private Collection<Attribute> topAttributes;
+
+    @Visible(false)
+    private Collection<Attribute> coreAttributes;
 
     @Visible(false)
     private Collection<Attribute> attributes;

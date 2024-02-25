@@ -90,4 +90,20 @@ public interface Attribute extends Nameable, Descriptable, Comparable<Attribute>
      * @return {@code true} if null, {@code false} otherwise
      */
     boolean isNull();
+
+    /**
+     * Returns whether the attribute carries a number or looks like a number (can be parsed as a number).
+     *
+     * @return {@code true} if number, {@code false} otherwise
+     */
+    boolean isNumber();
+
+    /**
+     * Returns whether the attribute value is text and it does not have new lines.
+     * <p>
+     * Also, long single line texts are also considered multi-line since they will wrap in most views.
+     *
+     * @return {@code true} if a single line, <code>false</code> otherwise
+     */
+    boolean isSingleLine();
 }

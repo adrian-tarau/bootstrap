@@ -8,7 +8,7 @@ public class AttributeConstants {
     /**
      * We cannot show too much in the UI when it comes to attributes for a model, so stick with this default number
      */
-    public static final int DEFAULT_MAXIMUM_ATTRIBUTES = 15;
+    public static final int DEFAULT_MAXIMUM_ATTRIBUTES = 10;
 
     /**
      * We cannot show long attribute, those are probably something that need to be displayed in the details view

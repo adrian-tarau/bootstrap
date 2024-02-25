@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static net.microfalx.bootstrap.search.SearchUtils.MAX_TERMS_PER_FIELD;
 import static net.microfalx.bootstrap.search.SearchUtils.isNumericField;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
@@ -96,7 +97,7 @@ public class SearchService implements InitializingBean {
      * @return a non-null instance
      */
     public Collection<FieldStatistics> getFieldStatistics() {
-        if (millisSince(lastFieldLoad) > FIVE_MINUTE && fieldLoadingFlag.compareAndSet(false, true)) {
+        if (millisSince(lastFieldLoad) > ONE_HOUR && fieldLoadingFlag.compareAndSet(false, true)) {
             try {
                 getTaskExecutor().submit(new ExtractFieldStatsWorker());
             } catch (Exception e) {
@@ -158,7 +159,7 @@ public class SearchService implements InitializingBean {
             final Query parsedQuery = createQuery(query);
             final SearchResult result = new SearchResult(query);
             result.setRewriteQuery(parsedQuery.toString());
-            LOGGER.info("Searching with query '" + query.getDescription() + "', normalized query: '" + getNormalizedQuery(query) + "', parsed query: '" + parsedQuery
+            LOGGER.info("Searching with '" + query.getDescription() + "', normalized query: '" + getNormalizedQuery(query) + "', parsed query: '" + parsedQuery
                     + "', auto-wildcard: " + query.isAutoWildcard() + ", leading wildcard: " + query.isAllowLeadingWildcard());
             RetryTemplate retryTemplate = new RetryTemplate();
             retryTemplate.registerListener(new RetryListener() {
@@ -440,7 +441,7 @@ public class SearchService implements InitializingBean {
             try {
                 fieldStatistics = doWithIndex("Get Fields", indexReader -> {
                     Map<String, FieldStatistics> fieldStatistics = new HashMap<>();
-                    SearchUtils.extractFieldsAndTerms(indexReader, fieldStatistics, 30);
+                    SearchUtils.extractFieldsAndTerms(indexReader, fieldStatistics, MAX_TERMS_PER_FIELD);
                     return fieldStatistics;
                 });
             } finally {

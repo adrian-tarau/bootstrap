@@ -60,7 +60,10 @@ public final class SearchController extends DataSetController<SearchResult, Stri
         }
         controllerModel.addAttribute("text", text);
         fieldAttributes.sort(Comparator.comparing(AbstractAttribute::getLabel));
+        List<Attribute> finalFields = new ArrayList<>();
+        finalFields.addAll(dataSetModel.getCoreAttributes());
+        finalFields.addAll(fieldAttributes);
         controllerModel.addAttribute("badges", badgeAttributes);
-        controllerModel.addAttribute("fields", fieldAttributes);
+        controllerModel.addAttribute("fields", finalFields);
     }
 }

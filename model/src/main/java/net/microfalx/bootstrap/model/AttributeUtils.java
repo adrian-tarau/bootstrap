@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.primitives.Doubles;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
@@ -31,18 +30,16 @@ public class AttributeUtils {
     /**
      * Returns whether the attribute is small enough
      *
-     * @param attribute the attribute
-     * @param {@code    true} to allow numbers, {@code false}
-     * @param <A>       the attribute type
+     * @param attribute      the attribute
+     * @param includeNumbers {@code    true} to allow numbers, {@code false}
+     * @param <A>            the attribute type
      * @return {@code true} to allow to be displayed as a badge, {@code false} otherwise
      */
     public static <A extends Attribute> boolean shouldDisplayAsBadge(A attribute, boolean includeNumbers) {
         requireNonNull(attribute);
         if (attribute.isEmpty()) return false;
-        String text = attribute.asString();
-        if (!includeNumbers && Doubles.tryParse(text) != null) return false;
-        if (!(attribute.getValue() instanceof String)) return true;
-        return isSingleLineAndShort(text);
+        if (!includeNumbers && attribute.isNumber()) return false;
+        return attribute.isSingleLine();
     }
 
     /**

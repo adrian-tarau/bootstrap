@@ -2,6 +2,8 @@ package net.microfalx.bootstrap.search;
 
 import net.microfalx.lang.Nameable;
 
+import java.util.Objects;
+
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
@@ -10,20 +12,20 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class TermStatistics implements Nameable {
 
     private final String field;
-    private final String name;
+    private final String value;
 
     long frequency;
     long count;
 
-    TermStatistics(String field, String name) {
+    TermStatistics(String field, String value) {
         requireNonNull(field);
-        requireNonNull(name);
+        requireNonNull(value);
         this.field = field;
-        this.name = name;
+        this.value = value;
     }
 
     /**
-     * Returns the field
+     * Returns the field name.
      *
      * @return a non-null instance
      */
@@ -31,9 +33,18 @@ public class TermStatistics implements Nameable {
         return field;
     }
 
+    /**
+     * Returns the value of the field.
+     *
+     * @return a non-null instance
+     */
+    public String getValue() {
+        return value;
+    }
+
     @Override
     public String getName() {
-        return name;
+        return value;
     }
 
     /**
@@ -52,5 +63,28 @@ public class TermStatistics implements Nameable {
      */
     public long getCount() {
         return count;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TermStatistics that = (TermStatistics) o;
+        return Objects.equals(field, that.field) && Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(field, value);
+    }
+
+    @Override
+    public String toString() {
+        return "TermStatistics{" +
+                "field='" + field + '\'' +
+                ", value='" + value + '\'' +
+                ", frequency=" + frequency +
+                ", count=" + count +
+                '}';
     }
 }

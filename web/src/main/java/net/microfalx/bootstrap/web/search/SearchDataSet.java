@@ -6,9 +6,11 @@ import net.microfalx.bootstrap.model.ComparisonExpression;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.PojoField;
+import net.microfalx.bootstrap.search.Attribute;
 import net.microfalx.bootstrap.search.Document;
 import net.microfalx.bootstrap.search.SearchQuery;
 import net.microfalx.bootstrap.search.SearchService;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Provider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -86,18 +88,32 @@ public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchRes
         result.setModifiedAt(document.getModifiedAt().toLocalDateTime());
         result.setName(document.getName());
         result.setDescription(document.getDescription());
-        result.setTitle(abbreviate(defaultIfEmpty(document.getDescription(), document.getName()), MAX_DESCRIPTION_LENGTH));
+        result.setTitle(abbreviate(defaultIfEmpty(document.getName(), document.getDescription()), MAX_DESCRIPTION_LENGTH));
         result.setType(document.getType());
         result.setMimeType(document.getMimeType());
         result.setReference(document.getReference());
         result.setOwner(document.getOwner());
-        //result.setRelevance(document.getRelevance());
+        result.setRelevance(document.getRelevance());
         result.setLength(document.getLength());
         result.setAttributeCount(document.toMap().size());
         result.setTopAttributes(document.toCollection(DEFAULT_MAXIMUM_ATTRIBUTES, attribute -> searchService.accept(document, attribute)));
         result.setAttributes(document.toCollection());
+        result.setCoreAttributes(getCoreAttributes(document));
         result.setBody(document.getBody());
         return result;
+    }
+
+    private List<Attribute> getCoreAttributes(Document document) {
+        List<Attribute> attributes = new ArrayList<>();
+        attributes.add(Attribute.create(Document.NAME_FIELD, document.getName()));
+        attributes.add(Attribute.create(Document.MIME_TYPE_FIELD, document.getMimeType()));
+        attributes.add(Attribute.create(Document.OWNER_FIELD, document.getOwner()));
+        attributes.add(Attribute.create(Document.TYPE_FIELD, document.getType()));
+        if (!document.getTags().isEmpty()) attributes.add(Attribute.create(Document.TAG_FIELD, document.getTags()));
+        if (StringUtils.isNotEmpty(document.getDescription())) {
+            attributes.add(Attribute.create(Document.DESCRIPTION_FIELD, document.getDescription()));
+        }
+        return attributes;
     }
 
     private String getQuery(Filter filter) {

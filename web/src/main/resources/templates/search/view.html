@@ -21,7 +21,7 @@
                 <div class="col-md-4"><span class="fw-bold">Modified At: </span><span class="fst-italic" th:text="${#temporals.format(model.modifiedAt)}"></span></div>
             </div>
         </div>
-        <div class="row border rounded bg-body-secondary mb-3 p-3 fs-6 dataset-attributes">
+        <div th:unless="${badges.isEmpty()}" class="row border rounded bg-body-secondary mb-3 p-3 fs-6 dataset-attributes">
             <div class="col-md-12 p-5">
             <span th:each="badge : ${badges}" th:class="|badge rounded-pill me-1 name-default ${#dataset.getAttributeClasses(badge)}|">
                 <span th:text="${badge.name}"></span><span>:&nbsp;</span>
@@ -54,7 +54,7 @@
                         <tr th:each="field : ${fields}">
                             <td th:text="${field.name}"></td>
                             <td>
-                                <a href="#" th:attr="onclick=|Application.Search.joinField('${field.name}','${field.value}')|"><i class="fa-solid fa-filter"></i></a>
+                                <a th:if="${field.isSingleLine()}" href="#" th:attr="onclick=|Application.Search.joinField('${field.name}','${field.value}')|"><i class="fa-solid fa-filter"></i></a>
                                 <span class="dataset-text-mono" th:text="${field.value}"></span>
                             </td>
                         </tr>

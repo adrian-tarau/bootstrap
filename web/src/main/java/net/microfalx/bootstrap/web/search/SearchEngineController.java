@@ -30,6 +30,7 @@ public class SearchEngineController extends DashboardController {
 
         private Row indexStatistics() {
             Row row = Row.create();
+            row.add(stats.getIndexStatistics());
             stats.buildFieldStatistics(row);
             return row;
         }
