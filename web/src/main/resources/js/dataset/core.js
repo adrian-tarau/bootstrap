@@ -353,7 +353,20 @@ DataSet.initFields = function () {
     }
     Logger.debug("Data Set Range: " + startDate + ", " + endDate);
     let formatter = function (start, end) {
-        $('#daterange span').html(start.format('L') + ' - ' + end.format('L'));
+        let adjustedEnd = moment();
+        let diff = adjustedEnd.diff(start, 'minutes');
+        let unit = "m";
+        if (diff > 300) {
+            start.subtract(30, "minutes");
+            if (diff > 1400) adjustedEnd = end;
+            diff = adjustedEnd.diff(start, 'hours');
+            unit = "h";
+            if (diff > 72) {
+                diff = adjustedEnd.diff(start, 'days');
+                unit = "d";
+            }
+        }
+        $('#daterange span').html(start.format('L') + ' - ' + end.format('L') + " (" + diff + unit + ")");
     };
     $('#daterange').daterangepicker({
         startDate: startDate,
