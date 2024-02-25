@@ -194,7 +194,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Resource resource = download(dataSet, model, dataSetModel);
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(resource.getMimeType()))
                 .header("Content-Disposition", "attachment; filename=\"" + resource.getFileName() + "\"")
-                .body(new InputStreamResource(resource.getInputStream()));
+                .body(new InputStreamResource(resource.getInputStream(true)));
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
