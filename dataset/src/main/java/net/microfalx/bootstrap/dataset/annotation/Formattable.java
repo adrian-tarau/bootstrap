@@ -18,7 +18,7 @@ public @interface Formattable {
     String NA = "-";
 
     /**
-     * A value for "value not available"
+     * A value for "value is negative"
      */
     String AUTO = "$AUTO$";
 
@@ -56,6 +56,16 @@ public @interface Formattable {
      * @return the value
      */
     String negativeValue() default AUTO;
+
+    /**
+     * Uses a human-readable format to make it easier to read the values.
+     * <p>
+     * For numbers, it uses locale specific thousands and fractional separators, for temporal uses custom format patterns
+     * to make the formatted value shorter.
+     *
+     * @return {@code true} to use pretty-print formatters, {@code false} to use basic formatters
+     */
+    boolean prettyPrint() default true;
 
     /**
      * Returns the custom formatter to be used for a field.

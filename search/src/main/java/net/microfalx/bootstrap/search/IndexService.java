@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.search;
 import jakarta.annotation.PreDestroy;
 import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.resource.ResourceService;
-import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.metrics.Metrics;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
 import org.apache.commons.io.FileUtils;
@@ -23,8 +23,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.throwException;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -34,6 +36,8 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 public class IndexService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexService.class);
+
+    static Metrics METRICS = Metrics.of("Index");
 
     @Autowired
     private SearchProperties searchProperties;
@@ -128,7 +132,7 @@ public class IndexService implements InitializingBean {
     public void index(Collection<Document> documents, boolean commit) {
         requireNonNull(documents);
         try {
-            doWithIndex(indexWriter -> {
+            doWithIndex("Index", indexWriter -> {
                 DocumentMapper itemMapper = new DocumentMapper();
                 for (Document document : documents) {
                     if (LOGGER.isDebugEnabled()) {
@@ -157,7 +161,7 @@ public class IndexService implements InitializingBean {
      */
     public void remove(String itemId) {
         requireNonNull(itemId);
-        doWithIndex(indexWriter -> {
+        doWithIndex("Delete", indexWriter -> {
             LOGGER.info("Deleting item with id: " + itemId);
             indexWriter.deleteDocuments(new Term(Document.ID_FIELD, itemId));
         });
@@ -224,11 +228,11 @@ public class IndexService implements InitializingBean {
     protected synchronized IndexHolder openIndex() {
         if (index != null) return index;
         try {
-            index = createIndex(false);
+            index = METRICS.time("Open", (Supplier<IndexHolder>) () -> createIndex(false));
             return index;
         } catch (Exception e) {
             if (index != null) index.release();
-            return ExceptionUtils.throwException(e);
+            return throwException(e);
         }
     }
 
@@ -237,13 +241,19 @@ public class IndexService implements InitializingBean {
      *
      * @param indexCallback the index callback
      */
-    protected void doWithIndex(final IndexCallback indexCallback) {
+    protected void doWithIndex(String name, final IndexCallback indexCallback) {
         IndexHolder index = openIndex();
         try {
-            indexCallback.doWithIndex(index.indexWriter);
+            METRICS.getTimer(name).record(() -> {
+                try {
+                    indexCallback.doWithIndex(index.indexWriter);
+                } catch (Exception e) {
+                    throwException(e);
+                }
+            });
         } catch (Exception throwable) {
             commitAndRelease();
-            ExceptionUtils.throwException(throwable);
+            throwException(throwable);
         } finally {
             index.indexLastUpdated = System.currentTimeMillis();
             index.indexChanged.set(true);
@@ -281,7 +291,7 @@ public class IndexService implements InitializingBean {
      */
     void commitIndexWriter() {
         try {
-            doWithIndex(indexWriter -> {
+            doWithIndex("Commit", indexWriter -> {
                 LOGGER.debug("Committing index writer");
                 indexWriter.flush();
                 indexWriter.commit();

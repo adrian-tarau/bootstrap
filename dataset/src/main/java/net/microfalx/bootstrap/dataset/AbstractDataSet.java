@@ -137,7 +137,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         if (visibleAnnot == null) return !field.isId();
         if (!visibleAnnot.value()) return false;
         return switch (state) {
-            case BROWSE -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.BROWSE);
+            case BROWSE, DELETE -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.BROWSE);
             case VIEW -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.VIEW);
             case ADD -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.ADD);
             case EDIT -> ArrayUtils.contains(visibleAnnot.modes(), Visible.Mode.EDIT);

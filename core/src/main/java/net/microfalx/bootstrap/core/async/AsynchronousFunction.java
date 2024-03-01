@@ -44,7 +44,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AsynchronousFunction.class);
 
-    private static final Metrics METRICS = Metrics.of("async_function");
+    private static final Metrics METRICS = Metrics.of("Asynchronous Function");
 
     private final String id;
     private final Function<I, O> function;
@@ -319,7 +319,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
         if (!force && millisSince(lastCleanup) < FIVE_MINUTE) return;
         for (Map.Entry<String, ResponseHolder<?>> entry : responses.entrySet()) {
             if (millisSince(entry.getValue().lastUpdate) > FIVE_MINUTE) {
-                METRICS.count("cleanup");
+                METRICS.count("Cleanup");
                 responses.remove(entry.getKey());
             }
         }
@@ -330,7 +330,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
      * Removes all cached responses.
      */
     public static void clear() {
-        METRICS.count("clear", responses.size());
+        METRICS.count("Clear", responses.size());
         responses.clear();
     }
 
@@ -361,7 +361,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
     }
 
     private O getDefaultWithTimer(I input) {
-        return METRICS.time("default", (Supplier<O>) () -> defaultValueSupplier.get());
+        return METRICS.time("Default", (Supplier<O>) () -> defaultValueSupplier.get());
     }
 
     private AsyncTaskExecutor getTaskExecutor() {
@@ -394,7 +394,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
     }
 
     private void invokeOnBefore(I input, Object context) {
-        if (onBefore != null) METRICS.time("before", (t) -> onBefore.accept(input, context));
+        if (onBefore != null) METRICS.time("Before", (t) -> onBefore.accept(input, context));
     }
 
     @SuppressWarnings("unchecked")
@@ -429,7 +429,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
         public O call() throws Exception {
             try {
                 invokeOnBefore(input, context);
-                O result = METRICS.time("execute", (Supplier<O>) () -> function.apply(input));
+                O result = METRICS.time("Execute", (Supplier<O>) () -> function.apply(input));
                 response.updateResult(result);
                 response.firstRequest.set(false);
                 return result;
@@ -439,7 +439,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
                     METRICS.count(getMonitorName(input));
                     LOGGER.warn(StringUtils.formatMessage("Function ''{0}'' timed out for input ''{1}''", id, getInputId(input)), e);
                 } else if (useDefaultWithFailures) {
-                    METRICS.increment("failure");
+                    METRICS.increment("Failure");
                     LOGGER.warn(formatMessage("Function ''{0}'' failed out for input ''{1}''", id, getInputId(input)), e);
                 }
                 throw e;

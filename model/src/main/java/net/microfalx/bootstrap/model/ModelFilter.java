@@ -2,11 +2,9 @@ package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.TimeUtils;
 import org.springframework.util.AntPathMatcher;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
@@ -140,24 +138,14 @@ public class ModelFilter<M> {
     }
 
     private int compare(Temporal temporal1, Temporal temporal2) {
-        if (temporal1 instanceof LocalDate) {
-            LocalDate localDate1 = (LocalDate) temporal1;
-            LocalDate localDate2 = (LocalDate) temporal2;
-            return localDate1.compareTo(localDate2);
-        } else if (temporal1 instanceof LocalDateTime) {
-            LocalDateTime localDateTime1 = (LocalDateTime) temporal1;
-            LocalDateTime localDateTime2 = (LocalDateTime) temporal2;
-            return localDateTime1.compareTo(localDateTime2);
-        } else if (temporal1 instanceof ZonedDateTime) {
-            ZonedDateTime zonedDateTime1 = (ZonedDateTime) temporal1;
-            ZonedDateTime zonedDateTime2 = (ZonedDateTime) temporal2;
-            return zonedDateTime1.compareTo(zonedDateTime2);
-        } else if (temporal1 instanceof OffsetDateTime) {
-            OffsetDateTime offsetDateTime1 = (OffsetDateTime) temporal1;
-            OffsetDateTime offsetDateTime2 = (OffsetDateTime) temporal2;
-            return offsetDateTime1.compareTo(offsetDateTime2);
+        ZonedDateTime zonedDateTime1 = TimeUtils.toZonedDateTime(temporal1);
+        ZonedDateTime zonedDateTime2 = TimeUtils.toZonedDateTime(temporal2);
+        if (temporal1 == null) {
+            return -1;
+        } else if (temporal2 == null) {
+            return 1;
         } else {
-            return 0;
+            return zonedDateTime1.compareTo(zonedDateTime2);
         }
     }
 

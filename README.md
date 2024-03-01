@@ -73,6 +73,7 @@ and a user for application access (change the database & user if desired, recomm
 ```sql
 CREATE USER 'demo'@'%' IDENTIFIED BY 'f2RODmy3j1Cq'; 
 CREATE DATABASE demo CHARACTER SET utf8 COLLATE utf8_bin; 
-GRANT ALL ON demo.* TO 'demo'@'%'; 
+GRANT ALL ON demo.* TO 'demo'@'%';
+GRANT SELECT ON mysql.* TO demo;
 FLUSH PRIVILEGES; 
 ```

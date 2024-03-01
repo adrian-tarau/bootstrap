@@ -6,6 +6,7 @@ import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 
 import java.text.NumberFormat;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.temporal.Temporal;
 import java.util.Locale;
@@ -90,8 +91,12 @@ public class FormatterUtils {
                 return valueAsString;
             }
         } else if (value instanceof Number) {
-            if (formattable != null && !Formattable.AUTO.equals(formattable.negativeValue()) && ((Number) value).doubleValue() < 0) {
-                return formattable.NA;
+            if (formattable != null) {
+                if (!formattable.prettyPrint()) {
+                    return ObjectUtils.toString(value);
+                } else if (!Formattable.AUTO.equals(formattable.negativeValue()) && ((Number) value).doubleValue() < 0) {
+                    return formattable.NA;
+                }
             }
             if (value instanceof Float || value instanceof Double) {
                 return NumberFormat.getNumberInstance().format(((Number) value).doubleValue());
@@ -102,6 +107,8 @@ public class FormatterUtils {
             return EnumUtils.toLabel((Enum) value);
         } else if (value instanceof Temporal) {
             return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value, getTimeZone());
+        } else if (value instanceof Duration) {
+            return net.microfalx.lang.FormatterUtils.formatDuration(value, Formattable.NA);
         } else {
             return ObjectUtils.toString(value);
         }

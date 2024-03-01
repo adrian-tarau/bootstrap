@@ -44,8 +44,7 @@ import java.util.function.Supplier;
 import static net.microfalx.bootstrap.search.SearchUtils.MAX_TERMS_PER_FIELD;
 import static net.microfalx.bootstrap.search.SearchUtils.isNumericField;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.StringUtils.isNotEmpty;
-import static net.microfalx.lang.StringUtils.toIdentifier;
+import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.*;
 
 /**
@@ -56,7 +55,7 @@ public class SearchService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchService.class);
 
-    static Metrics METRICS = Metrics.of("search");
+    static Metrics METRICS = Metrics.of("Search");
 
     @Autowired
     private SearchProperties searchProperties;
@@ -264,7 +263,7 @@ public class SearchService implements InitializingBean {
         try {
             return retryTemplate.execute((RetryCallback<T, Exception>) context -> {
                 IndexReader indexReader = getIndexSearcher().getIndexReader();
-                return METRICS.time(toIdentifier(operation), (Supplier<T>) () -> callback.apply(indexReader));
+                return METRICS.time(toIdentifier(capitalizeWords(operation)), (Supplier<T>) () -> callback.apply(indexReader));
             });
         } catch (Exception e) {
             throw new SearchException("Exception during index operation : " + operation, e);
@@ -306,18 +305,20 @@ public class SearchService implements InitializingBean {
 
     private Document doFind(String id) throws IOException {
         final IndexSearcher indexSearcher = getIndexSearcher();
-        Document translatedDocument = null;
-        try (Timer ignored = METRICS.startTimer("find")) {
+        Document translatedDocument = METRICS.timeCallable("Find", () -> {
             TermQuery query = new TermQuery(new Term(Document.ID_FIELD, id));
             TopDocs topDocs = indexSearcher.search(query, 1);
             DocumentMapper documentMapper = new DocumentMapper();
+            Document mappedDocument = null;
             if (topDocs.scoreDocs.length > 0) {
                 org.apache.lucene.document.Document document = indexSearcher.doc(topDocs.scoreDocs[0].doc);
-                translatedDocument = documentMapper.read(document);
+                mappedDocument = documentMapper.read(document);
             }
-        }
-        if (translatedDocument != null)
+            return mappedDocument;
+        });
+        if (translatedDocument != null) {
             LOGGER.info("Found document with identifier " + id + ", name " + translatedDocument.getName());
+        }
         return translatedDocument;
     }
 
@@ -326,14 +327,12 @@ public class SearchService implements InitializingBean {
         final IndexSearcher indexSearcher = getIndexSearcher();
         final List<Document> items = new ArrayList<>();
         final Sort sort = createSort(searchQuery);
-
-        TopDocs topDocs;
-        try (Timer ignored = METRICS.startTimer("search")) {
-            topDocs = indexSearcher.search(luceneQuery, searchQuery.getStart() + searchQuery.getLimit(), sort);
+        TopDocs topDocs = METRICS.timeCallable("Search", () -> {
+            TopDocs docs = indexSearcher.search(luceneQuery, searchQuery.getStart() + searchQuery.getLimit(), sort);
             int startIndex = searchQuery.getStart();
             int counter = searchQuery.getLimit();
             DocumentMapper documentMapper = new DocumentMapper();
-            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+            for (ScoreDoc scoreDoc : docs.scoreDocs) {
                 if (startIndex-- > 0) continue;
                 org.apache.lucene.document.Document document = indexSearcher.doc(scoreDoc.doc);
                 Document translatedDocument = documentMapper.read(document);
@@ -341,9 +340,9 @@ public class SearchService implements InitializingBean {
                 items.add(translatedDocument);
                 if (counter-- == 0) break;
             }
-        }
+            return docs;
+        });
         LOGGER.info("Found " + topDocs.totalHits + " total hit(s), took " + FormatterUtils.formatNumber(Timer.last().getDuration()));
-
         result.setDocuments(items);
         result.setTotalHits(topDocs.totalHits.value);
     }
@@ -382,12 +381,10 @@ public class SearchService implements InitializingBean {
             if (searchHolder == null || reopen) {
                 if (searchHolder != null) releaseSearchHolder();
                 LOGGER.debug("Open searcher");
-                try (Timer ignored = METRICS.startTimer("open_searcher")) {
-                    try {
-                        searchHolder = new SearchHolder();
-                    } catch (IOException e) {
-                        return ExceptionUtils.throwException(e);
-                    }
+                try {
+                    searchHolder = METRICS.timeCallable("Open", SearchHolder::new);
+                } catch (Exception e) {
+                    return ExceptionUtils.throwException(e);
                 }
             }
             return searchHolder;
@@ -398,9 +395,7 @@ public class SearchService implements InitializingBean {
         LOGGER.debug("Release searcher");
         synchronized (lock) {
             if (searchHolder != null) {
-                try (Timer ignored = METRICS.startTimer("release_searcher")) {
-                    searchHolder.release();
-                }
+                METRICS.time("Release", (t) -> searchHolder.release());
                 searchHolder = null;
             }
         }
@@ -468,12 +463,8 @@ public class SearchService implements InitializingBean {
         private SearchHolder() throws IOException {
             File indexDirectory = getIndexDirectory();
             directory = new NIOFSDirectory(indexDirectory.toPath(), NativeFSLockFactory.getDefault());
-            try (Timer ignored = METRICS.startTimer("open_reader")) {
-                indexReader = DirectoryReader.open(directory);
-            }
-            try (Timer ignored = METRICS.startTimer("open_searcher")) {
-                indexSearcher = new IndexSearcher(indexReader);
-            }
+            indexReader = METRICS.timeCallable("Open Reader", () -> DirectoryReader.open(directory));
+            indexSearcher = METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(indexReader));
         }
 
         public IndexReader getIndexReader() {

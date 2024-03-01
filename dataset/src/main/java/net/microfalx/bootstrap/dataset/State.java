@@ -21,6 +21,11 @@ public enum State {
     ADD,
 
     /**
+     * Data set is in delete mode (current record is about to be removed)
+     */
+    DELETE,
+
+    /**
      * Data set is in browse mode (navigating the result set)
      */
     BROWSE

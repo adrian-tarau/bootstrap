@@ -6,6 +6,17 @@
         <menu id="administration" text="Administration" position="1000" icon="fa-solid fa-gears">
             <item id="search_engine" text="Search Engine" parent="administration" action="/admin/search" position="1000"
                   icon="fa-solid fa-book"/>
+            <menu id="database" text="Databases" position="900" icon="fa-solid fa-database">
+                <item id="list" text="Manage" action="/admin/database" icon="fa-solid fa-database"/>
+                <item id="node" text="Nodes" action="/admin/database/node" icon="fa-solid fa-server"/>
+                <item id="session" text="Sessions" action="/admin/database/session" icon="fa-solid fa-circle-nodes"/>
+                <item id="transaction" text="Transactions" action="/admin/database/transaction" icon="fa-solid fa-right-left"/>
+            </menu>
+            <menu id="metric" text="Metrics" position="2000" icon="fa-solid fa-ruler-combined">
+                <item id="timer" text="Timers" action="/admin/metric/timer" icon="fa-solid fa-stopwatch"/>
+                <item id="counter" text="Counters" action="/admin/metric/counter" icon="fa-solid fa-cubes-stacked"/>
+                <item id="gauge" text="Gauges" action="/admin/metric/gauge" icon="fa-solid fa-gauge"/>
+            </menu>
         </menu>
     </menu>
     <menu id="top">

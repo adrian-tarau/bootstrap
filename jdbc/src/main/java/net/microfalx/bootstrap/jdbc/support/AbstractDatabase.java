@@ -1,0 +1,269 @@
+package net.microfalx.bootstrap.jdbc.support;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.TimeUtils;
+import net.microfalx.metrics.Metrics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.unmodifiableCollection;
+import static java.util.Optional.ofNullable;
+import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.createJdbcUri;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.*;
+
+/**
+ * Base class for a database.
+ */
+public abstract class AbstractDatabase extends AbstractNode implements Database {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseService.class);
+
+    private static final long REFRESH_NODES_INTERVAL = TimeUtils.ONE_MINUTE;
+    public static final int UNAVAILABLE_PORT = -1;
+
+    private final DatabaseService databaseService;
+
+    private volatile long lastNodesUpdate = 0;
+    private volatile Map<String, Node> nodes = Collections.emptyMap();
+    private volatile Metrics metrics;
+
+    public AbstractDatabase(DatabaseService databaseService, String id, String name, DataSource dataSource) {
+        super(null, id, name, dataSource);
+        requireNonNull(databaseService);
+        this.databaseService = databaseService;
+    }
+
+    protected final DatabaseService getDatabaseService() {
+        return databaseService;
+    }
+
+    @Override
+    public Database getDatabase() {
+        return this;
+    }
+
+    @Override
+    public final Collection<Node> getNodes() {
+        if (shouldUpdateNodes()) {
+            synchronized (this) {
+                if (shouldUpdateNodes()) {
+                    lastNodesUpdate = currentTimeMillis();
+                    try {
+                        Collection<Node> extractedNodes = timeCallable("Extract Nodes", this::extractNodes);
+                        nodes = extractedNodes.stream().collect(Collectors.toMap(node -> toIdentifier(node.getId()), node -> node));
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to extract database nodes for " + getName(), e);
+                    }
+                }
+            }
+        }
+        return unmodifiableCollection(nodes.values());
+    }
+
+    @Override
+    public Optional<Node> getNode(String id) {
+        requireNotEmpty(id);
+        getNodes();
+        return ofNullable(nodes.get(toIdentifier(id)));
+    }
+
+    @Override
+    public final Collection<Session> getSessions() {
+        return timeCallable("Extract Sessions", this::extractSessions);
+    }
+
+    @Override
+    public Collection<Transaction> getTransactions() {
+        return timeCallable("Extract Transactions", this::extractTransactions);
+    }
+
+    /**
+     * Returns the nodes from the database.
+     *
+     * @return a non-null instance
+     * @throws SQLException if the nodes cannot be extracted
+     */
+    protected abstract Collection<Node> extractNodes() throws SQLException;
+
+    /**
+     * Returns the sessions from the database.
+     *
+     * @return a non-null instance
+     * @throws SQLException if the sessions cannot be extracted
+     */
+    protected abstract Collection<Session> extractSessions() throws SQLException;
+
+    /**
+     * Returns the transactions from the database.
+     *
+     * @return a non-null instance
+     * @throws SQLException if the transactions cannot be extracted
+     */
+    protected abstract Collection<Transaction> extractTransactions() throws SQLException;
+
+    /**
+     * Returns the data source with a given identifier.
+     *
+     * @param id the identifier
+     * @return the data source, null if it does not exist
+     */
+    protected final DataSource findDataSource(String id) {
+        return databaseService.findDataSource(id).orElse(null);
+    }
+
+    /**
+     * Registers a data source.
+     *
+     * @param dataSource the data source
+     */
+    protected final void registerDataSource(DataSource dataSource) {
+        databaseService.registerDataSource(dataSource);
+    }
+
+    /**
+     * Creates a data source for a given host and port.
+     *
+     * @param hostname the host name
+     * @param port     the port
+     * @return the data source
+     */
+    protected final DataSource createDataSource(String hostname, int port) {
+        String id = getNodeDataSourceId(hostname);
+        DataSource dataSource = findDataSource(id);
+        if (dataSource != null) return dataSource;
+        URI uri = DatabaseUtils.getURI(getDataSource());
+        uri = createJdbcUri(replaceHostAndPort(uri, hostname, port));
+        HikariConfig config = new HikariConfig();
+        config.setMinimumIdle(1);
+        config.setMaximumPoolSize(10);
+        config.setPoolName(hostname);
+        config.setJdbcUrl(uri.toASCIIString());
+        config.setUsername(getDataSource().getUserName());
+        config.setPassword(getDataSource().getPassword());
+        HikariDataSource hikariDataSource = new HikariDataSource(config);
+        dataSource = DataSource.create(id, hostname, hikariDataSource).withUri(uri)
+                .withUserName(getDataSource().getUserName())
+                .withPassword(getDataSource().getPassword())
+                .withNode(true);
+        registerDataSource(dataSource);
+        return dataSource;
+    }
+
+    /**
+     * Returns the data source identifier for a node.
+     *
+     * @param hostname the hostname (or IP)
+     * @return a non-null instance
+     */
+    protected final String getNodeDataSourceId(String hostname) {
+        return toIdentifier(getDatabase().getId() + "_" + hostname);
+    }
+
+    /**
+     * Returns the metrics group for this database.
+     *
+     * @return a non-null instance
+     */
+    protected final Metrics getMetrics() {
+        if (metrics == null) metrics = DatabaseUtils.DATABASE.withGroup(getType().name());
+        return metrics;
+    }
+
+    /**
+     * Times a database access.
+     *
+     * @param name     the name of the timer
+     * @param supplier the supplier
+     */
+    protected final <T> T time(String name, Supplier<T> supplier) {
+        return getMetrics().time(name, supplier);
+    }
+
+    /**
+     * Times a database access.
+     *
+     * @param name     the name of the timer
+     * @param callable the callable
+     */
+    protected final <T> T timeCallable(String name, Callable<T> callable) {
+        return getMetrics().timeCallable(name, callable);
+    }
+
+    /**
+     * Extracts the host part from a hostname and an option port
+     *
+     * @param hostname the host name or hostname and port (separated by ":"), can be null
+     * @return the hostname or null if it was null
+     */
+    public static String getHostFromHostAndPort(String hostname) {
+        if (hostname == null) return null;
+        String[] parts = splitHostAndPort(hostname);
+        return parts.length > 0 ? parts[0] : EMPTY_STRING;
+    }
+
+    /**
+     * Extracts the host part from a hostname and an option port
+     *
+     * @param hostname the host name or hostname and port (separated by ":"), can be null
+     * @return the port or {@link #UNAVAILABLE_PORT} if missing or invalid
+     */
+    public static int getPortFromHostAndPort(String hostname) {
+        if (hostname == null) return UNAVAILABLE_PORT;
+        String[] parts = splitHostAndPort(hostname);
+        try {
+            return parts.length == 2 ? Integer.parseInt(parts[1]) : UNAVAILABLE_PORT;
+        } catch (NumberFormatException e) {
+            return UNAVAILABLE_PORT;
+        }
+    }
+
+    /**
+     * Replaces the hostname and port from the URI.
+     *
+     * @param uri      the original URI
+     * @param hostName the new hostname
+     * @param port     the new port
+     * @return a new URI
+     */
+    public static URI replaceHostAndPort(URI uri, String hostName, int port) {
+        try {
+            return new URI(uri.getScheme(), uri.getUserInfo(), hostName, port, uri.getPath(), uri.getQuery(), uri.getFragment());
+        } catch (URISyntaxException e) {
+            return ExceptionUtils.throwException(e);
+        }
+    }
+
+    private boolean shouldUpdateNodes() {
+        return nodes.isEmpty() || TimeUtils.millisSince(lastNodesUpdate) > REFRESH_NODES_INTERVAL;
+    }
+
+    private static String[] splitHostAndPort(String hostname) {
+        if (hostname == null) return EMPTY_STRING_ARRAY;
+        if (hostname.contains("]") || hostname.contains("::")) {
+            String[] parts = split(hostname, "]", true);
+            if (parts.length != 2) return new String[]{hostname};
+            if (parts[0].startsWith("[")) parts[0] = parts[0].substring(1);
+            if (parts.length > 1 && parts[1].startsWith(":")) parts[1] = parts[1].substring(1);
+            return parts;
+        } else {
+            String[] parts = split(hostname, ":", true);
+            return parts.length > 2 ? new String[]{hostname} : parts;
+        }
+    }
+}

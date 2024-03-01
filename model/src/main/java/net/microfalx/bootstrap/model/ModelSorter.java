@@ -81,17 +81,19 @@ public class ModelSorter<M> {
         public int compare(M o1, M o2) {
             Object value1 = Field.from(field.get(o1), field.getDataClass());
             Object value2 = Field.from(field.get(o2), field.getDataClass());
+            int result;
             if (value1 == null && value2 == null) {
-                return 0;
+                result = 0;
             } else if (value1 != null && value2 == null) {
-                return order.getNullHandling() == Sort.NullHandling.NULLS_LAST ? -1 : 1;
+                result = order.getNullHandling() == Sort.NullHandling.NULLS_LAST ? -1 : 1;
             } else if (value1 == null) {
-                return order.getNullHandling() == Sort.NullHandling.NULLS_LAST ? 1 : -1;
+                result = order.getNullHandling() == Sort.NullHandling.NULLS_LAST ? 1 : -1;
             } else if (value1 instanceof Comparable) {
-                return ((Comparable) value1).compareTo(value2);
+                result = ((Comparable) value1).compareTo(value2);
             } else {
-                return value1.toString().compareTo(value2.toString());
+                result = value1.toString().compareTo(value2.toString());
             }
+            return order.getDirection() == Sort.Direction.ASC ? result : -result;
         }
     }
 }

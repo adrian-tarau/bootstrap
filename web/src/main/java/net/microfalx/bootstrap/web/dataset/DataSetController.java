@@ -169,6 +169,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                     }
                 }
             }
+            afterPersist(dataSet, dataSetModel, State.DELETE);
             return JsonResponse.success();
         } else {
             return throwModelNotFound(id);
@@ -207,6 +208,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         if (response.isSuccess()) {
             beforePersist(dataSet, dataSetModel, State.ADD);
             dataSet.save(dataSetModel);
+            afterPersist(dataSet, dataSetModel, State.ADD);
         }
         return response;
     }
@@ -223,6 +225,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         if (response.isSuccess()) {
             beforePersist(dataSet, dataSetModel, State.EDIT);
             dataSet.save(dataSetModel);
+            afterPersist(dataSet, dataSetModel, State.EDIT);
         }
         return response;
     }
@@ -369,6 +372,17 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      */
     protected boolean beforePersist(DataSet<M, Field<M>, ID> dataSet, M model, State state) {
         return true;
+    }
+
+    /**
+     * Invoked after the model is persisted.
+     *
+     * @param dataSet the data set
+     * @param model   the model
+     * @param state   the data set state
+     */
+    protected void afterPersist(DataSet<M, Field<M>, ID> dataSet, M model, State state) {
+        // empty
     }
 
     /**
