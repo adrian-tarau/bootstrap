@@ -6,6 +6,7 @@ import net.microfalx.lang.StringUtils;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -26,6 +27,7 @@ class DataSourceImpl implements DataSource, Cloneable {
     private URI uri;
     private String userName;
     private String password;
+    private ZoneId zoneId = ZoneId.systemDefault();
     private Map<String, String> properties = new HashMap<>();
 
     private boolean node;
@@ -83,6 +85,11 @@ class DataSourceImpl implements DataSource, Cloneable {
     }
 
     @Override
+    public ZoneId getZoneId() {
+        return zoneId;
+    }
+
+    @Override
     public Map<String, String> getProperties() {
         return unmodifiableMap(properties);
     }
@@ -123,6 +130,14 @@ class DataSourceImpl implements DataSource, Cloneable {
         requireNonNull(password);
         DataSourceImpl copy = copy();
         copy.password = password;
+        return copy;
+    }
+
+    @Override
+    public DataSource withZoneId(ZoneId zoneId) {
+        requireNonNull(zoneId);
+        DataSourceImpl copy = copy();
+        copy.zoneId = zoneId;
         return copy;
     }
 

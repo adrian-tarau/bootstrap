@@ -2,10 +2,14 @@ package net.microfalx.bootstrap.jdbc.support;
 
 import net.microfalx.lang.StringUtils;
 import net.microfalx.metrics.Metrics;
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 
 import java.net.URI;
 
 public class DatabaseUtils {
+
+    private static final String COMMENT_START = "/*";
+    private static final String COMMENT_END = "*/";
 
     public static final String JDBC_SCHEME = "jdbc";
     public static final String MYSQL_SCHEME = "mysql";
@@ -43,5 +47,33 @@ public class DatabaseUtils {
         } else {
             return URI.create("jdbc:" + uri.toASCIIString());
         }
+    }
+
+    public static Statement.Statistics getStatistics(StatisticalSummary statisticalSummary) {
+        return new StatementImpl.StatisticsImpl(statisticalSummary);
+    }
+
+    /**
+     * Normalizes the statement
+     *
+     * @param statement the statement
+     * @return a normalized statement
+     */
+    public static String cleanupStatement(String statement) {
+        if (statement == null) return null;
+        statement = statement.trim();
+        int startCommentIndex = statement.indexOf(COMMENT_START);
+        int endCommentIndex = statement.indexOf(COMMENT_END);
+        if (startCommentIndex < 0 && endCommentIndex < 0) return statement;
+        if (startCommentIndex == 0) {
+            statement = statement.substring(endCommentIndex + 2).trim();
+        } else {
+            statement = statement.substring(0, startCommentIndex).trim();
+        }
+        startCommentIndex = statement.indexOf(COMMENT_START);
+        endCommentIndex = statement.indexOf(COMMENT_END);
+        if (startCommentIndex < 0 && endCommentIndex < 0) return statement;
+        statement = statement.substring(0, startCommentIndex).trim();
+        return statement;
     }
 }

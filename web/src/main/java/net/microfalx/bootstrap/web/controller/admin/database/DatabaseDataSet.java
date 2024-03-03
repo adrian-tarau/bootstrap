@@ -39,7 +39,7 @@ public class DatabaseDataSet extends PojoDataSet<Database, PojoField<Database>, 
 
     @Override
     protected Page<Database> doFindAll(Pageable pageable, Filter filterable) {
-        List<Database> models = databaseService.getDatabase().stream().map(Database::from).toList();
+        List<Database> models = databaseService.getDatabases().stream().map(Database::from).toList();
         return getPage(models, pageable, filterable);
     }
 

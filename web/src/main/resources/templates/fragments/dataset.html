@@ -3,17 +3,32 @@
 <body>
 
 <thead class="table-light" th:fragment="grid-header">
-<tr>
-    <th scope="col" class="text-right">#</th>
+<tr th:if="${#dataset.hasColumnGroups()}">
+    <th scope="col" class="text-right align-middle" rowspan="2">#</th>
+    <th scope="col" th:each="group : ${#dataset.getColumnGroupsFirstRow()}" th:class="${#dataset.getHeaderClass(group.getField(), group.isGroup())}"
+        th:attr="field=${group.getField().name}" th:colspan="${group.getColSpan()}" th:rowspan="${group.getRowSpan()}">
+        <span th:utext="${group.label}"></span>
+    </th>
+    <th scope="col" rowspan="2" class="text-center align-middle" th:if="${#dataset.hasActions}" component:tooltip-text="The actions available to interact with records">Actions</th>
+</tr>
+<tr th:if="${#dataset.hasColumnGroups()}">
+    <th scope="col" th:each="group : ${#dataset.getColumnGroupsSecondRow()}" th:class="${#dataset.getHeaderClass(group.getField())}"
+        th:attr="field=${group.getField().name}" component:tooltip="${group.getField()}">
+        <span th:if="${group.getField().labelIcon}" th:class="${group.getField().labelIcon}"></span><span th:utext="${group.getField().label}"></span>
+    </th>
+</tr>
+<tr th:unless="${#dataset.hasColumnGroups()}">
+    <th scope="col" class="text-right align-middle">#</th>
     <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}"
         th:attr="field=${field.name}" component:tooltip="${field}">
         <span th:if="${field.labelIcon}" th:class="${field.labelIcon}"></span><span th:utext="${field.label}"></span>
     </th>
-    <th scope="col" class="text-center" th:if="${#dataset.hasActions}" component:tooltip-text="The actions available to interact with records">Actions</th>
+    <th scope="col" class="text-center align-middle" th:if="${#dataset.hasActions}" component:tooltip-text="The actions available to interact with records">Actions</th>
 </tr>
 </thead>
 
 <tr th:fragment="grid-row" th:class="${#dataset.getPrimaryRowClass(model)}">
+    <div th:text="${#dataset.beforeBrowse(model)}" th:remove="tag"></div>
     <td class="text-right" th:text="${#dataset.getCurrentIndex()}"></td>
     <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}">
         <span th:unless="${field.isName()}" th:utext="${#dataset.getDisplayValue(model, field)}"></span>
@@ -63,7 +78,7 @@
                 <button th:each="button : ${#component.getChildren(toolbar)}" type="button"
                         component:tooltip="${button}"
                         th:attr="onclick=|Application.action('${button.action}')|"
-                        th:class="${#component.getCssClass(button,'btn btn-primary btn-color mR-5')}">
+                        th:class="${#component.getCssClass(button,'btn btn-primary btn-color mR-5 btn-sm')}">
                     <i th:class="${button.icon}"></i><span class="mL-5" th:text="${button.text}"></span>
                 </button>
             </ul>
@@ -131,9 +146,9 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" th:attr="onclick=|DataSet.save()|" th:unless="${#dataset.isView()}">Save</button>
-                <button type="button" class="btn btn-secondary" th:attr="onclick=|Application.closeModal()|" th:unless="${#dataset.isView()}">Cancel</button>
-                <button type="button" class="btn btn-secondary" th:attr="onclick=|Application.closeModal()|" th:if="${#dataset.isView()}">Close</button>
+                <button type="button" class="btn btn-primary btn-sm" th:attr="onclick=|DataSet.save()|" th:unless="${#dataset.isView()}">Save</button>
+                <button type="button" class="btn btn-secondary btn-sm" th:attr="onclick=|Application.closeModal()|" th:unless="${#dataset.isView()}">Cancel</button>
+                <button type="button" class="btn btn-secondary btn-sm" th:attr="onclick=|Application.closeModal()|" th:if="${#dataset.isView()}">Close</button>
             </div>
         </div>
     </div>

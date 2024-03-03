@@ -5,11 +5,19 @@ import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * An interfaces which provides an abstraction over a database node.
  */
 public interface Node extends Identifiable<String>, Nameable, Descriptable {
+
+    /**
+     * Returns the time zone of the node/database.
+     *
+     * @return a non-null instance
+     */
+    ZoneId getZoneId();
 
     /**
      * Returns the state of the node.

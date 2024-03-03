@@ -49,6 +49,15 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
     String getLabel();
 
     /**
+     * Returs the (label) group associated with the field.
+     *
+     * @return the group, null if there is no group
+     * @see net.microfalx.lang.annotation.I18n
+     * @see net.microfalx.lang.annotation.Label
+     */
+    String getGroup();
+
+    /**
      * Returns the icon used along the label (in front of the label)
      *
      * @return the icon, null if not defined

@@ -1,4 +1,14 @@
 package net.microfalx.bootstrap.web.controller.admin.database;
 
-public class TransactionController {
+import net.microfalx.bootstrap.dataset.annotation.DataSet;
+import net.microfalx.bootstrap.help.annotation.Help;
+import net.microfalx.bootstrap.web.dataset.DataSetController;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping(value = "/admin/database/transaction")
+@DataSet(model = Transaction.class, defaultQuery = "state = 'Running'")
+@Help("admin/database/transaction")
+public class TransactionController extends DataSetController<Transaction, String> {
 }

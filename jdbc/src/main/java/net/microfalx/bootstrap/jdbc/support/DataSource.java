@@ -7,6 +7,7 @@ import net.microfalx.lang.Nameable;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.ZoneId;
 import java.util.Map;
 
 /**
@@ -60,6 +61,13 @@ public interface DataSource extends Identifiable<String>, Nameable, Descriptable
      * @return a non-null instance
      */
     String getPassword();
+
+    /**
+     * Returns the time zone of the data source.
+     *
+     * @return a non-null instance
+     */
+    ZoneId getZoneId();
 
     /**
      * Returns whether the data source represents an individual database node.
@@ -116,6 +124,14 @@ public interface DataSource extends Identifiable<String>, Nameable, Descriptable
      * @return a new instance
      */
     DataSource withPassword(String password);
+
+    /**
+     * Creates a copy of this data source and changes the time zone.
+     *
+     * @param zoneId the time zone
+     * @return a new instance
+     */
+    DataSource withZoneId(ZoneId zoneId);
 
     /**
      * Creates a copy of this data source and changes the description.

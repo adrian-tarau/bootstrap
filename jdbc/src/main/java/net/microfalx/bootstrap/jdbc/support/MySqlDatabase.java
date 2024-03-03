@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
+import net.microfalx.bootstrap.jdbc.support.Transaction.IsolationLevel;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,10 +9,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.SQLException;
 import java.time.Duration;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import static java.util.Collections.singleton;
+import static net.microfalx.lang.EnumUtils.fromName;
 import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.TimeUtils.toZonedDateTime;
 
 public class MySqlDatabase extends AbstractDatabase {
 
@@ -29,11 +36,6 @@ public class MySqlDatabase extends AbstractDatabase {
     @Override
     public Type getType() {
         return Type.MYSQL;
-    }
-
-    @Override
-    public Collection<Transaction> getTransactions() {
-        return Collections.emptyList();
     }
 
     @Override
@@ -67,7 +69,12 @@ public class MySqlDatabase extends AbstractDatabase {
 
     @Override
     protected Collection<Transaction> extractTransactions() throws SQLException {
-        return Collections.emptyList();
+        Collection<Transaction> transactions = new ArrayList<>();
+        Collection<Node> nodes = getNodes();
+        for (Node node : nodes) {
+            transactions.addAll(time("Extract Transactions - " + node.getName(), () -> extractTransactionsFromNode(node)));
+        }
+        return transactions;
     }
 
     private MySqlNode createNode(String id, String name, DataSource dataSource) {
@@ -124,13 +131,15 @@ public class MySqlDatabase extends AbstractDatabase {
             Collection<Session> sessions = new ArrayList<>();
             while (rs.next()) {
                 long id = rs.getLong("id");
-                String nodeId = toIdentifier(node.getId() + "_" + rs.getString("id"));
+                String nodeId = toIdentifier(node.getId() + "_" + id);
                 MySqlSession session = new MySqlSession(node, nodeId, id);
                 session.setUserName(rs.getString("user"));
                 session.setSchema(rs.getString("db"));
                 session.setClientHostname(getHostFromHostAndPort(rs.getString("host")));
                 session.setState(getState(rs.getString("command"), rs.getString("state")));
                 session.setElapsed(Duration.ofMillis(rs.getLong("time_ms")));
+                session.setStartedAt(LocalDateTime.now().minusSeconds(session.getElapsed().toSeconds()).atZone(getZoneId()));
+                session.setCreatedAt(session.getCreatedAt());
                 String info = rs.getString("info");
                 if (isNotEmpty(info)) session.setStatement(Statement.create(info));
                 session.setSystem(isSystem(rs.getString("user")));
@@ -141,8 +150,36 @@ public class MySqlDatabase extends AbstractDatabase {
         });
     }
 
+    private Collection<Transaction> extractTransactionsFromNode(Node node) {
+        JdbcTemplate template = new JdbcTemplate(node.getDataSource().unwrap());
+        return template.query(GET_TRANSACTIONS_SQL, rs -> {
+            Collection<Transaction> transactions = new ArrayList<>();
+            while (rs.next()) {
+                long id = rs.getLong("trx_id");
+                long threadId = rs.getLong("trx_mysql_thread_id");
+                String nodeId = toIdentifier(node.getId() + "_" + id + "_" + threadId);
+                MySqlTransaction transaction = new MySqlTransaction(node, nodeId, id, threadId);
+                transaction.setStartedAt(toZonedDateTime(rs.getTimestamp("trx_started")).withZoneSameInstant(getZoneId()));
+                transaction.setLockStartedAt(toZonedDateTime(rs.getTimestamp("trx_wait_started")).withZoneSameInstant(getZoneId()));
+                transaction.setWeight(rs.getInt("trx_weight"));
+                transaction.setStatement(createStatement(rs.getString("trx_query")));
+                transaction.setOperation(rs.getString("trx_operation_state"));
+                transaction.setTablesInUseCount(rs.getInt("trx_tables_in_use"));
+                transaction.setLockedRowCount(rs.getInt("trx_tables_locked"));
+                transaction.setLockedRowCount(rs.getInt("trx_rows_locked"));
+                transaction.setModifiedRowCount(rs.getInt("trx_rows_modified"));
+                transaction.setReadOnly(rs.getInt("trx_is_read_only") != 0);
+                transaction.setIsolationLevel(fromName(IsolationLevel.class, rs.getString("trx_isolation_level"), IsolationLevel.READ_COMMITTED));
+                transaction.setState(fromName(Transaction.State.class, rs.getString("trx_state"), Transaction.State.RUNNING));
+                transactions.add(transaction);
+            }
+            return transactions;
+        });
+    }
+
     private static final String GET_NODES_SQL = "select * from mysql.wsrep_cluster_members order by node_name";
     private static final String GET_SESSIONS_SQL = "select * from information_schema.processlist";
+    private static final String GET_TRANSACTIONS_SQL = "SELECT * FROM information_schema.innodb_trx;";
 
     private static final Set<String> activeStates = new HashSet<>();
     private static final Set<String> blockedStates = new HashSet<>();

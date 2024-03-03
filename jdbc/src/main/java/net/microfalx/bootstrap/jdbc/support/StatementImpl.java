@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.jdbc.support;
 
+import net.microfalx.bootstrap.metrics.util.MemoryStatisticalSummary;
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.Hashing;
 import net.microfalx.lang.StringUtils;
 import net.sf.jsqlparser.JSQLParserException;
@@ -18,21 +20,26 @@ import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.truncate.Truncate;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.upsert.Upsert;
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 
+import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.cleanupStatement;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.split;
 
-public class StatementImpl implements Statement {
+public class StatementImpl implements Statement, Cloneable {
 
     private final String id;
     private final String content;
-    private Type type = Type.UNKNOWN;
+    private Type type = Type.OTHER;
     private boolean parsed;
+    private Statistics statistics = new StatisticsImpl();
 
     public StatementImpl(String content) {
-        this.content = content;
+        this.content = cleanupStatement(content);
         this.id = calculateId();
     }
 
@@ -50,6 +57,38 @@ public class StatementImpl implements Statement {
     @Override
     public String getContent() {
         return content;
+    }
+
+    @Override
+    public Statistics getStatistics() {
+        return statistics;
+    }
+
+    @Override
+    public Statement withStatistics(Statistics statistics) {
+        requireNonNull(statistics);
+        StatementImpl copy = copy();
+        copy.statistics = new StatisticsImpl(statistics);
+        return copy;
+    }
+
+    @Override
+    public Statement withStatistics(StatisticalSummary statisticalSummary) {
+        requireNonNull(statisticalSummary);
+        StatementImpl copy = copy();
+        copy.statistics = new StatisticsImpl(statisticalSummary);
+        return copy;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", StatementImpl.class.getSimpleName() + "[", "]")
+                .add("id='" + id + "'")
+                .add("content='" + content + "'")
+                .add("type=" + type)
+                .add("parsed=" + parsed)
+                .add("statistics=" + statistics)
+                .toString();
     }
 
     private String calculateId() {
@@ -94,7 +133,7 @@ public class StatementImpl implements Statement {
             type = extractNonStandardTypes();
         }
         Type extensionType = extractExtensionTypes(type);
-        if (extensionType != Type.UNKNOWN) return extensionType;
+        if (extensionType != Type.OTHER) return extensionType;
         return type;
     }
 
@@ -107,7 +146,7 @@ public class StatementImpl implements Statement {
                 if (extensionType != null) return extensionType;
             }
         }
-        return Type.UNKNOWN;
+        return Type.OTHER;
     }
 
     private Type extractNonStandardTypes() {
@@ -117,12 +156,30 @@ public class StatementImpl implements Statement {
             Type type = TYPES.get(parts[0]);
             if (type != null) return type;
         }
-        return Type.UNKNOWN;
+        return Type.OTHER;
     }
 
     private String normalizeContent() {
         String contentLowerCase = getContent().toLowerCase();
         return contentLowerCase.substring(0, Math.min(200, contentLowerCase.length() - 1));
+    }
+
+    private StatementImpl copy() {
+        try {
+            return (StatementImpl) clone();
+        } catch (CloneNotSupportedException e) {
+            return ExceptionUtils.throwException(e);
+        }
+    }
+
+    public static class StatisticsImpl extends MemoryStatisticalSummary implements Statistics {
+
+        public StatisticsImpl() {
+        }
+
+        public StatisticsImpl(StatisticalSummary summary) {
+            super(summary);
+        }
     }
 
     private static final Map<String, Type> TYPES = new HashMap<>();

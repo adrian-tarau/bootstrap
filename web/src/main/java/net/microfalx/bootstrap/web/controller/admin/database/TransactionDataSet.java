@@ -14,12 +14,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Provider
-public class SessionDataSet extends PojoDataSet<Session, PojoField<Session>, String> {
+public class TransactionDataSet extends PojoDataSet<Transaction, PojoField<Transaction>, String> {
 
     private DatabaseService databaseService;
 
-    public SessionDataSet(DataSetFactory<Session, PojoField<Session>, String> factory,
-                          Metadata<Session, PojoField<Session>, String> metadata) {
+    public TransactionDataSet(DataSetFactory<Transaction, PojoField<Transaction>, String> factory,
+                              Metadata<Transaction, PojoField<Transaction>, String> metadata) {
         super(factory, metadata);
     }
 
@@ -29,19 +29,18 @@ public class SessionDataSet extends PojoDataSet<Session, PojoField<Session>, Str
     }
 
     @Override
-    protected Optional<Session> doFindById(String id) {
+    protected Optional<Transaction> doFindById(String id) {
         try {
-            return Optional.ofNullable(Session.from(databaseService.findSession(id).orElse(null)));
+            return Optional.ofNullable(Transaction.from(databaseService.findTransaction(id).orElse(null)));
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }
     }
 
     @Override
-    protected Page<Session> doFindAll(Pageable pageable, Filter filterable) {
-        List<Session> models = databaseService.getSessions(true).stream()
-                .filter(session -> !session.isSystem())
-                .map(Session::from).toList();
+    protected Page<Transaction> doFindAll(Pageable pageable, Filter filterable) {
+        List<Transaction> models = databaseService.getTransactions(true).stream()
+                .map(Transaction::from).toList();
         return getPage(models, pageable, filterable);
     }
 }

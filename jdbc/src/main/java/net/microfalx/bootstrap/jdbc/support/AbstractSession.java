@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.jdbc.support;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -18,9 +18,9 @@ public abstract class AbstractSession implements Session {
     private State state = State.INACTIVE;
     private String transactionId;
     private String clientHostname;
-    private LocalDateTime startedAt;
+    private ZonedDateTime startedAt;
     private Duration elapsed;
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
     private transient Statement statement;
     private String statementId;
     private String info;
@@ -48,7 +48,7 @@ public abstract class AbstractSession implements Session {
         return userName;
     }
 
-    public void setUserName(String userName) {
+    protected void setUserName(String userName) {
         this.userName = userName;
     }
 
@@ -57,7 +57,7 @@ public abstract class AbstractSession implements Session {
         return schema;
     }
 
-    public void setSchema(String schema) {
+    protected void setSchema(String schema) {
         this.schema = schema;
     }
 
@@ -66,7 +66,7 @@ public abstract class AbstractSession implements Session {
         return state;
     }
 
-    public void setState(State state) {
+    protected void setState(State state) {
         this.state = state;
     }
 
@@ -75,7 +75,7 @@ public abstract class AbstractSession implements Session {
         return statement;
     }
 
-    public void setStatement(Statement statement) {
+    protected void setStatement(Statement statement) {
         this.statement = statement;
         if (statement != null) this.statementId = statement.getId();
     }
@@ -85,7 +85,7 @@ public abstract class AbstractSession implements Session {
         return transactionId;
     }
 
-    public void setTransactionId(String transactionId) {
+    protected void setTransactionId(String transactionId) {
         this.transactionId = transactionId;
     }
 
@@ -94,20 +94,20 @@ public abstract class AbstractSession implements Session {
         return clientHostname;
     }
 
-    public void setClientHostname(String clientHostname) {
+    protected void setClientHostname(String clientHostname) {
         this.clientHostname = clientHostname;
     }
 
     @Override
     public final Duration getElapsed() {
         if (startedAt != null) {
-            return Duration.between(startedAt, LocalDateTime.now());
+            return Duration.between(startedAt, ZonedDateTime.now());
         } else {
             return elapsed;
         }
     }
 
-    public void setElapsed(Duration elapsed) {
+    protected void setElapsed(Duration elapsed) {
         this.elapsed = elapsed;
     }
 
@@ -116,24 +116,24 @@ public abstract class AbstractSession implements Session {
         return info;
     }
 
-    public void setInfo(String info) {
+    protected void setInfo(String info) {
         this.info = info;
     }
 
-    public LocalDateTime getStartedAt() {
+    public ZonedDateTime getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(LocalDateTime startedAt) {
+    protected void setStartedAt(ZonedDateTime startedAt) {
         this.startedAt = startedAt;
     }
 
     @Override
-    public final LocalDateTime getCreatedAt() {
+    public final ZonedDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreated(LocalDateTime createdAt) {
+    protected void setCreatedAt(ZonedDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -142,7 +142,7 @@ public abstract class AbstractSession implements Session {
         return system;
     }
 
-    public void setSystem(boolean system) {
+    protected void setSystem(boolean system) {
         this.system = system;
     }
 

@@ -8,23 +8,22 @@ import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.component.Menu;
+import net.microfalx.bootstrap.web.dataset.DataSetController;
 import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.apache.commons.lang3.mutable.MutableLong;
+import org.joor.Reflect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 import org.thymeleaf.context.IContext;
 
 import java.io.IOException;
 import java.time.temporal.Temporal;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,6 +52,9 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     private final static Queue<String> attributeClassesQueue = new LinkedBlockingQueue<>();
     private final static Map<String, String> attributeClasses = new ConcurrentHashMap<>();
 
+    private ColumnGroups<M, F, ID> columnGroups;
+    private Boolean hasColumnGroups;
+
     public DataSetTool(IContext context, DataSetService dataSetService) {
         super(context);
         requireNotEmpty(dataSetService);
@@ -80,6 +82,31 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         DataSet dataset = getModelAttribute(context, "dataset");
         if (dataset == null && required) throw new DataSetException("A data set is not available in the context");
         return dataset;
+    }
+
+    /**
+     * Returns the current data set.
+     *
+     * @return a non-null instance
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public DataSetController<M, ID> getDataSetController() {
+        return getDataSetController(true);
+    }
+
+    /**
+     * Returns the current data set controller.
+     *
+     * @param required {@code true} if the data set is required, {@code false} otherwise
+     * @return a non-null instance
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public DataSetController<M, ID> getDataSetController(boolean required) {
+        DataSetController controller = getModelAttribute(context, "controller");
+        if (controller == null && required) {
+            throw new DataSetException("A data set controller is not available in the context");
+        }
+        return controller;
     }
 
     /**
@@ -112,7 +139,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      *
      * @return a non-null instance
      */
-    public Collection<Field<M>> getFields() {
+    public Collection<F> getFields() {
         DataSet<M, F, ID> dataSet = getDataSet();
         return dataSet.getVisibleFields();
     }
@@ -197,6 +224,42 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
             attributeClasses.put(name.toLowerCase(), availableClass);
         }
         return defaultIfNull(attributeClass, EMPTY_STRING);
+    }
+
+    /**
+     * Returns whether the data set has a column groups (fields with a group).
+     *
+     * @return {@code true} if there are groups, {@code false} otherwise
+     */
+    public boolean hasColumnGroups() {
+        if (hasColumnGroups != null) return hasColumnGroups;
+        for (Field<M> field : getFields()) {
+            if (isNotEmpty(field.getGroup())) {
+                hasColumnGroups = true;
+                columnGroups = new ColumnGroups<>(getFields());
+                break;
+            }
+        }
+        if (hasColumnGroups == null) hasColumnGroups = false;
+        return hasColumnGroups;
+    }
+
+    /**
+     * Returns the column groups for the first row.
+     *
+     * @return a non-null instance
+     */
+    public Iterable<ColumnGroup<M, F, ID>> getColumnGroupsFirstRow() {
+        return columnGroups != null ? columnGroups.getFirstRow() : Collections.emptyList();
+    }
+
+    /**
+     * Returns the column groups for the first row.
+     *
+     * @return a non-null instance
+     */
+    public Iterable<ColumnGroup<M, F, ID>> getColumnGroupsSecondRow() {
+        return columnGroups != null ? columnGroups.getSecondRow() : Collections.emptyList();
     }
 
     /**
@@ -471,24 +534,67 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the column span for a field.
+     *
+     * @param field the field
+     * @return the column span, null if there is no column span
+     */
+    public Integer getHeaderColSpan(Field<M> field) {
+        if (hasColumnGroups()) {
+            return isEmpty(field.getGroup()) ? 2 : 1;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the row span for a field.
+     *
+     * @param field the field
+     * @return the row span, null if there is no row span
+     */
+    public Integer getHeaderRowSpan(Field<M> field) {
+        if (hasColumnGroups()) {
+            if (field == null) return 2;
+            return isEmpty(field.getGroup()) ? 2 : 1;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Returns the class to be used with a header cell.
      *
      * @param field the field
      * @return the class
      */
     public String getHeaderClass(Field<M> field) {
+        return getHeaderClass(field, false);
+    }
+
+    /**
+     * Returns the class to be used with a header cell.
+     *
+     * @param field the field
+     * @param group {@code true} when the field is part of a column group, {@code false} otherwise
+     * @return the class
+     */
+    public String getHeaderClass(Field<M> field, boolean group) {
         DataSet<M, F, ID> dataSet = getDataSet();
-        String classes = "sortable";
-        Sort sort = getSort();
-        Sort.Order order = sort.getOrderFor(field.getName());
-        if (order != null) {
-            if (order.getDirection().isAscending()) {
-                classes += " asc";
-            } else {
-                classes += " desc";
+        String classes = "align-middle";
+        if (!group) {
+            classes += " sortable";
+            Sort sort = getSort();
+            Sort.Order order = sort.getOrderFor(field.getName());
+            if (order != null) {
+                if (order.getDirection().isAscending()) {
+                    classes += " asc";
+                } else {
+                    classes += " desc";
+                }
             }
         }
-        String cellClass = getCellClass(field);
+        String cellClass = getCellClass(field, group);
         if (cellClass != null) {
             classes += " " + cellClass;
         }
@@ -503,9 +609,20 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return the class
      */
     public String getCellClass(Field<M> field) {
+        return getCellClass(field, false);
+    }
+
+    /**
+     * Returns the class to be used with a row cell.
+     *
+     * @param field the field
+     * @param group {@code true} when the field is part of a column group, {@code false} otherwise
+     * @return the class
+     */
+    public String getCellClass(Field<M> field, boolean group) {
         DataSet<M, F, ID> dataSet = getDataSet();
         String classes = "";
-        if (field.getDataType() == Field.DataType.BOOLEAN) {
+        if (field.getDataType() == Field.DataType.BOOLEAN || group) {
             classes += " text-center";
         } else if (field.getDataType().isNumeric()) {
             classes += " text-right";
@@ -597,7 +714,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public String getSearchTooltip() {
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation(false);
         String resourcePath = null;
-        if (dataSetAnnotation != null && StringUtils.isNotEmpty(dataSetAnnotation.queryHelp())) {
+        if (dataSetAnnotation != null && isNotEmpty(dataSetAnnotation.queryHelp())) {
             resourcePath = dataSetAnnotation.queryHelp();
         }
         resourcePath = defaultIfEmpty(resourcePath, "/help/dataset/default.html");
@@ -616,6 +733,18 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
             LOGGER.error("Failed to create search tooltip for " + resourcePath, e);
             return null;
         }
+    }
+
+    /**
+     * Called from the template before each model is displayed in the grid.
+     *
+     * @param model the model
+     */
+    public void beforeBrowse(M model) {
+        DataSet<M, F, ID> dataSet = getDataSet();
+        RedirectAttributesModelMap controllerModel = new RedirectAttributesModelMap();
+        DataSetController<M, ID> dataSetController = getDataSetController();
+        Reflect.on(dataSetController).call("beforeBrowse", dataSet, controllerModel, model);
     }
 
     /**
@@ -664,6 +793,108 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     private Component.Type getComponentType(Field<M> field) {
         Component componentAnnot = field.findAnnotation(Component.class);
         return componentAnnot != null ? componentAnnot.value() : Component.Type.TEXT_FIELD;
+    }
+
+    public static class ColumnGroup<M, F extends Field<M>, ID> {
+
+        private final String label;
+        private final List<F> fields = new ArrayList<>();
+
+        ColumnGroup(String label) {
+            this.label = label;
+        }
+
+        ColumnGroup(F field) {
+            this.label = field.getLabel();
+            this.fields.add(field);
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String getName() {
+            return getField().getName();
+        }
+
+        public boolean isField() {
+            return fields.size() == 1;
+        }
+
+        public boolean isGroup() {
+            return !isField();
+        }
+
+        public F getField() {
+            return fields.get(0);
+        }
+
+        public int getColSpan() {
+            return fields.size();
+        }
+
+        public int getRowSpan() {
+            return fields.size() == 1 ? 2 : 1;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", ColumnGroup.class.getSimpleName() + "[", "]")
+                    .add("label='" + label + "'")
+                    .add("fields=" + fields)
+                    .toString();
+        }
+    }
+
+    public static class ColumnGroups<M, F extends Field<M>, ID> {
+
+        private final Collection<F> fields;
+        private final List<ColumnGroup<M, F, ID>> groups = new ArrayList<>();
+
+        ColumnGroups(Collection<F> fields) {
+            this.fields = fields;
+            init();
+        }
+
+        public Iterable<ColumnGroup<M, F, ID>> getFirstRow() {
+            return groups;
+        }
+
+        public Iterable<ColumnGroup<M, F, ID>> getSecondRow() {
+            return groups.stream().filter(g -> g.isGroup())
+                    .flatMap(g -> g.fields.stream()).map(f -> new ColumnGroup<M, F, ID>(f)).toList();
+        }
+
+        private ColumnGroup<M, F, ID> findGroup(Field<M> field) {
+            for (ColumnGroup<M, F, ID> group : groups) {
+                if (group.label.equals(field.getGroup())) return group;
+            }
+            return null;
+        }
+
+        private void init() {
+            for (F field : fields) {
+                ColumnGroup<M, F, ID> group;
+                if (isEmpty(field.getGroup())) {
+                    group = new ColumnGroup<>(field);
+                    groups.add(group);
+                } else {
+                    group = findGroup(field);
+                    if (group == null) {
+                        group = new ColumnGroup<>(field.getGroup());
+                        groups.add(group);
+                    }
+                    group.fields.add(field);
+                }
+            }
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", ColumnGroups.class.getSimpleName() + "[", "]")
+                    .add("groups=" + groups)
+                    .toString();
+        }
     }
 
 

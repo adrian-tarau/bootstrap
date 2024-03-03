@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
-import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
 import net.microfalx.lang.annotation.*;
 
 import java.time.LocalDateTime;
@@ -16,26 +16,27 @@ import java.time.LocalDateTime;
 @ToString
 @Name("Nodes")
 @ReadOnly
-public class Node {
+public class Node extends NamedTimestampAware {
 
     @Id
     @Visible(value = false)
     private String id;
 
-    @Position(1)
+    @Position(10)
+    @Label(value = "Name", group = "Database")
     @Description("The database which owns this node")
     private Database database;
 
-    @Position(2)
-    @Name
-    @Description("The name of the database node")
-    private String name;
+    @Position(11)
+    @Label(value = "Type", group = "Database")
+    @Description("The type of database")
+    private net.microfalx.bootstrap.jdbc.support.Database.Type databaseType;
 
-    @Position(10)
+    @Position(6)
     @Description("The hostname of the database node")
     private String hostname;
 
-    @Position(11)
+    @Position(7)
     @Formattable(prettyPrint = false)
     @Description("The port of the database service")
     private int port;
@@ -44,19 +45,9 @@ public class Node {
     @Description("The state of the database node")
     private net.microfalx.bootstrap.jdbc.support.Node.State state;
 
-    @Position(100)
+    @Position(502)
     @Description("The timestamp when the database was started")
     private LocalDateTime startedAt;
-
-    @Position(101)
-    @Description("The timestamp when the database was created")
-    private LocalDateTime createdAt;
-
-    @Position(102)
-    @Timestamp
-    @OrderBy(OrderBy.Direction.DESC)
-    @Description("The timestamp when the database was modified last time")
-    private LocalDateTime modifiedAt;
 
     /**
      * Creates a model from a {@link net.microfalx.bootstrap.jdbc.support.Node}.
@@ -69,6 +60,7 @@ public class Node {
         Node model = new Node();
         model.setId(node.getId());
         model.setDatabase(Database.from(node.getDatabase()));
+        model.setDatabaseType(node.getDatabase().getType());
         model.setName(node.getName());
         model.setHostname(node.getDataSource().getHostname());
         model.setState(node.getState());

@@ -131,7 +131,7 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
      * @return a non-null instance
      * @see #getState()
      */
-    List<Field<M>> getVisibleFields();
+    List<F> getVisibleFields();
 
     /**
      * Returns the value of a field for a given model in a display format.

@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.jdbc.support;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Metrics;
 import org.slf4j.Logger;
@@ -11,10 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -37,7 +35,7 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
     private static final long REFRESH_NODES_INTERVAL = TimeUtils.ONE_MINUTE;
     public static final int UNAVAILABLE_PORT = -1;
 
-    private final DatabaseService databaseService;
+    transient DatabaseService databaseService;
 
     private volatile long lastNodesUpdate = 0;
     private volatile Map<String, Node> nodes = Collections.emptyMap();
@@ -47,10 +45,6 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
         super(null, id, name, dataSource);
         requireNonNull(databaseService);
         this.databaseService = databaseService;
-    }
-
-    protected final DatabaseService getDatabaseService() {
-        return databaseService;
     }
 
     @Override
@@ -89,7 +83,7 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
     }
 
     @Override
-    public Collection<Transaction> getTransactions() {
+    public final Collection<Transaction> getTransactions() {
         return timeCallable("Extract Transactions", this::extractTransactions);
     }
 
@@ -203,6 +197,29 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
      */
     protected final <T> T timeCallable(String name, Callable<T> callable) {
         return getMetrics().timeCallable(name, callable);
+    }
+
+    /**
+     * Creates a statement if exists.
+     *
+     * @param statement the statement
+     * @return a non-null instance if exists, null otherwise
+     */
+    protected final Statement createStatement(String statement) {
+        return StringUtils.isNotEmpty(statement) ? Statement.create(statement) : null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbstractDatabase that = (AbstractDatabase) o;
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getType(), that.getType());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getType());
     }
 
     /**

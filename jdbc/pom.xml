@@ -78,6 +78,12 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-metrics</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
             <artifactId>bootstrap-store</artifactId>
             <version>${project.version}</version>
         </dependency>

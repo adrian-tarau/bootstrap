@@ -11,7 +11,7 @@ import net.microfalx.lang.annotation.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Getter
 @Setter
@@ -26,40 +26,46 @@ public class Session {
     private String id;
 
     @Position(1)
+    @Label(value = "Name", group = "Database")
+    @Description("The name of the schema (database)")
+    private net.microfalx.bootstrap.web.controller.admin.database.Database database;
+
+    @Position(2)
+    @Label(value = "Type", group = "Database")
+    @Description("The type of database")
+    private net.microfalx.bootstrap.jdbc.support.Database.Type databaseType;
+
+    @Position(3)
+    @Label(value = "Node", group = "Database")
     @Description("The database node which runs this session")
     private Node node;
 
-    @Position(2)
-    @Description("The name of the schema (database)")
-    @Visible(modes = Visible.Mode.VIEW)
-    private String schema;
-
-    @Position(3)
+    @Position(10)
     @Description("The user name used to create the session")
     private String userName;
 
-    @Position(4)
+    @Position(11)
     @Description("The hostname of the client for the session")
     private String hostname;
 
-    @Position(10)
+    @Position(20)
     @Description("The state of the database session")
     private net.microfalx.bootstrap.jdbc.support.Session.State state;
 
-    @Position(11)
+    @Position(30)
     @Description("The time since the session change its state")
     @OrderBy(OrderBy.Direction.DESC)
     @Filterable
     private Duration elapsed;
 
-    @Position(20)
+    @Position(40)
     @Description("The statement executed by the session")
     @Filterable
     @Name
     @Component(Component.Type.TEXT_AREA)
     private String statement;
 
-    @Position(21)
+    @Position(41)
     @Description("An additional information about session (state/operations/etc.)")
     @Filterable
     private String info;
@@ -67,14 +73,15 @@ public class Session {
     @Position(100)
     @Description("The timestamp when the database session was created")
     @Visible
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     public static Session from(net.microfalx.bootstrap.jdbc.support.Session session) {
         if (session == null) return null;
         Session model = new Session();
         model.setId(session.getId());
         model.setNode(Node.from(session.getNode()));
-        model.setSchema(session.getSchema());
+        model.setDatabase(net.microfalx.bootstrap.web.controller.admin.database.Database.from(session.getNode().getDatabase()));
+        model.setDatabaseType(session.getNode().getDatabase().getType());
         model.setUserName(session.getUserName());
         model.setHostname(session.getClientHostname());
         model.setElapsed(session.getElapsed());

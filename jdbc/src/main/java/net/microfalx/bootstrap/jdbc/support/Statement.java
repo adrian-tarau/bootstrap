@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.jdbc.support;
 
 import net.microfalx.lang.Identifiable;
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 
 /**
  * A class which represents a SQL (statement).
@@ -36,6 +37,36 @@ public interface Statement extends Identifiable<String> {
     String getContent();
 
     /**
+     * Returns statistics about a statement.
+     *
+     * @return a non-null instance
+     */
+    Statistics getStatistics();
+
+    /**
+     * Creates a copy of the statement and attaches new statistics.
+     *
+     * @param statistics the new statistics
+     * @return a new instance
+     */
+    Statement withStatistics(Statistics statistics);
+
+    /**
+     * Creates a copy of the statement and attaches new statistics.
+     *
+     * @param statisticalSummary the new statistics
+     * @return a new instance
+     */
+    Statement withStatistics(StatisticalSummary statisticalSummary);
+
+    /**
+     * An interface which holds statistics about a statement.
+     */
+    interface Statistics extends StatisticalSummary {
+
+    }
+
+    /**
      * Type of script.
      */
     enum Type {
@@ -43,7 +74,7 @@ public interface Statement extends Identifiable<String> {
         /**
          * An unknown type
          */
-        UNKNOWN,
+        OTHER,
 
         /**
          * Creates objects in the database.

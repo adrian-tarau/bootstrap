@@ -38,6 +38,11 @@ public abstract class AbstractField<M> implements Field<M> {
     private DataType dataType = DataType.MODEL;
     private boolean readOnly;
     private boolean _transient;
+    private String label;
+    private String labelIcon;
+    private boolean labelIconCalculated;
+    private String group;
+    private boolean groupCalculated;
 
     public AbstractField(AbstractMetadata<M, ? extends AbstractField<M>, ?> metadata, String name, String property) {
         requireNotEmpty(metadata);
@@ -67,20 +72,38 @@ public abstract class AbstractField<M> implements Field<M> {
 
     @Override
     public final String getLabel() {
-        String label = metadata.getI18n(getI18nPrefix() + ".label");
+        if (label != null) return label;
+        label = metadata.getI18n(getI18nPrefix() + ".label");
         if (isEmpty(label)) {
             Label labelAnnot = findAnnotation(Label.class);
             if (labelAnnot != null) {
-                return isNotEmpty(labelAnnot.icon()) && isEmpty(labelAnnot.value()) ? EMPTY_STRING : labelAnnot.value();
+                label = isNotEmpty(labelAnnot.icon()) && isEmpty(labelAnnot.value()) ? EMPTY_STRING : labelAnnot.value();
             }
         }
-        return isNotEmpty(label) ? label : StringUtils.beautifyCamelCase(getName());
+        if (isEmpty(label)) label = beautifyCamelCase(getName());
+        return label;
+    }
+
+    public final String getGroup() {
+        if (groupCalculated) return group;
+        group = metadata.getI18n(getI18nPrefix() + ".group");
+        if (isEmpty(group)) {
+            Label labelAnnot = findAnnotation(Label.class);
+            if (labelAnnot != null) {
+                group = isNotEmpty(labelAnnot.group()) ? labelAnnot.group() : EMPTY_STRING;
+            }
+        }
+        groupCalculated = true;
+        return group;
     }
 
     @Override
     public String getLabelIcon() {
+        if (labelIconCalculated) return labelIcon;
         Label labelAnnot = findAnnotation(Label.class);
-        return labelAnnot != null && isNotEmpty(labelAnnot.icon()) ? labelAnnot.icon() : null;
+        labelIcon = labelAnnot != null && isNotEmpty(labelAnnot.icon()) ? labelAnnot.icon() : null;
+        labelIconCalculated = true;
+        return labelIcon;
     }
 
     @Override

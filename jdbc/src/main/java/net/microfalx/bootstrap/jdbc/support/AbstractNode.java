@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.jdbc.support;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Objects;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -10,11 +12,13 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
  */
 public abstract class AbstractNode implements Node {
 
-    private final AbstractDatabase database;
+    private transient AbstractDatabase database;
+    String databaseId;
     private final String id;
     private final String name;
 
-    private final DataSource dataSource;
+    private transient DataSource dataSource;
+    String dataSourceId;
     private LocalDateTime startedAt = LocalDateTime.now();
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime modifiedAt = LocalDateTime.now();
@@ -25,9 +29,11 @@ public abstract class AbstractNode implements Node {
         requireNotEmpty(id);
         requireNotEmpty(name);
         this.database = database;
+        this.databaseId = database != null ? database.getId() : null;
         this.id = id;
         this.name = name;
         this.dataSource = dataSource;
+        this.dataSourceId = dataSource.getId();
     }
 
     @Override
@@ -53,6 +59,11 @@ public abstract class AbstractNode implements Node {
     @Override
     public Database getDatabase() {
         return database;
+    }
+
+    @Override
+    public ZoneId getZoneId() {
+        return dataSource.getZoneId();
     }
 
     @Override
@@ -99,6 +110,19 @@ public abstract class AbstractNode implements Node {
 
     public final void setModifiedAt(LocalDateTime modifiedAt) {
         this.modifiedAt = modifiedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbstractNode that = (AbstractNode) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     @Override

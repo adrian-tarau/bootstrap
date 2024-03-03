@@ -28,23 +28,24 @@ public class Timer extends Metric {
     @Description("The total time of recorded events")
     @OrderBy(OrderBy.Direction.DESC)
     @Filterable
+    @Label(value = "Total", group = "Duration")
     private Duration duration;
 
     @Position(20)
-    @Label("Avg. Duration")
+    @Label(value = "Average", group = "Duration")
     @Description("The average time of recorded events")
     @Filterable
     private Duration averageDuration;
 
     @Position(21)
-    @Label("Min. Duration")
+    @Label(value = "Minimum", group = "Duration")
     @Description("The minimum time of recorded events")
     @Filterable
     @Visible(false)
     private Duration minimumDuration;
 
     @Position(22)
-    @Label("Max. Duration")
+    @Label(value = "Maximum", group = "Duration")
     @Description("The maximum time of recorded events")
     @Filterable
     private Duration maximumDuration;

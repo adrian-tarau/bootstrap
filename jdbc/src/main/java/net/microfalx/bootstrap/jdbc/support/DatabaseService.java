@@ -3,10 +3,12 @@ package net.microfalx.bootstrap.jdbc.support;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.zaxxer.hikari.HikariDataSource;
+import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ConcurrencyUtils;
 import net.microfalx.lang.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,20 +20,23 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.System.currentTimeMillis;
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.stream.Collectors.toMap;
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.ConcurrencyUtils.collectFutures;
-import static net.microfalx.lang.ConcurrencyUtils.waitForFutures;
+import static net.microfalx.lang.ConcurrencyUtils.*;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 import static net.microfalx.lang.TimeUtils.millisSince;
@@ -45,15 +50,22 @@ public class DatabaseService implements InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseService.class);
 
     private static final long SESSION_REFRESH_INTERVAL = 5_000;
+    private static final long TRANSACTION_REFRESH_INTERVAL = 5_000;
     private static final long STATEMENT_CACHE = 5_000;
+    private static final Duration wait = ofSeconds(2);
+    private static final Duration timeout = ofSeconds(10);
 
     private final Map<String, DataSource> dataSources = new ConcurrentHashMap<>();
     private final Map<String, Database> databases = new ConcurrentHashMap<>();
 
     private volatile Map<String, Session> lastSessions = Collections.emptyMap();
+    private volatile Map<String, Transaction> lastTransactions = Collections.emptyMap();
+    private final Map<String, Lock> databaseLocks = new ConcurrentHashMap<>();
     private final Cache<String, Statement> statements = CacheBuilder.newBuilder().maximumSize(STATEMENT_CACHE).softValues().build();
     private volatile long lastSessionExtractTime = TimeUtils.oneHourAgo();
     private final AtomicBoolean extractingSessions = new AtomicBoolean();
+    private volatile long lastTransactionExtractTime = TimeUtils.oneHourAgo();
+    private final AtomicBoolean extractingTransactions = new AtomicBoolean();
 
     @Autowired(required = false)
     private javax.sql.DataSource dataSource;
@@ -123,7 +135,7 @@ public class DatabaseService implements InitializingBean {
      *
      * @return a non-null instance
      */
-    public Collection<Database> getDatabase() {
+    public Collection<Database> getDatabases() {
         return unmodifiableCollection(databases.values());
     }
 
@@ -144,16 +156,78 @@ public class DatabaseService implements InitializingBean {
     }
 
     /**
+     * Returns a snapshot for each registered databases.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Snapshot> getSnapshots() {
+        return getSnapshots(new HashSet<>(databases.values()));
+    }
+
+    /**
+     * Returns a snapshot for a set of databases.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Snapshot> getSnapshots(Set<Database> databases) {
+        requireNotEmpty(databases);
+        Collection<Snapshot> snapshots = new ArrayList<>();
+        Collection<Future<Snapshot>> futures = new ArrayList<>();
+        for (Database database : databases) {
+            Snapshot snapshot = new Snapshot(database);
+            snapshots.add(snapshot);
+            futures.add(taskExecutor.submit(new ExtractSnapshot(snapshot)));
+        }
+        int pendingTasks = DATABASE.getTimer("Get Snapshots").record(() -> waitForFutures(futures, timeout));
+        if (pendingTasks > 0) LOGGER.warn("Incomplete list of snapshots, pending tasks: " + pendingTasks);
+        return snapshots;
+
+    }
+
+    /**
      * Returns a collection of sessions from registered databases.
      *
      * @return a non-null instance
      */
-    public Collection<Session> getSessions() {
+    public Collection<Session> getSessions(boolean sync) {
         if ((this.lastSessions.isEmpty() || millisSince(lastSessionExtractTime) > SESSION_REFRESH_INTERVAL)
                 && extractingSessions.compareAndSet(false, true)) {
-            taskExecutor.execute(DATABASE.getTimer("Get Sessions").wrap(new ExtractSessions()));
+            getSessions();
         }
+        if (sync) waitForCondition(this.extractingSessions, true, wait);
         return this.lastSessions.values();
+    }
+
+    /**
+     * Returns a map of sessions from registered databases.
+     *
+     * @return a non-null instance
+     */
+    public Future<Map<String, Session>> getSessions() {
+        return taskExecutor.submit(DATABASE.getTimer("Get Sessions").wrap(new ExtractSessions()));
+    }
+
+    /**
+     * Returns a collection of sessions from registered databases.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Transaction> getTransactions(boolean sync) {
+        if ((this.lastTransactions.isEmpty() || millisSince(lastTransactionExtractTime) > TRANSACTION_REFRESH_INTERVAL)
+                && extractingTransactions.compareAndSet(false, true)) {
+            getTransactions();
+        }
+        if (sync) waitForCondition(this.extractingTransactions, true, wait);
+        return this.lastTransactions.values();
+    }
+
+    /**
+     * Returns a collection of sessions from registered databases.
+     *
+     * @return a non-null instance
+     */
+    public Future<Map<String, Transaction>> getTransactions() {
+        return taskExecutor.submit(DATABASE.getTimer("Get Transactions").wrap(new ExtractTransactions()));
     }
 
     /**
@@ -165,6 +239,17 @@ public class DatabaseService implements InitializingBean {
     public Optional<Session> findSession(String id) {
         requireNotEmpty(id);
         return Optional.ofNullable(lastSessions.get(id));
+    }
+
+    /**
+     * Returns a transaction by its identifier.
+     *
+     * @param id the session identifier
+     * @return a non-null optional
+     */
+    public Optional<Transaction> findTransaction(String id) {
+        requireNotEmpty(id);
+        return Optional.ofNullable(lastTransactions.get(id));
     }
 
     /**
@@ -271,6 +356,7 @@ public class DatabaseService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        initializeExecutor();
         if (dataSource != null) {
             String name = defaultIfEmpty(applicationName, "Default");
             String id = toIdentifier(name);
@@ -278,7 +364,12 @@ public class DatabaseService implements InitializingBean {
                     .withDescription("The application database"));
             registerDataSource(newDataSource);
         }
+
         statementStore = storeService.registerStore(Store.Options.create("Database Statement"));
+    }
+
+    private void initializeExecutor() {
+        taskExecutor = TaskExecutorFactory.create("database").setRatio(3).createExecutor();
     }
 
     private Database createDatabase(DataSource dataSource) {
@@ -295,10 +386,47 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractSessions implements Runnable {
+    private void registerStatements(Collection<? extends StatementAware> entries) {
+        for (StatementAware entry : entries) {
+            if (entry.getStatement() == null) continue;
+            try {
+                registerStatement(entry.getStatement());
+            } catch (Exception e) {
+                LOGGER.error("Failed to analyze statement " + org.apache.commons.lang3.StringUtils
+                        .abbreviate(entry.getStatement().getContent(), 80), e);
+            }
+        }
+    }
+
+    private Lock getNodeLock(Database database) {
+        return databaseLocks.computeIfAbsent(database.getId(), s -> new ReentrantLock());
+    }
+
+    class ExtractSnapshot implements Callable<Snapshot> {
+
+        private final Snapshot snapshot;
+
+        ExtractSnapshot(Snapshot snapshot) {
+            this.snapshot = snapshot;
+        }
 
         @Override
-        public void run() {
+        public Snapshot call() throws Exception {
+            snapshot.setNodes(snapshot.getDatabase().getNodes());
+            Future<Collection<Session>> sessions = taskExecutor.submit(new ExtractSessionsForDatabase(snapshot.getDatabase()));
+            Future<Collection<Transaction>> transactions = taskExecutor.submit(new ExtractTransactionsForDatabase(snapshot.getDatabase()));
+            Collection<Future<?>> futures = Arrays.asList(sessions, transactions);
+            snapshot.setIncomplete(waitForFutures(futures, timeout) > 0);
+            snapshot.setSessions(ConcurrencyUtils.getResult(sessions));
+            snapshot.setTransactions(ConcurrencyUtils.getResult(transactions));
+            return snapshot;
+        }
+    }
+
+    class ExtractSessions implements Callable<Map<String, Session>> {
+
+        @Override
+        public Map<String, Session> call() throws Exception {
             lastSessionExtractTime = currentTimeMillis();
             try {
                 Map<String, Session> sessions = new HashMap<>();
@@ -306,13 +434,37 @@ public class DatabaseService implements InitializingBean {
                 for (Database database : databases.values()) {
                     futures.add(taskExecutor.submit(new ExtractSessionsForDatabase(database)));
                 }
-                int pendingTasks = waitForFutures(futures);
+                int pendingTasks = waitForFutures(futures, timeout);
                 if (pendingTasks > 0) LOGGER.warn("Incomplete list of sessions, pending tasks: " + pendingTasks);
                 sessions.putAll(collectFutures(futures).stream().flatMap(Collection::stream)
                         .collect(toMap(Session::getId, session -> session)));
                 DatabaseService.this.lastSessions = sessions;
+                return sessions;
             } finally {
                 extractingSessions.set(false);
+            }
+        }
+    }
+
+    class ExtractTransactions implements Callable<Map<String, Transaction>> {
+
+        @Override
+        public Map<String, Transaction> call() throws Exception {
+            lastTransactionExtractTime = currentTimeMillis();
+            try {
+                Map<String, Transaction> transactions = new HashMap<>();
+                Collection<Future<Collection<Transaction>>> futures = new ArrayList<>();
+                for (Database database : databases.values()) {
+                    futures.add(taskExecutor.submit(new ExtractTransactionsForDatabase(database)));
+                }
+                int pendingTasks = waitForFutures(futures, timeout);
+                if (pendingTasks > 0) LOGGER.warn("Incomplete list of transactions, pending tasks: " + pendingTasks);
+                transactions.putAll(collectFutures(futures).stream().flatMap(Collection::stream)
+                        .collect(toMap(Transaction::getId, transaction -> transaction)));
+                DatabaseService.this.lastTransactions = transactions;
+                return transactions;
+            } finally {
+                extractingTransactions.set(false);
             }
         }
     }
@@ -325,23 +477,32 @@ public class DatabaseService implements InitializingBean {
             this.database = database;
         }
 
-        private void registerStatements(Collection<Session> sessions) {
-            for (Session session : sessions) {
-                if (session.getStatement() == null) continue;
-                try {
-                    registerStatement(session.getStatement());
-                } catch (Exception e) {
-                    LOGGER.error("Failed to analyze statement " + org.apache.commons.lang3.StringUtils
-                            .abbreviate(session.getStatement().getContent(), 80), e);
-                }
-            }
-        }
-
         @Override
         public Collection<Session> call() throws Exception {
-            Collection<Session> sessions = database.getSessions();
-            registerStatements(sessions);
-            return sessions;
+            return ConcurrencyUtils.withTryLock(getNodeLock(database), () -> {
+                Collection<Session> sessions = database.getSessions();
+                registerStatements(sessions);
+                return sessions;
+            }, timeout).orElse(Collections.emptyList());
+        }
+    }
+
+    class ExtractTransactionsForDatabase implements Callable<Collection<Transaction>> {
+
+        private final Database database;
+
+        public ExtractTransactionsForDatabase(Database database) {
+            this.database = database;
+        }
+
+
+        @Override
+        public Collection<Transaction> call() throws Exception {
+            return ConcurrencyUtils.withTryLock(getNodeLock(database), () -> {
+                Collection<Transaction> sessions = database.getTransactions();
+                registerStatements(sessions);
+                return sessions;
+            }, timeout).orElse(Collections.emptyList());
         }
     }
 }

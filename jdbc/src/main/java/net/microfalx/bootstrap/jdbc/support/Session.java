@@ -3,12 +3,12 @@ package net.microfalx.bootstrap.jdbc.support;
 import net.microfalx.lang.Identifiable;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 /**
  * An interfaces which provides an abstraction over a database session.
  */
-public interface Session extends Identifiable<String> {
+public interface Session extends Identifiable<String>, StatementAware {
 
     /**
      * Returns the node hosting this session.
@@ -84,7 +84,7 @@ public interface Session extends Identifiable<String> {
      *
      * @return millis since epoch
      */
-    LocalDateTime getCreatedAt();
+    ZonedDateTime getCreatedAt();
 
     /**
      * Returns whether the session belongs to the database.
@@ -106,28 +106,6 @@ public interface Session extends Identifiable<String> {
      * For most database sessions it results in a 'KILL' command.
      */
     void close();
-
-    /**
-     * Determines the amount of run-time resources (CPU, I/O bandwidth) the Resource Manager should dedicate for a session.
-     */
-    enum Priority {
-
-        /**
-         * The highest priority, these will receive receive more CPU and I/O resources than those with a MEDIUM or LOW run-time priority
-         */
-        HIGH,
-
-        /**
-         * The default priority
-         */
-        MEDIUM,
-
-        /**
-         * The lowest priority, such sessions will be executed only when resources are not required by HIGH and MEDIUM
-         */
-        LOW
-
-    }
 
     enum State {
 

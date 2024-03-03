@@ -15,7 +15,7 @@ import java.util.Collections;
 
 import static net.microfalx.lang.EnumUtils.fromName;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
-import static net.microfalx.lang.TimeUtils.toLocalDateTime;
+import static net.microfalx.lang.TimeUtils.toZonedDateTime;
 
 public class VerticaDatabase extends AbstractDatabase {
 
@@ -72,17 +72,14 @@ public class VerticaDatabase extends AbstractDatabase {
                 session.setSchema(session.getUserName());
                 session.setClientHostname(getHostFromHostAndPort(rs.getString("client_hostname")));
                 session.setState(getState(rs));
-                Timestamp statementStart = rs.getTimestamp("statement_start");
-                if (statementStart != null) {
-                    session.setStartedAt(TimeUtils.toLocalDateTime(statementStart));
-                }
+                session.setStartedAt(TimeUtils.toZonedDateTime(rs.getTimestamp("statement_start")).withZoneSameInstant(getZoneId()));
                 String currentStatement = rs.getString("current_statement");
                 String lastStatement = rs.getString("last_statement");
                 if (session.getState() == Session.State.ACTIVE && StringUtils.isEmpty(currentStatement)) {
                     currentStatement = lastStatement;
                 }
                 if (isNotEmpty(currentStatement)) session.setStatement(Statement.create(currentStatement));
-                session.setCreated(toLocalDateTime(rs.getTimestamp("login_timestamp")));
+                session.setCreatedAt(toZonedDateTime(rs.getTimestamp("login_timestamp")));
                 sessions.add(session);
             }
             return sessions;
@@ -91,7 +88,32 @@ public class VerticaDatabase extends AbstractDatabase {
 
     @Override
     protected Collection<Transaction> extractTransactions() throws SQLException {
-        return Collections.emptyList();
+        JdbcTemplate template = new JdbcTemplate(getDataSource().unwrap());
+        return template.query(GET_TRANSACTIONS_SQL, rs -> {
+            Collection<Transaction> transactions = new ArrayList<>();
+            while (rs.next()) {
+                String transactionId = rs.getString("transaction_id");
+                String nodeName = rs.getString("node_name");
+                Node node = getNodeByName(nodeName);
+                if (node == null) {
+                    LOGGER.error("Cannot find a node with name " + nodeName);
+                    continue;
+                }
+                VerticaTransaction transaction = new VerticaTransaction(node, transactionId);
+                //transaction.setState(getState(rs));
+                Timestamp statementStart = rs.getTimestamp("statement_start");
+                if (statementStart != null) {
+                    transaction.setStartedAt(toZonedDateTime(statementStart));
+                }
+                String currentStatement = rs.getString("description");
+                if (isNotEmpty(currentStatement)) transaction.setStatement(Statement.create(currentStatement));
+                transaction.setIsolationLevel(fromName(Transaction.IsolationLevel.class, rs.getString("isolation"), Transaction.IsolationLevel.READ_COMMITTED));
+                transaction.setReadOnly(rs.getInt("is_read_only") != 0);
+                transaction.setStartedAt(toZonedDateTime(rs.getTimestamp("start_timestamp")));
+                transactions.add(transaction);
+            }
+            return transactions;
+        });
     }
 
     private VerticaNode createNode(String id, String name, DataSource dataSource) {
@@ -101,11 +123,6 @@ public class VerticaDatabase extends AbstractDatabase {
     private VerticaNode createNode(String id, String name, String hostName, int port) {
         DataSource dataSource = createDataSource(hostName, port);
         return createNode(id, name, dataSource);
-    }
-
-    @Override
-    public Collection<Transaction> getTransactions() {
-        return Collections.emptyList();
     }
 
     private Session.State getState(ResultSet rs) throws SQLException {
@@ -121,6 +138,8 @@ public class VerticaDatabase extends AbstractDatabase {
 
     private static final String GET_NODES_SQL = "select * from v_catalog.nodes order by node_name";
     private static final String GET_SESSIONS_SQL = "select * from v_monitor.sessions";
+    private static final String GET_TRANSACTIONS_SQL = "select t.* from v_monitor.sessions s\n" +
+            "  join v_monitor.transactions t on s.transaction_id = t.transaction_id;";
     private static final String GET_SESSION_STATES_SQL = "select sum(CASE WHEN transaction_id::integer > 0 THEN 1 ELSE 0 END) as active, \n" +
             "        sum(CASE WHEN transaction_id::integer <= 0 THEN 1 ELSE 0 END) as inactive, \n" +
             "        sum(CASE WHEN lock_mode is not null THEN 1 ELSE 0 END) as blocked from (\n" +

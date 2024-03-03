@@ -6,6 +6,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,8 @@ import static net.microfalx.lang.AnnotationUtils.getAnnotation;
  */
 public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
+
     JpaRepository<M, ID> repository;
 
     public JpaDataSet(DataSetFactory<M, JpaField<M>, ID> factory, Metadata<M, JpaField<M>, ID> metadata) {
@@ -42,6 +46,8 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
             try {
                 specification.toPredicate(query.from(getMetadata().getModel()), query, criteriaBuilder);
             } catch (InvalidDataTypeExpression e) {
+                LOGGER.warn("Validation of filter for '{}', filter '{}' has failed with '{}'", getName(), filter,
+                        org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage(e));
                 throw new DataSetException(e.getMessage(), e);
             }
         }
@@ -88,6 +94,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
 
     @Override
     protected Page<M> doFindAll(Pageable pageable) {
+        LOGGER.info("Find all for '{}', page '{}'", getName(), pageable);
         return repository.findAll(pageable);
     }
 
@@ -96,6 +103,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
     protected Page<M> doFindAll(Pageable pageable, Filter filterable) {
         Specification<M> specification = createSpecification(filterable);
         if (specification != null) {
+            LOGGER.info("Find all for '{}, page '{}',  filter '{}' specification '{}'", getName(), pageable, filterable, specification);
             JpaSpecificationExecutor<M> executor = (JpaSpecificationExecutor<M>) repository;
             return executor.findAll(specification, pageable);
         } else {
@@ -110,7 +118,9 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
         Filter filter = Filter.create(ComparisonExpression.eq(nameFields.iterator().next().getName(), displayValue));
         Page<M> page = doFindAll(Pageable.ofSize(1), filter);
         List<M> content = page.getContent();
-        return content.isEmpty() ? Optional.empty() : Optional.of(content.get(0));
+        Optional<M> value = content.isEmpty() ? Optional.empty() : Optional.of(content.get(0));
+        LOGGER.info("Located value '{}' by display value '{}'", value, displayValue);
+        return value;
     }
 
     @Override

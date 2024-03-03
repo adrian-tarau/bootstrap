@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.dataset;
 
 import com.google.common.collect.Lists;
+import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.Lookup;
@@ -33,7 +34,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -54,10 +54,10 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     private State state = State.BROWSE;
 
     DataSetService dataSetService;
-    private List<Field<M>> browsableFields;
-    private List<Field<M>> viewableFields;
-    private List<Field<M>> editableFields;
-    private List<Field<M>> appendableFields;
+    private List<F> browsableFields;
+    private List<F> viewableFields;
+    private List<F> editableFields;
+    private List<F> appendableFields;
 
     public AbstractDataSet(DataSetFactory<M, F, ID> factory, Metadata<M, F, ID> metadata) {
         requireNonNull(factory);
@@ -174,7 +174,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
-    public final List<Field<M>> getVisibleFields() {
+    public final List<F> getVisibleFields() {
         switch (state) {
             case BROWSE -> {
                 if (browsableFields == null) browsableFields = getVisibleAndOrderedFields();
@@ -216,6 +216,9 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                     displayValue = ((net.microfalx.bootstrap.dataset.Lookup) lookupModel.get()).getName();
                 }
             } else if (value instanceof Enum) {
+                if (ENUM_FORMATTER.getI18nService() == null) {
+                    ENUM_FORMATTER.setI18nService(getService(I18nService.class));
+                }
                 displayValue = ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
             } else if (value instanceof Number) {
                 displayValue = ((Formatter<M, Field<M>, Object>) NUMBER_FORMATTER).format(value, field, model);
@@ -528,10 +531,10 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         if (labelAnnot != null) setName(labelAnnot.value());
     }
 
-    private List<Field<M>> getVisibleAndOrderedFields() {
+    private List<F> getVisibleAndOrderedFields() {
         return getMetadata().getFields().stream().filter(this::isVisible)
                 .sorted(Comparator.comparing(Field::getPosition))
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     private void checkIfBrowse() {
@@ -551,6 +554,6 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         }
     }
 
-    private static final Formatter<?, ?, ?> ENUM_FORMATTER = new EnumFormatter<>();
-    private static final Formatter<?, ?, ?> NUMBER_FORMATTER = new NumberFormatter<>();
+    private static final EnumFormatter ENUM_FORMATTER = new EnumFormatter<>();
+    private static final NumberFormatter NUMBER_FORMATTER = new NumberFormatter<>();
 }

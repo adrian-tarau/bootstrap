@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.jdbc.support;
 
+import net.microfalx.lang.annotation.Name;
+
 import java.util.Collection;
 import java.util.Optional;
 
@@ -54,21 +56,25 @@ public interface Database extends Node {
         /**
          * A <a href="https://dev.mysql.com/doc/refman/8.3/en/">MySQL</a> database.
          */
+        @Name("MySQL")
         MYSQL,
 
         /**
          * A <a href="https://mariadb.org/documentation/">MariaDB</a> database.
          */
+        @Name("MariaDB")
         MARIADB,
 
         /**
          * A <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL</a> database.
          */
+        @Name("PostgreSQL")
         POSTGRES,
 
         /**
          * A <a href="https://docs.vertica.com/24.1.x/en/">Vertica</a> database.
          */
+        @Name("Vertica")
         VERTICA
     }
 }
