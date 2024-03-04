@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.jdbc.support.Node;
 import net.microfalx.lang.annotation.*;
 
 import java.time.LocalDateTime;
@@ -43,6 +44,11 @@ public class Database {
     @Description("The number of nodes supporting the database")
     private int nodeCount;
 
+    @Position(21)
+    @Label("State")
+    @Description("The state of the database")
+    private Node.State state;
+
     @Position(100)
     @Description("The timestamp when the database was started")
     private LocalDateTime startedAt;
@@ -58,8 +64,8 @@ public class Database {
     private LocalDateTime modifiedAt;
 
     @Position(200)
-    @Description("The description of the database")
-    private String description;
+    @Description("The description of the validation failure")
+    private String validationError;
 
     /**
      * Creates a model from a {@link net.microfalx.bootstrap.jdbc.support.Database}.
@@ -72,7 +78,6 @@ public class Database {
         Database model = new Database();
         model.setId(database.getId());
         model.setName(database.getName());
-        model.setDescription(database.getDataSource().getDescription());
         model.setType(database.getType());
         model.setUri(database.getDataSource().getUri().toASCIIString());
         model.setNodeCount(database.getNodes().size());
@@ -80,6 +85,8 @@ public class Database {
         model.setStartedAt(database.getStartedAt());
         model.setCreatedAt(database.getCreatedAt());
         model.setModifiedAt(database.getModifiedAt());
+        model.setValidationError(database.getValidationError());
+        model.setState(database.getState());
         return model;
     }
 }

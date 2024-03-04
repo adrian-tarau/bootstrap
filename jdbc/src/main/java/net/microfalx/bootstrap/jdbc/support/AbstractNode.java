@@ -1,16 +1,27 @@
 package net.microfalx.bootstrap.jdbc.support;
 
+import net.microfalx.lang.TimeUtils;
+
+import java.net.InetAddress;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.IOUtils.closeQuietly;
+import static net.microfalx.lang.TimeUtils.millisSince;
 
 /**
  * Base class for a database node.
  */
 public abstract class AbstractNode implements Node {
+
+
+    private static final String VALIDATE_SQL = "select 1";
 
     private transient AbstractDatabase database;
     String databaseId;
@@ -24,6 +35,9 @@ public abstract class AbstractNode implements Node {
     private LocalDateTime modifiedAt = LocalDateTime.now();
 
     private volatile State state = State.UP;
+    private volatile Boolean available;
+    private volatile String validationError;
+    private volatile long lastValidationTime = TimeUtils.oneDayAgo();
 
     public AbstractNode(AbstractDatabase database, String id, String name, DataSource dataSource) {
         requireNotEmpty(id);
@@ -62,7 +76,25 @@ public abstract class AbstractNode implements Node {
     }
 
     @Override
-    public ZoneId getZoneId() {
+    public boolean isAvailable() {
+        if (available == null || millisSince(lastValidationTime) > AVAILABILITY_INTERVAL.toMillis()) {
+            validate();
+        }
+        return available;
+    }
+
+    @Override
+    public final void validate() {
+        doValidate();
+    }
+
+    @Override
+    public final String getValidationError() {
+        return validationError;
+    }
+
+    @Override
+    public final ZoneId getZoneId() {
         return dataSource.getZoneId();
     }
 
@@ -123,6 +155,54 @@ public abstract class AbstractNode implements Node {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    protected void copyFrom(AbstractNode node) {
+        available = node.available;
+        state = node.state;
+        validationError = node.validationError;
+        lastValidationTime = node.lastValidationTime;
+    }
+
+    protected boolean doIsAvailable() {
+        boolean available = isAvailableOverNetwork();
+        if (available) {
+            available = isAvailableOverSQL();
+        }
+        return available;
+    }
+
+    protected boolean isAvailableOverNetwork() {
+        boolean availableOverNetwork = false;
+        try {
+            InetAddress inetAddress = InetAddress.getByName(getHostname());
+            availableOverNetwork = inetAddress.isReachable((int) PING_TIMEOUT.toMillis());
+        } catch (Exception e) {
+            validationError = e.getMessage();
+        }
+        return availableOverNetwork;
+    }
+
+    protected boolean isAvailableOverSQL() {
+        boolean availableOverSql = false;
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+            connection = getDataSource().getConnection();
+            statement = connection.prepareStatement(VALIDATE_SQL);
+            availableOverSql = true;
+        } catch (Exception e) {
+            validationError = e.getMessage();
+        } finally {
+            closeQuietly(connection);
+            closeQuietly(statement);
+        }
+        return availableOverSql;
+    }
+
+    protected void doValidate() {
+        available = DATABASE.time("Validate", this::doIsAvailable);
+        if (!available) state = State.DOWN;
     }
 
     @Override

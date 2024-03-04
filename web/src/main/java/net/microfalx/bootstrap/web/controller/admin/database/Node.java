@@ -1,11 +1,12 @@
 package net.microfalx.bootstrap.web.controller.admin.database;
 
+import jakarta.persistence.Column;
+import jakarta.validation.constraints.NotBlank;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
-import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
 import net.microfalx.lang.annotation.*;
 
 import java.time.LocalDateTime;
@@ -16,11 +17,16 @@ import java.time.LocalDateTime;
 @ToString
 @Name("Nodes")
 @ReadOnly
-public class Node extends NamedTimestampAware {
+public class Node {
 
     @Id
     @Visible(value = false)
     private String id;
+
+    @Column(name = "name", nullable = false)
+    @NotBlank
+    @Position(5)
+    private String name;
 
     @Position(10)
     @Label(value = "Name", group = "Database")
@@ -45,9 +51,13 @@ public class Node extends NamedTimestampAware {
     @Description("The state of the database node")
     private net.microfalx.bootstrap.jdbc.support.Node.State state;
 
-    @Position(502)
+    @Position(100)
     @Description("The timestamp when the database was started")
     private LocalDateTime startedAt;
+
+    @Position(200)
+    @Description("The description of the validation failure")
+    private String validationError;
 
     /**
      * Creates a model from a {@link net.microfalx.bootstrap.jdbc.support.Node}.
@@ -64,10 +74,9 @@ public class Node extends NamedTimestampAware {
         model.setName(node.getName());
         model.setHostname(node.getDataSource().getHostname());
         model.setState(node.getState());
+        model.setValidationError(node.getValidationError());
         model.setPort(node.getDataSource().getPort());
         model.setStartedAt(node.getStartedAt());
-        model.setCreatedAt(node.getCreatedAt());
-        model.setModifiedAt(node.getModifiedAt());
         return model;
     }
 

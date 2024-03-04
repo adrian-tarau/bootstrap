@@ -21,6 +21,7 @@ public interface Node extends Identifiable<String>, Nameable, Descriptable {
 
     /**
      * Returns the state of the node.
+     *
      * @return a non-null instance
      */
     State getState();
@@ -73,6 +74,25 @@ public interface Node extends Identifiable<String>, Nameable, Descriptable {
      * @return a non-null instance
      */
     LocalDateTime getModifiedAt();
+
+    /**
+     * Returns whether the node is available for use (to be queries for independent node).
+     *
+     * @return {@code true} if available, {@code false} otherwise
+     */
+    boolean isAvailable();
+
+    /**
+     * Validates the data source parameters node accessibility.
+     */
+    void validate();
+
+    /**
+     * Returns the error message received during last validation.
+     *
+     * @return null if the node is available, a non-null string with the reason why validation failed.
+     */
+    String getValidationError();
 
     /**
      * An enum for node states.

@@ -6,6 +6,7 @@ import net.microfalx.lang.StringUtils;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,8 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 class DataSourceImpl implements DataSource, Cloneable {
 
+    private static final Duration TIMEOUT = Duration.ofSeconds(5);
+
     private final String id;
     private final String name;
     private String description;
@@ -29,6 +32,7 @@ class DataSourceImpl implements DataSource, Cloneable {
     private String password;
     private ZoneId zoneId = ZoneId.systemDefault();
     private Map<String, String> properties = new HashMap<>();
+    private Duration timeout = TIMEOUT;
 
     private boolean node;
 
@@ -92,6 +96,11 @@ class DataSourceImpl implements DataSource, Cloneable {
     @Override
     public Map<String, String> getProperties() {
         return unmodifiableMap(properties);
+    }
+
+    @Override
+    public Duration getTimeout() {
+        return timeout;
     }
 
     @Override

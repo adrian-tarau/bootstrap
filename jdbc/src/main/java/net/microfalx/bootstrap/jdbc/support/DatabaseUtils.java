@@ -5,6 +5,11 @@ import net.microfalx.metrics.Metrics;
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 
 import java.net.URI;
+import java.time.Duration;
+
+import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
+import static net.microfalx.lang.TimeUtils.ONE_MINUTE;
 
 public class DatabaseUtils {
 
@@ -18,6 +23,10 @@ public class DatabaseUtils {
     public static final String VERTICA_SCHEME = "vertica";
 
     static final Metrics DATABASE = Metrics.of("Database");
+
+    public static final Duration AVAILABILITY_INTERVAL = ofMillis(ONE_MINUTE);
+    public static final Duration PING_TIMEOUT = ofSeconds(5);
+    public static final Duration CONNECT_TIMEOUT = ofSeconds(5);
 
     /**
      * Returns the real URI behind a JDBC URI.

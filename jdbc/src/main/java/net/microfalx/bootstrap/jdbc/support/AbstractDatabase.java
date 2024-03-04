@@ -60,6 +60,7 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
                     lastNodesUpdate = currentTimeMillis();
                     try {
                         Collection<Node> extractedNodes = timeCallable("Extract Nodes", this::extractNodes);
+                        copyNodeAttributes(extractedNodes);
                         nodes = extractedNodes.stream().collect(Collectors.toMap(node -> toIdentifier(node.getId()), node -> node));
                     } catch (Exception e) {
                         LOGGER.error("Failed to extract database nodes for " + getName(), e);
@@ -210,6 +211,18 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
     }
 
     @Override
+    protected void doValidate() {
+        super.doValidate();
+        for (Node node : nodes.values()) {
+            try {
+                node.validate();
+            } catch (Exception e) {
+                // ignore if it happens
+            }
+        }
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -263,6 +276,26 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
             return new URI(uri.getScheme(), uri.getUserInfo(), hostName, port, uri.getPath(), uri.getQuery(), uri.getFragment());
         } catch (URISyntaxException e) {
             return ExceptionUtils.throwException(e);
+        }
+    }
+
+    /**
+     * Returns whether the host points to the local host.
+     *
+     * @param host the host
+     * @return {@code true} if local host, {@code false} otherwise
+     */
+    public static boolean isLocalHost(String host) {
+        if (host == null) return true;
+        return host.equalsIgnoreCase("localhost") || host.equals("127.0.0.1") || host.equals("::1");
+    }
+
+    private void copyNodeAttributes(Collection<Node> nodes) {
+        for (Node node : nodes) {
+            Node prevNode = this.nodes.get(node.getId());
+            if (prevNode != null) {
+                ((AbstractNode) node).copyFrom((AbstractNode) node);
+            }
         }
     }
 

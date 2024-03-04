@@ -7,6 +7,7 @@ import net.microfalx.lang.Nameable;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.Map;
 
@@ -91,6 +92,12 @@ public interface DataSource extends Identifiable<String>, Nameable, Descriptable
      * @return a non-null instance
      */
     Map<String, String> getProperties();
+
+    /**
+     * Returns the timeout used to obtain a connection.
+     * @return a non-null instance
+     */
+    Duration getTimeout();
 
     /**
      * Returns a new connection from the data source.

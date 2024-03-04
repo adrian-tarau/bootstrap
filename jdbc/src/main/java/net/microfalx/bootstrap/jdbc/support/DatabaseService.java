@@ -6,10 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
-import net.microfalx.lang.ArgumentUtils;
-import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ConcurrencyUtils;
-import net.microfalx.lang.TimeUtils;
+import net.microfalx.lang.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -25,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -73,8 +71,8 @@ public class DatabaseService implements InitializingBean {
     @Autowired
     private TaskScheduler taskScheduler;
 
-    @Autowired
-    private AsyncTaskExecutor taskExecutor;
+    private AsyncTaskExecutor coordinatorTaskExecutor;
+    private AsyncTaskExecutor workerTaskExecutor;
 
     @Autowired
     private StoreService storeService;
@@ -150,7 +148,7 @@ public class DatabaseService implements InitializingBean {
         id = toIdentifier(id);
         Database dataSource = databases.get(id);
         if (dataSource == null) {
-            throw new IllegalArgumentException("A database with identifier '" + id + "' is not registered");
+            throw new DatabaseNotFoundException("A database with identifier '" + id + "' is not registered");
         }
         return dataSource;
     }
@@ -176,7 +174,7 @@ public class DatabaseService implements InitializingBean {
         for (Database database : databases) {
             Snapshot snapshot = new Snapshot(database);
             snapshots.add(snapshot);
-            futures.add(taskExecutor.submit(new ExtractSnapshot(snapshot)));
+            futures.add(coordinatorTaskExecutor.submit(new ExtractSnapshot(snapshot)));
         }
         int pendingTasks = DATABASE.getTimer("Get Snapshots").record(() -> waitForFutures(futures, timeout));
         if (pendingTasks > 0) LOGGER.warn("Incomplete list of snapshots, pending tasks: " + pendingTasks);
@@ -204,7 +202,7 @@ public class DatabaseService implements InitializingBean {
      * @return a non-null instance
      */
     public Future<Map<String, Session>> getSessions() {
-        return taskExecutor.submit(DATABASE.getTimer("Get Sessions").wrap(new ExtractSessions()));
+        return coordinatorTaskExecutor.submit(DATABASE.getTimer("Get Sessions").wrap(new ExtractSessions()));
     }
 
     /**
@@ -227,7 +225,7 @@ public class DatabaseService implements InitializingBean {
      * @return a non-null instance
      */
     public Future<Map<String, Transaction>> getTransactions() {
-        return taskExecutor.submit(DATABASE.getTimer("Get Transactions").wrap(new ExtractTransactions()));
+        return coordinatorTaskExecutor.submit(DATABASE.getTimer("Get Transactions").wrap(new ExtractTransactions()));
     }
 
     /**
@@ -351,7 +349,7 @@ public class DatabaseService implements InitializingBean {
         requireNotEmpty(id);
         String finalId = toIdentifier(id);
         return databases.values().stream().filter(database -> database.getId().equals(finalId))
-                .findFirst().orElseThrow(() -> new IllegalArgumentException("A database node with identifier '" + id + "' is not registered"));
+                .findFirst().orElseThrow(() -> new DatabaseNotFoundException("A database node with identifier '" + id + "' is not registered"));
     }
 
     @Override
@@ -364,12 +362,13 @@ public class DatabaseService implements InitializingBean {
                     .withDescription("The application database"));
             registerDataSource(newDataSource);
         }
-
         statementStore = storeService.registerStore(Store.Options.create("Database Statement"));
+        taskScheduler.scheduleWithFixedDelay(new ValidateDatabases(), AVAILABILITY_INTERVAL.dividedBy(2));
     }
 
     private void initializeExecutor() {
-        taskExecutor = TaskExecutorFactory.create("database").setRatio(3).createExecutor();
+        coordinatorTaskExecutor = TaskExecutorFactory.create("dbc").setRatio(2).createExecutor();
+        workerTaskExecutor = TaskExecutorFactory.create("dbw").setRatio(3).createExecutor();
     }
 
     private Database createDatabase(DataSource dataSource) {
@@ -398,7 +397,7 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    private Lock getNodeLock(Database database) {
+    private Lock getDatabaseLock(Database database) {
         return databaseLocks.computeIfAbsent(database.getId(), s -> new ReentrantLock());
     }
 
@@ -413,13 +412,32 @@ public class DatabaseService implements InitializingBean {
         @Override
         public Snapshot call() throws Exception {
             snapshot.setNodes(snapshot.getDatabase().getNodes());
-            Future<Collection<Session>> sessions = taskExecutor.submit(new ExtractSessionsForDatabase(snapshot.getDatabase()));
-            Future<Collection<Transaction>> transactions = taskExecutor.submit(new ExtractTransactionsForDatabase(snapshot.getDatabase()));
+            Future<Collection<Session>> sessions = workerTaskExecutor.submit(new ExtractSessionsForDatabase(snapshot.getDatabase()));
+            Future<Collection<Transaction>> transactions = workerTaskExecutor.submit(new ExtractTransactionsForDatabase(snapshot.getDatabase()));
             Collection<Future<?>> futures = Arrays.asList(sessions, transactions);
             snapshot.setIncomplete(waitForFutures(futures, timeout) > 0);
             snapshot.setSessions(ConcurrencyUtils.getResult(sessions));
             snapshot.setTransactions(ConcurrencyUtils.getResult(transactions));
             return snapshot;
+        }
+    }
+
+    class ValidateDatabases implements Runnable {
+
+        @Override
+        public void run() {
+            for (Database database : databases.values()) {
+                try {
+                    ConcurrencyUtils.withTryLock(getDatabaseLock(database), () -> {
+                        database.validate();
+                        return null;
+                    }, timeout);
+                } catch (InterruptedException e) {
+                    ExceptionUtils.rethrowInterruptedException(e);
+                } catch (TimeoutException e) {
+                    // if we cannot acquire a lock, just
+                }
+            }
         }
     }
 
@@ -432,7 +450,7 @@ public class DatabaseService implements InitializingBean {
                 Map<String, Session> sessions = new HashMap<>();
                 Collection<Future<Collection<Session>>> futures = new ArrayList<>();
                 for (Database database : databases.values()) {
-                    futures.add(taskExecutor.submit(new ExtractSessionsForDatabase(database)));
+                    futures.add(workerTaskExecutor.submit(new ExtractSessionsForDatabase(database)));
                 }
                 int pendingTasks = waitForFutures(futures, timeout);
                 if (pendingTasks > 0) LOGGER.warn("Incomplete list of sessions, pending tasks: " + pendingTasks);
@@ -455,7 +473,7 @@ public class DatabaseService implements InitializingBean {
                 Map<String, Transaction> transactions = new HashMap<>();
                 Collection<Future<Collection<Transaction>>> futures = new ArrayList<>();
                 for (Database database : databases.values()) {
-                    futures.add(taskExecutor.submit(new ExtractTransactionsForDatabase(database)));
+                    futures.add(workerTaskExecutor.submit(new ExtractTransactionsForDatabase(database)));
                 }
                 int pendingTasks = waitForFutures(futures, timeout);
                 if (pendingTasks > 0) LOGGER.warn("Incomplete list of transactions, pending tasks: " + pendingTasks);
@@ -479,7 +497,7 @@ public class DatabaseService implements InitializingBean {
 
         @Override
         public Collection<Session> call() throws Exception {
-            return ConcurrencyUtils.withTryLock(getNodeLock(database), () -> {
+            return ConcurrencyUtils.withTryLock(getDatabaseLock(database), () -> {
                 Collection<Session> sessions = database.getSessions();
                 registerStatements(sessions);
                 return sessions;
@@ -498,7 +516,7 @@ public class DatabaseService implements InitializingBean {
 
         @Override
         public Collection<Transaction> call() throws Exception {
-            return ConcurrencyUtils.withTryLock(getNodeLock(database), () -> {
+            return ConcurrencyUtils.withTryLock(getDatabaseLock(database), () -> {
                 Collection<Transaction> sessions = database.getTransactions();
                 registerStatements(sessions);
                 return sessions;

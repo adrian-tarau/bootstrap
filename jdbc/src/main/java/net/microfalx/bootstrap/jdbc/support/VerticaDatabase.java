@@ -42,6 +42,7 @@ public class VerticaDatabase extends AbstractDatabase {
                 String name = rs.getString("node_name");
                 String state = rs.getString("node_state");
                 String host = rs.getString("export_address");
+                if (isLocalHost(host)) host = getDataSource().getHostname();
                 Node.State stateEnum = fromName(Node.State.class, state, Node.State.UNKNOWN);
                 int port = getPortFromHostAndPort(host);
                 host = getHostFromHostAndPort(host);
