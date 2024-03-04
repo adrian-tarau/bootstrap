@@ -15,8 +15,8 @@ import java.util.Base64;
 @Component
 public class EncryptionSupport {
 
-    private String key = "9eVCsPO13tEYyiqUXdqq";
-    private String seed = "rs0Ps960xKJiXrAOF6trnc34qZtgJrHW";
+    private String key = "GQsmX783Z5x2u2iA";
+    private String seed = "x9qI636KL3DgrBnh";
     private String algorithm = "AES/CBC/PKCS5PADDING";
 
     public String getKey() {
