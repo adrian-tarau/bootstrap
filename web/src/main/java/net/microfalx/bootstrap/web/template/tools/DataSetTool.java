@@ -583,7 +583,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         DataSet<M, F, ID> dataSet = getDataSet();
         String classes = "align-middle";
         if (!group) {
-            classes += " sortable";
+            if (!field.isTransient()) classes += " sortable";
             Sort sort = getSort();
             Sort.Order order = sort.getOrderFor(field.getName());
             if (order != null) {
@@ -625,7 +625,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         if (field.getDataType() == Field.DataType.BOOLEAN || group) {
             classes += " text-center";
         } else if (field.getDataType().isNumeric()) {
-            classes += " text-right";
+            classes += " text-end";
         }
         if (field.getDataType().isTemporal()) classes += " text-nowrap";
         if (dataSet.isFilterable(field)) classes += " filterable";

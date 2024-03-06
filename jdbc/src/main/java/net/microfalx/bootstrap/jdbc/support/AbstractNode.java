@@ -23,7 +23,7 @@ public abstract class AbstractNode implements Node {
 
     private static final String VALIDATE_SQL = "select 1";
 
-    private transient AbstractDatabase database;
+    transient AbstractDatabase database;
     String databaseId;
     private final String id;
     private final String name;
@@ -201,7 +201,7 @@ public abstract class AbstractNode implements Node {
     }
 
     protected void doValidate() {
-        available = DATABASE.time("Validate", this::doIsAvailable);
+        available = METRICS.time("Validate", this::doIsAvailable);
         if (!available) state = State.DOWN;
     }
 

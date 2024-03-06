@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
-import net.microfalx.lang.StringUtils;
+import net.microfalx.bootstrap.metrics.util.SimpleStatisticalSummary;
 import net.microfalx.lang.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,14 +8,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
 import static net.microfalx.lang.EnumUtils.fromName;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
-import static net.microfalx.lang.TimeUtils.toZonedDateTime;
+import static net.microfalx.lang.TimeUtils.*;
 
 public class VerticaDatabase extends AbstractDatabase {
 
@@ -74,12 +74,7 @@ public class VerticaDatabase extends AbstractDatabase {
                 session.setClientHostname(getHostFromHostAndPort(rs.getString("client_hostname")));
                 session.setState(getState(rs));
                 session.setStartedAt(TimeUtils.toZonedDateTime(rs.getTimestamp("statement_start")).withZoneSameInstant(getZoneId()));
-                String currentStatement = rs.getString("current_statement");
-                String lastStatement = rs.getString("last_statement");
-                if (session.getState() == Session.State.ACTIVE && StringUtils.isEmpty(currentStatement)) {
-                    currentStatement = lastStatement;
-                }
-                if (isNotEmpty(currentStatement)) session.setStatement(Statement.create(currentStatement));
+                session.setStatement(createStatement(this, rs.getString("current_statement"), session.getUserName()));
                 session.setCreatedAt(toZonedDateTime(rs.getTimestamp("login_timestamp")));
                 sessions.add(session);
             }
@@ -102,12 +97,9 @@ public class VerticaDatabase extends AbstractDatabase {
                 }
                 VerticaTransaction transaction = new VerticaTransaction(node, transactionId);
                 //transaction.setState(getState(rs));
-                Timestamp statementStart = rs.getTimestamp("statement_start");
-                if (statementStart != null) {
-                    transaction.setStartedAt(toZonedDateTime(statementStart));
-                }
+                String userName = rs.getString("user_name");
                 String currentStatement = rs.getString("description");
-                if (isNotEmpty(currentStatement)) transaction.setStatement(Statement.create(currentStatement));
+                transaction.setStatement(createStatement(this, currentStatement, userName));
                 transaction.setIsolationLevel(fromName(Transaction.IsolationLevel.class, rs.getString("isolation"), Transaction.IsolationLevel.READ_COMMITTED));
                 transaction.setReadOnly(rs.getInt("is_read_only") != 0);
                 transaction.setStartedAt(toZonedDateTime(rs.getTimestamp("start_timestamp")));
@@ -115,6 +107,27 @@ public class VerticaDatabase extends AbstractDatabase {
             }
             return transactions;
         });
+    }
+
+    @Override
+    protected Collection<Statement> extractStatements(LocalDateTime start, LocalDateTime end) {
+        JdbcTemplate template = new JdbcTemplate(getDataSource().unwrap());
+        return template.query(GET_STATEMENTS_SQL, rs -> {
+            Collection<Statement> statements = new ArrayList<>();
+            while (rs.next()) {
+                String request = rs.getString("request");
+                String userName = rs.getString("user_name");
+                Statement statement = Statement.create(this, request, userName)
+                        .withExecutionTime(toZonedDateTimeSameInstant(rs.getTimestamp("max_start_timestamp"), getZoneId()));
+                SimpleStatisticalSummary statisticalSummary = new SimpleStatisticalSummary();
+                statisticalSummary.setN(rs.getInt("request_cnt"))
+                        .setSum(rs.getLong("total_request_duration_ms"))
+                        .setMin(rs.getFloat("min_request_duration_ms"))
+                        .setMax(rs.getFloat("max_request_duration_ms"));
+                statements.add(statement.withStatistics(statisticalSummary));
+            }
+            return statements;
+        }, toTimestamp(start), toTimestamp(end));
     }
 
     private VerticaNode createNode(String id, String name, DataSource dataSource) {
@@ -127,8 +140,9 @@ public class VerticaDatabase extends AbstractDatabase {
     }
 
     private Session.State getState(ResultSet rs) throws SQLException {
+        String currentStatement = rs.getString("current_statement");
         String transactionId = rs.getString("transaction_id");
-        boolean hasValidTransactionId = isNotEmpty(transactionId) && !"-1".equals(transactionId) && !"0".equals(transactionId);
+        boolean hasValidTransactionId = isNotEmpty(currentStatement) && isNotEmpty(transactionId) && !"-1".equals(transactionId) && !"0".equals(transactionId);
         return hasValidTransactionId ? Session.State.ACTIVE : Session.State.INACTIVE;
     }
 
@@ -140,11 +154,18 @@ public class VerticaDatabase extends AbstractDatabase {
     private static final String GET_NODES_SQL = "select * from v_catalog.nodes order by node_name";
     private static final String GET_SESSIONS_SQL = "select * from v_monitor.sessions";
     private static final String GET_TRANSACTIONS_SQL = "select t.* from v_monitor.sessions s\n" +
-            "  join v_monitor.transactions t on s.transaction_id = t.transaction_id;";
+            "  join v_monitor.transactions t on s.transaction_id = t.transaction_id";
     private static final String GET_SESSION_STATES_SQL = "select sum(CASE WHEN transaction_id::integer > 0 THEN 1 ELSE 0 END) as active, \n" +
             "        sum(CASE WHEN transaction_id::integer <= 0 THEN 1 ELSE 0 END) as inactive, \n" +
             "        sum(CASE WHEN lock_mode is not null THEN 1 ELSE 0 END) as blocked from (\n" +
             "        select s.transaction_id, l.lock_mode from v_monitor.sessions s left join v_monitor.locks l on s.transaction_id = l.transaction_id\n" +
             ") as t";
     private static final String GET_RESOURCE_QUEUES = "select * from v_monitor.resource_queues";
+    private static final String GET_STATEMENTS_SQL = "select request, user_name, count(*) as request_cnt," +
+            "\n  sum(request_duration_ms) as total_request_duration_ms, min(request_duration_ms) as min_request_duration_ms," +
+            "\n  max(request_duration_ms) as max_request_duration_ms," +
+            "\n  max(start_timestamp) as max_start_timestamp" +
+            "\nfrom v_monitor.query_requests" +
+            "\nwhere start_timestamp between ? and ?" +
+            "\ngroup by request, user_name";
 }

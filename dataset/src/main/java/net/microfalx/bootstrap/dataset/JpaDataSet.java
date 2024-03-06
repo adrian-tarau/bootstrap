@@ -47,7 +47,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
                 specification.toPredicate(query.from(getMetadata().getModel()), query, criteriaBuilder);
             } catch (InvalidDataTypeExpression e) {
                 LOGGER.warn("Validation of filter for '{}', filter '{}' has failed with '{}'", getName(), filter,
-                        org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage(e));
+                        ExceptionUtils.getRootCauseMessage(e));
                 throw new DataSetException(e.getMessage(), e);
             }
         }

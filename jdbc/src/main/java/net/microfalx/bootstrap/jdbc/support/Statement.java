@@ -3,10 +3,12 @@ package net.microfalx.bootstrap.jdbc.support;
 import net.microfalx.lang.Identifiable;
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 
+import java.time.ZonedDateTime;
+
 /**
  * A class which represents a SQL (statement).
  * <p>
- * Clients can asks for metdata about the SQL by executing a soft-parsing on the client side.
+ * Clients can ask for metadata about the SQL by executing a soft-parsing on the client side.
  * The clients should not expect to receive a correct representation of the compiled statement. While the library supports a wide range of queries,
  * not everything can be extracted correctly.
  */
@@ -14,13 +16,43 @@ public interface Statement extends Identifiable<String> {
 
     /**
      * Creates a statement instance.
+     * <p>
+     * The statement will be assigned to an {@code anonymous} user name. Use {@link #withUserName(String)} to change
+     * the user name which triggered the statement.
      *
+     * @param node    the node running the SQL statement
      * @param content the SQL content
      * @return a non-null instance
      */
-    static Statement create(String content) {
-        return new StatementImpl(content);
+    static Statement create(Node node, String content) {
+        return new StatementImpl(node, content, null);
     }
+
+    /**
+     * Creates a statement instance.
+     *
+     * @param node     the node running the SQL statement
+     * @param content  the SQL content
+     * @param userName the user name which triggered the SQL
+     * @return a non-null instance
+     */
+    static Statement create(Node node, String content, String userName) {
+        return new StatementImpl(node, content, userName);
+    }
+
+    /**
+     * Returns the node which was running the statement.
+     *
+     * @return a non-null instance
+     */
+    Node getNode();
+
+    /**
+     * Returns the user name which was executing the statement.
+     *
+     * @return a non-null instance
+     */
+    String getUserName();
 
     /**
      * Returns the type of statement.
@@ -37,11 +69,32 @@ public interface Statement extends Identifiable<String> {
     String getContent();
 
     /**
+     * Returns the timestamp when the statement was executed.
+     * @return a non-null instance
+     */
+    ZonedDateTime getExecutionTime();
+
+    /**
      * Returns statistics about a statement.
      *
      * @return a non-null instance
      */
     Statistics getStatistics();
+
+    /**
+     * Creates a copy of the statement and attaches new user.
+     *
+     * @param userName the new user-name
+     * @return a new instance
+     */
+    Statement withUserName(String userName);
+
+    /**
+     * Creates a copy of the statement and changes the execution time.
+     * @param executionTime the new execution time
+     * @return a new instance
+     */
+    Statement withExecutionTime(ZonedDateTime executionTime);
 
     /**
      * Creates a copy of the statement and attaches new statistics.

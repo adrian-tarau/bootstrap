@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.jdbc.support;
 
 import net.microfalx.lang.annotation.Name;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -47,6 +48,20 @@ public interface Database extends Node {
      * @return a non-null instance
      */
     Collection<Transaction> getTransactions();
+
+    /**
+     * Returns the statements executed between a given interval.
+     * <p>
+     * Not all databases can extract the execution history of statements and even when possible, it might not have
+     * any statistics attached to the statement.
+     * <p>
+     * The statement is expected to
+     *
+     * @param start the start time
+     * @param end   the end time
+     * @return a non-null instance
+     */
+    Collection<Statement> getStatements(LocalDateTime start, LocalDateTime end);
 
     /**
      * An enum which identifies the database type.

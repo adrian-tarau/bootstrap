@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.jdbc.support;
 import java.time.ZonedDateTime;
 import java.util.StringJoiner;
 
+import static net.microfalx.bootstrap.jdbc.support.Transaction.IsolationLevel.READ_COMMITTED;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
@@ -17,15 +18,15 @@ public abstract class AbstractTransaction implements Transaction {
     private ZonedDateTime startedAt;
     private ZonedDateTime lockStartedAt;
     private Integer weight;
-    private Statement statement;
-    private String statementId;
+    transient Statement statement;
+    String statementId;
     private String operation;
 
     private int tablesInUseCount;
     private int tablesLockedCount;
     private int lockedRowCount;
     private int modifiedRowCount;
-    private IsolationLevel isolationLevel = IsolationLevel.READ_COMMITTED;
+    private IsolationLevel isolationLevel = READ_COMMITTED;
     private boolean readOnly;
 
     public AbstractTransaction(Node node, String id) {

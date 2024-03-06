@@ -94,6 +94,10 @@ public class FormatterUtils {
             if (formattable != null) {
                 if (!formattable.prettyPrint()) {
                     return ObjectUtils.toString(value);
+                } else if (formattable.counter()) {
+                    return net.microfalx.lang.FormatterUtils.formatNumber(value);
+                } else if (formattable.duration()) {
+                    return net.microfalx.lang.FormatterUtils.formatDuration(value);
                 } else if (!Formattable.AUTO.equals(formattable.negativeValue()) && ((Number) value).doubleValue() < 0) {
                     return formattable.NA;
                 }

@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
-import net.microfalx.bootstrap.metrics.util.MemoryStatisticalSummary;
+import net.microfalx.bootstrap.metrics.util.SimpleStatisticalSummary;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.Hashing;
 import net.microfalx.lang.StringUtils;
@@ -22,23 +22,35 @@ import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.upsert.Upsert;
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.cleanupStatement;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.lang.StringUtils.split;
 
 public class StatementImpl implements Statement, Cloneable {
 
+    transient Node node;
+    String nodeId;
     private final String id;
     private final String content;
+    private String userName;
     private Type type = Type.OTHER;
     private boolean parsed;
+    private ZonedDateTime executionTime = ZonedDateTime.now();
     private Statistics statistics = new StatisticsImpl();
 
-    public StatementImpl(String content) {
+    StatementImpl(Node node, String content, String userName) {
+        requireNonNull(node);
+        requireNotEmpty(content);
+        this.node = node;
+        this.nodeId = node.getId();
+        this.userName = defaultIfEmpty(userName, "anonymous");
         this.content = cleanupStatement(content);
         this.id = calculateId();
     }
@@ -46,6 +58,16 @@ public class StatementImpl implements Statement, Cloneable {
     @Override
     public String getId() {
         return id;
+    }
+
+    @Override
+    public Node getNode() {
+        return node;
+    }
+
+    @Override
+    public String getUserName() {
+        return userName;
     }
 
     @Override
@@ -60,8 +82,29 @@ public class StatementImpl implements Statement, Cloneable {
     }
 
     @Override
+    public ZonedDateTime getExecutionTime() {
+        return executionTime;
+    }
+
+    @Override
     public Statistics getStatistics() {
         return statistics;
+    }
+
+    @Override
+    public Statement withUserName(String userName) {
+        requireNonNull(userName);
+        StatementImpl copy = copy();
+        copy.userName = userName;
+        return copy;
+    }
+
+    @Override
+    public Statement withExecutionTime(ZonedDateTime executionTime) {
+        requireNonNull(executionTime);
+        StatementImpl copy = copy();
+        copy.executionTime = executionTime;
+        return copy;
     }
 
     @Override
@@ -87,6 +130,7 @@ public class StatementImpl implements Statement, Cloneable {
                 .add("content='" + content + "'")
                 .add("type=" + type)
                 .add("parsed=" + parsed)
+                .add("executionTime=" + executionTime)
                 .add("statistics=" + statistics)
                 .toString();
     }
@@ -172,7 +216,7 @@ public class StatementImpl implements Statement, Cloneable {
         }
     }
 
-    public static class StatisticsImpl extends MemoryStatisticalSummary implements Statistics {
+    public static class StatisticsImpl extends SimpleStatisticalSummary implements Statistics {
 
         public StatisticsImpl() {
         }

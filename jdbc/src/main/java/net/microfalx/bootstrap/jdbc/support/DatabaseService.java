@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -176,7 +177,7 @@ public class DatabaseService implements InitializingBean {
             snapshots.add(snapshot);
             futures.add(coordinatorTaskExecutor.submit(new ExtractSnapshot(snapshot)));
         }
-        int pendingTasks = DATABASE.getTimer("Get Snapshots").record(() -> waitForFutures(futures, timeout));
+        int pendingTasks = METRICS.getTimer("Get Snapshots").record(() -> waitForFutures(futures, timeout));
         if (pendingTasks > 0) LOGGER.warn("Incomplete list of snapshots, pending tasks: " + pendingTasks);
         return snapshots;
 
@@ -202,7 +203,7 @@ public class DatabaseService implements InitializingBean {
      * @return a non-null instance
      */
     public Future<Map<String, Session>> getSessions() {
-        return coordinatorTaskExecutor.submit(DATABASE.getTimer("Get Sessions").wrap(new ExtractSessions()));
+        return coordinatorTaskExecutor.submit(METRICS.getTimer("Get Sessions").wrap(new ExtractSessions()));
     }
 
     /**
@@ -220,12 +221,26 @@ public class DatabaseService implements InitializingBean {
     }
 
     /**
-     * Returns a collection of sessions from registered databases.
+     * Returns a collection of transactions from registered databases.
      *
      * @return a non-null instance
      */
     public Future<Map<String, Transaction>> getTransactions() {
-        return coordinatorTaskExecutor.submit(DATABASE.getTimer("Get Transactions").wrap(new ExtractTransactions()));
+        return coordinatorTaskExecutor.submit(METRICS.getTimer("Get Transactions").wrap(new ExtractTransactions()));
+    }
+
+    /**
+     * Returns a collection of transactions from registered databases.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Statement> getStatements(LocalDateTime start, LocalDateTime end) {
+        Callable<Collection<Statement>> callable = METRICS.getTimer("Get Statements").wrap(new ExtractStatements(start, end));
+        try {
+            return callable.call();
+        } catch (Exception e) {
+            return ExceptionUtils.throwException(e);
+        }
     }
 
     /**
@@ -487,6 +502,36 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
+    class ExtractStatements implements Callable<Collection<Statement>> {
+
+        private final LocalDateTime start;
+        private final LocalDateTime end;
+
+        public ExtractStatements(LocalDateTime start, LocalDateTime end) {
+            this.start = start;
+            this.end = end;
+        }
+
+        @Override
+        public Collection<Statement> call() throws Exception {
+            Collection<Future<Collection<Statement>>> futures = new ArrayList<>();
+            for (Database database : databases.values()) {
+                futures.add(workerTaskExecutor.submit(new ExtractStatementsForDatabase(database, start, end)));
+            }
+            int pendingTasks = waitForFutures(futures, timeout.multipliedBy(5));
+            if (pendingTasks > 0) LOGGER.warn("Incomplete list of statements, pending tasks: " + pendingTasks);
+            return collectFutures(futures).stream().flatMap(Collection::stream).toList();
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", ExtractStatements.class.getSimpleName() + "[", "]")
+                    .add("start=" + start)
+                    .add("end=" + end)
+                    .toString();
+        }
+    }
+
     class ExtractSessionsForDatabase implements Callable<Collection<Session>> {
 
         private final Database database;
@@ -498,10 +543,23 @@ public class DatabaseService implements InitializingBean {
         @Override
         public Collection<Session> call() throws Exception {
             return ConcurrencyUtils.withTryLock(getDatabaseLock(database), () -> {
-                Collection<Session> sessions = database.getSessions();
+                Collection<Session> sessions = null;
+                try {
+                    sessions = database.getSessions();
+                } catch (Exception e) {
+                    LOGGER.error("Failed to extract sessions from " + database.getName(), e);
+                    sessions = Collections.emptyList();
+                }
                 registerStatements(sessions);
                 return sessions;
             }, timeout).orElse(Collections.emptyList());
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", ExtractSessionsForDatabase.class.getSimpleName() + "[", "]")
+                    .add("database=" + database.getName())
+                    .toString();
         }
     }
 
@@ -517,10 +575,55 @@ public class DatabaseService implements InitializingBean {
         @Override
         public Collection<Transaction> call() throws Exception {
             return ConcurrencyUtils.withTryLock(getDatabaseLock(database), () -> {
-                Collection<Transaction> sessions = database.getTransactions();
-                registerStatements(sessions);
-                return sessions;
+                Collection<Transaction> transactions = null;
+                try {
+                    transactions = database.getTransactions();
+                } catch (Exception e) {
+                    LOGGER.error("Failed to extract statements from " + database.getName(), e);
+                    transactions = Collections.emptyList();
+                }
+                registerStatements(transactions);
+                return transactions;
             }, timeout).orElse(Collections.emptyList());
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", ExtractTransactionsForDatabase.class.getSimpleName() + "[", "]")
+                    .add("database=" + database.getName())
+                    .toString();
+        }
+    }
+
+    class ExtractStatementsForDatabase implements Callable<Collection<Statement>> {
+
+        private final LocalDateTime start;
+        private final LocalDateTime end;
+        private final Database database;
+
+        public ExtractStatementsForDatabase(Database database, LocalDateTime start, LocalDateTime end) {
+            this.database = database;
+            this.start = start;
+            this.end = end;
+        }
+
+        @Override
+        public Collection<Statement> call() throws Exception {
+            try {
+                return database.getStatements(start, end);
+            } catch (Exception e) {
+                LOGGER.error("Failed to extract statements from " + database.getName(), e);
+                return Collections.emptyList();
+            }
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", ExtractStatementsForDatabase.class.getSimpleName() + "[", "]")
+                    .add("start=" + start)
+                    .add("end=" + end)
+                    .add("database=" + database.getName())
+                    .toString();
         }
     }
 }

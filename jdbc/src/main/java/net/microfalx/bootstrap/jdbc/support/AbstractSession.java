@@ -21,8 +21,8 @@ public abstract class AbstractSession implements Session {
     private ZonedDateTime startedAt;
     private Duration elapsed;
     private ZonedDateTime createdAt;
-    private transient Statement statement;
-    private String statementId;
+    transient Statement statement;
+    String statementId;
     private String info;
     private boolean system;
 

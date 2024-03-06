@@ -68,6 +68,20 @@ public @interface Formattable {
     boolean prettyPrint() default true;
 
     /**
+     * Formats a number like a counter.
+     *
+     * @return {@code true} if a counter, {@code false otherwise}
+     */
+    boolean counter() default false;
+
+    /**
+     * Formats a number like a duration.
+     *
+     * @return {@code true} if a duration, {@code false otherwise}
+     */
+    boolean duration() default false;
+
+    /**
      * Returns the custom formatter to be used for a field.
      *
      * @return the formatter

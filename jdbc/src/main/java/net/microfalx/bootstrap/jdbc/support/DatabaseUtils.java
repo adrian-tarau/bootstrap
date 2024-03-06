@@ -22,7 +22,7 @@ public class DatabaseUtils {
     public static final String POSTGRES_SCHEME = "postgres";
     public static final String VERTICA_SCHEME = "vertica";
 
-    static final Metrics DATABASE = Metrics.of("Database");
+    public static final Metrics METRICS = Metrics.of("Database");
 
     public static final Duration AVAILABILITY_INTERVAL = ofMillis(ONE_MINUTE);
     public static final Duration PING_TIMEOUT = ofSeconds(5);
@@ -71,18 +71,35 @@ public class DatabaseUtils {
     public static String cleanupStatement(String statement) {
         if (statement == null) return null;
         statement = statement.trim();
+        String withoutComments = cleanupComments(statement);
+        if (withoutComments.equals("insert")) {
+            System.out.println("Stop");
+        }
+        String withoutVertica = cleanupVertica(withoutComments);
+        return withoutVertica;
+    }
+
+    private static String cleanupComments(String statement) {
         int startCommentIndex = statement.indexOf(COMMENT_START);
         int endCommentIndex = statement.indexOf(COMMENT_END);
-        if (startCommentIndex < 0 && endCommentIndex < 0) return statement;
-        if (startCommentIndex == 0) {
+        if (startCommentIndex == 0 && endCommentIndex != -1) {
             statement = statement.substring(endCommentIndex + 2).trim();
-        } else {
-            statement = statement.substring(0, startCommentIndex).trim();
         }
         startCommentIndex = statement.indexOf(COMMENT_START);
         endCommentIndex = statement.indexOf(COMMENT_END);
-        if (startCommentIndex < 0 && endCommentIndex < 0) return statement;
-        statement = statement.substring(0, startCommentIndex).trim();
+        if (startCommentIndex != -1 && endCommentIndex == statement.length() - 2) {
+            statement = statement.substring(0, startCommentIndex).trim();
+        }
+        return statement;
+    }
+
+    private static String cleanupVertica(String statement) {
+        int startIndex = statement.indexOf("STREAM");
+        int endIndex = statement.indexOf(")'");
+        if (startIndex != -1 && endIndex != -1) {
+            String endFragment = statement.substring(endIndex + 3);
+            statement = statement.substring(0, startIndex) + endFragment;
+        }
         return statement;
     }
 }

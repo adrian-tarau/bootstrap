@@ -5,26 +5,26 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Collections.singleton;
 import static net.microfalx.lang.EnumUtils.fromName;
-import static net.microfalx.lang.StringUtils.*;
-import static net.microfalx.lang.TimeUtils.toZonedDateTime;
+import static net.microfalx.lang.StringUtils.toIdentifier;
+import static net.microfalx.lang.StringUtils.toLowerCase;
+import static net.microfalx.lang.TimeUtils.toZonedDateTimeSameInstant;
 
 public class MySqlDatabase extends AbstractDatabase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseService.class);
 
     private static final int TABLE_NOT_FOUND_ERROR = 1146;
+    private static final int ACCESS_DENIED_ERROR = 1227;
     private static final String GARB_NODE_NAME = "garb";
 
     private volatile boolean clustered = true;
@@ -72,9 +72,19 @@ public class MySqlDatabase extends AbstractDatabase {
         Collection<Transaction> transactions = new ArrayList<>();
         Collection<Node> nodes = getNodes();
         for (Node node : nodes) {
-            transactions.addAll(time("Extract Transactions - " + node.getName(), () -> extractTransactionsFromNode(node)));
+            try {
+                transactions.addAll(time("Extract Transactions - " + node.getName(), () -> extractTransactionsFromNode(node)));
+            } catch (BadSqlGrammarException e) {
+                int errorCode = net.microfalx.lang.ExceptionUtils.getSQLErrorCode(e);
+                if (errorCode != ACCESS_DENIED_ERROR) LOGGER.error("Failed to extract transactions", e);
+            }
         }
         return transactions;
+    }
+
+    @Override
+    protected Collection<Statement> extractStatements(LocalDateTime start, LocalDateTime end) {
+        return Collections.emptyList();
     }
 
     private MySqlNode createNode(String id, String name, DataSource dataSource) {
@@ -141,7 +151,7 @@ public class MySqlDatabase extends AbstractDatabase {
                 session.setStartedAt(LocalDateTime.now().minusSeconds(session.getElapsed().toSeconds()).atZone(getZoneId()));
                 session.setCreatedAt(session.getCreatedAt());
                 String info = rs.getString("info");
-                if (isNotEmpty(info)) session.setStatement(Statement.create(info));
+                session.setStatement(createStatement(node, info, session.getUserName()));
                 session.setSystem(isSystem(rs.getString("user")));
                 session.setInfo(rs.getString("state"));
                 sessions.add(session);
@@ -159,10 +169,10 @@ public class MySqlDatabase extends AbstractDatabase {
                 long threadId = rs.getLong("trx_mysql_thread_id");
                 String nodeId = toIdentifier(node.getId() + "_" + id + "_" + threadId);
                 MySqlTransaction transaction = new MySqlTransaction(node, nodeId, id, threadId);
-                transaction.setStartedAt(toZonedDateTime(rs.getTimestamp("trx_started")).withZoneSameInstant(getZoneId()));
-                transaction.setLockStartedAt(toZonedDateTime(rs.getTimestamp("trx_wait_started")).withZoneSameInstant(getZoneId()));
+                transaction.setStartedAt(toZonedDateTimeSameInstant(rs.getTimestamp("trx_started"), getZoneId()));
+                transaction.setLockStartedAt(toZonedDateTimeSameInstant(rs.getTimestamp("trx_wait_started"), getZoneId()));
                 transaction.setWeight(rs.getInt("trx_weight"));
-                transaction.setStatement(createStatement(rs.getString("trx_query")));
+                transaction.setStatement(createStatement(node, rs.getString("trx_query"), rs.getString("user")));
                 transaction.setOperation(rs.getString("trx_operation_state"));
                 transaction.setTablesInUseCount(rs.getInt("trx_tables_in_use"));
                 transaction.setLockedRowCount(rs.getInt("trx_tables_locked"));
@@ -179,7 +189,8 @@ public class MySqlDatabase extends AbstractDatabase {
 
     private static final String GET_NODES_SQL = "select * from mysql.wsrep_cluster_members order by node_name";
     private static final String GET_SESSIONS_SQL = "select * from information_schema.processlist";
-    private static final String GET_TRANSACTIONS_SQL = "SELECT * FROM information_schema.innodb_trx;";
+    private static final String GET_TRANSACTIONS_SQL = "SELECT t.*, p.`USER` FROM information_schema.innodb_trx t" +
+            "\n  left join information_schema.processlist p on t.trx_mysql_thread_id = p.id";
 
     private static final Set<String> activeStates = new HashSet<>();
     private static final Set<String> blockedStates = new HashSet<>();

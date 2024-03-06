@@ -3,7 +3,6 @@ package net.microfalx.bootstrap.jdbc.support;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Metrics;
 import org.slf4j.Logger;
@@ -12,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
@@ -88,6 +88,11 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
         return timeCallable("Extract Transactions", this::extractTransactions);
     }
 
+    @Override
+    public Collection<Statement> getStatements(LocalDateTime start, LocalDateTime end) {
+        return timeCallable("Extract Statements", () -> extractStatements(start, end));
+    }
+
     /**
      * Returns the nodes from the database.
      *
@@ -111,6 +116,15 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
      * @throws SQLException if the transactions cannot be extracted
      */
     protected abstract Collection<Transaction> extractTransactions() throws SQLException;
+
+    /**
+     * Returns the statements executed between a given interval.
+     *
+     * @param start the start time
+     * @param end   the end time
+     * @return a non-null instance
+     */
+    protected abstract Collection<Statement> extractStatements(LocalDateTime start, LocalDateTime end);
 
     /**
      * Returns the data source with a given identifier.
@@ -176,7 +190,7 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
      * @return a non-null instance
      */
     protected final Metrics getMetrics() {
-        if (metrics == null) metrics = DatabaseUtils.DATABASE.withGroup(getType().name());
+        if (metrics == null) metrics = DatabaseUtils.METRICS.withGroup(getType().name());
         return metrics;
     }
 
@@ -203,11 +217,13 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
     /**
      * Creates a statement if exists.
      *
+     * @param node      the node where the statement was executed
      * @param statement the statement
+     * @param userName  name the user name
      * @return a non-null instance if exists, null otherwise
      */
-    protected final Statement createStatement(String statement) {
-        return StringUtils.isNotEmpty(statement) ? Statement.create(statement) : null;
+    protected final Statement createStatement(Node node, String statement, String userName) {
+        return isNotEmpty(statement) ? Statement.create(node, statement, userName) : null;
     }
 
     @Override
