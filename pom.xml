@@ -53,6 +53,8 @@
         <module>core</module>
         <module>test</module>
         <module>jdbc</module>
+        <module>content</module>
+        <module>broker</module>
         <module>resource</module>
         <module>store</module>
         <module>registry</module>
@@ -92,6 +94,7 @@
         <lombok.version>1.18.30</lombok.version>
         <jodd.version>5.1.6</jodd.version>
         <lucene.version>9.9.1</lucene.version>
+        <confluent.version>7.6.0</confluent.version>
         <flexmark.version>0.64.8</flexmark.version>
         <awaitility.version>4.2.0</awaitility.version>
         <kryo.version>5.6.0</kryo.version>
@@ -181,6 +184,36 @@
 
             <dependency>
                 <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parser-code-module</artifactId>
+                <version>${apache.tika.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parser-digest-commons</artifactId>
+                <version>${apache.tika.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parser-pdf-module</artifactId>
+                <version>${apache.tika.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parser-xml-module</artifactId>
+                <version>${apache.tika.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parser-xmp-commons</artifactId>
+                <version>${apache.tika.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tika</groupId>
                 <artifactId>tika-parser-html-module</artifactId>
                 <version>${apache.tika.version}</version>
             </dependency>
@@ -188,6 +221,12 @@
             <dependency>
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika-parser-text-module</artifactId>
+                <version>${apache.tika.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-langdetect-optimaize</artifactId>
                 <version>${apache.tika.version}</version>
             </dependency>
 
@@ -277,6 +316,12 @@
             </dependency>
 
             <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-avro-serializer</artifactId>
+                <version>${confluent.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>net.microfalx.metrics</groupId>
                 <artifactId>metrics</artifactId>
                 <version>${metrics.version}</version>
@@ -292,6 +337,12 @@
                 <groupId>net.microfalx</groupId>
                 <artifactId>threadpool</artifactId>
                 <version>${threadpool.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.resource</groupId>
+                <artifactId>resource-core</artifactId>
+                <version>${resource.version}</version>
             </dependency>
 
             <dependency>
@@ -471,6 +522,13 @@
         </dependency>
 
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>confluent</id>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
+    </repositories>
 
     <build>
         <pluginManagement>

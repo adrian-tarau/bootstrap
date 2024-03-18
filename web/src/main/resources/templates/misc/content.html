@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset"
+>
+<head>
+    <title>Code Editor</title>
+    <style>
+        #editor {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+    <asset:css inline="true" bundles="loader"></asset:css>
+    <!--asset:css bundles="code"></asset:css-->
+</head>
+<body>
+<div id="editor" th:text="${content}"></div>
+<asset:js bundles="code"></asset:js>
+<asset:js inline="true" bundles="loader"></asset:js>
+<script th:inline="javascript">
+    let editor = ace.edit("editor");
+    editor.setTheme("ace/theme/google");
+    editor.setOptions({
+        autoScrollEditorIntoView: true,
+        copyWithEmptySelection: true,
+        customScrollbar : true,
+        readOnly : /*[[${view}]]*/true,
+        highlightActiveLine : /*[[${edit}]]*/false,
+        enableAutoIndent : true,
+        fontSize: "14px",
+        tabSize: 4,
+        printMarginColumn : 160,
+        newLineMode : 'unix',
+        indentedSoftWrap : true,
+        wrap: true
+    });
+    editor.session.setMode(/*[[${mode}]]*/);
+</script>
+</body>
+</html>

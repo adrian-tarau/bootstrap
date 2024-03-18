@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping(value = "/admin/metric/counter")
+@RequestMapping(value = "/support/metric/counter")
 @DataSet(model = Counter.class)
 @Help("admin/metric/counter")
 public class CounterController  extends DataSetController<Counter, String>  {

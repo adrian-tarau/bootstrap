@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping(value = "/admin/database/session")
+@RequestMapping(value = "/system/database/session")
 @DataSet(model = Session.class, defaultQuery = "state = 'Active'")
 @Help("admin/database/session")
 public class SessionController extends DataSetController<Session, String> {

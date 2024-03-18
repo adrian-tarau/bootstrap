@@ -96,6 +96,8 @@ public class FormatterUtils {
                     return ObjectUtils.toString(value);
                 } else if (formattable.counter()) {
                     return net.microfalx.lang.FormatterUtils.formatNumber(value);
+                } else if (formattable.bytes()) {
+                    return net.microfalx.lang.FormatterUtils.formatBytes(value);
                 } else if (formattable.duration()) {
                     return net.microfalx.lang.FormatterUtils.formatDuration(value);
                 } else if (!Formattable.AUTO.equals(formattable.negativeValue()) && ((Number) value).doubleValue() < 0) {

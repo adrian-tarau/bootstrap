@@ -1,10 +1,12 @@
 package net.microfalx.bootstrap.jdbc.jpa;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 import net.microfalx.bootstrap.core.utils.EncryptionSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+@Converter
 @Component
 public class EncryptAttributeConverter implements AttributeConverter<String, String> {
 

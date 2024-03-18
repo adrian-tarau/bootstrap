@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping(value = "/admin/metric/timer")
+@RequestMapping(value = "/support/metric/timer")
 @DataSet(model = Timer.class)
 @Help("admin/metric/timer")
 public class TimerController extends DataSetController<Timer, String> {

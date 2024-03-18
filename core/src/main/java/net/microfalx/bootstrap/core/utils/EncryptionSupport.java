@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.core.utils;
 
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -36,12 +38,13 @@ public class EncryptionSupport {
     }
 
     /**
-     * Encrypts a text with a symmetric algorithm (to be recovered).
+     * Encrypts a text with a symmetric algorithm.
      *
      * @param value the value to encrypt
      * @return the encrypted value
      */
     public String encrypt(String value) {
+        if (StringUtils.isEmpty(value)) return value;
         try {
             IvParameterSpec iv = new IvParameterSpec(seed.getBytes(StandardCharsets.UTF_8));
             SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
@@ -57,22 +60,34 @@ public class EncryptionSupport {
     /**
      * Decrypts a text with a symmetric algorithm.
      *
-     * @param encrypted the value to decrypt
+     * @param value the value to decrypt
      * @return the decrypted value
      */
-    public String decrypt(String encrypted) {
+    public String decrypt(String value) {
+        if (StringUtils.isEmpty(value)) return value;
         try {
             IvParameterSpec iv = new IvParameterSpec(seed.getBytes(StandardCharsets.UTF_8));
             SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
             Cipher cipher = Cipher.getInstance(algorithm);
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
-            byte[] original = cipher.doFinal(Base64.getDecoder().decode(encrypted));
+            byte[] original = cipher.doFinal(Base64.getDecoder().decode(value));
             return new String(original);
         } catch (javax.crypto.IllegalBlockSizeException e) {
             // we presume these exceptions means "not encrypted"
-            return encrypted;
+            return value;
         } catch (Exception e) {
             return ExceptionUtils.throwException(e);
         }
+    }
+
+    /**
+     * Returns whether the text is encrypted.
+     *
+     * @param value the value to test
+     * @return {@code true} if encrypted, {@code false} otherwise
+     */
+    public boolean isEncrypted(String value) {
+        String decryptedValue = decrypt(value);
+        return !ObjectUtils.equals(value, decryptedValue);
     }
 }

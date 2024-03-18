@@ -40,10 +40,10 @@
             </ul>
             <div class="tab-content h-100 overflow-auto">
                 <div class="tab-pane fade show active" id="body" >
-                    <p class="dataset-text-mono" th:text="${text}"></p>
+                    <iframe class="w-100 p-3" style="height:400px" loading="lazy" th:src="${#content.getViewUri(body)}"></iframe>
                 </div>
                 <div class="tab-pane fade" id="fields">
-                    <table class="table">
+                    <table class="table" style="height:400px">
                         <thead class="thead-dark">
                         <tr>
                             <th scope="col">Name</th>

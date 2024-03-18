@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping(value = "/admin/metric/gauge")
+@RequestMapping(value = "/support/metric/gauge")
 @DataSet(model = Gauge.class)
 @Help("admin/metric/gauge")
 public class GaugeController extends DataSetController<Gauge, String> {

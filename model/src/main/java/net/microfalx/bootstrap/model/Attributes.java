@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.model;
 
+import io.micrometer.common.lang.Nullable;
 import net.microfalx.resource.Resource;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.util.function.Function;
 public interface Attributes<A extends Attribute> extends Iterable<A> {
 
     /**
-     * Creates a default implementation.
+     * Creates attributes with a default implementation.
      *
      * @param <AA> the attribute type
      * @return a non-null instance
@@ -21,6 +22,34 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
     @SuppressWarnings("unchecked")
     static <AA extends Attribute> Attributes<AA> create() {
         return (Attributes<AA>) new DefaultAttributes();
+    }
+
+    /**
+     * Creates mutable attributes with default implementation and copies the attributes over.
+     *
+     * @param <AA>       the attribute type
+     * @param attributes the source for the new instance
+     * @return a non-null instance
+     */
+    @SuppressWarnings("unchecked")
+    static <AA extends Attribute> Attributes<AA> create(@Nullable Attributes<?> attributes) {
+        return create(attributes, false);
+    }
+
+    /**
+     * Creates attributes with default implementation and copies the attributes over.
+     *
+     * @param <AA>       the attribute type
+     * @param attributes the source for the new instance
+     * @param readOnly   {@code true} to create immutable attributes, {@code false} to be mutable
+     * @return a non-null instance
+     */
+    @SuppressWarnings("unchecked")
+    static <AA extends Attribute> Attributes<AA> create(@Nullable Attributes<?> attributes, boolean readOnly) {
+        DefaultAttributes result = new DefaultAttributes();
+        if (attributes != null) result.copyFrom(attributes);
+        result.setReadOnly(readOnly);
+        return (Attributes<AA>) result;
     }
 
     /**
@@ -129,6 +158,13 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
     boolean isEmpty();
 
     /**
+     * Returns the number of attributes.
+     *
+     * @return a positive integer
+     */
+    int size();
+
+    /**
      * Returns the attributes/parameters as a read-only map.
      *
      * @return a non-null instance
@@ -137,8 +173,9 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
 
     /**
      * Returns the attributes/parameter values in the order of the insertion.
-     *
+     * <p>
      * This is equivalent to {@link #toMap()#values()}.
+     *
      * @return a non-null instance
      */
     Collection<Object> toValues();

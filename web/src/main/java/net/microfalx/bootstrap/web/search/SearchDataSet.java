@@ -100,6 +100,7 @@ public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchRes
         result.setAttributes(document.toCollection());
         result.setCoreAttributes(getCoreAttributes(document));
         result.setBody(document.getBody());
+        result.setBodyUri(document.getBodyUri());
         return result;
     }
 

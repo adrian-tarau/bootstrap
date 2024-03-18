@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.content.ContentService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
@@ -18,6 +19,12 @@ import static net.microfalx.lang.ObjectUtils.isEmpty;
  */
 class DocumentMapper {
 
+    private ContentService contentService;
+
+    public DocumentMapper(ContentService contentService) {
+        this.contentService = contentService;
+    }
+
     /**
      * Writes a document into the index.
      *
@@ -34,7 +41,9 @@ class DocumentMapper {
             ld.add(new TextField(DESCRIPTION_FIELD, normalizeText(document.getDescription(), true), Field.Store.YES));
         if (document.getBody() != null) {
             ld.add(new TextField(BODY_FIELD, normalizeBody(document), Field.Store.NO));
-            ld.add(new StringField(BODY_URI_FIELD, document.getBody().toURI().toASCIIString(), Field.Store.YES));
+            if (document.getBodyUri() != null) {
+                ld.add(new StringField(BODY_URI_FIELD, document.getBodyUri().toASCIIString(), Field.Store.YES));
+            }
         }
         ld.add(new StringField(MIME_TYPE_FIELD, document.getMimeType(), Field.Store.YES));
         ld.add(new IntField(LENGTH_FIELD, document.getLength(), Field.Store.YES));
@@ -172,7 +181,7 @@ class DocumentMapper {
     }
 
     private String normalizeBody(Document document) throws IOException {
-        return new TextExtractor(document).execute();
+        return new TextExtractor(contentService, document).execute();
     }
 
     private static final FieldType TIME_TYPE;

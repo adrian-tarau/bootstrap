@@ -75,6 +75,13 @@ public @interface Formattable {
     boolean counter() default false;
 
     /**
+     * Formats a number with a byte unit.
+     *
+     * @return {@code true} if a counter, {@code false otherwise}
+     */
+    boolean bytes() default false;
+
+    /**
      * Formats a number like a duration.
      *
      * @return {@code true} if a duration, {@code false otherwise}

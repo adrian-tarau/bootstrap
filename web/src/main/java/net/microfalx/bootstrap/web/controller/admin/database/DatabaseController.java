@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping(value = "/admin/database")
+@RequestMapping(value = "/system/database")
 @DataSet(model = Database.class)
 @Help("admin/database")
 public class DatabaseController extends DataSetController<Database, String> {

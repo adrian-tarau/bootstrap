@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.template;
 
+import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.help.HelpService;
 import net.microfalx.bootstrap.model.MetadataService;
@@ -24,14 +25,16 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
     private final MetadataService metadataService;
     private final DataSetService dataSetService;
     private final HelpService helpService;
+    private final ContentService contentService;
 
     public ExpressionsDialect(ApplicationService applicationService, MetadataService metadataService, DataSetService dataSetService,
-                              HelpService helpService) {
+                              HelpService helpService, ContentService contentService) {
         super("application");
         this.applicationService = applicationService;
         this.metadataService = metadataService;
         this.dataSetService = dataSetService;
         this.helpService = helpService;
+        this.contentService = contentService;
     }
 
     @Override
@@ -50,12 +53,12 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
         public static final String USER_OBJECT_NAME = "user";
         public static final String RESOURCE_OBJECT_NAME = "resources";
         public static final String MODEL_TOOL_NAME = "models";
-        public static final String HTML_TOOL_NAME = "htmls";
+        public static final String CONTENT_TOOL_NAME = "content";
 
         protected static final Set<String> ALL_EXPRESSION_OBJECT_NAMES = unmodifiableSet(
                 new LinkedHashSet<>(asList(APPLICATION_OBJECT_NAME, NAVIGATION_OBJECT_NAME, COMPONENT_OBJECT_NAME,
                         USER_OBJECT_NAME, DATASET_OBJECT_NAME, LINK_OBJECT_NAME, HELP_OBJECT_NAME,
-                        RESOURCE_OBJECT_NAME, MODEL_TOOL_NAME)));
+                        RESOURCE_OBJECT_NAME, MODEL_TOOL_NAME, CONTENT_TOOL_NAME)));
 
         @Override
         public Set<String> getAllExpressionObjectNames() {
@@ -78,8 +81,8 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
                 return new ResourceTool(context);
             } else if (MODEL_TOOL_NAME.equals(expressionObjectName)) {
                 return new ModelTool(context, metadataService);
-            } else if (HTML_TOOL_NAME.equals(expressionObjectName)) {
-                return new HtmlTool(context);
+            } else if (CONTENT_TOOL_NAME.equals(expressionObjectName)) {
+                return new ContentTool(context, contentService);
             } else if (HELP_OBJECT_NAME.equals(expressionObjectName)) {
                 return new HelpTool(context, helpService);
             } else if (USER_OBJECT_NAME.equals(expressionObjectName)) {

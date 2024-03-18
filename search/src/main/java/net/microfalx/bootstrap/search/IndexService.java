@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.search;
 
 import jakarta.annotation.PreDestroy;
+import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.metrics.Metrics;
@@ -47,6 +48,9 @@ public class IndexService implements InitializingBean {
 
     @Autowired
     private ResourceService resourceService;
+
+    @Autowired
+    private ContentService contentService;
 
     private volatile AsyncTaskExecutor taskExecutor;
 
@@ -133,7 +137,7 @@ public class IndexService implements InitializingBean {
         requireNonNull(documents);
         try {
             doWithIndex("Index", indexWriter -> {
-                DocumentMapper itemMapper = new DocumentMapper();
+                DocumentMapper itemMapper = new DocumentMapper(contentService);
                 for (Document document : documents) {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug(" - index item, id: " + document.getId() + ", name: " + document.getName());

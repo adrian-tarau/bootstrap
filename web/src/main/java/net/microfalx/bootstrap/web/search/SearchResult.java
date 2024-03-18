@@ -10,6 +10,7 @@ import net.microfalx.bootstrap.search.Attribute;
 import net.microfalx.lang.annotation.*;
 import net.microfalx.resource.Resource;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
@@ -84,6 +85,9 @@ public class SearchResult {
 
     @Visible(false)
     private Resource body;
+
+    @Visible(false)
+    private URI bodyUri;
 
     @Visible(false)
     private String reference;

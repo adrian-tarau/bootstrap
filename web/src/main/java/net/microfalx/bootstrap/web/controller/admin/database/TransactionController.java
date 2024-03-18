@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping(value = "/admin/database/transaction")
+@RequestMapping(value = "/system/database/transaction")
 @DataSet(model = Transaction.class, defaultQuery = "state = 'Running'")
 @Help("admin/database/transaction")
 public class TransactionController extends DataSetController<Transaction, String> {

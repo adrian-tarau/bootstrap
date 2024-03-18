@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.resource.ResourceService;
@@ -39,7 +40,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static net.microfalx.bootstrap.search.SearchUtils.MAX_TERMS_PER_FIELD;
 import static net.microfalx.bootstrap.search.SearchUtils.isNumericField;
@@ -65,6 +65,9 @@ public class SearchService implements InitializingBean {
 
     @Autowired
     private I18nService i18nService;
+
+    @Autowired
+    private ContentService contentService;
 
     private volatile AsyncTaskExecutor taskExecutor;
 
@@ -263,7 +266,7 @@ public class SearchService implements InitializingBean {
         try {
             return retryTemplate.execute((RetryCallback<T, Exception>) context -> {
                 IndexReader indexReader = getIndexSearcher().getIndexReader();
-                return METRICS.time(toIdentifier(capitalizeWords(operation)), (Supplier<T>) () -> callback.apply(indexReader));
+                return METRICS.time(toIdentifier(capitalizeWords(operation)), () -> callback.apply(indexReader));
             });
         } catch (Exception e) {
             throw new SearchException("Exception during index operation : " + operation, e);
@@ -308,7 +311,7 @@ public class SearchService implements InitializingBean {
         Document translatedDocument = METRICS.timeCallable("Find", () -> {
             TermQuery query = new TermQuery(new Term(Document.ID_FIELD, id));
             TopDocs topDocs = indexSearcher.search(query, 1);
-            DocumentMapper documentMapper = new DocumentMapper();
+            DocumentMapper documentMapper = new DocumentMapper(contentService);
             Document mappedDocument = null;
             if (topDocs.scoreDocs.length > 0) {
                 org.apache.lucene.document.Document document = indexSearcher.doc(topDocs.scoreDocs[0].doc);
@@ -331,7 +334,7 @@ public class SearchService implements InitializingBean {
             TopDocs docs = indexSearcher.search(luceneQuery, searchQuery.getStart() + searchQuery.getLimit(), sort);
             int startIndex = searchQuery.getStart();
             int counter = searchQuery.getLimit();
-            DocumentMapper documentMapper = new DocumentMapper();
+            DocumentMapper documentMapper = new DocumentMapper(contentService);
             for (ScoreDoc scoreDoc : docs.scoreDocs) {
                 if (startIndex-- > 0) continue;
                 org.apache.lucene.document.Document document = indexSearcher.doc(scoreDoc.doc);

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Arrays;
 
-@RequestMapping("/admin/search")
+@RequestMapping("/support/search")
 @Dashboard("search-engine")
 @Controller
 public class SearchEngineController extends DashboardController {

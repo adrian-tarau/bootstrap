@@ -87,6 +87,11 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     }
 
     @Override
+    public int size() {
+        return attributes != null ? attributes.size() : 0;
+    }
+
+    @Override
     public final boolean isReadOnly() {
         return readOnly;
     }
