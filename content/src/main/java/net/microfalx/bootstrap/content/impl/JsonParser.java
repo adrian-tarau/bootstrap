@@ -45,6 +45,7 @@ public class JsonParser extends AbstractParser {
                 Map.Entry<String, JsonNode> entry = fields.next();
                 handler.startElement(null, entry.getKey(), entry.getKey(), ContentUtils.EMPTY_ATTRIBUTES);
                 walkTree(entry.getKey(), entry.getValue(), handler);
+                handler.endElement(null, entry.getKey(), entry.getKey());
                 writeNewLine(handler);
             }
         } else if (node.isArray()) {
