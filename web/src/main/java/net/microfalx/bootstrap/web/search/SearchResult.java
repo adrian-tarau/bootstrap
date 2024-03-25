@@ -54,6 +54,7 @@ public class SearchResult {
 
     @Position(20)
     @Description("The length (size) of the document")
+    @Formattable(unit = Formattable.Unit.BYTES)
     private int length;
 
     @Position(25)

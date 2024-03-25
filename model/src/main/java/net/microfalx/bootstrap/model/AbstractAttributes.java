@@ -24,6 +24,9 @@ import static net.microfalx.lang.ObjectUtils.defaultIfNull;
  */
 public abstract class AbstractAttributes<A extends Attribute> implements Attributes<A> {
 
+    private static final Function<Attribute, Boolean> ALL_ATTRIBUTES = attribute -> true;
+    private static final Function<String, Boolean> ALL_ATTRIBUTE_NAMES = attribute -> true;
+
     private Map<String, A> attributes;
     private boolean readOnly;
 
@@ -107,9 +110,22 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     }
 
     @Override
+    public void copyFrom(Map<String, Object> values, Function<String, Boolean> filter) {
+        if (values == null) return;
+        Function<String, Boolean> finalFilter = filter == null ? (Function<String, Boolean>) ALL_ATTRIBUTE_NAMES : filter;
+        values.entrySet().stream().filter(e -> finalFilter.apply(e.getKey())).forEach(e -> add(e.getKey(), e.getValue()));
+    }
+
+    @Override
     public final <AA extends Attribute> void copyFrom(Attributes<AA> attributes) {
         if (attributes == null) return;
         getRawAttributes(attributes).forEach(a -> add(a.getName(), a.getValue()));
+    }
+
+    @Override
+    public <AA extends Attribute> void copyFrom(Attributes<AA> attributes, Function<AA, Boolean> filter) {
+        Function<AA, Boolean> finalFilter = filter == null ? (Function<AA, Boolean>) ALL_ATTRIBUTES : filter;
+        getRawAttributes(attributes).stream().filter(a -> finalFilter.apply(a)).forEach(a -> add(a.getName(), a.getValue()));
     }
 
     @Override

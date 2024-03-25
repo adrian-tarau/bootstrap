@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.content.Content;
 import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
@@ -98,10 +99,9 @@ public class TextExtractor {
         MimeType mimeType = MimeType.get(body.getMimeType());
         Metadata metadata = new Metadata();
         metadata.set(Metadata.CONTENT_TYPE, mimeType.getValue());
-        Resource text = contentService.extract(body, metadata);
-        builder.append(text.loadAsString());
+        Content content = contentService.extract(body, metadata, false);
+        builder.append(content.loadAsString());
         return builder.toString();
     }
-
 
 }

@@ -179,8 +179,8 @@ public class ContentService implements InitializingBean {
      * @param resource the content of the document
      * @throws IOException if an I/O exception occurs
      */
-    public Resource extract(Resource resource) throws IOException {
-        return extract(resource, new Metadata());
+    public Content extract(Resource resource) throws IOException {
+        return extract(resource, new Metadata(), false);
     }
 
     /**
@@ -189,16 +189,20 @@ public class ContentService implements InitializingBean {
      * @param resource the content of the document
      * @throws IOException if an I/O exception occurs
      */
-    public Resource extract(Resource resource, Metadata metadata) throws IOException {
+    public Content extract(Resource resource, Metadata metadata, boolean extractAttributes) throws IOException {
         requireNonNull(resource);
         requireNonNull(metadata);
         if (MimeType.APPLICATION_OCTET_STREAM.equals(resource.getMimeType())) {
             BinaryContentExtractor extractor = new BinaryContentExtractor(resource);
-            return MemoryResource.create(extractor.execute());
+            return Content.create(MemoryResource.create(extractor.execute()));
         } else {
             ContentExtractor handler = new ContentExtractor();
+            handler.setExtractAttributes(extractAttributes);
             doParse(resource, handler, metadata);
-            return MemoryResource.create(removeRedundantNewLines(handler.toString()));
+            Resource extractedContent = MemoryResource.create(removeRedundantNewLines(handler.toString()));
+            Content content = Content.create(extractedContent);
+            if (extractAttributes) content = content.withAttributes(handler.getAttributes());
+            return content;
         }
     }
 
@@ -213,15 +217,15 @@ public class ContentService implements InitializingBean {
         for (ContentResolver resolver : resolvers) {
             if (resolver.supports(locator)) {
                 Throwable throwable = null;
-                Content resource = null;
+                Content content = null;
                 try {
-                    resource = resolver.resolve(locator);
+                    content = resolver.resolve(locator);
                 } catch (IOException e) {
                     throwable = e;
                 }
-                if (resource == null) throw new ContentException("Content cannot be resolved by listener '" +
+                if (content == null) throw new ContentException("Content cannot be resolved by listener '" +
                         ClassUtils.getName(resolver) + ", locator '" + locator + "'", throwable);
-                return resource;
+                return content;
             }
         }
         throw new ContentNotFoundException("Content cannot be resolved by any listener, locator '" + locator + "'");
@@ -279,6 +283,30 @@ public class ContentService implements InitializingBean {
             }
         }
         return content.getResource();
+    }
+
+    /**
+     * Intercepts the content.
+     *
+     * @param content the content
+     * @return the resource with
+     */
+    public Content intercept(Content content) {
+        requireNotEmpty(content);
+        for (ContentResolver resolver : resolvers) {
+            if (resolver.supports(content.getLocator())) {
+                Throwable throwable = null;
+                try {
+                    content = resolver.intercept(content);
+                } catch (IOException e) {
+                    throwable = e;
+                }
+                if (content == null) throw new ContentException("Content cannot be left NULL by listener '" +
+                        ClassUtils.getName(resolver) + ", locator '" + content.getLocator() + "'", throwable);
+                return content;
+            }
+        }
+        return content;
     }
 
     /**

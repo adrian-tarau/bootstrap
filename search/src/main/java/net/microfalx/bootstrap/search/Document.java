@@ -122,7 +122,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
         return name;
     }
 
-    protected Document setName(String name) {
+    public Document setName(String name) {
         this.name = name;
         return this;
     }

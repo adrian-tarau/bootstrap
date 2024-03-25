@@ -129,6 +129,13 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
     void copyFrom(Map<String, Object> values);
 
     /**
+     * Copies the attributes/parameters from a map.
+     *
+     * @param values the values
+     */
+    void copyFrom(Map<String, Object> values, Function<String, Boolean> filter);
+
+    /**
      * Copies the attributes/parameters from JSON.
      *
      * @param resource the resource
@@ -139,9 +146,17 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
     /**
      * Copy the attributes/parameters from a different collection of attributes.
      *
-     * @param attributes the attributes
+     * @param attributes the attributes, can be null
      */
     <AA extends Attribute> void copyFrom(Attributes<AA> attributes);
+
+    /**
+     * Copy the attributes/parameters from a different collection of attributes.
+     *
+     * @param attributes the attributes
+     * @param filter the filter to apply, can be null to include all
+     */
+    <AA extends Attribute> void copyFrom(Attributes<AA> attributes, Function<AA, Boolean> filter);
 
     /**
      * Returns whether the attributes/parameters cannot be changed.

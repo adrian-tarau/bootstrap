@@ -85,6 +85,15 @@ public final class Content implements Identifiable<String>, Nameable, Descriptab
     }
 
     /**
+     * Returns the attributes associated with the content.
+     *
+     * @return a non-null instance
+     */
+    public Attributes<?> getAttributes() {
+        return attributes;
+    }
+
+    /**
      * Returns the content locator.
      *
      * @return a non-null instance
@@ -100,6 +109,16 @@ public final class Content implements Identifiable<String>, Nameable, Descriptab
      */
     public Resource getResource() {
         return resource;
+    }
+
+    /**
+     * Returns the content as a string.
+     *
+     * @return a non-empty string
+     * @throws IOException an I/O exception if the content cannot be extracted
+     */
+    public String loadAsString() throws IOException {
+        return resource.loadAsString();
     }
 
     /**
@@ -170,6 +189,18 @@ public final class Content implements Identifiable<String>, Nameable, Descriptab
     public Content withDescription(String description) {
         Content copy = copy();
         copy.attributes.add(DESCRIPTION_ATTR, description);
+        return copy;
+    }
+
+    /**
+     * Creates a copy of this object and updates the attributes.
+     *
+     * @param attributes the new attributes
+     * @return a new instance
+     */
+    public Content withAttributes(Attributes<?> attributes) {
+        Content copy = copy();
+        copy.attributes.copyFrom(attributes);
         return copy;
     }
 
