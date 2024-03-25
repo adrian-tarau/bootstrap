@@ -63,6 +63,7 @@
         <module>search</module>
         <module>js</module>
         <module>model</module>
+        <module>template</module>
         <module>dataset</module>
         <module>web</module>
         <module>security</module>
@@ -98,6 +99,7 @@
         <flexmark.version>0.64.8</flexmark.version>
         <awaitility.version>4.2.0</awaitility.version>
         <kryo.version>5.6.0</kryo.version>
+        <mvel.version>2.5.2.Final</mvel.version>
         <jsqlparser.version>4.6</jsqlparser.version>
         <datafaker.version>2.1.0</datafaker.version>
         <logback.version>2.0.11</logback.version>
@@ -240,6 +242,12 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-math3</artifactId>
                 <version>${apache.commons.math.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mvel</groupId>
+                <artifactId>mvel2</artifactId>
+                <version>${mvel.version}</version>
             </dependency>
 
             <dependency>
