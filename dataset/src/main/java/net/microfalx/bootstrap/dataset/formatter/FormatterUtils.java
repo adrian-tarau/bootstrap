@@ -11,6 +11,8 @@ import java.time.ZoneId;
 import java.time.temporal.Temporal;
 import java.util.Locale;
 
+import static net.microfalx.lang.TimeUtils.*;
+
 /**
  * Various utilities around formatters.
  */
@@ -94,12 +96,24 @@ public class FormatterUtils {
             if (formattable != null) {
                 if (!formattable.prettyPrint()) {
                     return ObjectUtils.toString(value);
-                } else if (formattable.counter()) {
+                } else if (formattable.unit() == Formattable.Unit.COUNT) {
                     return net.microfalx.lang.FormatterUtils.formatNumber(value);
-                } else if (formattable.bytes()) {
+                } else if (formattable.unit() == Formattable.Unit.BYTES) {
                     return net.microfalx.lang.FormatterUtils.formatBytes(value);
-                } else if (formattable.duration()) {
+                } else if (formattable.unit() == Formattable.Unit.MICRO_SECOND) {
+                    float floatValue = ((Number) value).floatValue() / MICROSECONDS_IN_MILLISECONDS;
+                    return net.microfalx.lang.FormatterUtils.formatDuration(floatValue);
+                } else if (formattable.unit() == Formattable.Unit.MILLI_SECOND) {
                     return net.microfalx.lang.FormatterUtils.formatDuration(value);
+                } else if (formattable.unit() == Formattable.Unit.SECOND) {
+                    value = ((Number) value).longValue() * MILLISECONDS_IN_SECOND;
+                    return net.microfalx.lang.FormatterUtils.formatDuration(value);
+                } else if (formattable.unit() == Formattable.Unit.MINUTE) {
+                    value = ((Number) value).longValue() * MILLISECONDS_IN_MINUTE;
+                    return net.microfalx.lang.FormatterUtils.formatDuration(value);
+                } else if (formattable.unit() == Formattable.Unit.NANO_SECOND) {
+                    float floatValue = ((Number) value).floatValue() / NANOSECONDS_IN_MILLISECONDS;
+                    return net.microfalx.lang.FormatterUtils.formatDuration(floatValue);
                 } else if (!Formattable.AUTO.equals(formattable.negativeValue()) && ((Number) value).doubleValue() < 0) {
                     return formattable.NA;
                 }

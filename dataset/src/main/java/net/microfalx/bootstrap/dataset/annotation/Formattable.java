@@ -68,25 +68,13 @@ public @interface Formattable {
     boolean prettyPrint() default true;
 
     /**
-     * Formats a number like a counter.
+     * Returns the unit of measure for this formatter.
+     * <p>
+     * Based on the unit of measure, a different formatter will be used
      *
-     * @return {@code true} if a counter, {@code false otherwise}
+     * @return the unit
      */
-    boolean counter() default false;
-
-    /**
-     * Formats a number with a byte unit.
-     *
-     * @return {@code true} if a counter, {@code false otherwise}
-     */
-    boolean bytes() default false;
-
-    /**
-     * Formats a number like a duration.
-     *
-     * @return {@code true} if a duration, {@code false otherwise}
-     */
-    boolean duration() default false;
+    Unit unit() default Unit.NONE;
 
     /**
      * Returns the custom formatter to be used for a field.
@@ -94,4 +82,55 @@ public @interface Formattable {
      * @return the formatter
      */
     Class<? extends Formatter> formatter() default Formatter.class;
+
+    /**
+     * A unit of measure for a formatter
+     */
+    enum Unit {
+
+        /**
+         * No unit of measure
+         */
+        NONE,
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatNumber(Object)}
+         */
+        COUNT,
+
+        /**
+         * Formats the integer as is, no pretty-print
+         */
+        INTEGER,
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatBytes(Object)}
+         */
+        BYTES,
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with nanosecond unit
+         */
+        NANO_SECOND,
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with microsecond unit
+         */
+        MICRO_SECOND,
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with millisecond unit
+         */
+        MILLI_SECOND,
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with second unit
+         */
+        SECOND,
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with second unit
+         */
+        MINUTE
+    }
 }
