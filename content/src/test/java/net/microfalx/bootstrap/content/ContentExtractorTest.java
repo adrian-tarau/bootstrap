@@ -23,14 +23,21 @@ class ContentExtractorTest {
 
     @Test
     void extractHtml() throws IOException {
-        Content content = contentService.extract(ClassPathResource.file("test1.html"));
+        Content content = contentService.extract(ClassPathResource.file("test1.html"), true);
         Assertions.assertThat(content.getResource().loadAsString())
                 .contains("Company A").contains("Contact us").contains("sidebar");
     }
 
     @Test
     void extractJson() throws IOException {
-        Content content = contentService.extract(ClassPathResource.file("test1.json"));
+        Content content = contentService.extract(ClassPathResource.file("test1.json"), true);
+        Assertions.assertThat(content.getResource().loadAsString())
+                .contains("Click Here").contains("sun1.opacity").contains("Copy Again");
+    }
+
+    @Test
+    void extractJson3() throws IOException {
+        Content content = contentService.extract(ClassPathResource.file("test3.json"), true);
         Assertions.assertThat(content.getResource().loadAsString())
                 .contains("Click Here").contains("sun1.opacity").contains("Copy Again");
     }

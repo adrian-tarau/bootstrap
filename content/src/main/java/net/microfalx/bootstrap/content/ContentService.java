@@ -180,7 +180,7 @@ public class ContentService implements InitializingBean {
      * @throws IOException if an I/O exception occurs
      */
     public Content extract(Resource resource) throws IOException {
-        return extract(resource, new Metadata(), false);
+        return extract(resource, false);
     }
 
     /**
@@ -189,7 +189,17 @@ public class ContentService implements InitializingBean {
      * @param resource the content of the document
      * @throws IOException if an I/O exception occurs
      */
-    public Content extract(Resource resource, Metadata metadata, boolean extractAttributes) throws IOException {
+    public Content extract(Resource resource, boolean extractAttributes) throws IOException {
+        return extract(resource, extractAttributes, new Metadata());
+    }
+
+    /**
+     * Extracts the plain text from a document using an available parser.
+     *
+     * @param resource the content of the document
+     * @throws IOException if an I/O exception occurs
+     */
+    public Content extract(Resource resource, boolean extractAttributes, Metadata metadata) throws IOException {
         requireNonNull(resource);
         requireNonNull(metadata);
         if (MimeType.APPLICATION_OCTET_STREAM.equals(resource.getMimeType())) {

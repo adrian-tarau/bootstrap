@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.content;
 
+import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.lang.*;
 import net.microfalx.resource.Resource;
@@ -9,7 +10,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -31,6 +34,7 @@ public final class Content implements Identifiable<String>, Nameable, Descriptab
     public static final String URI_ATTR = "uri";
     public static final String DESCRIPTION_ATTR = "description";
     public static final String MIME_TYPE_ATTR = "mime_type";
+    private static final Set<String> INTERNAL_ATTRIBUTES = new HashSet<>();
 
     private final ContentLocator locator;
     private final Resource resource;
@@ -91,6 +95,15 @@ public final class Content implements Identifiable<String>, Nameable, Descriptab
      */
     public Attributes<?> getAttributes() {
         return attributes;
+    }
+
+    /**
+     * Returns the external attributes associated with the content.
+     *
+     * @return a non-null instance
+     */
+    public Attributes<?> getExternalAttributes() {
+        return Attributes.create().copyFrom(this.attributes, a -> !INTERNAL_ATTRIBUTES.contains(a.getName()));
     }
 
     /**
@@ -198,9 +211,9 @@ public final class Content implements Identifiable<String>, Nameable, Descriptab
      * @param attributes the new attributes
      * @return a new instance
      */
-    public Content withAttributes(Attributes<?> attributes) {
+    public <AA extends Attribute> Content withAttributes(Attributes<AA> attributes) {
         Content copy = copy();
-        copy.attributes.copyFrom(attributes);
+        copy.attributes.copyFrom(attributes, aa -> !INTERNAL_ATTRIBUTES.contains(aa.getName()));
         return copy;
     }
 
@@ -249,5 +262,14 @@ public final class Content implements Identifiable<String>, Nameable, Descriptab
                 .add("type='" + getType() + "'")
                 .add("resource=" + resource.toURI())
                 .toString();
+    }
+
+    static {
+        INTERNAL_ATTRIBUTES.add(ID_ATTR);
+        INTERNAL_ATTRIBUTES.add(NAME_ATTR);
+        INTERNAL_ATTRIBUTES.add(TYPE_ATTR);
+        INTERNAL_ATTRIBUTES.add(URI_ATTR);
+        INTERNAL_ATTRIBUTES.add(DESCRIPTION_ATTR);
+        INTERNAL_ATTRIBUTES.add(MIME_TYPE_ATTR);
     }
 }

@@ -1,19 +1,15 @@
 package net.microfalx.bootstrap.content;
 
 import net.microfalx.bootstrap.model.Attribute;
-import net.microfalx.lang.StringUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * Extracts all the text.
@@ -23,18 +19,9 @@ public class ContentExtractor extends DefaultHandler {
     private final StringBuilder builder = new StringBuilder();
     private final Map<String, Set<String>> attributes = new HashMap<>();
 
-    private String lastElement;
+    private Stack<String> elements = new Stack<>();
     private StringBuilder elementBody = new StringBuilder();
-    private int maximumElementLength = 50;
     private boolean extractAttributes;
-
-    public int getMaximumElementLength() {
-        return maximumElementLength;
-    }
-
-    public void setMaximumElementLength(int maximumElementLength) {
-        this.maximumElementLength = maximumElementLength;
-    }
 
     public boolean isExtractAttributes() {
         return extractAttributes;
@@ -60,7 +47,8 @@ public class ContentExtractor extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         super.startElement(uri, localName, qName, attributes);
         if (extractAttributes) {
-            lastElement = StringUtils.defaultIfEmpty(localName, qName);
+            String name = defaultIfEmpty(localName, qName);
+            elements.push(name);
             elementBody.setLength(0);
         }
     }
@@ -81,18 +69,31 @@ public class ContentExtractor extends DefaultHandler {
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
         super.endElement(uri, localName, qName);
-        if (extractAttributes && isNotEmpty(lastElement)) {
-            String value = elementBody.toString();
-            if (value.length() < maximumElementLength && isNotEmpty(value)) {
-                Set<String> values = attributes.computeIfAbsent(lastElement, s -> new HashSet<>());
-                values.add(value);
-            }
-        }
+        if (!extractAttributes) return;
+        String name = calculateAttributeName();
+        if (!elements.isEmpty()) elements.pop();
+        if (isEmpty(name)) return;
+        String value = elementBody.toString();
+        if (containsWhiteSpacesOnly(value)) return;
+        Set<String> values = attributes.computeIfAbsent(name, s -> new HashSet<>());
+        values.add(value);
     }
 
     @Override
     public String toString() {
         return builder.toString();
+    }
+
+    private String calculateAttributeName() {
+        if (elements.isEmpty()) return EMPTY_STRING;
+        StringBuilder attributeNameBuilder = new StringBuilder();
+        Iterator<String> iterator = elements.iterator();
+        attributeNameBuilder.append(iterator.next());
+        while (iterator.hasNext()) {
+            String part = iterator.next();
+            attributeNameBuilder.append(capitalizeFirst(part));
+        }
+        return attributeNameBuilder.toString();
     }
 
     private boolean acceptAttributeValue(String value) {
