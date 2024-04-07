@@ -148,11 +148,11 @@ public class VerticaDatabase extends AbstractDatabase {
 
     private Node getNodeByName(String nodeName) {
         Collection<Node> nodes = cachedNodes.isEmpty() ? getNodes() : cachedNodes;
-        return cachedNodes.stream().filter(node -> node.getName().equals(nodeName)).findFirst().orElse(null);
+        return nodes.stream().filter(node -> node.getName().equals(nodeName)).findFirst().orElse(null);
     }
 
     private static final String GET_NODES_SQL = "select * from v_catalog.nodes order by node_name";
-    private static final String GET_SESSIONS_SQL = "select * from v_monitor.sessions";
+    private static final String GET_SESSIONS_SQL = "select * from v_monitor.sessions where CURRENT_SESSION() <> session_id";
     private static final String GET_TRANSACTIONS_SQL = "select t.* from v_monitor.sessions s\n" +
             "  join v_monitor.transactions t on s.transaction_id = t.transaction_id";
     private static final String GET_SESSION_STATES_SQL = "select sum(CASE WHEN transaction_id::integer > 0 THEN 1 ELSE 0 END) as active, \n" +

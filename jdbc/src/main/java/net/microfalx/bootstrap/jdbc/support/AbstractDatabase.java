@@ -24,6 +24,8 @@ import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.createJdbcUri;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
+import static net.microfalx.lang.TimeUtils.TEN_SECONDS;
 
 /**
  * Base class for a database.
@@ -159,12 +161,15 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
         URI uri = DatabaseUtils.getURI(getDataSource());
         uri = createJdbcUri(replaceHostAndPort(uri, hostname, port));
         HikariConfig config = new HikariConfig();
-        config.setMinimumIdle(1);
+        config.setMinimumIdle(0);
         config.setMaximumPoolSize(10);
         config.setPoolName(hostname);
         config.setJdbcUrl(uri.toASCIIString());
         config.setUsername(getDataSource().getUserName());
         config.setPassword(getDataSource().getPassword());
+        config.setConnectionTimeout(TEN_SECONDS);
+        config.setIdleTimeout(FIVE_MINUTE);
+        config.setInitializationFailTimeout(-1);
         HikariDataSource hikariDataSource = new HikariDataSource(config);
         dataSource = DataSource.create(id, hostname, hikariDataSource).withUri(uri)
                 .withUserName(getDataSource().getUserName())

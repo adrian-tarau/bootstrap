@@ -188,7 +188,7 @@ public class MySqlDatabase extends AbstractDatabase {
     }
 
     private static final String GET_NODES_SQL = "select * from mysql.wsrep_cluster_members order by node_name";
-    private static final String GET_SESSIONS_SQL = "select * from information_schema.processlist";
+    private static final String GET_SESSIONS_SQL = "select * from information_schema.processlist where CONNECTION_ID() <> id";
     private static final String GET_TRANSACTIONS_SQL = "SELECT t.*, p.`USER` FROM information_schema.innodb_trx t" +
             "\n  left join information_schema.processlist p on t.trx_mysql_thread_id = p.id";
 
