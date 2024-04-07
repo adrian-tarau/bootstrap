@@ -2,23 +2,24 @@ package net.microfalx.bootstrap.template;
 
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.resource.Resource;
+import org.mvel2.MVEL;
 import org.mvel2.templates.CompiledTemplate;
 import org.mvel2.templates.TemplateCompiler;
 import org.mvel2.templates.TemplateRuntime;
 
-import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 
 /**
  * An expression evaluator based on <a href="http://mvel.documentnode.com/">MVel</a>
  */
 final class MvelTemplate<M, F extends Field<M>, ID> extends AbstractTemplate {
 
-    private final CompiledTemplate compiledTemplate;
+    private volatile CompiledTemplate template;
+    private volatile Serializable expression;
 
-    MvelTemplate(Resource resource) throws IOException {
+    MvelTemplate(Resource resource) {
         super(resource);
-        compiledTemplate = TemplateCompiler.compileTemplate(resource.getInputStream());
     }
 
     @Override
@@ -28,20 +29,18 @@ final class MvelTemplate<M, F extends Field<M>, ID> extends AbstractTemplate {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T evaluate(TemplateContext context) {
-        try {
-            return (T) TemplateRuntime.execute(compiledTemplate, context.getModel(), context.toMap());
-        } catch (Exception e) {
-            throw new TemplateException("Failed to evaluate expression '" + getResource() + "'", e);
+    public <T> T doEvaluate(TemplateContext context) throws Exception {
+        if (expression == null) {
+            expression = MVEL.compileExpression(getResource().loadAsString());
         }
+        return (T) MVEL.executeExpression(expression, context.getModel(), context.toMap());
     }
 
     @Override
-    public void evaluate(TemplateContext context, OutputStream outputStream) throws IOException {
-        try {
-            TemplateRuntime.execute(compiledTemplate, context.getModel(), context.toMap(), outputStream);
-        } catch (Exception e) {
-            throw new TemplateException("Failed to evaluate expression '" + getResource() + "'", e);
+    public void doEvaluate(TemplateContext context, OutputStream outputStream) throws Exception {
+        if (template == null) {
+            template = TemplateCompiler.compileTemplate(getResource().getInputStream());
         }
+        TemplateRuntime.execute(template, context.getModel(), context.toMap(), outputStream);
     }
 }

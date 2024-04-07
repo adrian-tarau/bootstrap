@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.dialect.springdata.SpringDataDialect;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-@Service
+@Service("WebTemplateService")
 public class TemplateService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TemplateService.class);

@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.template;
 
 import net.microfalx.resource.Resource;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
 final class ThymeleafTemplate extends AbstractTemplate {
@@ -17,12 +16,12 @@ final class ThymeleafTemplate extends AbstractTemplate {
     }
 
     @Override
-    public <T> T evaluate(TemplateContext context) {
+    public <T> T doEvaluate(TemplateContext context) throws Exception {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void evaluate(TemplateContext context, OutputStream outputStream) throws IOException {
+    public void doEvaluate(TemplateContext context, OutputStream outputStream) throws Exception {
         evaluate(context);
     }
 }

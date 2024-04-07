@@ -20,10 +20,15 @@ public abstract class AbstractTemplateTest {
     @InjectMocks
     protected TemplateService templateService;
 
+    @InjectMocks
+    protected TemplateProperties templateProperties;
+
     @BeforeEach
     public void setup() throws Exception {
         metadataService.afterPropertiesSet();
         Reflect.on(templateService).set("metadataService", metadataService);
         Reflect.on(metadataService).set("i18nService", i18nService);
+        Reflect.on(templateService).set("properties", templateProperties);
+        templateService.afterPropertiesSet();
     }
 }

@@ -10,7 +10,7 @@ public class Person {
     private int age = 21;
     private Sex sex = Sex.MALE;
 
-    public static enum Sex {
+    public enum Sex {
         MALE,
         FEMALE
     }

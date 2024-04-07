@@ -4,6 +4,7 @@ import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.lang.ExceptionUtils;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -19,14 +20,14 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * @param <F>  the field
  * @param <ID> the identifier type
  */
-public abstract class AbstractTemplateContext<M, F extends Field<M>, ID> implements TemplateContext {
+public abstract class AbstractTemplateContext<M, F extends Field<M>, ID> implements TemplateContext, Cloneable {
 
     private final Metadata<M, F, ID> metadata;
     private final M model;
-    private final Attributes<?> attributes;
+    private Attributes<?> attributes;
 
-    private final Map<String, Object> variables = new HashMap<>();
-    private final Map<String, Object> wrapper = new WrapperMap();
+    private Map<String, Object> variables = new HashMap<>();
+    private Map<String, Object> wrapper = new WrapperMap();
 
     public AbstractTemplateContext(Metadata<M, F, ID> metadata, M model, Attributes<?> attributes) {
         this.metadata = metadata;
@@ -91,6 +92,13 @@ public abstract class AbstractTemplateContext<M, F extends Field<M>, ID> impleme
     }
 
     @Override
+    public TemplateContext withAttributes(Attributes<?> attributes) {
+        AbstractTemplateContext<M, F, ID> copy = copy();
+        copy.attributes = attributes;
+        return copy;
+    }
+
+    @Override
     public String toString() {
         return new StringJoiner(", ", AbstractTemplateContext.class.getSimpleName() + "[", "]")
                 .add("metadata=" + metadata)
@@ -98,6 +106,18 @@ public abstract class AbstractTemplateContext<M, F extends Field<M>, ID> impleme
                 .add("attributes=" + attributes)
                 .add("variables=" + variables)
                 .toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private AbstractTemplateContext<M, F, ID> copy() {
+        try {
+            AbstractTemplateContext<M, F, ID> clone = (AbstractTemplateContext<M, F, ID>) clone();
+            clone.variables = new HashMap<>(variables);
+            clone.wrapper = clone.new WrapperMap();
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            return ExceptionUtils.throwException(e);
+        }
     }
 
     private class WrapperMap extends AbstractMap<String, Object> {

@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.template;
 
+import net.microfalx.bootstrap.model.Attributes;
+
 import java.util.Map;
 
 /**
@@ -52,5 +54,13 @@ public interface TemplateContext {
      * @return a non-null instance
      */
     Map<String, Object> toMap();
+
+    /**
+     * Creates a new instance of the template context, replaces the attributes.
+     *
+     * @param attributes the new attributes
+     * @return a new instance
+     */
+    TemplateContext withAttributes(Attributes<?> attributes);
 
 }
