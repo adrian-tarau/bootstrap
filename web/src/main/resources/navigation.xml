@@ -13,7 +13,8 @@
             </menu>
         </menu>
         <menu id="support" text="Support" position="2000" icon="fa-solid fa-life-ring">
-            <menu id="metric" text="Metrics" position="500" icon="fa-solid fa-ruler-combined">
+            <item id="executor" text="Executors" action="/support/executor" position="500" icon="fa-solid fa-cubes"/>
+            <menu id="metric" text="Metrics" position="510" icon="fa-solid fa-ruler-combined">
                 <item id="timer" text="Timers" action="/support/metric/timer" icon="fa-solid fa-stopwatch"/>
                 <item id="counter" text="Counters" action="/support/metric/counter" icon="fa-solid fa-cubes-stacked"/>
                 <item id="gauge" text="Gauges" action="/support/metric/gauge" icon="fa-solid fa-gauge"/>
