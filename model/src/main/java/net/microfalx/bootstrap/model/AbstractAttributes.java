@@ -86,7 +86,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
 
     @Override
     public final boolean isEmpty() {
-        return !(attributes == null || attributes.isEmpty());
+        return attributes == null || attributes.isEmpty();
     }
 
     @Override
@@ -104,34 +104,40 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     }
 
     @Override
-    public final void copyFrom(Map<String, Object> values) {
-        if (values == null) return;
+    public final Attributes<A> copyFrom(Map<String, Object> values) {
+        if (values == null) return this;
         values.forEach(this::add);
+        return this;
     }
 
     @Override
-    public void copyFrom(Map<String, Object> values, Function<String, Boolean> filter) {
-        if (values == null) return;
+    public Attributes<A> copyFrom(Map<String, Object> values, Function<String, Boolean> filter) {
+        if (values == null) return this;
         Function<String, Boolean> finalFilter = filter == null ? (Function<String, Boolean>) ALL_ATTRIBUTE_NAMES : filter;
         values.entrySet().stream().filter(e -> finalFilter.apply(e.getKey())).forEach(e -> add(e.getKey(), e.getValue()));
+        return this;
     }
 
     @Override
-    public final <AA extends Attribute> void copyFrom(Attributes<AA> attributes) {
-        if (attributes == null) return;
+    public final <AA extends Attribute> Attributes<A> copyFrom(Attributes<AA> attributes) {
+        if (attributes == null) return this;
         getRawAttributes(attributes).forEach(a -> add(a.getName(), a.getValue()));
+        return this;
     }
 
     @Override
-    public <AA extends Attribute> void copyFrom(Attributes<AA> attributes, Function<AA, Boolean> filter) {
+    public <AA extends Attribute> Attributes<A> copyFrom(Attributes<AA> attributes, Function<AA, Boolean> filter) {
+        if (attributes == null) return this;
         Function<AA, Boolean> finalFilter = filter == null ? (Function<AA, Boolean>) ALL_ATTRIBUTES : filter;
         getRawAttributes(attributes).stream().filter(a -> finalFilter.apply(a)).forEach(a -> add(a.getName(), a.getValue()));
+        return this;
     }
 
     @Override
-    public void copyFrom(Resource resource) throws IOException {
+    public Attributes<A> copyFrom(Resource resource) throws IOException {
         requireNonNull(resource);
         decodeAttributes(resource, this);
+        return this;
     }
 
     @Override

@@ -99,7 +99,7 @@ public interface Attribute extends Nameable, Descriptable, Comparable<Attribute>
     boolean isNumber();
 
     /**
-     * Returns whether the attribute value is text and it does not have new lines.
+     * Returns whether the attribute value is text and it does not have multiple lines.
      * <p>
      * Also, long single line texts are also considered multi-line since they will wrap in most views.
      *

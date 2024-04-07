@@ -99,7 +99,7 @@ public class TextExtractor {
         MimeType mimeType = MimeType.get(body.getMimeType());
         Metadata metadata = new Metadata();
         metadata.set(Metadata.CONTENT_TYPE, mimeType.getValue());
-        Content content = contentService.extract(body, metadata, false);
+        Content content = contentService.extract(body, false, metadata);
         builder.append(content.loadAsString());
         return builder.toString();
     }

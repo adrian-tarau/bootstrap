@@ -9,6 +9,10 @@ class DefaultAttributes extends AbstractAttributes<DefaultAttributes.DefaultAttr
 
     static class DefaultAttribute extends AbstractAttribute {
 
+        public DefaultAttribute() {
+            this("null", null);
+        }
+
         DefaultAttribute(String name, Object value) {
             super(name, value);
         }
