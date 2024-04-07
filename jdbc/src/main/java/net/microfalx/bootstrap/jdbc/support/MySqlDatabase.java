@@ -8,11 +8,14 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singleton;
 import static net.microfalx.lang.EnumUtils.fromName;
 import static net.microfalx.lang.StringUtils.toIdentifier;
@@ -135,10 +138,20 @@ public class MySqlDatabase extends AbstractDatabase {
         return "system user".equals(userName);
     }
 
+    private boolean hasTimeMs(ResultSet rs) throws SQLException {
+        ResultSetMetaData metaData = rs.getMetaData();
+        for (int index = 1; index <= metaData.getColumnCount(); index++) {
+            String columnName = metaData.getColumnName(index);
+            if ("time_ms".equalsIgnoreCase(columnName)) return true;
+        }
+        return false;
+    }
+
     private Collection<Session> extractSessionsFromNode(Node node) {
         JdbcTemplate template = new JdbcTemplate(node.getDataSource().unwrap());
         return template.query(GET_SESSIONS_SQL, rs -> {
             Collection<Session> sessions = new ArrayList<>();
+            boolean hasTimeMs = hasTimeMs(rs);
             while (rs.next()) {
                 long id = rs.getLong("id");
                 String nodeId = toIdentifier(node.getId() + "_" + id);
@@ -147,7 +160,7 @@ public class MySqlDatabase extends AbstractDatabase {
                 session.setSchema(rs.getString("db"));
                 session.setClientHostname(getHostFromHostAndPort(rs.getString("host")));
                 session.setState(getState(rs.getString("command"), rs.getString("state")));
-                session.setElapsed(Duration.ofMillis(rs.getLong("time_ms")));
+                session.setElapsed(hasTimeMs ? ofMillis(rs.getLong("time_ms")) : ofSeconds(rs.getLong("time")));
                 session.setStartedAt(LocalDateTime.now().minusSeconds(session.getElapsed().toSeconds()).atZone(getZoneId()));
                 session.setCreatedAt(session.getCreatedAt());
                 String info = rs.getString("info");
