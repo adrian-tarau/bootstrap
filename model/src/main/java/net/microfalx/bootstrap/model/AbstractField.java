@@ -39,6 +39,7 @@ public abstract class AbstractField<M> implements Field<M> {
     private boolean readOnly;
     private boolean _transient;
     private String label;
+    private boolean labelCalculated;
     private String labelIcon;
     private boolean labelIconCalculated;
     private String group;
@@ -72,15 +73,21 @@ public abstract class AbstractField<M> implements Field<M> {
 
     @Override
     public final String getLabel() {
-        if (label != null) return label;
+        if (labelCalculated) return label;
         label = metadata.getI18n(getI18nPrefix() + ".label");
         if (isEmpty(label)) {
             Label labelAnnot = findAnnotation(Label.class);
-            if (labelAnnot != null) {
-                label = isNotEmpty(labelAnnot.icon()) && isEmpty(labelAnnot.value()) ? EMPTY_STRING : labelAnnot.value();
+            if (getLabelIcon() != null) {
+                label = EMPTY_STRING;
+                labelCalculated = true;
+            } else {
+                label = labelAnnot != null ? labelAnnot.value() : EMPTY_STRING;
             }
         }
-        if (isEmpty(label)) label = beautifyCamelCase(getName());
+        if (isEmpty(label) && !labelCalculated) {
+            label = beautifyCamelCase(getName());
+        }
+        labelCalculated = true;
         return label;
     }
 

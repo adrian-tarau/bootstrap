@@ -3,6 +3,8 @@ package net.microfalx.bootstrap.dataset.annotation;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 
 import java.lang.annotation.*;
+import java.time.Duration;
+import java.util.StringJoiner;
 
 /**
  * An annotation used to provide formatting rules or custom formatters to fields.
@@ -70,7 +72,8 @@ public @interface Formattable {
     /**
      * Returns the unit of measure for this formatter.
      * <p>
-     * Based on the unit of measure, a different formatter will be used
+     * Based on the unit of measure, a different formatter will be used. When a throughput is requested, the created or modified
+     * field (in this order) will be used to calculated the duration.
      *
      * @return the unit
      */
@@ -91,46 +94,86 @@ public @interface Formattable {
         /**
          * No unit of measure
          */
-        NONE,
+        NONE(false, false),
 
         /**
          * Uses {@link net.microfalx.lang.FormatterUtils#formatNumber(Object)}
          */
-        COUNT,
+        COUNT(false, false),
 
         /**
          * Formats the integer as is, no pretty-print
          */
-        INTEGER,
+        INTEGER(false, false),
 
         /**
          * Uses {@link net.microfalx.lang.FormatterUtils#formatBytes(Object)}
          */
-        BYTES,
+        BYTES(false, false),
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatThroughput(Object, Duration, String)}
+         */
+        THROUGHPUT_BYTES(true, false),
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatThroughput(Object, Duration, String)}
+         */
+        THROUGHPUT_REQUESTS(true, false),
+
+        /**
+         * Uses {@link net.microfalx.lang.FormatterUtils#formatThroughput(Object, Duration, String)}
+         */
+        THROUGHPUT_TRANSACTIONS(true, false),
 
         /**
          * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with nanosecond unit
          */
-        NANO_SECOND,
+        NANO_SECOND(false, true),
 
         /**
          * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with microsecond unit
          */
-        MICRO_SECOND,
+        MICRO_SECOND(false, true),
 
         /**
          * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with millisecond unit
          */
-        MILLI_SECOND,
+        MILLI_SECOND(false, true),
 
         /**
          * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with second unit
          */
-        SECOND,
+        SECOND(false, true),
 
         /**
          * Uses {@link net.microfalx.lang.FormatterUtils#formatDuration(Object)} with second unit
          */
-        MINUTE
+        MINUTE(false, true);
+
+        private boolean throughput;
+        private boolean time;
+
+        Unit(boolean throughput, boolean time) {
+            this.throughput = throughput;
+            this.time = time;
+        }
+
+        public boolean isThroughput() {
+            return throughput;
+        }
+
+        public boolean isTime() {
+            return time;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", Unit.class.getSimpleName() + "[", "]")
+                    .add("name=" + name())
+                    .add("throughput=" + throughput)
+                    .add("time=" + time)
+                    .toString();
+        }
     }
 }

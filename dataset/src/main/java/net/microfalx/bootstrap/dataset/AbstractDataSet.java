@@ -15,10 +15,7 @@ import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.StringUtils;
-import net.microfalx.lang.annotation.Label;
-import net.microfalx.lang.annotation.Name;
-import net.microfalx.lang.annotation.ReadOnly;
-import net.microfalx.lang.annotation.Visible;
+import net.microfalx.lang.annotation.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +55,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     private List<F> viewableFields;
     private List<F> editableFields;
     private List<F> appendableFields;
+
+    private F timestampField;
+    private F createdAtField;
+    private F modifiedAtField;
+    private boolean timestampFieldsUpdated;
 
     public AbstractDataSet(DataSetFactory<M, F, ID> factory, Metadata<M, F, ID> metadata) {
         requireNonNull(factory);
@@ -529,6 +531,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         if (nameAnnot != null) setName(nameAnnot.value());
         Label labelAnnot = metadata.findAnnotation(Label.class);
         if (labelAnnot != null) setName(labelAnnot.value());
+        updateTimestampFields();
     }
 
     private List<F> getVisibleAndOrderedFields() {
@@ -544,6 +547,16 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     private boolean isJdkType(Object value) {
         if (value == null) return false;
         return value.getClass().getClassLoader() == StringUtils.NA_STRING.getClass().getClassLoader();
+    }
+
+    private void updateTimestampFields() {
+        if (timestampFieldsUpdated) return;
+        for (F field : getMetadata().getFields()) {
+            if (field.findAnnotation(Timestamp.class) != null) timestampField = field;
+            if (field.findAnnotation(CreatedAt.class) != null) createdAtField = field;
+            if (field.findAnnotation(ModifiedAt.class) != null) modifiedAtField = field;
+        }
+        timestampFieldsUpdated = true;
     }
 
     private Formatter<M, F, Object> createFormatter(Field<M> field, Formattable formattable) {
