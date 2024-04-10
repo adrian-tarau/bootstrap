@@ -6,21 +6,21 @@
 <tr th:if="${#dataset.hasColumnGroups()}">
     <th scope="col" class="text-right align-middle" rowspan="2">#</th>
     <th scope="col" th:each="group : ${#dataset.getColumnGroupsFirstRow()}" th:class="${#dataset.getHeaderClass(group.getField(), group.isGroup())}"
-        th:attr="field=${group.getField().name}" component:tooltip="${group.getField()}" th:colspan="${group.getColSpan()}" th:rowspan="${group.getRowSpan()}">
+        th:attr="field_name=${group.getField().name},field_index=${#dataset.getFieldIndex(group.getField())}" component:tooltip="${group.getField()}" th:colspan="${group.getColSpan()}" th:rowspan="${group.getRowSpan()}">
         <span th:utext="${group.label}"></span>
     </th>
     <th scope="col" rowspan="2" class="text-center align-middle" th:if="${#dataset.hasActions}" component:tooltip-text="The actions available to interact with records">Actions</th>
 </tr>
 <tr th:if="${#dataset.hasColumnGroups()}">
     <th scope="col" th:each="group : ${#dataset.getColumnGroupsSecondRow()}" th:class="${#dataset.getHeaderClass(group.getField())}"
-        th:attr="field=${group.getField().name}" component:tooltip="${group.getField()}">
+        th:attr="field_name=${group.getField().name},field_index=${#dataset.getFieldIndex(group.getField())}" component:tooltip="${group.getField()}">
         <span th:if="${group.getField().labelIcon}" th:class="${group.getField().labelIcon}"></span><span th:utext="${group.getField().label}"></span>
     </th>
 </tr>
 <tr th:unless="${#dataset.hasColumnGroups()}">
     <th scope="col" class="text-right align-middle">#</th>
     <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}"
-        th:attr="field=${field.name}" component:tooltip="${field}">
+        th:attr="field_name=${field.name},field_index=${#dataset.getFieldIndex(field)}" component:tooltip="${field}">
         <span th:if="${field.labelIcon}" th:class="${field.labelIcon}"></span><span th:utext="${field.label}"></span>
     </th>
     <th scope="col" class="text-center align-middle" th:if="${#dataset.hasActions}" component:tooltip-text="The actions available to interact with records">Actions</th>

@@ -7,11 +7,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.bootstrap.broker.BrokerUtils.describe;
@@ -30,6 +35,8 @@ public class BrokerService implements InitializingBean {
     private final Collection<BrokerProvider> providers = new CopyOnWriteArrayList<>();
     private final Map<String, Broker> brokers = new ConcurrentHashMap<>();
     private final Map<String, Topic> topics = new ConcurrentHashMap<>();
+    private final Collection<WeakReference<BrokerConsumer<?, ?>>> consumers = new ConcurrentLinkedQueue<>();
+    private final Collection<WeakReference<BrokerProducer<?, ?>>> producers = new ConcurrentLinkedQueue<>();
 
     /**
      * Returns registered brokers.
@@ -69,6 +76,62 @@ public class BrokerService implements InitializingBean {
         requireNonNull(topic);
         topics.put(topic.getId(), topic);
         LOGGER.info("Register topic '{}' from broker '{}'", topic.getName(), topic.getBroker().getName());
+    }
+
+    /**
+     * Returns a collection of registered consumers.
+     *
+     * @return a non-null instance
+     */
+    public Collection<BrokerConsumer<?, ?>> getConsumers() {
+        return consumers.stream().map(Reference::get).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a consumer by its identifier.
+     *
+     * @param id  the consumer identifier
+     * @param <K> the key type
+     * @param <V> the value type
+     * @return the consumer
+     * @throws IllegalArgumentException if the consumer cannot be located
+     */
+    @SuppressWarnings("unchecked")
+    public <K, V> BrokerConsumer<K, V> getConsumer(String id) {
+        requireNonNull(id);
+        for (WeakReference<BrokerConsumer<?, ?>> consumer : consumers) {
+            BrokerConsumer<?, ?> realConsumer = consumer.get();
+            if (realConsumer != null && realConsumer.getId().equals(id)) return (BrokerConsumer<K, V>) realConsumer;
+        }
+        throw new IllegalArgumentException("A consumer with identifier '" + id + "' is not registered");
+    }
+
+    /**
+     * Returns a collection of registered producers.
+     *
+     * @return a non-null instance
+     */
+    public Collection<BrokerProducer<?, ?>> getProducers() {
+        return producers.stream().map(Reference::get).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a producer by its identifier.
+     *
+     * @param id  the procuer identifier
+     * @param <K> the key type
+     * @param <V> the value type
+     * @return the consumer
+     * @throws IllegalArgumentException if the consumer cannot be located
+     */
+    @SuppressWarnings("unchecked")
+    public <K, V> BrokerProducer<K, V> getProducer(String id) {
+        requireNonNull(id);
+        for (WeakReference<BrokerProducer<?, ?>> producer : producers) {
+            BrokerProducer<?, ?> realProducer = producer.get();
+            if (realProducer != null && realProducer.getId().equals(id)) return (BrokerProducer<K, V>) realProducer;
+        }
+        throw new IllegalArgumentException("A consumer with identifier '" + id + "' is not registered");
     }
 
     /**
@@ -166,6 +229,36 @@ public class BrokerService implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         loadProviders();
+    }
+
+    <K, V> void registerProducer(BrokerProducer<K, V> producer) {
+        requireNonNull(producer);
+        this.producers.add(new WeakReference<>(producer));
+    }
+
+    <K, V> void releaseProducer(BrokerProducer<K, V> producer) {
+        requireNonNull(producer);
+        for (WeakReference<BrokerProducer<?, ?>> reference : producers) {
+            if (reference.get() == producer) {
+                producers.remove(reference);
+                break;
+            }
+        }
+    }
+
+    <K, V> void registerConsumer(BrokerConsumer<K, V> consumer) {
+        requireNonNull(consumer);
+        this.consumers.add(new WeakReference<>(consumer));
+    }
+
+    <K, V> void releaseConsumer(BrokerConsumer<K, V> consumer) {
+        requireNonNull(consumer);
+        for (WeakReference<BrokerConsumer<?, ?>> reference : consumers) {
+            if (reference.get() == consumer) {
+                consumers.remove(reference);
+                break;
+            }
+        }
     }
 
     private BrokerProvider locateProvider(Broker broker) {

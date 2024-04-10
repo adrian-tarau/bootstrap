@@ -11,6 +11,11 @@
                 <item id="transaction" text="Transactions" action="/system/database/transaction"
                       icon="fa-solid fa-right-left"/>
             </menu>
+            <menu id="brokers_admin" text="Brokers" position="910" action="/system/broker"
+                  icon="fa-regular fa-message">
+                <item id="consumer" text="Consumers" action="/system/broker/consumer" position="10" icon="fa-solid fa-arrow-right-to-bracket"/>
+                <item id="producer" text="Producers" action="/system/broker/producer" position="11" icon="fa-solid fa-arrow-right-from-bracket"/>
+            </menu>
         </menu>
         <menu id="support" text="Support" position="2000" icon="fa-solid fa-life-ring">
             <item id="executor" text="Executors" action="/support/executor" position="500" icon="fa-solid fa-cubes"/>

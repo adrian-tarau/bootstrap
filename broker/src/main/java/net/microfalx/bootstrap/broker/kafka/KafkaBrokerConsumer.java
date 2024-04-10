@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
@@ -21,19 +22,21 @@ public class KafkaBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
 
     private static final ThreadLocal<Deserializer<?>> DESERIALIZER = new ThreadLocal<>();
 
-    private Consumer<K, V> consumer;
+    private volatile Consumer<K, V> consumer;
     private volatile Set<TopicPartition> initialPartitions;
     private final Set<TopicPartition> currentPartitions = new CopyOnWriteArraySet<>();
 
     private final Map<Integer, Long> offsetPositions = new ConcurrentHashMap<>();
     private final Set<Integer> offsetPositionsApplied = new CopyOnWriteArraySet<>();
 
-    public KafkaBrokerConsumer(Topic topic) {
-        super(topic);
+    private volatile Status status;
+
+    public KafkaBrokerConsumer(BrokerService brokerService, Topic topic) {
+        super(brokerService, topic);
     }
 
     @Override
-    public void initialize(Object... context) {
+    public void doInitialize(Object... context) {
         Topic topic = getTopic();
         final Map<String, Object> props = createProperties();
         consumer = new KafkaConsumer<>(props);
@@ -41,8 +44,32 @@ public class KafkaBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
     }
 
     @Override
-    public void release() {
+    public void doRelease() {
         IOUtils.closeQuietly(consumer);
+    }
+
+    @Override
+    public long getLag() {
+        long lag = 0;
+        for (TopicPartition currentPartition : currentPartitions) {
+            OptionalLong topicLag = consumer.currentLag(currentPartition);
+            if (topicLag.isPresent()) lag += topicLag.getAsLong();
+        }
+        return lag;
+    }
+
+    @Override
+    public Status getStatus() {
+        if (status != null && initialPartitions != null) {
+            return status;
+        } else {
+            return initialPartitions != null ? Status.IDLE : Status.CONNECT;
+        }
+    }
+
+    @Override
+    public Collection<Partition> getPartitions() {
+        return currentPartitions.stream().map(p -> new Partition(getTopic(), p.partition())).collect(Collectors.toList());
     }
 
     @Override
@@ -50,9 +77,21 @@ public class KafkaBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
         Topic topic = getTopic();
         try {
             Collection<Event<K, V>> events = new ArrayList<>();
-            ConsumerRecords<K, V> records = consumer.poll(timeout);
-            for (ConsumerRecord<K, V> record : records) {
-                events.add(new KafkaEvent<>(topic, record));
+            status = Status.POLL;
+            ConsumerRecords<K, V> records;
+            try {
+                records = consumer.poll(timeout);
+            } finally {
+                status = null;
+            }
+            status = Status.CONSUME;
+            try {
+                for (ConsumerRecord<K, V> record : records) {
+                    eventCount.incrementAndGet();
+                    events.add(new KafkaEvent<>(topic, record));
+                }
+            } finally {
+                status = null;
             }
             return events;
         } catch (Exception e) {
@@ -62,16 +101,27 @@ public class KafkaBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
 
     @Override
     protected void doCommit() {
-        if (!getTopic().isAutoCommit()) {
-            consumer.commitSync();
-        } else {
-            consumer.commitSync();
+        status = Status.COMMIT;
+        try {
+            if (!getTopic().isAutoCommit()) {
+                consumer.commitSync();
+            } else {
+                consumer.commitSync();
+            }
+        } finally {
+            status = null;
         }
     }
 
     @Override
     protected void doRollback() {
-
+        status = Status.ROLLBACK;
+        try {
+            close();
+            initialize();
+        } finally {
+            status = null;
+        }
     }
 
     private Map<String, Object> createProperties() {

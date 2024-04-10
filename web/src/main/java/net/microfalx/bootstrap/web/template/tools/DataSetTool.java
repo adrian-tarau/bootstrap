@@ -145,6 +145,22 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the field index in the grid.
+     *
+     * @param field the field index
+     * @return the index, -1 if it cannot be located
+     */
+    public int getFieldIndex(Field<M> field) {
+        int index = 1;
+        Collection<F> fields = getFields();
+        for (F visibleField : fields) {
+            if (visibleField.equals(field)) return index;
+            index++;
+        }
+        return -1;
+    }
+
+    /**
      * Returns whether a field is visible for the current state of the data set.
      *
      * @param field the field
@@ -594,7 +610,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
                 }
             }
         }
-        String cellClass = getCellClass(field, group);
+        String cellClass = getCellClass(field, group, true);
         if (cellClass != null) {
             classes += " " + cellClass;
         }
@@ -609,7 +625,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return the class
      */
     public String getCellClass(Field<M> field) {
-        return getCellClass(field, false);
+        return getCellClass(field, false, false);
     }
 
     /**
@@ -619,12 +635,12 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @param group {@code true} when the field is part of a column group, {@code false} otherwise
      * @return the class
      */
-    public String getCellClass(Field<M> field, boolean group) {
+    public String getCellClass(Field<M> field, boolean group, boolean header) {
         DataSet<M, F, ID> dataSet = getDataSet();
         String classes = "";
         if (field.getDataType() == Field.DataType.BOOLEAN || group) {
             classes += " text-center";
-        } else if (field.getDataType().isNumeric()) {
+        } else if (field.getDataType().isNumeric() && !header) {
             classes += " text-end";
         }
         if (field.getDataType().isTemporal()) classes += " text-nowrap";

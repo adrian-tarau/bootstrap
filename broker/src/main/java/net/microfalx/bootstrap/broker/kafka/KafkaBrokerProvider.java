@@ -8,12 +8,12 @@ public class KafkaBrokerProvider extends AbstractBrokerProvider {
 
     @Override
     public <K, V> BrokerConsumer<K, V> createConsumer(Topic topic) {
-        return new KafkaBrokerConsumer<>(topic);
+        return new KafkaBrokerConsumer<>(getBrokerService(), topic);
     }
 
     @Override
     public <K, V> BrokerProducer<K, V> createProducer(Topic topic) {
-        return new KafkaBrokerProducer<>(topic);
+        return new KafkaBrokerProducer<>(getBrokerService(), topic);
     }
 
     @Override

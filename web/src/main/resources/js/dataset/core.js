@@ -351,22 +351,9 @@ DataSet.initFields = function () {
         startDate = moment(startEndRange[0]);
         endDate = moment(startEndRange.length === 2 ? startEndRange[1] : startDate);
     }
-    Logger.debug("Data Set Range: " + startDate + ", " + endDate);
+    Logger.debug("Data Set Range: " + this.formatRange(startDate, endDate));
     let formatter = function (start, end) {
-        let adjustedEnd = moment();
-        let diff = adjustedEnd.diff(start, 'minutes');
-        let unit = "m";
-        if (diff > 300) {
-            start.subtract(30, "minutes");
-            if (diff > 1400) adjustedEnd = end;
-            diff = adjustedEnd.diff(start, 'hours');
-            unit = "h";
-            if (diff > 72) {
-                diff = adjustedEnd.diff(start, 'days');
-                unit = "d";
-            }
-        }
-        $('#daterange span').html(start.format('L') + ' - ' + end.format('L') + " (" + diff + unit + ")");
+        $('#daterange span').html(DataSet.formatRange(start, end));
     };
     $('#daterange').daterangepicker({
         startDate: startDate,
@@ -395,6 +382,32 @@ DataSet.initFields = function () {
         DataSet.reload();
     });
     formatter(startDate, endDate);
+}
+
+/**
+ * Formats a time range.
+ * @param {Object} start the start time as an instance, JS Date or Moment object
+ * @param {Object} end the end time as an instance, JS Date or Moment object
+ * @return {String} the formatted range as a string
+ */
+DataSet.formatRange = function (start, end) {
+    start = moment(start);
+    end = moment(end);
+    let localStart = start.clone();
+    let adjustedEnd = moment();
+    let diff = adjustedEnd.diff(localStart, 'minutes');
+    let unit = "m";
+    if (diff > 300) {
+        localStart.subtract(30, "minutes");
+        if (diff > 1400) adjustedEnd = end;
+        diff = adjustedEnd.diff(localStart, 'hours');
+        unit = "h";
+        if (diff > 72) {
+            diff = adjustedEnd.diff(localStart, 'days');
+            unit = "d";
+        }
+    }
+    return start.format('L') + ' - ' + end.format('L') + " (" + diff + unit + ")";
 }
 
 /**
@@ -432,11 +445,16 @@ DataSet.initTables = function () {
         if (target.get(0).tagName === "SPAN" && parent.get(0).tagName === "TD" && parent.hasClass("filterable")) {
             let text = target.text();
             target = parent;
-            let tdIndex = target.index() + 1;
-            let th = $('.dataset-table tr').find('th:nth-child(' + tdIndex + ')');
-            let field = th.attr('field');
+            let field = null;
+            let tdIndex = target.index();
+            $('.dataset-table tr th').each(function (index) {
+                if ($(this).attr("field_index") == tdIndex) {
+                    field = $(this).attr('field_name');
+                    return false;
+                }
+            });
             Logger.debug("Click on '" + text + "', index " + tdIndex + ", field " + field);
-            if (Utils.isNotEmpty(text) && Utils.isDefined(field)) {
+            if (Utils.isNotEmpty(text) && Utils.isNotEmpty(field)) {
                 let currentQuery = field + DATASET_FILTERABLE_OPERATOR + DATASET_FILTERABLE_QUOTE_CHAR + text + DATASET_FILTERABLE_QUOTE_CHAR;
                 let previousQuery = Application.getQueryParam("query");
                 if (Utils.isNotEmpty(previousQuery)) currentQuery += " AND " + previousQuery;
