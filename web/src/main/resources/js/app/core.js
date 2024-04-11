@@ -41,7 +41,7 @@ Application.getUri = function (path, params, options) {
     options = options || APP_AJAX_DEFAULT_OPTIONS;
     options.self = Utils.isDefined(options.self) ? options.self : true;
     options.params = Utils.isDefined(options.params) ? options.params : false;
-    params = options.self ? this.getQuery(params) : params;
+    params = options.params ? this.getQuery(params) : params;
     let uri = options.self ? this.getPath() : "/";
     if (path) {
         if (!uri.endsWith("/")) uri += "/";
@@ -154,7 +154,8 @@ Application.ajax = function (type, path, params, callback, options) {
         // nothing to do for errors
     });
     options.dataType = Utils.defaultIfNotDefinedOrNull(options.dataType, "text");
-    params = options.self ? this.getQuery(params) : params;
+    params = options.params ? this.getQuery(params) : params;
+    options.params = false;
     type = Utils.defaultIfNotDefinedOrNull(type, "GET");
     let uri = this.getUri(path, {}, options);
     Logger.info("Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);

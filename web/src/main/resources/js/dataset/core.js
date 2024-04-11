@@ -79,7 +79,7 @@ DataSet.reload = function () {
  * @param {Function} callback the callback to be called with the response
  */
 DataSet.get = function (path, params, callback) {
-    params = this.getParams(params, {params: true});
+    params = this.getParams(params, {params: false});
     Application.get(path, params, callback, {params: true})
 }
 
