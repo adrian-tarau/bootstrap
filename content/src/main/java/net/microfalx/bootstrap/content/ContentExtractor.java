@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.content;
 
 import net.microfalx.bootstrap.model.Attribute;
+import net.microfalx.lang.StringUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -15,6 +16,8 @@ import static net.microfalx.lang.StringUtils.*;
  * Extracts all the text.
  */
 public class ContentExtractor extends DefaultHandler {
+
+    private static final char[] WORD_SEPARATORS = new char[]{' ', '_', '-'};
 
     private final StringBuilder builder = new StringBuilder();
     private final Map<String, Set<String>> attributes = new HashMap<>();
@@ -90,8 +93,8 @@ public class ContentExtractor extends DefaultHandler {
         Iterator<String> iterator = elements.iterator();
         attributeNameBuilder.append(iterator.next());
         while (iterator.hasNext()) {
-            String part = iterator.next();
-            attributeNameBuilder.append(capitalizeFirst(part));
+            String name = camelCase(iterator.next());
+            attributeNameBuilder.append(capitalizeFirst(name));
         }
         return attributeNameBuilder.toString();
     }
@@ -99,6 +102,27 @@ public class ContentExtractor extends DefaultHandler {
     private boolean acceptAttributeValue(String value) {
         if (isIsoDateTime(value)) return false;
         return true;
+    }
+
+    private String camelCase(String name) {
+        name = org.apache.commons.lang3.StringUtils.replace(name, "(%)", "Pct");
+        name = org.apache.commons.lang3.StringUtils.replace(name, "%", "Pct");
+        StringBuilder builder = new StringBuilder();
+        char[] chars = name.toCharArray();
+        char preChar = 0x00;
+        for (int index = 0; index < chars.length; index++) {
+            char c = chars[index];
+            if (index == 0) c = Character.toLowerCase(c);
+            if (!isWordSeparator(c)) {
+                builder.append(isWordSeparator(preChar) ? Character.toUpperCase(c) : c);
+            }
+            preChar = c;
+        }
+        return builder.toString();
+    }
+
+    private static boolean isWordSeparator(char c) {
+        return StringUtils.containsInArray(c, WORD_SEPARATORS);
     }
 
     private boolean isIsoDateTime(String value) {

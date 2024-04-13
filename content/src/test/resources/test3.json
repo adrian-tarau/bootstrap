@@ -1,19 +1,13 @@
 {
-  "version" : "1.0",
-  "type" : "SYSTEM",
-  "severity" : "ERROR",
-  "message" : "An site health measurement, at site 'Holmdel South', has cross the threshold '1.6', value '1.0'. Additional information:\nHealth Report\n  Score : 1.0\n     1.0 : Application Server (Service) (*)\n     1.0 : Elastic Search (Service) (*)\n     1.0 : Elastic Search Curator (Service) (*)\n     1.0 : External Message Adapter (Service) (*)\n     1.0 : MariaDB (Database) (*)\n     1.0 : Ndo Agent (Service) (*)\n     1.0 : Policy (Service) (*)\n     1.0 : SSH Proxy (Service) (*)\n     1.0 : Security (Service) (*)\n     1.0 : Sentinel (Service) (*)\n     1.0 : Test Controller (Service) (*)\n     1.0 : Test Tesult Management (Service) (*)\n     1.0 : VTA Adapter (Service) (*)\n     1.0 : Zookeeper (Service) (*)\n     1.9 : Landing Zone (Broker) \n     2.1 : Prometheus (Service) \n     2.3 : Rule Engine (Service) \n     2.3 : Fault Isolation (Service) \n     2.5 : VMs (Server) \n     2.8 : Watchmen (Service) \n     2.8 : Default (Storage) \n     3.0 : Vertica (Database) \n     3.2 : On-demand Collection (Service) \n     3.3 : Prometheus / Asterix (Service) \n     3.3 : Prometheus / Hydra (Service) \n     3.4 : Landing Zone (Storage) \n     3.4 : Data Aggregation (Service) \n     3.6 : User Interface (Service) \n     3.6 : Minio Server A (Storage) \n     3.6 : Logger (Service) \n     3.7 : Event Collector (Service) \n     3.7 : Vertica (Server) \n     3.7 : K8s (Server) \n     3.8 : Collector Manager (Service) \n     3.8 : Machine Learning (Service) \n     3.8 : Application (Server) \n     3.8 : Registry (Service) \n     3.8 : Search (Service) \n     3.8 : File Store (Service) \n     3.8 : Sql Interceptor (Service) \n     3.8 : System Metrics (Service) \n     3.9 : Event Streaming (Service) \n     3.9 : Ad Hoc Reporting (Service) \n     3.9 : API Gateway (Service) \n     3.9 : Incident Analysis (Service) \n     3.9 : Backup (Service) \n     4.0 : REST API Collector (Service) \n     4.1 : Landslide Collector (Service) \n     4.2 : Sql Scheduler (Service) \n     4.2 : SNMP Collector (Service) \n     4.2 : Intelligent Thresholding (Service) \n     4.2 : Viavi xSight - UPC (Service) \n     4.3 : Correlator (Service) \n     4.3 : Standard (Service) \n     4.3 : Viavi xSight - CPC (Service) \n     4.3 : LSA (Service) \n     4.3 : Stream Analytics (Service) \n     4.3 : File Collector (Service) \n     4.3 : Viavi xSight - UP (Service) \n     4.3 : Data Export (Service) \n     4.3 : Reference Data (Service) \n     4.4 : CIDB Kafka (Broker) \n     4.4 : Holmdel (Broker) \n     5.0 : Performance Monitor (Service) \n     5.0 : Default Kafka Broker (Broker) \n     5.0 : Grafana / Adhoc (Service) \n     5.0 : Grafana / System (Service)\nUnhealthiest Resource  Score : 1.0\n     1.0 : Minimum Replicas (0 of 1) (*)\n     5.0 : Policy 01 (controller spectrum_policy) on Spcfrkusspectrum Worker 0 (spcfrkusspectrum-worker-0) (us_policy_6655dd94c5_h2mp9).",
-  "module" : {
-    "code" : 401,
-    "name" : "System Status"
-  },
-  "errorNumber" : 100,
-  "errorCode" : "CEM-401100",
-  "source" : {
-    "id" : "Site",
-    "name" : "Site"
-  },
-  "category" : "system",
-  "correlationId" : "siteholmdel_south",
-  "creationTime" : "2024-03-30T18:07:39.000-04:00"
+  "version" : "1",
+  "name" : "Report",
+  "owner" : "John Doe",
+  "data" : {
+    "Test Name" : "Ping",
+    "Date" : "04/13/2024 08:30",
+    "End Date" : "04/13/2024 09:00",
+    "Failed (%)" : "0.00%",
+    "Total Tests" : "2",
+    "Failed Tests (%)" : "100.00%"
+  }
 }

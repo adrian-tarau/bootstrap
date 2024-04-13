@@ -10,6 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @ExtendWith(MockitoExtension.class)
 class ContentExtractorTest {
 
@@ -39,7 +41,9 @@ class ContentExtractorTest {
     void extractJson3() throws IOException {
         Content content = contentService.extract(ClassPathResource.file("test3.json"), true);
         Assertions.assertThat(content.getResource().loadAsString())
-                .contains("Click Here").contains("sun1.opacity").contains("Copy Again");
+                .contains("John").contains("Report").contains("100.00%");
+        assertEquals("Ping", content.getAttributes().get("dataTestName").getValue());
+        assertEquals("0.00%", content.getAttributes().get("dataFailedPct").getValue());
     }
 
 }
