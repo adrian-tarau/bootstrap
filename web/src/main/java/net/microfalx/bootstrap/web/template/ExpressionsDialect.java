@@ -54,11 +54,12 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
         public static final String RESOURCE_OBJECT_NAME = "resources";
         public static final String MODEL_TOOL_NAME = "models";
         public static final String CONTENT_TOOL_NAME = "content";
+        public static final String FORMAT_TOOL_NAME = "formats";
 
         protected static final Set<String> ALL_EXPRESSION_OBJECT_NAMES = unmodifiableSet(
                 new LinkedHashSet<>(asList(APPLICATION_OBJECT_NAME, NAVIGATION_OBJECT_NAME, COMPONENT_OBJECT_NAME,
                         USER_OBJECT_NAME, DATASET_OBJECT_NAME, LINK_OBJECT_NAME, HELP_OBJECT_NAME,
-                        RESOURCE_OBJECT_NAME, MODEL_TOOL_NAME, CONTENT_TOOL_NAME)));
+                        RESOURCE_OBJECT_NAME, MODEL_TOOL_NAME, CONTENT_TOOL_NAME, FORMAT_TOOL_NAME)));
 
         @Override
         public Set<String> getAllExpressionObjectNames() {
@@ -83,6 +84,8 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
                 return new ModelTool(context, metadataService);
             } else if (CONTENT_TOOL_NAME.equals(expressionObjectName)) {
                 return new ContentTool(context, contentService);
+            } else if (FORMAT_TOOL_NAME.equals(expressionObjectName)) {
+                return new FormatTool(context);
             } else if (HELP_OBJECT_NAME.equals(expressionObjectName)) {
                 return new HelpTool(context, helpService);
             } else if (USER_OBJECT_NAME.equals(expressionObjectName)) {

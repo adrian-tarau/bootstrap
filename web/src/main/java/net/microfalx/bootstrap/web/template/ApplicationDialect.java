@@ -7,7 +7,6 @@ import net.microfalx.bootstrap.web.container.WebContainerRequest;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.template.tools.LinkTool;
 import net.microfalx.lang.TextUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.model.IProcessableElementTag;
@@ -21,6 +20,7 @@ import java.util.Set;
 
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang3.StringEscapeUtils.escapeEcmaScript;
 
 /**
  * Processors for {@link net.microfalx.bootstrap.web.application.Application}.
@@ -75,7 +75,9 @@ public class ApplicationDialect extends AbstractProcessorDialect {
             String filterableOperator = defaultIfEmpty(dataSetTool.getFilterableOperator(), SearchUtils.DEFAULT_FILTER_OPERATOR);
             builder.append("\nconst DATASET_FILTERABLE_OPERATOR=\"").append(filterableOperator).append("\"");
             String filterableQuoteChar = defaultIfEmpty(dataSetTool.getFilterableQuoteChar(), String.valueOf(SearchUtils.DEFAULT_FILTER_QUOTE_CHAR));
-            builder.append("\nconst DATASET_FILTERABLE_QUOTE_CHAR=\"").append(StringEscapeUtils.escapeEcmaScript(filterableQuoteChar)).append("\"");
+            builder.append("\nconst DATASET_FILTERABLE_QUOTE_CHAR=\"").append(escapeEcmaScript(filterableQuoteChar)).append("\"");
+            builder.append("\nconst SEARCH_ENGINE_FILTERABLE_OPERATOR=\"").append(SearchUtils.DEFAULT_FILTER_OPERATOR).append("\"");
+            builder.append("\nconst SEARCH_ENGINE_FILTERABLE_QUOTE_CHAR=\"").append(escapeEcmaScript(String.valueOf(SearchUtils.DEFAULT_FILTER_QUOTE_CHAR))).append("\"");
             builder.append('\n').append(SCRIPT_START_END);
             structureHandler.replaceWith(TextUtils.insertSpaces(builder.toString(), tag.getCol()), false);
 
