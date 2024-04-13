@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.broker.kafka;
 
 import net.microfalx.bootstrap.broker.*;
-import net.microfalx.lang.IOUtils;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -14,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
+import static net.microfalx.lang.IOUtils.closeQuietly;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 public class KafkaBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
@@ -45,7 +45,7 @@ public class KafkaBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
 
     @Override
     public void doRelease() {
-        IOUtils.closeQuietly(consumer);
+        closeQuietly(consumer);
     }
 
     @Override

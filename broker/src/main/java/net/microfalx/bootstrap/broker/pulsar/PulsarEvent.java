@@ -1,47 +1,51 @@
-package net.microfalx.bootstrap.broker.kafka;
+package net.microfalx.bootstrap.broker.pulsar;
 
 import net.microfalx.bootstrap.broker.Event;
 import net.microfalx.bootstrap.broker.Partition;
 import net.microfalx.bootstrap.broker.PartitionOffset;
 import net.microfalx.bootstrap.broker.Topic;
 import net.microfalx.lang.TimeUtils;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.pulsar.client.api.Message;
 
 import java.time.LocalDateTime;
 
-class KafkaEvent<K, V> implements Event<K, V> {
+class PulsarEvent<K, V> implements Event<K, V> {
 
     private final Topic topic;
-    private final ConsumerRecord<K, V> record;
+    private final Message<V> message;
 
-    KafkaEvent(Topic topic, ConsumerRecord<K, V> record) {
+    PulsarEvent(Topic topic, Message<V> message) {
         this.topic = topic;
-        this.record = record;
+        this.message = message;
+    }
+
+    Message<V> getMessage() {
+        return message;
     }
 
     @Override
     public String getId() {
-        return record.partition() + ":" + record.offset();
+        return message.getMessageId().toString();
     }
 
     @Override
     public K getKey() {
-        return record.key();
+        return (K) message.getKey();
     }
 
     @Override
     public V getValue() {
-        return record.value();
+        return message.getValue();
     }
 
     @Override
     public PartitionOffset getOffset() {
-        return PartitionOffset.create(Partition.create(topic, record.partition()), record.offset());
+        return PartitionOffset.create(Partition.create(topic, 1), 1);
     }
 
     @Override
     public LocalDateTime getTimestamp() {
-        return TimeUtils.toLocalDateTime(record.timestamp());
+        return TimeUtils.toLocalDateTime(message.getPublishTime());
     }
 
 
