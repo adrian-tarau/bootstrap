@@ -83,7 +83,15 @@ public final class DataSetService extends ApplicationContextSupport implements I
         Class<?> valueClass = value.getClass();
         if (valueClass == field.getDataClass()) return value;
         String displayValue = value.toString();
-        if (field.getDataType() == Field.DataType.MODEL) {
+        if (field.getDataType().isBoolean()) {
+            return Field.from(value, Boolean.class);
+        } else if (field.getDataType() == Field.DataType.STRING) {
+            return Field.from(value, String.class);
+        } else if (field.getDataType() == Field.DataType.INTEGER) {
+            return Field.from(value, Long.class);
+        } else if (field.getDataType() == Field.DataType.NUMBER) {
+            return Field.from(value, Double.class);
+        } else if (field.getDataType() == Field.DataType.MODEL) {
             CachedModelsByDisplayValue<?> cache = getCacheByDisplayName(valueClass);
             value = cache.models.getIfPresent(displayValue.toLowerCase());
             if (value != null) return value;
