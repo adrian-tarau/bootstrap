@@ -71,11 +71,13 @@ Application.openSelf = function (path, params) {
  *
  * @param {Object} params the new parameters
  * @param {String} [path] an optional path to add to the base URI
+ * @param {Boolean} [newWindow=false] an optional flag, true to control if the URI is opened in a new window, false otherwise
  */
-Application.open = function (path, params) {
+Application.open = function (path, params, newWindow) {
     let uri = this.getUri(path, params, {self: false});
-    Logger.info("Open '" + uri + "'");
-    window.location.href = uri;
+    newWindow = Utils.defaultIfNotDefined(newWindow, false);
+    Logger.info("Open '" + uri + "', new window '" + newWindow + "'");
+    window.open(uri, newWindow ? "_blank" : "");
 }
 
 /**

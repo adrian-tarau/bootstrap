@@ -20,8 +20,9 @@ Application.Search.click = function (element) {
  *
  * @param {String} text the query text
  * @param {Boolean} [global] true to use the global search engine
+ * @param {Boolean} [newWindow=false] an optional flag, true to control if the URI is opened in a new window, false otherwise
  */
-Application.Search.query = function (text, global) {
+Application.Search.query = function (text, global, newWindow) {
     global = Utils.defaultIfNotDefinedOrNull(global, false);
     if (DataSet.exists() && !global) {
         DataSet.search(text);
@@ -30,8 +31,29 @@ Application.Search.query = function (text, global) {
         let params = {
             query: text
         }
-        Application.open("/search", params);
+        Application.open("/search", params, newWindow);
     }
+}
+
+/**
+ * Executes a search with a given query.
+ *
+ * If the current page is a data set, the expression is processed by a data set, otherwise it goes to the
+ * global search engine (Apache Lucene), unless it is explicitly asked to be the global engine.
+ *
+ * @param {String} field the field name
+ * @param {String} text the field value
+ * @param {Boolean} [global] true to use the global search engine
+ * @param {Boolean} [newWindow=false] an optional flag, true to control if the URI is opened in a new window, false otherwise
+ */
+Application.Search.queryField = function (field, text, global, newWindow) {
+    let query;
+    if (global) {
+        query = field + SEARCH_ENGINE_FILTERABLE_OPERATOR + SEARCH_ENGINE_FILTERABLE_QUOTE_CHAR + text + SEARCH_ENGINE_FILTERABLE_QUOTE_CHAR;
+    } else {
+        query = field + DATASET_FILTERABLE_OPERATOR + DATASET_FILTERABLE_QUOTE_CHAR + text + DATASET_FILTERABLE_QUOTE_CHAR;
+    }
+    Application.Search.query(query, global, newWindow);
 }
 
 /**
@@ -39,14 +61,15 @@ Application.Search.query = function (text, global) {
  *
  * @param {String} text the new query text passed
  * @param {Boolean} [global] true to use the global search engine
+ * @param {Boolean} [newWindow=false] an optional flag, true to control if the URI is opened in a new window, false otherwise
  */
-Application.Search.join = function (text, global) {
+Application.Search.join = function (text, global, newWindow) {
     if (Utils.isEmpty(text)) {
-        Application.Search.query("", global);
+        Application.Search.query("", global, newWindow);
     } else {
         let currentText = Application.getQueryParam("query");
         if (Utils.isNotEmpty(currentText)) text += " AND " + currentText;
-        Application.Search.query(text, global);
+        Application.Search.query(text, global, newWindow);
     }
 }
 
@@ -56,10 +79,16 @@ Application.Search.join = function (text, global) {
  * @param {String} field the field name
  * @param {String} text the field value
  * @param {Boolean} [global] true to use the global search engine
+ * @param {Boolean} [newWindow=false] an optional flag, true to control if the URI is opened in a new window, false otherwise
  */
-Application.Search.joinField = function (field, text, global) {
-    let query = field + DATASET_FILTERABLE_OPERATOR + DATASET_FILTERABLE_QUOTE_CHAR + text + DATASET_FILTERABLE_QUOTE_CHAR;
-    Application.Search.join(query, global);
+Application.Search.joinField = function (field, text, global, newWindow) {
+    let query;
+    if (global) {
+        query = field + SEARCH_ENGINE_FILTERABLE_OPERATOR + SEARCH_ENGINE_FILTERABLE_QUOTE_CHAR + text + SEARCH_ENGINE_FILTERABLE_QUOTE_CHAR;
+    } else {
+        query = field + DATASET_FILTERABLE_OPERATOR + DATASET_FILTERABLE_QUOTE_CHAR + text + DATASET_FILTERABLE_QUOTE_CHAR;
+    }
+    Application.Search.join(query, global, newWindow);
 }
 
 // Bind events

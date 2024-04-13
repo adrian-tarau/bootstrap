@@ -12,13 +12,13 @@
                         <span class="fst-italic" th:text="${model.title}"></span>
                     </a>
                 </div>
-                <div class="col-md-4"><span class="fw-bold">Created At: </span><span class="fst-italic" th:text="${#temporals.format(model.createdAt)}"></span></div>
+                <div class="col-md-4"><span class="fw-bold">Created At: </span><span class="fst-italic" th:text="${#formats.format(model.createdAt)}"></span></div>
             </div>
             <div class="row">
                 <div class="col-md-2"><span class="fw-bold">Owner: </span><span class="fst-italic" th:text="${model.owner}"></span></div>
                 <div class="col-md-2"><span class="fw-bold">Type: </span><span class="fst-italic" th:text="${model.type}"></span></div>
                 <div class="col-md-4"><span class="fw-bold">Mime Type: </span><span class="fst-italic" th:text="${model.mimeType}"></span></div>
-                <div class="col-md-4"><span class="fw-bold">Modified At: </span><span class="fst-italic" th:text="${#temporals.format(model.modifiedAt)}"></span></div>
+                <div class="col-md-4"><span class="fw-bold">Modified At: </span><span class="fst-italic" th:text="${#formats.format(model.modifiedAt)}"></span></div>
             </div>
         </div>
         <div th:unless="${badges.isEmpty()}" class="row border rounded bg-body-secondary mb-3 p-3 fs-6 dataset-attributes">

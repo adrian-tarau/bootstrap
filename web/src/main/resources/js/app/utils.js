@@ -121,9 +121,9 @@ Utils.isDefined = function (value) {
 /**
  * Returns whether the value if defined or the default value.
  *
- * @param {Object} value the value to test.
- * @param {Object} defaultValue the default value to test.
- * @return {Object}
+ * @param {*} value the value to test.
+ * @param {*} defaultValue the default value to test.
+ * @return {*}
  */
 Utils.defaultIfNotDefined = function (value, defaultValue) {
     return Utils.isDefined(value) ? value : defaultValue;
