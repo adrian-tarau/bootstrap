@@ -11,7 +11,7 @@ import net.microfalx.lang.annotation.*;
 @Setter
 @EqualsAndHashCode(of = "id")
 @ToString
-@Name("Executor")
+@Name("Executors")
 @ReadOnly
 public class Executor {
 

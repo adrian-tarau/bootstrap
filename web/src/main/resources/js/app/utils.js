@@ -161,6 +161,17 @@ Utils.requireNonNull = function (reference) {
 }
 
 /**
+ * Defers the execution of the callback by a number of milliseconds.
+ *
+ * @param {Function} callback the callback
+ * @param {Number} delay the delay in milliseconds
+ * @param {Object} [self] the self
+ */
+Utils.defer = function (callback, delay, self) {
+    setTimeout(callback, delay);
+}
+
+/**
  * Returns the string representation of the reference.
  *
  * @param {Object} value a JavaScript reference

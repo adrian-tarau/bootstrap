@@ -37,6 +37,35 @@ Application.showErrorAlert = function (title, message) {
 }
 
 /**
+ * Asks the user a question and invokes the callback with the answer
+ * @param {String} title the title of the message box
+ * @param {String} message the question to be asked
+ * @param {Function} callback the callback to call with the answer
+ */
+Application.question = function (title, message, callback) {
+    iziToast.question({
+        timeout: 20000,
+        close: false,
+        overlay: true,
+        displayMode: 'once',
+        id: 'question',
+        zindex: 1000000,
+        title: title,
+        message: message,
+        position: 'center',
+        buttons: [
+            ['<button><b>Yes</b></button>', function (instance, toast) {
+                instance.hide({transitionOut: 'fadeOut'}, toast, 'button');
+                callback.call(this);
+            }, true],
+            ['<button>No</button>', function (instance, toast) {
+                instance.hide({transitionOut: 'fadeOut'}, toast, 'button');
+            }],
+        ]
+    });
+}
+
+/**
  * Shows an alert.
  *
  * @param {String} title the title
@@ -57,13 +86,14 @@ Application.showAlert = function (title, message, type) {
             color = "red";
             break
     }
+    message = Utils.isEmpty(message) ? "N/A" : message;
     iziToast.show({
         title: title,
         message: message,
         icon: icon,
         close: true,
         timeout: 5000,
-        maxWidth : 400,
+        maxWidth: 400,
         position: 'topRight',
         color: color
     });

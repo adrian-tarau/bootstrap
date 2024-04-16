@@ -3,28 +3,37 @@ package net.microfalx.bootstrap.store;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.google.common.collect.AbstractIterator;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.TimeUtils;
+import net.microfalx.lang.Timestampable;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.rocksdb.RocksDbManager;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckForNull;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDateTime;
+import java.time.temporal.Temporal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
+import static net.microfalx.bootstrap.store.StoreUtils.METRICS_FAILURES;
+import static net.microfalx.bootstrap.store.StoreUtils.getTimer;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
-public final class StoreImpl<ID, T extends Identifiable<ID>> implements Store<ID, T> {
+final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreImpl.class);
-
-    private static final String CLASS_NAME_KEY = "class_name";
 
     static private final ThreadLocal<Kryo> KRYOS = new ThreadLocal<Kryo>() {
         protected Kryo initialValue() {
@@ -38,14 +47,25 @@ public final class StoreImpl<ID, T extends Identifiable<ID>> implements Store<ID
     private final Store.Options options;
     private final RocksDB db;
 
-    private volatile Class<T> type;
-
     StoreImpl(Options options, Resource resource) {
         requireNonNull(options);
         requireNonNull(resource);
         this.options = options;
         this.resource = resource;
-        this.db = RocksDbManager.getInstance().get(((FileResource) resource.toFile()).getFile());
+        this.db = RocksDbManager.getInstance().create(((FileResource) resource.toFile()).getFile());
+    }
+
+    StoreImpl(Options options, Resource resource, RocksDB db) {
+        requireNonNull(options);
+        requireNonNull(resource);
+        requireNonNull(db);
+        this.options = options;
+        this.resource = resource;
+        this.db = db;
+    }
+
+    public String getName() {
+        return options.getName();
     }
 
     @Override
@@ -61,9 +81,10 @@ public final class StoreImpl<ID, T extends Identifiable<ID>> implements Store<ID
     @Override
     public void add(T item) {
         if (item == null) return;
-        storeType(item);
-        byte[] data = serialize(item);
-        writeContent(item.getId(), data);
+        getTimer(StoreUtils.ADD_ACTION, this).record(() -> {
+            byte[] data = serialize(item);
+            writeContent(item.getId(), data);
+        });
     }
 
     @Override
@@ -75,32 +96,106 @@ public final class StoreImpl<ID, T extends Identifiable<ID>> implements Store<ID
     @Override
     public void remove(ID id) {
         requireNonNull(id);
-        try {
-            db.delete(ObjectUtils.toString(id).getBytes());
-        } catch (RocksDBException e) {
-            throw new StoreException("Failed to remove item " + id + "'", e);
-        }
+        getTimer(StoreUtils.REMOVE_ACTION, this).record(() -> {
+            try {
+                db.delete(ObjectUtils.toString(id).getBytes());
+            } catch (Exception e) {
+                throw new StoreException("Failed to remove item " + id + "'", e);
+            }
+        });
     }
 
     @Override
     public T find(ID id) {
         requireNonNull(id);
-        byte[] data = readData(id);
-        if (data == null) {
-            return null;
-        } else {
-            return deserialize(data);
-        }
+        return getTimer(StoreUtils.FIND_ACTION, this).record(() -> {
+            byte[] data = readData(id);
+            if (data == null) {
+                return null;
+            } else {
+                return deserialize(data);
+            }
+        });
     }
 
     @Override
-    public int count() {
-        return 0;
+    public Collection<T> list(Query<T> query) {
+        Collection<T> objects = new ArrayList<>();
+        walk(query, t -> {
+            objects.add(t);
+            return true;
+        });
+        return objects;
     }
 
     @Override
-    public void clear() {
-        // empty for now
+    public void walk(Query<T> query, Function<T, Boolean> callback) {
+        requireNonNull(query);
+        requireNonNull(callback);
+        LocalDateTime start = query.getStart();
+        LocalDateTime end = query.getEnd();
+        Predicate<T> filter = query.getFilter();
+        getTimer(StoreUtils.WALK_ACTION, this).record(() -> {
+            Iterator<T> iterator = iterator();
+            while (iterator.hasNext()) {
+                T object = iterator.next();
+                if (start != null && end != null && !isBetween(object, start, end)) continue;
+                if (filter != null && !filter.test(object)) continue;
+                if (!callback.apply(object)) break;
+            }
+        });
+    }
+
+    @Override
+    public void update(Query<T> query, Function<T, Boolean> callback) {
+        walk(query, t -> {
+            Boolean changed = callback.apply(t);
+            if (Boolean.TRUE.equals(changed)) {
+                add(t);
+            } else if (Boolean.FALSE.equals(changed)) {
+                return false;
+            }
+            return true;
+        });
+    }
+
+    @Override
+    public long count() {
+        return RocksDbManager.getCount(db);
+    }
+
+    @Override
+    public long size() {
+        return RocksDbManager.getSSTSize(db);
+    }
+
+    @Override
+    public long clear() {
+        AtomicLong count = new AtomicLong();
+        getTimer("Clear", this).record((t) -> {
+            RocksIterator iterator = db.newIterator();
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                count.incrementAndGet();
+                try {
+                    db.delete(iterator.key());
+                } catch (RocksDBException e) {
+                    METRICS_FAILURES.count(getName());
+                }
+                iterator.next();
+            }
+        });
+        return count.get();
+    }
+
+    @Override
+    public void purge() {
+
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new IteratorImpl();
     }
 
     void close() {
@@ -109,6 +204,9 @@ public final class StoreImpl<ID, T extends Identifiable<ID>> implements Store<ID
         } catch (Exception e) {
             LOGGER.warn("Failed to close the ");
         }
+    }
+
+    void cleanup() {
     }
 
     @SuppressWarnings("unchecked")
@@ -130,24 +228,10 @@ public final class StoreImpl<ID, T extends Identifiable<ID>> implements Store<ID
         return buffer.toByteArray();
     }
 
-    private void storeType(T item) {
-        try {
-            db.put(CLASS_NAME_KEY.getBytes(), item.getClass().getName().getBytes());
-        } catch (Exception e) {
-            throw new StoreException("Failed to store the type for '" + getOptions().getName() + "'", e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Class<T> getType() {
-        if (type != null) return type;
-        try {
-            byte[] bytes = db.get(CLASS_NAME_KEY.getBytes());
-            type = (Class<T>) Class.forName(new String(bytes));
-            return type;
-        } catch (Exception e) {
-            throw new StoreException("Failed to retrieve the type for '" + getOptions().getName() + "'", e);
-        }
+    private boolean isBetween(T object, LocalDateTime start, LocalDateTime end) {
+        if (!(object instanceof Timestampable)) return true;
+        Timestampable<? extends Temporal> timestampable = (Timestampable<? extends Temporal>) object;
+        return TimeUtils.isBetween(timestampable.getUpdatedAt(), start, end);
     }
 
     private byte[] readData(ID id) {
@@ -168,5 +252,31 @@ public final class StoreImpl<ID, T extends Identifiable<ID>> implements Store<ID
         } catch (RocksDBException e) {
             throw new StoreException("Failed to write item " + id + "'", e);
         }
+    }
+
+    private class IteratorImpl extends AbstractIterator<T> {
+
+        private RocksIterator iterator;
+
+        public IteratorImpl() {
+            iterator = db.newIterator();
+            iterator.seekToFirst();
+        }
+
+        @CheckForNull
+        @Override
+        protected T computeNext() {
+            return getTimer("Next", StoreImpl.this).record(() -> {
+                if (!iterator.isValid()) {
+                    endOfData();
+                    return null;
+                } else {
+                    T value = deserialize(iterator.value());
+                    iterator.next();
+                    return value;
+                }
+            });
+        }
+
     }
 }

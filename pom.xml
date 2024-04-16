@@ -58,6 +58,7 @@
         <module>resource</module>
         <module>store</module>
         <module>registry</module>
+        <module>logger</module>
         <module>metrics</module>
         <module>help</module>
         <module>search</module>

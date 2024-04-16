@@ -77,10 +77,13 @@ DataSet.reload = function () {
  * @param {String} path the path
  * @param {Object} params the parameter overrides
  * @param {Function} callback the callback to be called with the response
+ * @param {Object} [options] the callback to be called with the response
  */
-DataSet.get = function (path, params, callback) {
+DataSet.get = function (path, params, callback, options) {
     params = this.getParams(params, {params: false});
-    Application.get(path, params, callback, {params: true})
+    options = options || {};
+    options.params = true;
+    Application.get(path, params, callback, options)
 }
 
 /**

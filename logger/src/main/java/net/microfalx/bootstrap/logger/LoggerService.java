@@ -1,0 +1,204 @@
+package net.microfalx.bootstrap.logger;
+
+import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
+import net.microfalx.bootstrap.store.Query;
+import net.microfalx.bootstrap.store.Store;
+import net.microfalx.bootstrap.store.StoreService;
+import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static net.microfalx.bootstrap.logger.LoggerUtils.METRICS_COUNTS_EXCEPTION;
+import static net.microfalx.bootstrap.logger.LoggerUtils.METRICS_COUNTS_SEVERITY;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+
+@Service
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class LoggerService extends ApplicationContextSupport implements InitializingBean, LoggerListener {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggerService.class);
+
+    @Autowired
+    private StoreService storeService;
+
+    @Autowired
+    private TaskScheduler taskScheduler;
+
+    @Autowired
+    private AsyncTaskExecutor taskExecutor;
+
+    private Store<LoggerEvent, Long> store;
+
+    private Store<AlertEvent, String> alertStore;
+
+    private final Collection<LoggerListener> listeners = new CopyOnWriteArrayList<>();
+    private final Map<String, AlertEvent> alerts = new ConcurrentHashMap<>();
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initializeListeners();
+        initializeStores();
+        initializeAppenders();
+        initializeWorkers();
+    }
+
+    /**
+     * Returns the application alerts for a given time interval.
+     *
+     * @param start the start time
+     * @param end   the end time
+     * @return a non-null instance
+     */
+    public Collection<AlertEvent> getAlerts(LocalDateTime start, LocalDateTime end) {
+        return alertStore.list(Query.<AlertEvent>builder().start(start).end(end).build());
+    }
+
+    /**
+     * Returns an alert by its identifier.
+     *
+     * @param id the alert identifier
+     * @return the alert, null if it does not exist
+     */
+    public AlertEvent getAlert(String id) {
+        requireNonNull(id);
+        return alertStore.find(id);
+    }
+
+    /**
+     * Registers a logger listener.
+     *
+     * @param loggerListener the listener
+     */
+    public void registerLoggerListener(LoggerListener loggerListener) {
+        requireNonNull(loggerListener);
+        if (!(loggerListener instanceof LoggerService)) {
+            LOGGER.info("Logger listener '{}'", ClassUtils.getName(loggerListener));
+            listeners.add(loggerListener);
+        }
+    }
+
+    /**
+     * Clears all alerts.
+     */
+    public long clearAlerts() {
+        long count = alertStore.clear();
+        alerts.clear();
+        return count;
+    }
+
+    /**
+     * Acknowledge pending alerts.
+     */
+    public int acknowledgeAlerts() {
+        AtomicInteger count = new AtomicInteger(0);
+        Query<AlertEvent> query = Query.<AlertEvent>builder().start(LocalDateTime.now().minusDays(7)).build();
+        alertStore.update(query, event -> {
+            event.setAcknowledged(true);
+            event.setPendingEventCount(0);
+            count.incrementAndGet();
+            return true;
+        });
+        return count.get();
+    }
+
+    private void initializeListeners() {
+        getBeansOfType(LoggerListener.class).forEach(this::registerLoggerListener);
+    }
+
+    private void initializeStores() {
+        Store.Options options = Store.Options.create(LoggerUtils.LOGGER_STORE, "Logger");
+        store = storeService.registerStore(options);
+        options = Store.Options.create(LoggerUtils.ALERT_STORE, "Alert");
+        alertStore = storeService.registerStore(options);
+    }
+
+    private void initializeAppenders() {
+        LogbackAppender.register(this);
+    }
+
+    private void initializeWorkers() {
+        taskExecutor.submit(new AcknowledgeAlertsTask());
+    }
+
+    @Override
+    public void onEvent(LoggerEvent event) {
+        trackLogEvents(event);
+        processLogEvent(event);
+        processAlertEvent(event);
+        forwardLogEvent(event);
+    }
+
+    private void trackLogEvents(LoggerEvent event) {
+        METRICS_COUNTS_SEVERITY.count(event.getLevel().name());
+        METRICS_COUNTS_EXCEPTION.count(event.getExceptionClassName());
+    }
+
+    private void forwardLogEvent(LoggerEvent event) {
+        for (LoggerListener listener : listeners) {
+            try {
+                listener.onEvent(event);
+            } catch (Exception e) {
+                String listenerClassName = ClassUtils.getName(listener);
+                LOGGER.debug("Failed to forward logging event to '{}', event {}", listenerClassName, event);
+                LoggerUtils.METRICS_FORWARD_FAILURE.increment(listenerClassName);
+            }
+        }
+    }
+
+    private void processLogEvent(LoggerEvent event) {
+        try {
+            store.add(event);
+        } catch (Exception e) {
+            LOGGER.debug("Failed to store logging event '{}' to internal storage", event);
+            LoggerUtils.METRICS_EVENT_STORE_FAILURE.increment(ExceptionUtils.getRootCauseName(e));
+        }
+    }
+
+    private void processAlertEvent(LoggerEvent event) {
+        if (!event.getLevel().isHigherSeverity(LoggerEvent.Level.WARN)) return;
+        AlertEvent alert = getAlert(event);
+        alert.update(event);
+        storeAlert(alert);
+    }
+
+    private void storeAlert(AlertEvent event) {
+        try {
+            alertStore.add(event);
+        } catch (Exception e) {
+            LOGGER.debug("Failed to store logging event '{}' to internal storage", event);
+            LoggerUtils.METRICS_ALERT_STORE_FAILURE.increment(ExceptionUtils.getRootCauseName(e));
+        }
+    }
+
+    private AlertEvent getAlert(LoggerEvent event) {
+        return alerts.computeIfAbsent(event.getCorrelationId(), s -> {
+            AlertEvent alertEvent = alertStore.find(s);
+            if (alertEvent == null) alertEvent = AlertEvent.builder().id(s).build();
+            return alertEvent;
+        });
+    }
+
+    class AcknowledgeAlertsTask implements Runnable {
+
+        @Override
+        public void run() {
+            acknowledgeAlerts();
+        }
+    }
+
+}

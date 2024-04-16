@@ -78,7 +78,7 @@ public class DatabaseService implements InitializingBean {
     @Autowired
     private StoreService storeService;
 
-    private Store<String, Statement> statementStore;
+    private Store<Statement, String> statementStore;
 
     @Value("${bootstrap.application.name}")
     private String applicationName;
