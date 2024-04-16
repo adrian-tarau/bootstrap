@@ -8,6 +8,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.util.ErrorHandler;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -27,7 +28,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * <p>
  * The settings can be customized using {@link AsynchronousProperties}.
  */
-public class TaskExecutorFactory {
+public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, ErrorHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskExecutorFactory.class);
 
@@ -51,6 +52,17 @@ public class TaskExecutorFactory {
     }
 
     TaskExecutorFactory() {
+        Thread.setDefaultUncaughtExceptionHandler(this);
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        LOGGER.error("Unhandled exception in thread '" + t.getName() + "'", e);
+    }
+
+    @Override
+    public void handleError(Throwable t) {
+        LOGGER.error("Unhandled exception in task scheduler", t);
     }
 
     public AsynchronousProperties getProperties() {
@@ -106,6 +118,7 @@ public class TaskExecutorFactory {
         taskScheduler.setPoolSize(properties.getCoreThreads());
         taskScheduler.setRemoveOnCancelPolicy(properties.isRemoveOnCancel());
         taskScheduler.initialize();
+        taskScheduler.setErrorHandler(this);
         ScheduledThreadPoolExecutor poolExecutor = taskScheduler.getScheduledThreadPoolExecutor();
         poolExecutor.setCorePoolSize((int) (properties.getCoreThreads() * ratio));
         poolExecutor.setMaximumPoolSize((int) (properties.getMaximumThreads() * ratio));
