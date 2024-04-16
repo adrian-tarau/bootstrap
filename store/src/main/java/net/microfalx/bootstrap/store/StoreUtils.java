@@ -13,6 +13,8 @@ public class StoreUtils {
     public static String ADD_ACTION = "Add";
     public static String REMOVE_ACTION = "Remove";
     public static String FIND_ACTION = "Find";
+    public static String CLEAR_ACTION = "Clear";
+    public static String FLUSH_ACTION = "Flush";
     public static String WALK_ACTION = "Walk";
 
     /**

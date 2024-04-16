@@ -117,6 +117,11 @@ public interface Store<T extends Identifiable<ID>, ID> extends Nameable, Iterabl
     void purge();
 
     /**
+     * Persists on disk any pending changes.
+     */
+    void flush();
+
+    /**
      * Options for store.
      */
     final class Options implements Identifiable<String>, Nameable, Cloneable {

@@ -44,7 +44,7 @@ Application.showErrorAlert = function (title, message) {
  */
 Application.question = function (title, message, callback) {
     iziToast.question({
-        timeout: 20000,
+        timeout: 10000,
         close: false,
         overlay: true,
         displayMode: 'once',

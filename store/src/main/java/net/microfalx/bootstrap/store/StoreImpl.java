@@ -27,8 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static net.microfalx.bootstrap.store.StoreUtils.METRICS_FAILURES;
-import static net.microfalx.bootstrap.store.StoreUtils.getTimer;
+import static net.microfalx.bootstrap.store.StoreUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
@@ -172,7 +171,7 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
     @Override
     public long clear() {
         AtomicLong count = new AtomicLong();
-        getTimer("Clear", this).record((t) -> {
+        getTimer(CLEAR_ACTION, this).record((t) -> {
             RocksIterator iterator = db.newIterator();
             iterator.seekToFirst();
             while (iterator.isValid()) {
@@ -191,6 +190,17 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
     @Override
     public void purge() {
 
+    }
+
+    @Override
+    public void flush() {
+        getTimer(FLUSH_ACTION, this).record((t) -> {
+            try {
+                db.flush(new FlushOptions().setWaitForFlush(true));
+            } catch (Exception e) {
+                LOGGER.warn("Failed to close the ");
+            }
+        });
     }
 
     @Override

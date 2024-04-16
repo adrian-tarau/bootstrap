@@ -85,7 +85,8 @@ public class StoreService implements InitializingBean, DisposableBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        taskScheduler.scheduleAtFixedRate(new MaintenanceTask(), Duration.ofHours(1));
+        taskScheduler.scheduleAtFixedRate(new MaintenanceTask(), Duration.ofSeconds(5));
+        taskScheduler.scheduleAtFixedRate(new CleanupTask(), Duration.ofHours(1));
         taskScheduler.scheduleAtFixedRate(new DiscoverTask(), Duration.ofMinutes(1));
     }
 
@@ -126,6 +127,20 @@ public class StoreService implements InitializingBean, DisposableBean {
     }
 
     class MaintenanceTask implements Runnable {
+
+        @Override
+        public void run() {
+            for (Store<?, ?> store : stores.values()) {
+                try {
+                    store.flush();
+                } catch (Exception e) {
+                    LOGGER.error("Failed to flush store '" + store.getName() + "'");
+                }
+            }
+        }
+    }
+
+    class CleanupTask implements Runnable {
 
         @Override
         public void run() {
