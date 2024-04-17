@@ -29,15 +29,26 @@ public class Store {
     private String name;
 
     @Position(20)
-    @Label(value = "Count", group = "Objects")
-    @Description("The estimated number of objects in the store")
-    private long count;
+    @Label(value = "Count", group = "Memory")
+    @Description("The estimated number of objects in memory")
+    private long memoryCount;
 
     @Position(21)
-    @Label(value = "Size", group = "Objects")
-    @Description("The estimated size of objects in the store (file system")
+    @Label(value = "Size", group = "Memory")
+    @Description("The estimated size of objects in the memory")
     @Formattable(unit = Formattable.Unit.BYTES)
-    private long size;
+    private long memorySize;
+
+    @Position(22)
+    @Label(value = "Count", group = "Disk")
+    @Description("The estimated number of objects on disk")
+    private long diskCount;
+
+    @Position(23)
+    @Label(value = "Size", group = "Disk")
+    @Description("The estimated size of objects on disk")
+    @Formattable(unit = Formattable.Unit.BYTES)
+    private long diskSize;
 
     @Position(30)
     @Label(value = "Add", group = "Operations")
@@ -57,7 +68,12 @@ public class Store {
     @Position(33)
     @Label(value = "Walk", group = "Operations")
     @Description("The number of walks from the store")
-    private long listCount;
+    private long walkCount;
+
+    @Position(33)
+    @Label(value = "Flush", group = "Operations")
+    @Description("The number of flushes from the store")
+    private long flushCount;
 
     @Position(40)
     @Label(value = "Add", group = "Statistics")
@@ -77,7 +93,12 @@ public class Store {
     @Position(43)
     @Label(value = "Walk", group = "Statistics")
     @Description("The average duration of a walk")
-    private Duration listDuration;
+    private Duration walkDuration;
+
+    @Position(43)
+    @Label(value = "Flush", group = "Statistics")
+    @Description("The average duration of a flush")
+    private Duration flushDuration;
 
     @Position(100)
     private String location;
@@ -87,8 +108,10 @@ public class Store {
         model.setId(store.getOptions().getId());
         model.setName(store.getOptions().getName());
         model.setLocation(store.getDirectory().toURI().getPath());
-        model.setCount(store.count());
-        model.setSize(store.size());
+        model.setMemoryCount(store.count(net.microfalx.bootstrap.store.Store.Location.MEMORY));
+        model.setMemorySize(store.size(net.microfalx.bootstrap.store.Store.Location.MEMORY));
+        model.setDiskCount(store.count(net.microfalx.bootstrap.store.Store.Location.DISK));
+        model.setDiskSize(store.size(net.microfalx.bootstrap.store.Store.Location.DISK));
         Timer timer = StoreUtils.getTimer(StoreUtils.ADD_ACTION, store);
         model.setAddCount(timer.getCount());
         model.setAddDuration(timer.getAverageDuration());
@@ -99,8 +122,11 @@ public class Store {
         model.setFindCount(timer.getCount());
         model.setFindDuration(timer.getAverageDuration());
         timer = StoreUtils.getTimer(StoreUtils.WALK_ACTION, store);
-        model.setListCount(timer.getCount());
-        model.setListDuration(timer.getAverageDuration());
+        model.setWalkCount(timer.getCount());
+        model.setWalkDuration(timer.getAverageDuration());
+        timer = StoreUtils.getTimer(StoreUtils.FLUSH_ACTION, store);
+        model.setFlushCount(timer.getCount());
+        model.setFlushDuration(timer.getAverageDuration());
         return model;
     }
 }

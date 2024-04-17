@@ -64,6 +64,7 @@ public class LoggerEvent implements Identifiable<Long>, Timestampable<LocalDateT
     }
 
     public enum Level {
+
         ERROR(0),
         WARN(1),
         INFO(2),

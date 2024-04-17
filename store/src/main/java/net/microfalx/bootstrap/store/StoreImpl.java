@@ -159,13 +159,21 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
     }
 
     @Override
-    public long count() {
-        return RocksDbManager.getCount(db);
+    public long count(Location location) {
+        requireNonNull(location);
+        return switch (location) {
+            case MEMORY -> RocksDbManager.getMemoryCount(db);
+            case DISK -> RocksDbManager.getDiskCount(db);
+        };
     }
 
     @Override
-    public long size() {
-        return RocksDbManager.getSSTSize(db);
+    public long size(Location location) {
+        requireNonNull(location);
+        return switch (location) {
+            case MEMORY -> RocksDbManager.getMemorySize(db);
+            case DISK -> RocksDbManager.getDiskSize(db);
+        };
     }
 
     @Override
@@ -209,6 +217,7 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
     }
 
     void close() {
+        flush();
         try {
             db.close();
         } catch (Exception e) {

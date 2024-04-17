@@ -97,14 +97,14 @@ public interface Store<T extends Identifiable<ID>, ID> extends Nameable, Iterabl
      *
      * @return the number of items in the store
      */
-    long count();
+    long count(Location location);
 
     /**
      * Calculates the size of the store.
      *
      * @return the size in bytes
      */
-    long size();
+    long size(Location location);
 
     /**
      * Removes all items in the store.
@@ -112,7 +112,7 @@ public interface Store<T extends Identifiable<ID>, ID> extends Nameable, Iterabl
     long clear();
 
     /**
-     * Removes all items from the store.
+     * Removes old items from the store.
      */
     void purge();
 
@@ -120,6 +120,11 @@ public interface Store<T extends Identifiable<ID>, ID> extends Nameable, Iterabl
      * Persists on disk any pending changes.
      */
     void flush();
+
+    enum Location {
+        MEMORY,
+        DISK
+    }
 
     /**
      * Options for store.

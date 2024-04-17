@@ -41,6 +41,9 @@ public class StoreService implements InitializingBean, DisposableBean {
     @Autowired
     private TaskScheduler taskScheduler;
 
+    @Autowired
+    private StoreProperties properties;
+
     private final Map<String, Store<?, ?>> stores = new ConcurrentHashMap<>();
 
     /**
@@ -72,6 +75,20 @@ public class StoreService implements InitializingBean, DisposableBean {
         Store store = stores.get(toIdentifier(id));
         if (store == null) throw new StoreException("A store with identifier '" + id + "' is not registered");
         return store;
+    }
+
+    /**
+     * Flushes all stores to disk.
+     */
+    public void flush() {
+        LOGGER.info("Flush stores");
+        for (Store<?, ?> store : stores.values()) {
+            try {
+                store.flush();
+            } catch (Exception e) {
+                LOGGER.error("Failed to flush store '" + store.getName() + "'");
+            }
+        }
     }
 
     /**
@@ -132,7 +149,9 @@ public class StoreService implements InitializingBean, DisposableBean {
         public void run() {
             for (Store<?, ?> store : stores.values()) {
                 try {
-                    store.flush();
+                    if (store.size(Store.Location.MEMORY) > properties.getMaximumMemorySize()) {
+                        store.flush();
+                    }
                 } catch (Exception e) {
                     LOGGER.error("Failed to flush store '" + store.getName() + "'");
                 }
