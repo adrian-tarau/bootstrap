@@ -36,7 +36,7 @@ class StoreImplTest extends AbstractStoreTest {
     @Test
     void add() {
         store.add(Item.builder().id(UUID.randomUUID().toString()).name("Test " + System.currentTimeMillis()).value(System.currentTimeMillis()).build());
-        assertEquals(1, store.count());
+        assertEquals(1, store.count(Store.Location.MEMORY));
     }
 
     @Test
@@ -66,9 +66,9 @@ class StoreImplTest extends AbstractStoreTest {
         store.add(Item.builder().id("a").build());
         store.add(Item.builder().id("b").build());
         store.add(Item.builder().id("c").build());
-        assertEquals(3, store.count());
+        assertEquals(3, store.count(Store.Location.MEMORY));
         store.clear();
-        assertEquals(0, store.count());
+        assertEquals(0, store.count(Store.Location.MEMORY));
     }
 
     @Test

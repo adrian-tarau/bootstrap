@@ -178,6 +178,7 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
 
     @Override
     public long clear() {
+        flush();
         AtomicLong count = new AtomicLong();
         getTimer(CLEAR_ACTION, this).record((t) -> {
             RocksIterator iterator = db.newIterator();
