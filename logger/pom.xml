@@ -51,6 +51,11 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>biz.paluch.logging</groupId>
+            <artifactId>logstash-gelf</artifactId>
+        </dependency>
+
         <!-- Testing -->
 
     </dependencies>

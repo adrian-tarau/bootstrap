@@ -1,13 +1,10 @@
 package net.microfalx.bootstrap.logger;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import net.microfalx.bootstrap.core.utils.IdGenerator;
 import net.microfalx.lang.EnumUtils;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,19 +17,6 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 class LogbackAppender extends ch.qos.logback.core.AppenderBase<ILoggingEvent> {
 
     private final LoggerListener storage;
-
-    /**
-     * Registers the appender for logback.
-     */
-    public static void register(LoggerListener storage) {
-        LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
-        LogbackAppender appender = new LogbackAppender(storage);
-        appender.setContext(logCtx);
-        appender.setName("storage");
-        appender.start();
-        Logger logger = logCtx.getLogger(Logger.ROOT_LOGGER_NAME);
-        logger.addAppender(appender);
-    }
 
     LogbackAppender(LoggerListener storage) {
         requireNonNull(storage);

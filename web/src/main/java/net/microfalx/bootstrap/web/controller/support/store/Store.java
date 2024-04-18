@@ -70,7 +70,7 @@ public class Store {
     @Description("The number of walks from the store")
     private long walkCount;
 
-    @Position(33)
+    @Position(34)
     @Label(value = "Flush", group = "Operations")
     @Description("The number of flushes from the store")
     private long flushCount;
@@ -95,7 +95,7 @@ public class Store {
     @Description("The average duration of a walk")
     private Duration walkDuration;
 
-    @Position(43)
+    @Position(44)
     @Label(value = "Flush", group = "Statistics")
     @Description("The average duration of a flush")
     private Duration flushDuration;

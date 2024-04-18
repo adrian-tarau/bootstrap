@@ -1,11 +1,15 @@
 package net.microfalx.bootstrap.logger;
 
+import biz.paluch.logging.gelf.logback.GelfLogbackAppender;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.net.SyslogAppender;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.store.Query;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -16,6 +20,8 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Map;
@@ -37,10 +43,15 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     private StoreService storeService;
 
     @Autowired
+    private LoggerProperties properties;
+
+    @Autowired
     private TaskScheduler taskScheduler;
 
     @Autowired
     private AsyncTaskExecutor taskExecutor;
+
+    private String hostname;
 
     private Store<LoggerEvent, Long> store;
 
@@ -51,6 +62,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        initHostInformation();
         initializeListeners();
         initializeStores();
         initializeAppenders();
@@ -120,6 +132,14 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
         getBeansOfType(LoggerListener.class).forEach(this::registerLoggerListener);
     }
 
+    private void initHostInformation() {
+        try {
+            hostname = InetAddress.getLocalHost().getCanonicalHostName();
+        } catch (UnknownHostException e) {
+            hostname = "localhost";
+        }
+    }
+
     private void initializeStores() {
         Store.Options options = Store.Options.create(LoggerUtils.LOGGER_STORE, "Logger");
         store = storeService.registerStore(options);
@@ -128,7 +148,56 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     }
 
     private void initializeAppenders() {
-        LogbackAppender.register(this);
+        initializeApplicationAppender();
+        initializeGelfAppender();
+        initializeSyslogAppender();
+    }
+
+    private void initializeApplicationAppender() {
+        LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
+        LogbackAppender appender = new LogbackAppender(this);
+        appender.setContext(logCtx);
+        appender.setName("storage");
+        appender.start();
+        ch.qos.logback.classic.Logger logger = logCtx.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        logger.addAppender(appender);
+    }
+
+    private void initializeGelfAppender() {
+        LoggerProperties.Gelf gelf = properties.getGelf();
+        if (StringUtils.isEmpty(gelf.getHostname())) return;
+        LOGGER.info("Send logs using GELF to " + gelf.toUri());
+        LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
+        GelfLogbackAppender appender = new GelfLogbackAppender();
+        appender.setHost(gelf.getHostname());
+        appender.setPort(gelf.getPort());
+        appender.setIncludeFullMdc(true);
+        appender.setIncludeLocation(true);
+        appender.setExtractStackTrace("true");
+        appender.setOriginHost(hostname);
+        appender.setFacility(gelf.getFacility());
+        appender.setContext(logCtx);
+        appender.setName("gelf");
+        appender.start();
+        ch.qos.logback.classic.Logger logger = logCtx.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        logger.addAppender(appender);
+    }
+
+    private void initializeSyslogAppender() {
+        LoggerProperties.Syslog syslog = properties.getSyslog();
+        if (StringUtils.isEmpty(syslog.getHostname())) return;
+        LOGGER.info("Send logs using Syslog to " + syslog.toUri());
+        LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
+        SyslogAppender appender = new SyslogAppender();
+        appender.setSyslogHost(syslog.getHostname());
+        appender.setPort(syslog.getPort());
+        appender.setFacility(syslog.getFacility());
+        appender.setThrowableExcluded(true);
+        appender.setContext(logCtx);
+        appender.setName("syslog");
+        appender.start();
+        ch.qos.logback.classic.Logger logger = logCtx.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        logger.addAppender(appender);
     }
 
     private void initializeWorkers() {

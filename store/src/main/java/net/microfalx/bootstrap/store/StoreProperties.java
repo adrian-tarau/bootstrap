@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties("bootstrap.store")
-
 public class StoreProperties {
 
     private long maximumMemorySize = 10 * FormatterUtils.M;
