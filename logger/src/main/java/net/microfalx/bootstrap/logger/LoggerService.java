@@ -221,7 +221,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
         for (LoggerListener listener : listeners) {
             try {
                 listener.onEvent(event);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 String listenerClassName = ClassUtils.getName(listener);
                 LOGGER.debug("Failed to forward logging event to '{}', event {}", listenerClassName, event);
                 LoggerUtils.METRICS_FORWARD_FAILURE.increment(listenerClassName);
@@ -232,7 +232,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     private void processLogEvent(LoggerEvent event) {
         try {
             store.add(event);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.debug("Failed to store logging event '{}' to internal storage", event);
             LoggerUtils.METRICS_EVENT_STORE_FAILURE.increment(ExceptionUtils.getRootCauseName(e));
         }
@@ -248,7 +248,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     private void storeAlert(AlertEvent event) {
         try {
             alertStore.add(event);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.debug("Failed to store logging event '{}' to internal storage", event);
             LoggerUtils.METRICS_ALERT_STORE_FAILURE.increment(ExceptionUtils.getRootCauseName(e));
         }

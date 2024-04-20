@@ -45,6 +45,7 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
     private final Resource resource;
     private final Store.Options options;
     private final RocksDB db;
+    private final boolean external;
 
     StoreImpl(Options options, Resource resource) {
         requireNonNull(options);
@@ -52,6 +53,7 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
         this.options = options;
         this.resource = resource;
         this.db = RocksDbManager.getInstance().create(((FileResource) resource.toFile()).getFile());
+        this.external = false;
     }
 
     StoreImpl(Options options, Resource resource, RocksDB db) {
@@ -61,6 +63,7 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
         this.options = options;
         this.resource = resource;
         this.db = db;
+        this.external = true;
     }
 
     public String getName() {
@@ -220,7 +223,7 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
     void close() {
         flush();
         try {
-            db.close();
+            if (!external) db.close();
         } catch (Exception e) {
             LOGGER.warn("Failed to close the ");
         }

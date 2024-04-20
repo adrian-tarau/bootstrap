@@ -49,7 +49,7 @@ public class AlertController extends DataSetController<Alert, String> {
             if (alert != null) {
                 controllerModel.addAttribute("alert", alert);
                 controllerModel.addAttribute("message", org.apache.commons.lang3.StringUtils.abbreviate(alert.getMessage(), 100));
-                controllerModel.addAttribute("stackTrace", getStackTrace(alert.getEvent()));
+                controllerModel.addAttribute("stackTrace", alert.getEvent().getExceptionStackTrace());
             }
         }
     }
@@ -61,16 +61,5 @@ public class AlertController extends DataSetController<Alert, String> {
                 .setDescription("Acknowledges all pending alerts"));
         toolbar.add(new Button().setAction("alert.clear").setText("Clear").setIcon("fa-solid fa-broom")
                 .setDescription("Removes all alerts"));
-    }
-
-    private String getStackTrace(LoggerEvent event) {
-        if (event.getStackTraceElements() == null) return null;
-        StringBuilder builder = new StringBuilder();
-        for (StackTraceElement stackTraceElement : event.getStackTraceElements()) {
-            builder.append(stackTraceElement.getClassName()).append(".").append(stackTraceElement.getMethodName())
-                    .append(":").append(stackTraceElement.getLineNumber());
-            builder.append("\n");
-        }
-        return builder.toString();
     }
 }
