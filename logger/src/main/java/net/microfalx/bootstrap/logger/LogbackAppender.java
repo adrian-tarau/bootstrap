@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.logger;
 
+import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
@@ -10,18 +11,41 @@ import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.Hashing;
 
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * An appender which takes all the log events and publish them to an application logger storage.
  */
 class LogbackAppender extends ch.qos.logback.core.AppenderBase<ILoggingEvent> {
 
-    private final LoggerListener storage;
+    static final String INSTALLED_FLAG = "BOOTSTRAP_APPENDER";
 
-    LogbackAppender(LoggerListener storage) {
-        requireNonNull(storage);
-        this.storage = storage;
+    volatile LoggerListener storage;
+    final Queue<LoggerEvent> pending = new LinkedBlockingQueue<>();
+
+    /**
+     * Initializes the internal appender for a given logger context.
+     *
+     * @param loggerContext the logger context
+     */
+    static void initialize(LoggerContext loggerContext) {
+        if (loggerContext.getObject(INSTALLED_FLAG) != null) return;
+        LogbackAppender appender = new LogbackAppender();
+        appender.setContext(loggerContext);
+        appender.setName("storage");
+        appender.start();
+        ch.qos.logback.classic.Logger logger = loggerContext.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        logger.addAppender(appender);
+        loggerContext.putProperty(INSTALLED_FLAG, INSTALLED_FLAG);
+    }
+
+    /**
+     * Resets the state of the appender inside the logger context.
+     * @param loggerContext the logger context
+     */
+    static void release(LoggerContext loggerContext) {
+        loggerContext.removeObject(INSTALLED_FLAG);
     }
 
     @Override
@@ -40,7 +64,12 @@ class LogbackAppender extends ch.qos.logback.core.AppenderBase<ILoggingEvent> {
                 builder.exceptionStackTrace(ExceptionUtils.getStackTrace(throwable));
             }
         }
-        storage.onEvent(builder.build());
+        LoggerEvent loggerEvent = builder.build();
+        if (storage != null) {
+            storage.onEvent(loggerEvent);
+        } else {
+            pending.add(loggerEvent);
+        }
     }
 
     private String buildCorrelationId(ILoggingEvent eventObject) {

@@ -12,6 +12,7 @@ public class LoggerUtils {
     static Metrics METRICS_COUNTS_SEVERITY = METRICS_COUNTS.withGroup("Severity");
     static Metrics METRICS_COUNTS_EXCEPTION = METRICS_COUNTS.withGroup("Exception Class");
     static Metrics METRICS_FORWARD_FAILURE = METRICS.withGroup("Forward Failure");
+    static Metrics METRICS_FAILURE = METRICS.withGroup("Failure");
     static Metrics METRICS_EVENT_STORE_FAILURE = METRICS.withGroup("Event Failure");
     static Metrics METRICS_ALERT_STORE_FAILURE = METRICS.withGroup("Alert Failure");
 

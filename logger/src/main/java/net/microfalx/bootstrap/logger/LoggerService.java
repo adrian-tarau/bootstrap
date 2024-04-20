@@ -3,6 +3,8 @@ package net.microfalx.bootstrap.logger;
 import biz.paluch.logging.gelf.logback.GelfLogbackAppender;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.net.SyslogAppender;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.store.Query;
 import net.microfalx.bootstrap.store.Store;
@@ -24,7 +26,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -154,13 +158,16 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     }
 
     private void initializeApplicationAppender() {
-        LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
-        LogbackAppender appender = new LogbackAppender(this);
-        appender.setContext(logCtx);
-        appender.setName("storage");
-        appender.start();
-        ch.qos.logback.classic.Logger logger = logCtx.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-        logger.addAppender(appender);
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ch.qos.logback.classic.Logger logger = loggerContext.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        Iterator<Appender<ILoggingEvent>> appenderIterator = logger.iteratorForAppenders();
+        while (appenderIterator.hasNext()) {
+            Appender<ILoggingEvent> appender = appenderIterator.next();
+            if (appender instanceof LogbackAppender internalAppender) {
+                processQueuedLoggerEvents(internalAppender.pending);
+                internalAppender.storage = this;
+            }
+        }
     }
 
     private void initializeGelfAppender() {
@@ -206,15 +213,28 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
 
     @Override
     public void onEvent(LoggerEvent event) {
-        trackLogEvents(event);
-        processLogEvent(event);
-        processAlertEvent(event);
-        forwardLogEvent(event);
+        requireNonNull(event);
+        try {
+            trackLogEvents(event);
+            processLogEvent(event);
+            processAlertEvent(event);
+            forwardLogEvent(event);
+        } catch (Throwable e) {
+            LoggerUtils.METRICS_FAILURE.increment(ExceptionUtils.getRootCauseName(e));
+        }
     }
 
     private void trackLogEvents(LoggerEvent event) {
         METRICS_COUNTS_SEVERITY.count(event.getLevel().name());
-        METRICS_COUNTS_EXCEPTION.count(event.getExceptionClassName());
+        if (event.getExceptionClassName() != null) METRICS_COUNTS_EXCEPTION.count(event.getExceptionClassName());
+    }
+
+    private void processQueuedLoggerEvents(Queue<LoggerEvent> events) {
+        for (; ; ) {
+            LoggerEvent event = events.poll();
+            if (event == null) break;
+            onEvent(event);
+        }
     }
 
     private void forwardLogEvent(LoggerEvent event) {

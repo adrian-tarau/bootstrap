@@ -104,7 +104,7 @@
         <jsqlparser.version>4.6</jsqlparser.version>
         <logstash-gelf.version>1.15.1</logstash-gelf.version>
         <datafaker.version>2.1.0</datafaker.version>
-        <logback.version>2.0.11</logback.version>
+        <logback.version>1.5.6</logback.version>
         <resource.version>1.0.0-SNAPSHOT</resource.version>
         <jdbcpool.version>1.0.0-SNAPSHOT</jdbcpool.version>
         <threadpool.version>1.0.0-SNAPSHOT</threadpool.version>
@@ -425,6 +425,18 @@
                 <groupId>biz.paluch.logging</groupId>
                 <artifactId>logstash-gelf</artifactId>
                 <version>${logstash-gelf.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
 
             <!-- Tests -->
