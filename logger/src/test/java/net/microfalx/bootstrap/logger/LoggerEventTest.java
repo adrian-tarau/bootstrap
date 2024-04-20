@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.logger;
 
+import net.microfalx.lang.ExceptionUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -23,7 +24,7 @@ class LoggerEventTest {
         return LoggerEvent.builder().name(LoggerEvent.class.getName())
                 .timestamp(123456789).level(LoggerEvent.Level.ERROR).threadName("main")
                 .message("This is an event")
-                .stackTraceElements(new IOException("Test").getStackTrace());
+                .exceptionStackTrace(ExceptionUtils.getStackTrace(new IOException("Test")));
     }
 
 }
