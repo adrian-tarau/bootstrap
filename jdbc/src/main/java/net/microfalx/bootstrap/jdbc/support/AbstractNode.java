@@ -10,6 +10,7 @@ import java.time.ZoneId;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import static java.lang.System.currentTimeMillis;
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.IOUtils.closeQuietly;
@@ -104,7 +105,20 @@ public abstract class AbstractNode implements Node {
     }
 
     public void setState(State state) {
+        requireNotEmpty(state);
         this.state = state;
+        if (state == State.UP || state == State.STANDBY) {
+            this.available = true;
+            this.validationError = null;
+        } else {
+            this.available = false;
+        }
+        this.lastValidationTime = currentTimeMillis();
+    }
+
+    public void setState(State state, String validationError) {
+        setState(state);
+        this.validationError = validationError;
     }
 
     @Override

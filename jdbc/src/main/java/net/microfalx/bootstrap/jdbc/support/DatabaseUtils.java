@@ -72,11 +72,19 @@ public class DatabaseUtils {
         if (statement == null) return null;
         statement = statement.trim();
         String withoutComments = cleanupComments(statement);
-        if (withoutComments.equals("insert")) {
-            System.out.println("Stop");
-        }
         String withoutVertica = cleanupVertica(withoutComments);
         return withoutVertica;
+    }
+
+    /**
+     * Describes a database node.
+     *
+     * @param node the node
+     * @return the description
+     */
+    public static String describe(Node node) {
+        if (node == null) return StringUtils.NA_STRING;
+        return node.getName() + " (" + node.getDatabase().getType() + ")";
     }
 
     private static String cleanupComments(String statement) {

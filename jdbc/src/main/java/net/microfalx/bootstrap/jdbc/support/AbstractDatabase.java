@@ -21,6 +21,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Optional.ofNullable;
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.createJdbcUri;
+import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.describe;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.*;
@@ -65,7 +66,7 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
                         copyNodeAttributes(extractedNodes);
                         nodes = extractedNodes.stream().collect(Collectors.toMap(node -> toIdentifier(node.getId()), node -> node));
                     } catch (Exception e) {
-                        LOGGER.error("Failed to extract database nodes for " + getName(), e);
+                        LOGGER.error("Failed to extract database nodes for " + describe(this), e);
                     }
                 }
             }

@@ -23,7 +23,6 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -305,7 +304,7 @@ public class DatabaseService implements InitializingBean {
      * @return a statement
      */
     public Statement registerStatement(Statement statement) {
-        ArgumentUtils.requireNonNull(statement);
+        requireNonNull(statement);
         Statement prevStatement = statements.getIfPresent(statement.getId());
         if (prevStatement == null) {
             statementStore.add(statement);
@@ -416,6 +415,21 @@ public class DatabaseService implements InitializingBean {
         return databaseLocks.computeIfAbsent(database.getId(), s -> new ReentrantLock());
     }
 
+    private void registerAvailability(Node node) {
+        requireNonNull(node);
+        if (node instanceof AbstractNode abstractNode) {
+            abstractNode.setState(Node.State.UP);
+        }
+    }
+
+    private void registerFailure(Node node, Throwable throwable) {
+        requireNonNull(node);
+        String message = throwable != null ? ExceptionUtils.getRootCauseMessage(throwable) : StringUtils.NA_STRING;
+        if (node instanceof AbstractNode abstractNode) {
+            abstractNode.setState(Node.State.DOWN, message);
+        }
+    }
+
     class ExtractSnapshot implements Callable<Snapshot> {
 
         private final Snapshot snapshot;
@@ -443,14 +457,9 @@ public class DatabaseService implements InitializingBean {
         public void run() {
             for (Database database : databases.values()) {
                 try {
-                    ConcurrencyUtils.withTryLock(getDatabaseLock(database), () -> {
-                        database.validate();
-                        return null;
-                    }, timeout);
-                } catch (InterruptedException e) {
-                    ExceptionUtils.rethrowInterruptedException(e);
-                } catch (TimeoutException e) {
-                    // if we cannot acquire a lock, just
+                    database.validate();
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to validate database '" + describe(database) + "', root cause: " + ExceptionUtils.getRootCauseName(e));
                 }
             }
         }
@@ -546,8 +555,10 @@ public class DatabaseService implements InitializingBean {
                 Collection<Session> sessions = null;
                 try {
                     sessions = database.getSessions();
+                    registerAvailability(database);
                 } catch (Exception e) {
-                    LOGGER.error("Failed to extract sessions from " + database.getName(), e);
+                    registerFailure(database, e);
+                    LOGGER.error("Failed to extract sessions from " + describe(database), e);
                     sessions = Collections.emptyList();
                 }
                 registerStatements(sessions);
@@ -558,7 +569,7 @@ public class DatabaseService implements InitializingBean {
         @Override
         public String toString() {
             return new StringJoiner(", ", ExtractSessionsForDatabase.class.getSimpleName() + "[", "]")
-                    .add("database=" + database.getName())
+                    .add("database=" + describe(database))
                     .toString();
         }
     }
@@ -578,8 +589,10 @@ public class DatabaseService implements InitializingBean {
                 Collection<Transaction> transactions = null;
                 try {
                     transactions = database.getTransactions();
+                    registerAvailability(database);
                 } catch (Exception e) {
-                    LOGGER.error("Failed to extract statements from " + database.getName(), e);
+                    registerFailure(database, e);
+                    LOGGER.error("Failed to extract statements from " + describe(database), e);
                     transactions = Collections.emptyList();
                 }
                 registerStatements(transactions);
@@ -590,12 +603,12 @@ public class DatabaseService implements InitializingBean {
         @Override
         public String toString() {
             return new StringJoiner(", ", ExtractTransactionsForDatabase.class.getSimpleName() + "[", "]")
-                    .add("database=" + database.getName())
+                    .add("database=" + describe(database))
                     .toString();
         }
     }
 
-    class ExtractStatementsForDatabase implements Callable<Collection<Statement>> {
+    static class ExtractStatementsForDatabase implements Callable<Collection<Statement>> {
 
         private final LocalDateTime start;
         private final LocalDateTime end;
@@ -612,7 +625,7 @@ public class DatabaseService implements InitializingBean {
             try {
                 return database.getStatements(start, end);
             } catch (Exception e) {
-                LOGGER.error("Failed to extract statements from " + database.getName(), e);
+                LOGGER.error("Failed to extract statements from " + describe(database), e);
                 return Collections.emptyList();
             }
         }
@@ -622,7 +635,7 @@ public class DatabaseService implements InitializingBean {
             return new StringJoiner(", ", ExtractStatementsForDatabase.class.getSimpleName() + "[", "]")
                     .add("start=" + start)
                     .add("end=" + end)
-                    .add("database=" + database.getName())
+                    .add("database=" + describe(database))
                     .toString();
         }
     }
