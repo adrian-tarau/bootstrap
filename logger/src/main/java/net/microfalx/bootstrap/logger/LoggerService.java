@@ -129,6 +129,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
             count.incrementAndGet();
             return true;
         });
+        alerts.clear();
         return count.get();
     }
 
