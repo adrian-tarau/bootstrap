@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
+import com.zaxxer.hikari.HikariDataSource;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
 
@@ -189,6 +190,13 @@ class DataSourceImpl implements DataSource, Cloneable {
                 .add("userName='" + userName + "'")
                 .add("dataSource=" + dataSource)
                 .toString();
+    }
+
+    @Override
+    public void close() {
+        if (dataSource instanceof HikariDataSource hikariDataSource) {
+            hikariDataSource.close();
+        }
     }
 
     private int getDefaultPort(URI realUri) {

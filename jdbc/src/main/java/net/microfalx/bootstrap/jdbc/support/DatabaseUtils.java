@@ -87,6 +87,17 @@ public class DatabaseUtils {
         return node.getName() + " (" + node.getDatabase().getType() + ")";
     }
 
+    /**
+     * Describes a data source.
+     *
+     * @param dataSource the node
+     * @return the description
+     */
+    public static String describe(DataSource dataSource) {
+        if (dataSource == null) return StringUtils.NA_STRING;
+        return dataSource.getName() + " (" + dataSource.getUri() + ")";
+    }
+
     private static String cleanupComments(String statement) {
         int startCommentIndex = statement.indexOf(COMMENT_START);
         int endCommentIndex = statement.indexOf(COMMENT_END);

@@ -4,6 +4,7 @@ import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 
+import java.io.Closeable;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -14,7 +15,7 @@ import java.util.Map;
 /**
  * An interface which wraps a JDBC data source.
  */
-public interface DataSource extends Identifiable<String>, Nameable, Descriptable {
+public interface DataSource extends Identifiable<String>, Nameable, Cloneable, Closeable, Descriptable {
 
     /**
      * Creates a new data source instance.
@@ -95,6 +96,7 @@ public interface DataSource extends Identifiable<String>, Nameable, Descriptable
 
     /**
      * Returns the timeout used to obtain a connection.
+     *
      * @return a non-null instance
      */
     Duration getTimeout();
@@ -164,4 +166,6 @@ public interface DataSource extends Identifiable<String>, Nameable, Descriptable
      */
     DataSource withProperties(Map<String, String> properties);
 
+    @Override
+    void close();
 }

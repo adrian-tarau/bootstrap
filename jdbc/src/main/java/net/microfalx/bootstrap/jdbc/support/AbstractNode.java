@@ -21,7 +21,6 @@ import static net.microfalx.lang.TimeUtils.millisSince;
  */
 public abstract class AbstractNode implements Node {
 
-
     private static final String VALIDATE_SQL = "select 1";
 
     transient AbstractDatabase database;
@@ -217,6 +216,16 @@ public abstract class AbstractNode implements Node {
     protected void doValidate() {
         available = METRICS.time("Validate", this::doIsAvailable);
         if (!available) state = State.DOWN;
+    }
+
+    void close() {
+        DatabaseService databaseService = ((AbstractDatabase) getDatabase()).databaseService;
+        databaseService.releaseDataSource(dataSource);
+        if (this instanceof Database database) {
+            for (Node node : database.getNodes()) {
+                databaseService.releaseDataSource(node.getDataSource());
+            }
+        }
     }
 
     @Override

@@ -81,6 +81,7 @@ public class DatabaseService implements InitializingBean {
 
     @Value("${bootstrap.application.name}")
     private String applicationName;
+    private String defaultDataSource;
 
     /**
      * Returns the task executor for this service.
@@ -108,8 +109,7 @@ public class DatabaseService implements InitializingBean {
      */
     public Optional<DataSource> findDataSource(String id) {
         requireNotEmpty(id);
-        toIdentifier(id);
-        return Optional.ofNullable(dataSources.get(id));
+        return Optional.ofNullable(dataSources.get(toIdentifier(id)));
     }
 
     /**
@@ -120,8 +120,7 @@ public class DatabaseService implements InitializingBean {
      */
     public DataSource getDataSource(String id) {
         requireNotEmpty(id);
-        toIdentifier(id);
-        DataSource dataSource = dataSources.get(id);
+        DataSource dataSource = dataSources.get(toIdentifier(id));
         if (dataSource == null) {
             throw new IllegalArgumentException("A data source with identifier '" + id + "' is not registered");
         }
@@ -146,11 +145,11 @@ public class DatabaseService implements InitializingBean {
     public Database getDatabase(String id) {
         requireNotEmpty(id);
         id = toIdentifier(id);
-        Database dataSource = databases.get(id);
-        if (dataSource == null) {
+        Database database = databases.get(id);
+        if (database == null) {
             throw new DatabaseNotFoundException("A database with identifier '" + id + "' is not registered");
         }
-        return dataSource;
+        return database;
     }
 
     /**
@@ -274,11 +273,33 @@ public class DatabaseService implements InitializingBean {
         String id = toIdentifier(dataSource.getId());
         if (!dataSources.containsKey(id)) {
             LOGGER.info("Register data source '{}', name '{}'", dataSource.getId(), dataSource.getName());
+        } else {
+            LOGGER.info("Reload data source '{}', name '{}'", dataSource.getId(), dataSource.getName());
+        }
+        releaseDataSource(dataSource);
+        if (!dataSource.isNode()) {
+            Database prevDatabase = databases.get(id);
+            if (prevDatabase != null) workerTaskExecutor.submit(new CloseDatabase(prevDatabase));
+            Database database = createDatabase(dataSource);
+            if (database != null) {
+                databases.put(id, database);
+                workerTaskExecutor.submit(new ValidateDatabase(database));
+            }
         }
         dataSources.put(id, dataSource);
-        if (!dataSource.isNode()) {
-            Database database = createDatabase(dataSource);
-            if (database != null) databases.put(id, database);
+    }
+
+    /**
+     * Closes and releases a data source.
+     *
+     * @param dataSource the data source
+     */
+    void releaseDataSource(DataSource dataSource) {
+        requireNonNull(dataSource);
+        String id = toIdentifier(dataSource.getId());
+        DataSource prevDataSource = dataSources.remove(id);
+        if (prevDataSource != null && !prevDataSource.getId().equals(defaultDataSource)) {
+            workerTaskExecutor.submit(new CloseDataSource(prevDataSource));
         }
     }
 
@@ -372,6 +393,7 @@ public class DatabaseService implements InitializingBean {
         if (dataSource != null) {
             String name = defaultIfEmpty(applicationName, "Default");
             String id = toIdentifier(name);
+            this.defaultDataSource = id;
             DataSource newDataSource = updateProperties(DataSource.create(id, name, dataSource)
                     .withDescription("The application database"));
             registerDataSource(newDataSource);
@@ -451,16 +473,66 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
+    class CloseDataSource implements Runnable {
+
+        private final DataSource dataSource;
+
+        public CloseDataSource(DataSource dataSource) {
+            this.dataSource = dataSource;
+        }
+
+        @Override
+        public void run() {
+            try {
+                dataSource.close();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to close data source '" + describe(dataSource) + "', root cause: " + ExceptionUtils.getRootCauseName(e));
+            }
+        }
+    }
+
+    class CloseDatabase implements Runnable {
+
+        private final Database database;
+
+        public CloseDatabase(Database database) {
+            this.database = database;
+        }
+
+        @Override
+        public void run() {
+            try {
+                ((AbstractDatabase) database).close();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to close data source '" + describe(database) + "', root cause: " + ExceptionUtils.getRootCauseName(e));
+            }
+        }
+    }
+
+    class ValidateDatabase implements Runnable {
+
+        private final Database database;
+
+        public ValidateDatabase(Database database) {
+            this.database = database;
+        }
+
+        @Override
+        public void run() {
+            try {
+                database.validate();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to validate database '" + describe(database) + "', root cause: " + ExceptionUtils.getRootCauseName(e));
+            }
+        }
+    }
+
     class ValidateDatabases implements Runnable {
 
         @Override
         public void run() {
             for (Database database : databases.values()) {
-                try {
-                    database.validate();
-                } catch (Exception e) {
-                    LOGGER.warn("Failed to validate database '" + describe(database) + "', root cause: " + ExceptionUtils.getRootCauseName(e));
-                }
+                new ValidateDatabase(database).run();
             }
         }
     }

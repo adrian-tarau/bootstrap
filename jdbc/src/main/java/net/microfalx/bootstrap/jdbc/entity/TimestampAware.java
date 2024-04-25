@@ -2,15 +2,14 @@ package net.microfalx.bootstrap.jdbc.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
-import net.microfalx.lang.annotation.Description;
-import net.microfalx.lang.annotation.Position;
-import net.microfalx.lang.annotation.Visible;
+import net.microfalx.lang.annotation.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -36,16 +35,15 @@ public abstract class TimestampAware implements Serializable {
     @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
     @Description("The timestamp when the {name} was created")
     @OrderBy(OrderBy.Direction.DESC)
+    @CreatedDate
+    @CreatedAt
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "modified_at")
     @Position(501)
     @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
     @Description("The timestamp when the {name} was last time modified")
+    @LastModifiedDate
+    @ModifiedAt
     private LocalDateTime modifiedAt;
-
-    @PrePersist
-    public void updateTimestamps() {
-        modifiedAt = LocalDateTime.now();
-    }
 }
