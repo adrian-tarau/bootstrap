@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.core.i18n;
 
+import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -16,10 +18,11 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
 @Service
-public class I18nService implements InitializingBean {
+public class I18nService implements InitializingBean, I18n {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(I18nService.class);
 
@@ -48,6 +51,19 @@ public class I18nService implements InitializingBean {
     }
 
     /**
+     * Returns the internationalized enum value.
+     *
+     * @param value the enum
+     * @return the value, null if not defined
+     */
+    public <E extends Enum<E>> String getText(E value) {
+        requireNonNull(value);
+        String key = getEnumKey(value);
+        String text = getText(key, false);
+        return StringUtils.isNotEmpty(text) ? text : EnumUtils.toLabel(value);
+    }
+
+    /**
      * Returns the value associated with a key
      *
      * @param key the key
@@ -65,6 +81,7 @@ public class I18nService implements InitializingBean {
      * @return the value, null if not defined
      */
     public String getText(String key, boolean safeText) {
+        requireNonNull(key);
         Locale locale = LocaleContextHolder.getLocale();
         try {
             return aggregatedMessageSource.getMessage(key, ObjectUtils.EMPTY_ARRAY, locale);
@@ -142,5 +159,10 @@ public class I18nService implements InitializingBean {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
         messageSource.setBasenames(baseNames.toArray(new String[0]));
         return messageSource;
+    }
+
+
+    private static String getEnumKey(Enum<?> value) {
+        return "enum." + net.microfalx.lang.ClassUtils.getName(value).toLowerCase() + "." + value.name().toLowerCase();
     }
 }

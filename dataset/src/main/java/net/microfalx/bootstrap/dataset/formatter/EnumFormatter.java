@@ -1,20 +1,20 @@
 package net.microfalx.bootstrap.dataset.formatter;
 
-import net.microfalx.bootstrap.core.i18n.I18nService;
+import net.microfalx.bootstrap.core.i18n.I18n;
+import net.microfalx.bootstrap.dataset.DataSetUtils;
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
 
-import static net.microfalx.lang.EnumUtils.*;
+import static net.microfalx.lang.EnumUtils.fromName;
+import static net.microfalx.lang.EnumUtils.fromOrdinal;
 import static net.microfalx.lang.ObjectUtils.asString;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class EnumFormatter<M, F extends Field<M>, T> extends AbstractFormatter<M, F, T> {
 
     private Class<Enum> enumClass;
-    private I18nService i18nService;
+    private I18n i18n;
 
     public EnumFormatter() {
     }
@@ -23,12 +23,12 @@ public class EnumFormatter<M, F extends Field<M>, T> extends AbstractFormatter<M
         this.enumClass = enumClass;
     }
 
-    public I18nService getI18nService() {
-        return i18nService;
+    public I18n getI18n() {
+        return i18n;
     }
 
-    public void setI18nService(I18nService i18nService) {
-        this.i18nService = i18nService;
+    public void setI18n(I18n i18n) {
+        this.i18n = i18n;
     }
 
     @SuppressWarnings("rawtypes")
@@ -44,20 +44,16 @@ public class EnumFormatter<M, F extends Field<M>, T> extends AbstractFormatter<M
         } else if (value instanceof Enum) {
             enumValue = (Enum) value;
         }
-        if (i18nService != null) {
-            String text = i18nService.getText(getEnumKey(enumValue), false);
-            if (StringUtils.isNotEmpty(text)) return text;
+        if (enumValue != null) {
+            return DataSetUtils.getDisplayValue(i18n, enumValue);
+        } else {
+            return asString(value);
         }
-        return enumValue != null ? toLabel(enumValue) : asString(value);
     }
 
     @Override
     public T parse(String text, F field) {
         return (T) EnumUtils.fromName(enumClass, text);
-    }
-
-    private String getEnumKey(Enum value) {
-        return "enum." + ClassUtils.getName(value).toLowerCase() + "." + value.name().toLowerCase();
     }
 
     private Class<Enum> getEnumClass(F field) {

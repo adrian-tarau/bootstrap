@@ -30,7 +30,7 @@ class ModelSorterTest {
         Sort orders = Sort.unsorted();
         ModelSorter<PersonJpa> modelSorter = new ModelSorter<>
                 (metadataService.getMetadata(PersonJpa.class), personList, orders);
-        List<PersonJpa> people = modelSorter.apply();
+        List<PersonJpa> people = modelSorter.toList();
         assertIterableEquals(personList,people);
     }
 
@@ -41,7 +41,7 @@ class ModelSorterTest {
         Sort orders = Sort.create(order1, order2);
         ModelSorter<PersonJpa> modelSorter = new ModelSorter<>
                 (metadataService.getMetadata(PersonJpa.class), personList, orders);
-        List<PersonJpa> sortedPersonJpaList = modelSorter.apply();
+        List<PersonJpa> sortedPersonJpaList = modelSorter.toList();
         assertEquals(personList.get(1).getFirstName(),sortedPersonJpaList.get(0).getFirstName());
         assertEquals(personList.get(1).getLastName(),sortedPersonJpaList.get(0).getLastName());
         assertEquals(personList.get(0).getFirstName(),sortedPersonJpaList.get(1).getFirstName());
@@ -56,7 +56,7 @@ class ModelSorterTest {
         Sort orders = Sort.create(order1);
         ModelSorter<PersonJpa> modelSorter = new ModelSorter<>
                 (metadataService.getMetadata(PersonJpa.class), personList, orders);
-        List<PersonJpa> sortedPersonJpaList = modelSorter.apply();
+        List<PersonJpa> sortedPersonJpaList = modelSorter.toList();
         assertEquals(personList.get(2).getAge(),sortedPersonJpaList.get(0).getAge());
         assertEquals(personList.get(0).getAge(),sortedPersonJpaList.get(1).getAge());
         assertEquals(personList.get(1).getAge(),sortedPersonJpaList.get(2).getAge());
@@ -68,7 +68,7 @@ class ModelSorterTest {
         Sort orders = Sort.create(order1);
         ModelSorter<PersonJpa> modelSorter = new ModelSorter<>
                 (metadataService.getMetadata(PersonJpa.class), personList, orders);
-        List<PersonJpa> sortedPersonJpaList = modelSorter.apply();
+        List<PersonJpa> sortedPersonJpaList = modelSorter.toList();
         assertEquals(personList.get(0).getDescription(),sortedPersonJpaList.get(0).getDescription());
         assertEquals(personList.get(2).getDescription(),sortedPersonJpaList.get(1).getDescription());
         assertEquals(personList.get(1).getAge(),sortedPersonJpaList.get(2).getAge());

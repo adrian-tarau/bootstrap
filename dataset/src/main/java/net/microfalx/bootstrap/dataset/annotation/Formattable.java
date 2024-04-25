@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.dataset.annotation;
 
+import net.microfalx.bootstrap.dataset.Alert;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
+import net.microfalx.bootstrap.model.Field;
 
 import java.lang.annotation.*;
 import java.time.Duration;
@@ -85,6 +87,13 @@ public @interface Formattable {
      * @return the formatter
      */
     Class<? extends Formatter> formatter() default Formatter.class;
+
+    /**
+     * Returns the provide for the alert.
+     *
+     * @return the provider
+     */
+    Class<? extends AlertProvider> alert() default AlertProvider.class;
 
     /**
      * A unit of measure for a formatter
@@ -175,5 +184,25 @@ public @interface Formattable {
                     .add("time=" + time)
                     .toString();
         }
+    }
+
+    /**
+     * An interface which allows a formatter to attach an alert to a field.
+     *
+     * @param <M> the model
+     * @param <F> the field
+     * @param <T> the value
+     */
+    interface AlertProvider<M, F extends Field<M>, T> {
+
+        /**
+         * Formats the value.
+         *
+         * @param value the value of the field
+         * @param field the field
+         * @param model the model
+         * @return the formatted value
+         */
+        Alert provide(T value, F field, M model);
     }
 }

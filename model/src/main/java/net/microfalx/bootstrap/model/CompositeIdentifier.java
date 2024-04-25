@@ -91,8 +91,9 @@ public class CompositeIdentifier<M, F extends Field<M>, ID> {
 
     private List<F> getIdFields() {
         List<F> idFields = metadata.getIdFields();
-        if (idFields.isEmpty())
+        if (idFields.isEmpty()) {
             throw new ModelException("Model '" + metadata.getName() + " does not have any identifiers");
+        }
         return idFields;
     }
 

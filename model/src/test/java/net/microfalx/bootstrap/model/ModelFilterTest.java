@@ -32,7 +32,7 @@ class ModelFilterTest {
     void emptyFiler() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create());
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertTrue(create().isEmpty());
         assertIterableEquals(persons, result);
         assertNotNull(modelFilter.toString());
@@ -44,7 +44,7 @@ class ModelFilterTest {
     void filterWithEqualExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(eq("age", 5)));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertEquals(persons.get(2), result.iterator().next());
         assertNotNull(modelFilter.toString());
         assertEquals("age = 5", create(eq("age", 5)).getDescription());
@@ -56,7 +56,7 @@ class ModelFilterTest {
     void filterWithNotEqualExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(ne("age", 5)));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(List.of(persons.get(0), persons.get(1)), result);
         assertNotNull(modelFilter.toString());
         assertEquals("age <> 5", create(ne("age", 5)).getExpression().getDescription());
@@ -67,10 +67,10 @@ class ModelFilterTest {
     void filterWithContainExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(contains("firstName", "J")));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(contains("firstName", "Jo")));
-        result = modelFilter.apply();
+        result = modelFilter.toList();
         assertIterableEquals(List.of(persons.get(0), persons.get(2)), result);
         assertNotNull(modelFilter.toString());
         assertEquals("firstName contains 'J'", create(contains("firstName", "J")).getExpression().
@@ -82,7 +82,7 @@ class ModelFilterTest {
     void filterWithBetweenExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(between("age", 9, 15)));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertEquals(persons.get(0), result.iterator().next());
         assertNotNull(modelFilter.toString());
         assertEquals("age between [9, 15]", create(between("age", 9, 15)).getExpression().
@@ -94,7 +94,7 @@ class ModelFilterTest {
     void filterWithGreaterExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(gt("age", 100)));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(Collections.emptyList(), result);
         assertNotNull(modelFilter.toString());
         assertEquals("age > 100", create(gt("age", 100)).getExpression().
@@ -106,7 +106,7 @@ class ModelFilterTest {
     void filterWithGreaterThanOrEqualExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(ge("age", 10)));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(List.of(persons.get(0), persons.get(1)), result);
         assertNotNull(modelFilter.toString());
         assertEquals("age >= 10", create(ge("age", 10)).getExpression().
@@ -118,7 +118,7 @@ class ModelFilterTest {
     void filterWithLessExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(lt("age", 90)));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(List.of(persons.get(0), persons.get(2)), result);
         assertNotNull(modelFilter.toString());
         assertEquals("age < 90", create(lt("age", 90)).getExpression().
@@ -130,7 +130,7 @@ class ModelFilterTest {
     void filterWithLessThanOrEqualExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(le("age", 90)));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(persons, result);
         assertNotNull(modelFilter.toString());
         assertEquals("age <= 90", create(le("age", 90)).getExpression().
@@ -142,7 +142,7 @@ class ModelFilterTest {
     void filterWithNullExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(isNull("firstName")));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(Collections.emptyList(), result);
         assertNotNull(modelFilter.toString());
         assertEquals("firstName is null", create(isNull("firstName")).getExpression().
@@ -154,7 +154,7 @@ class ModelFilterTest {
     void filterWithNotNullExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(isNotNull("lastName")));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(persons, result);
         assertNotNull(modelFilter.toString());
         assertEquals("lastName not null", create(isNotNull("lastName")).getExpression().
@@ -166,7 +166,7 @@ class ModelFilterTest {
     void filterWithLikeExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(like("description", "*year old*")));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(persons, result);
         assertNotNull(modelFilter.toString());
         assertEquals("description like '*year old*'", create(like("description", "*year old*")).
@@ -179,7 +179,7 @@ class ModelFilterTest {
     void filterWithRegexExpression() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(regex("description", ".*?year old.*?")));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(persons, result);
         assertNotNull(modelFilter.toString());
         assertEquals("description regex '.*?year old.*?'", create(
@@ -193,7 +193,7 @@ class ModelFilterTest {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(in("firstName",
                 "Sid", "Bob", "John")));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(List.of(persons.get(0), persons.get(2)), result);
         assertNotNull(modelFilter.toString());
         assertEquals("firstName in [Sid, Bob, John]", create(in("firstName",
@@ -207,7 +207,7 @@ class ModelFilterTest {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(notIn("lastName",
                 "Bond", "Frost", "Rogers")));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(List.of(persons.get(0), persons.get(1)), result);
         assertNotNull(modelFilter.toString());
         assertEquals("lastName not in [Bond, Frost, Rogers]", create(notIn("lastName",
@@ -222,7 +222,7 @@ class ModelFilterTest {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(and(in("firstName",
                 "Sid", "Bob", "John"), eq("age", 5))));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(Collections.singletonList(persons.get(2)), result);
         assertNotNull(modelFilter.toString());
         assertEquals("(firstName in [Sid, Bob, John] && age = 5)", create(and(in("firstName",
@@ -237,7 +237,7 @@ class ModelFilterTest {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(or(in("firstName",
                 "Sid", "Bob", "John"), eq("age", 90))));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertIterableEquals(persons, result);
         assertNotNull(modelFilter.toString());
         assertEquals("(firstName in [Sid, Bob, John] || age = 90)",create(or(in("firstName",
@@ -253,7 +253,7 @@ class ModelFilterTest {
     void twoComparisonsWithNot() {
         ModelFilter<Person> modelFilter = new ModelFilter<>(metadataService.getMetadata(Person.class),
                 persons, create(not(contains("firstName", "Jo"))));
-        List<Person> result = modelFilter.apply();
+        List<Person> result = modelFilter.toList();
         assertEquals(persons.get(1), result.iterator().next());
         assertNotNull(modelFilter.toString());
         assertEquals("!(firstName contains 'Jo')",create(not(contains("firstName",

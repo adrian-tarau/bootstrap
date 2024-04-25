@@ -1,19 +1,29 @@
 package net.microfalx.bootstrap.dataset;
 
+import net.microfalx.bootstrap.core.i18n.I18n;
+import net.microfalx.bootstrap.model.*;
+import net.microfalx.lang.EnumUtils;
+import net.microfalx.metrics.Metrics;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static org.apache.commons.lang3.ClassUtils.isAssignable;
 
 /**
  * Various utilities around data sets.
  */
 public class DataSetUtils {
+
+    static Metrics METRICS = Metrics.of("DataSet");
 
     /**
      * The operator injected when the user clicks on a field value in the grid.
@@ -33,6 +43,7 @@ public class DataSetUtils {
      * @param <T>        the data type
      * @return the parameter, null if does not exist
      */
+    @SuppressWarnings("unchecked")
     public static <T> T find(Class<T> type, Object... parameters) {
         for (Object parameter : parameters) {
             if (isAssignable(parameter.getClass(), type)) return (T) parameter;
@@ -42,6 +53,80 @@ public class DataSetUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the display value of an enum.
+     *
+     * @param i18n  the I18n resolver
+     * @param value the enum value
+     * @param <E>   the enum type
+     * @return the display value
+     */
+    public static <E extends Enum<E>> String getDisplayValue(I18n i18n, E value) {
+        if (value == null) return StringUtils.EMPTY;
+        if (i18n != null) {
+            return i18n.getText(value);
+        } else {
+            return EnumUtils.toLabel(value);
+        }
+    }
+
+    /**
+     * Filters and sorts a list of models.
+     *
+     * @param models     the models
+     * @param filterable the filter
+     * @param sort       the sort
+     * @return a non-null instance
+     */
+    public static <M, F extends Field<M>, ID> List<M> filterAndSort(Metadata<M, F, ID> metadata, Iterable<M> models, Filter filterable, net.microfalx.bootstrap.model.Sort sort) {
+        requireNonNull(models);
+        requireNonNull(filterable);
+        requireNonNull(sort);
+        ModelFilter<M> filter = new ModelFilter<>(metadata, models, filterable);
+        ModelSorter<M> sorter = new ModelSorter<>(metadata, filter.toList(), sort);
+        return sorter.toList();
+    }
+
+    /**
+     * Sorts a list of models.
+     *
+     * @param models the models
+     * @param sort   the sort
+     * @return a non-null instance
+     */
+    public static <M, F extends Field<M>, ID> List<M> sort(Metadata<M, F, ID> metadata, Iterable<M> models, Sort sort) {
+        requireNonNull(models);
+        requireNonNull(sort);
+        ModelSorter<M> sorter = new ModelSorter<>(metadata, models, DataSetUtils.from(sort));
+        return sorter.toList();
+    }
+
+    /**
+     * Paginates a list of models.
+     *
+     * @param models   the models
+     * @param pageable the page information
+     * @return a page of models
+     */
+    public static <M, F extends Field<M>, ID> Page<M> getPage(Metadata<M, F, ID> metadata, Iterable<M> models, Pageable pageable) {
+        requireNonNull(models);
+        requireNonNull(pageable);
+        ModelSorter<M> sorter = new ModelSorter<>(metadata, models, DataSetUtils.from(pageable.getSort()));
+        return new DataSetPage<>(pageable, sorter.toList());
+    }
+
+    /**
+     * Filters and paginates a list of models.
+     *
+     * @param models     the models
+     * @param pageable   the page information
+     * @param filterable the filter
+     * @return a page of models
+     */
+    public static <M, F extends Field<M>, ID> Page<M> getPage(Metadata<M, F, ID> metadata, Iterable<M> models, Pageable pageable, Filter filterable) {
+        return new DataSetPage<>(pageable, filterAndSort(metadata, models, filterable, DataSetUtils.from(pageable.getSort())));
     }
 
     /**

@@ -3,13 +3,14 @@ package net.microfalx.bootstrap.model;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
+import org.apache.commons.lang3.stream.Streams;
 import org.springframework.util.AntPathMatcher;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -22,27 +23,37 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class ModelFilter<M> {
 
     private final Metadata<M, ? extends Field<M>, ?> metadata;
-    private final List<M> models;
+    private final Iterable<M> models;
     private final Filter filter;
     private final AntPathMatcher matcher = new AntPathMatcher();
 
-    public ModelFilter(Metadata<M, ? extends Field<M>, ?> metadata, List<M> models, Filter filter) {
+    public ModelFilter(Metadata<M, ? extends Field<M>, ?> metadata, Iterable<M> models, Filter filter) {
         requireNonNull(metadata);
         requireNonNull(models);
         this.metadata = metadata;
-        this.models = new ArrayList<>(models);
+        this.models = models;
         this.filter = filter != null ? filter : Filter.create();
         this.matcher.setCachePatterns(true);
         this.matcher.setCaseSensitive(false);
     }
 
     /**
-     * Applies the filter to the models.
+     * Applies the filter to the models and returns the filtered models as a list.
      *
-     * @return the sorted models
+     * @return the filtered models
      */
-    public List<M> apply() {
-        return models.stream().filter(m -> evaluateExpression(filter.getExpression(), m)).toList();
+    public List<M> toList() {
+        return toStream().toList();
+    }
+
+    /**
+     * Applies the filter to the models and returns the filtered models as a stream.
+     *
+     * @return the filtered models
+     */
+    public Stream<M> toStream() {
+        Stream<M> stream = Streams.of(models);
+        return stream.filter(m -> evaluateExpression(filter.getExpression(), m));
     }
 
     /**
@@ -170,7 +181,7 @@ public class ModelFilter<M> {
     @Override
     public String toString() {
         return "ModelFilter{" +
-                "models=" + models.size() +
+                "models=" + models +
                 ", filter=" + filter +
                 '}';
     }

@@ -1,8 +1,11 @@
 package net.microfalx.bootstrap.model;
 
+import com.google.common.collect.Streams;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -12,29 +15,41 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class ModelSorter<M> {
 
     private final Metadata<M, ? extends Field<M>, ?> metadata;
-    private final List<M> models;
+    private final Iterable<M> models;
     private final Sort sort;
 
     private Comparator<M>[] comparators;
 
-    public ModelSorter(Metadata<M, ? extends Field<M>, ?> metadata, List<M> models, Sort sort) {
+    public ModelSorter(Metadata<M, ? extends Field<M>, ?> metadata, Iterable<M> models, Sort sort) {
         requireNonNull(metadata);
         requireNonNull(models);
         this.metadata = metadata;
-        this.models = new ArrayList<>(models);
+        this.models = models;
         this.sort = sort != null ? sort : Sort.unsorted();
         initialize();
     }
 
     /**
-     * Applies the sorting to the models.
+     * Applies the sorting to the models and returns the sorted models as a list.
      *
      * @return the sorted models
      */
-    public List<M> apply() {
-        if (!sort.isSorted()) return models;
-        models.sort(new SortComparator());
-        return models;
+    public List<M> toList() {
+        return toStream().toList();
+    }
+
+    /**
+     * Applies the sorting to the models and returns the sorted models as a stream.
+     *
+     * @return the sorted models
+     */
+    public Stream<M> toStream() {
+        Stream<M> stream = Streams.stream(models);
+        if (!sort.isSorted()) {
+            return stream;
+        } else {
+            return stream.sorted(new SortComparator());
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -49,7 +64,7 @@ public class ModelSorter<M> {
     @Override
     public String toString() {
         return "ModelSorter{" +
-                "models=" + models.size() +
+                "models=" + models +
                 ", sort=" + sort +
                 '}';
     }

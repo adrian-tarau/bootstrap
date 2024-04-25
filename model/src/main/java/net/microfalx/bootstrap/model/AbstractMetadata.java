@@ -20,7 +20,7 @@ import java.util.*;
 import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.ClassUtils.isJdkClass;
+import static net.microfalx.lang.ClassUtils.isBaseClass;
 import static net.microfalx.lang.ObjectUtils.isNull;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 
@@ -103,6 +103,16 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
         return getFields().stream().filter(field -> field.getDataType() == dataType).toList();
     }
 
+    @Override
+    public <A extends Annotation> List<F> getFields(Class<A> annotationClass) {
+        requireNonNull(annotationClass);
+        List<F> fieldsWithAnnotations = new ArrayList<>();
+        for (F field : getFields()) {
+            A annotation = field.findAnnotation(annotationClass);
+            if (annotation != null) fieldsWithAnnotations.add(field);
+        }
+        return fieldsWithAnnotations;
+    }
 
     @Override
     public List<F> getIdFields() {
@@ -144,11 +154,11 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     @SuppressWarnings("unchecked")
     @Override
     public F get(String nameOrProperty) {
-        Field<?> field = find(nameOrProperty);
+        F field = find(nameOrProperty);
         if (field == null) {
             throw new FieldNotFoundException("A field with name or property '" + nameOrProperty + "' is not registered in " + getName());
         }
-        return (F) field;
+        return field;
     }
 
     @Override
@@ -193,7 +203,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
             if (firstValue == null && secondValue == null) continue;
             if (isNull(firstValue, secondValue)) return false;
             Class<?> type = firstValue.getClass();
-            if (isJdkClass(type)) {
+            if (isBaseClass(type)) {
                 if (!ObjectUtils.equals(firstValue, secondValue)) return false;
             } else {
                 Metadata metadata = metadataService.getMetadata(type);
@@ -208,7 +218,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
         return copy(model, false);
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public M copy(M model, boolean deep) {
         if (model == null) return null;
@@ -217,7 +227,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
             Object value = field.get(model);
             if (value != null) {
                 if (deep) {
-                    if (ClassUtils.isJdkClass(value)) {
+                    if (ClassUtils.isBaseClass(value)) {
                         value = ObjectUtils.copy(value);
                     } else {
                         Metadata metadata = metadataService.getMetadata(value);

@@ -135,10 +135,13 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
 
     /**
      * Returns the value of a field for a given model in a display format.
+     * <p>
+     * If the field is supported by a model, the display value is the model name
      *
      * @param model the model
      * @param field the field
      * @return the display value
+     * @see Metadata#getName(Object)
      */
     String getDisplayValue(M model, Field<M> field);
 
@@ -185,6 +188,14 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
     void setId(M model, ID id);
 
     /**
+     * Returns the name for a model.
+     *
+     * @param model the model
+     * @return the identifier
+     */
+    String getName(M model);
+
+    /**
      * Validates a model.
      *
      * @param model the model
@@ -215,7 +226,7 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
      *
      * @param pageable   the page information
      * @param filterable the filter information
-     * @return a page of mode;s
+     * @return a page of models
      */
     Page<M> findAll(Pageable pageable, Filter filterable);
 }

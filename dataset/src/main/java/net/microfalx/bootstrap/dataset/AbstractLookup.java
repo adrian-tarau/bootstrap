@@ -1,14 +1,9 @@
 package net.microfalx.bootstrap.dataset;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import net.microfalx.lang.annotation.Id;
 import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.ReadOnly;
-
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * A base class for lookups.
@@ -19,6 +14,8 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 @Getter
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+@NoArgsConstructor
+@AllArgsConstructor
 @ToString
 public abstract class AbstractLookup<T> implements Lookup<T> {
 
@@ -27,11 +24,4 @@ public abstract class AbstractLookup<T> implements Lookup<T> {
 
     @Name
     private String name;
-
-    public AbstractLookup(T id, String name) {
-        requireNonNull(id);
-        requireNonNull(name);
-        this.id = id;
-        this.name = name;
-    }
 }

@@ -1,6 +1,9 @@
 package net.microfalx.bootstrap.dataset;
 
-import net.microfalx.bootstrap.model.*;
+import com.google.common.collect.Lists;
+import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Filter;
+import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.lang.ObjectUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +18,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * A data set backed by data in memory, which holds cached data from various services.
  * <p>
- * Subclasses would implement {@link  #extractModels()} to retrieve the models from services, store it with
+ * Subclasses would implement {@link #extractModels()} to retrieve the models from services, store it with
  * {@link DataSetService} in internal caches and reused for any instance of the data set.
  */
 public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractDataSet<M, F, ID> {
@@ -82,24 +85,19 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
     @Override
     protected final List<M> doFindAll(Sort sort) {
         List<M> models = getCachedModels().getModels();
-        ModelSorter<M> sorter = new ModelSorter<>(getMetadata(), models, DataSetUtils.from(sort));
-        return sorter.apply();
+        return sort(models, sort);
     }
 
     @Override
     protected final Page<M> doFindAll(Pageable pageable) {
         List<M> models = getCachedModels().getModels();
-        ModelSorter<M> sorter = new ModelSorter<>(getMetadata(), models, DataSetUtils.from(pageable.getSort()));
-        return new DataSetPage<>(pageable, sorter.apply());
+        return getPage(models, pageable);
     }
 
     @Override
     protected final Page<M> doFindAll(Pageable pageable, Filter filterable) {
         List<M> models = getCachedModels().getModels();
-        ModelFilter<M> filter = new ModelFilter<>(getMetadata(), models, filterable);
-        models = filter.apply();
-        ModelSorter<M> sorter = new ModelSorter<>(getMetadata(), models, DataSetUtils.from(pageable.getSort()));
-        return new DataSetPage<>(pageable, sorter.apply());
+        return getPage(models, pageable, filterable);
     }
 
     @Override
@@ -118,11 +116,11 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
      *
      * @return a non-null instance
      */
-    private final DataSetService.CachedModelsById<M, ID> getCachedModels() {
+    private DataSetService.CachedModelsById<M, ID> getCachedModels() {
         DataSetService dataSetService = getDataSetService();
         DataSetService.CachedModelsById<M, ID> cachedModels = dataSetService.getCacheById(getMetadata().getModel());
         if (cachedModels == null) {
-            Collection<M> models = extractModels();
+            Iterable<M> models = extractModels();
             if (models == null) models = Collections.emptyList();
             Map<ID, M> modelsMap = buildMap(models);
             List<M> modelsList = buildList(models);
@@ -137,17 +135,17 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
      *
      * @return the models, can be NULL
      */
-    protected abstract Collection<M> extractModels();
+    protected abstract Iterable<M> extractModels();
 
-    private List<M> buildList(Collection<M> models) {
+    private List<M> buildList(Iterable<M> models) {
         if (models instanceof List) {
             return (List<M>) models;
         } else {
-            return new ArrayList<>(models);
+            return Lists.newArrayList(models);
         }
     }
 
-    private Map<ID, M> buildMap(Collection<M> models) {
+    private Map<ID, M> buildMap(Iterable<M> models) {
         Map<ID, M> modelsMap = new HashMap<>();
         for (M model : models) {
             ID id = getId(model);

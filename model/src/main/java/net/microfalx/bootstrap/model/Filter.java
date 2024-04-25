@@ -53,8 +53,6 @@ public interface Filter extends Nameable, Descriptable, ComparisonExpressionLoca
      */
     Expression getExpression();
 
-
-
     /**
      * Returns the index of the first model and it used to paginate
      *

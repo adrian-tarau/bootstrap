@@ -42,7 +42,7 @@ class DataSetServiceTest {
 
     @Test
     void createJpaDataSet() {
-        DataSet<Person, Field<Person>, Integer> dataSet = dataSetService.lookup(Person.class, jpaRepository);
+        DataSet<Person, Field<Person>, Integer> dataSet = dataSetService.getDataSet(Person.class, jpaRepository);
         assertNotNull(dataSet);
         assertSame(dataSet.getClass(), JpaDataSet.class);
         when(jpaRepository.findAll()).thenReturn(Arrays.asList(new Person()));
@@ -51,7 +51,7 @@ class DataSetServiceTest {
 
     @Test
     void createCustomDataSet() {
-        DataSet<TestDataSetFactory.TestModel, Field<TestDataSetFactory.TestModel>, Integer> dataSet = dataSetService.lookup(TestDataSetFactory.TestModel.class);
+        DataSet<TestDataSetFactory.TestModel, Field<TestDataSetFactory.TestModel>, Integer> dataSet = dataSetService.getDataSet(TestDataSetFactory.TestModel.class);
         assertNotNull(dataSet);
         assertSame(dataSet.getClass(), TestDataSetFactory.TestDataSet.class);
     }

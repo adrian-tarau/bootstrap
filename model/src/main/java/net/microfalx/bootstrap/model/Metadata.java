@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.model;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
+import net.microfalx.lang.annotation.Glue;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -44,9 +45,10 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
     /**
      * Returns the fields which gives name to a record.
      * <p>
-     * The annotation {@link net.microfalx.lang.annotation.Name} will be used to decide which field i
+     * The annotation {@link net.microfalx.lang.annotation.Name} will be used to decide which field is used to create
+     * tbe name of the field.
      * <p>
-     * If there are multiple fields, they will be separated by spaces.
+     * If there are multiple fields, they will be separated by spaces or separator provider by {@link Glue} annotation.
      *
      * @return the fields
      * @throws FieldNotFoundException if at least one fi
@@ -60,6 +62,14 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
      * @return a non-null list
      */
     List<F> getFields(Field.DataType dataType);
+
+    /**
+     * Returns all fields with a given annotation.
+     *
+     * @param annotationClass the data type
+     * @return a non-null list
+     */
+    <A extends Annotation> List<F> getFields(Class<A> annotationClass);
 
     /**
      * Returns the field which identifies the record.

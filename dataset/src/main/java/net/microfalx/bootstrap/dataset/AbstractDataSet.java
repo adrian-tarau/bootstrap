@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static net.microfalx.bootstrap.dataset.DataSetUtils.METRICS;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
@@ -172,7 +173,8 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                 || field.getDataType() == Field.DataType.ENUM
                 || field.getDataType() == Field.DataType.MODEL
                 || field.getDataType() == Field.DataType.BOOLEAN;
-        return (canBeSearched && filterableAnnot == null) || (filterableAnnot != null && filterableAnnot.value());
+        boolean canBeFiltered = (canBeSearched && filterableAnnot == null) || (filterableAnnot != null && filterableAnnot.value());
+        return !field.isTransient() && canBeFiltered;
     }
 
     @Override
@@ -205,37 +207,37 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         if (model == null) return null;
         Object value = field.get(model);
         if (value == null) return null;
-        String displayValue = null;
-        Formattable formattableAnnot = field.findAnnotation(Formattable.class);
-        if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
-            displayValue = createFormatter(field, formattableAnnot).format(value, (F) field, model);
-        } else {
-            Lookup lookupAnnot = field.findAnnotation(Lookup.class);
-            if (lookupAnnot != null) {
-                DataSet<?, ? extends Field<?>, Object> lookupDataSet = getDataSetService().lookup(lookupAnnot.model());
-                Optional<?> lookupModel = lookupDataSet.findById(value);
-                if (lookupModel.isPresent()) {
-                    displayValue = ((net.microfalx.bootstrap.dataset.Lookup) lookupModel.get()).getName();
-                }
-            } else if (value instanceof Enum) {
-                if (ENUM_FORMATTER.getI18nService() == null) {
-                    ENUM_FORMATTER.setI18nService(getService(I18nService.class));
-                }
-                displayValue = ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
-            } else if (value instanceof Number) {
-                displayValue = ((Formatter<M, Field<M>, Object>) NUMBER_FORMATTER).format(value, field, model);
-            } else if (isJdkType(value)) {
-                displayValue = FormatterUtils.basicFormatting(value, formattableAnnot);
+        return METRICS.time("Get Display Value", () -> {
+            String displayValue = null;
+            Formattable formattableAnnot = field.findAnnotation(Formattable.class);
+            if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
+                displayValue = createFormatter(field, formattableAnnot).format(value, (F) field, model);
             } else {
-                MetadataService metadataService = dataSetService.getBean(MetadataService.class);
-                Metadata modelMetadata = metadataService.getMetadata(value.getClass());
-                displayValue = modelMetadata.getName(value);
+                Lookup lookupAnnot = field.findAnnotation(Lookup.class);
+                if (lookupAnnot != null) {
+                    LookupProvider<net.microfalx.bootstrap.dataset.Lookup<Object>, Object> lookupProvider = getDataSetService().getLookupProvider(lookupAnnot.model());
+                    Optional<?> lookupModel = lookupProvider.findById(value);
+                    if (lookupModel.isPresent()) {
+                        displayValue = ((net.microfalx.bootstrap.dataset.Lookup) lookupModel.get()).getName();
+                    }
+                } else if (value instanceof Enum) {
+                    if (ENUM_FORMATTER.getI18n() == null) ENUM_FORMATTER.setI18n(getService(I18nService.class));
+                    displayValue = ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
+                } else if (value instanceof Number) {
+                    displayValue = ((Formatter<M, Field<M>, Object>) NUMBER_FORMATTER).format(value, field, model);
+                } else if (isJdkType(value)) {
+                    displayValue = FormatterUtils.basicFormatting(value, formattableAnnot);
+                } else {
+                    MetadataService metadataService = dataSetService.getBean(MetadataService.class);
+                    Metadata modelMetadata = metadataService.getMetadata(value.getClass());
+                    displayValue = modelMetadata.getName(value);
+                }
             }
-        }
-        if (displayValue != null && !isJdkType(value)) {
-            getDataSetService().registerByDisplayName(value, displayValue);
-        }
-        return displayValue;
+            if (displayValue != null && !isJdkType(value)) {
+                getDataSetService().registerByDisplayName(value, displayValue);
+            }
+            return displayValue;
+        });
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -243,27 +245,29 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     public <T> T getValue(String displayValue, Field<M> field) {
         requireNonNull(field);
         if (StringUtils.isEmpty(displayValue)) return null;
-        Formattable formattableAnnot = field.findAnnotation(Formattable.class);
-        if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
-            Formatter<M, F, T> formatter = (Formatter<M, F, T>) createFormatter(field, formattableAnnot);
-            return formatter.parse(displayValue, (F) field);
-        } else if (field.getDataType() == Field.DataType.ENUM) {
-            EnumFormatter formatter = new EnumFormatter<>((Class<Enum>) field.getDataClass());
-            return (T) formatter.parse(displayValue, field);
-        } else {
-            Lookup lookupAnnot = field.findAnnotation(Lookup.class);
-            if (lookupAnnot != null) {
-                DataSet<?, ? extends Field<?>, Object> lookupDataSet = getDataSetService().lookup(lookupAnnot.model());
-                Object value = lookupDataSet.findByDisplayValue(displayValue).orElse(null);
-                if (value instanceof net.microfalx.bootstrap.dataset.Lookup<?> lookup) {
-                    return (T) lookup.getId();
-                } else {
-                    return (T) value;
-                }
+        return METRICS.time("Get Value", () -> {
+            Formattable formattableAnnot = field.findAnnotation(Formattable.class);
+            if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
+                Formatter<M, F, T> formatter = (Formatter<M, F, T>) createFormatter(field, formattableAnnot);
+                return formatter.parse(displayValue, (F) field);
+            } else if (field.getDataType() == Field.DataType.ENUM) {
+                EnumFormatter formatter = new EnumFormatter<>((Class<Enum>) field.getDataClass());
+                return (T) formatter.parse(displayValue, field);
             } else {
-                return (T) getDataSetService().resolve(field, displayValue);
+                Lookup lookupAnnot = field.findAnnotation(Lookup.class);
+                if (lookupAnnot != null) {
+                    DataSet<?, ? extends Field<?>, Object> lookupDataSet = getDataSetService().getDataSet(lookupAnnot.model());
+                    Object value = lookupDataSet.findByDisplayValue(displayValue).orElse(null);
+                    if (value instanceof net.microfalx.bootstrap.dataset.Lookup<?> lookup) {
+                        return (T) lookup.getId();
+                    } else {
+                        return (T) value;
+                    }
+                } else {
+                    return (T) getDataSetService().resolve(field, displayValue);
+                }
             }
-        }
+        });
     }
 
     @Override
@@ -282,6 +286,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public String getName(M model) {
+        return getMetadata().getName(model);
+    }
+
+    @Override
     public final void setId(M model, ID id) {
         new CompositeIdentifier<>(metadata, model);
     }
@@ -294,63 +303,41 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void validate(Filter filter) {
-        LOGGER.debug("Validate filter " + filter);
-        List<ComparisonExpression> comparisonExpressions = filter.getComparisonExpressions();
-        for (ComparisonExpression comparisonExpression : comparisonExpressions) {
-            Object value = comparisonExpression.getValue();
-            LOGGER.debug(" - " + comparisonExpression.getField() + " = " + value);
-            F field = getMetadata().find(comparisonExpression.getField());
-            if (field == null) {
-                throw new DataSetException("A field with name '" + comparisonExpression.getField() + "' does not exist in data set " + getName());
-            }
-            if (ComparisonExpression.MATCH_ALL.equals(value)) continue;
-            try {
-                switch (field.getDataType()) {
-                    case ENUM:
-                        if (!(value instanceof Enum<?>)) {
-                            Enum<?> resolvedEnum = EnumUtils.fromName((Class<Enum>) field.getDataClass(), Field.from(value, String.class));
-                            LOGGER.debug("   - " + resolvedEnum);
-                        }
-                        break;
-                    case DATE:
-                        if (!(value instanceof Temporal)) {
-                            LocalDate date = Field.from(value, LocalDate.class);
-                            LOGGER.debug("   - " + date);
-                        }
-                        break;
-                    case DATE_TIME:
-                        if (!(value instanceof Temporal)) {
-                            LocalDateTime dateTime = Field.from(value, LocalDateTime.class);
-                            LOGGER.debug("   - " + dateTime);
-                        }
-                        break;
+        METRICS.time("Validate", (t) -> {
+            LOGGER.debug("Validate filter " + filter);
+            List<ComparisonExpression> comparisonExpressions = filter.getComparisonExpressions();
+            for (ComparisonExpression comparisonExpression : comparisonExpressions) {
+                Object value = comparisonExpression.getValue();
+                LOGGER.debug(" - " + comparisonExpression.getField() + " = " + value);
+                F field = getMetadata().find(comparisonExpression.getField());
+                if (field == null) {
+                    throw new DataSetException("A field with name '" + comparisonExpression.getField() + "' does not exist in data set " + getName());
                 }
-            } catch (Exception e) {
-                throw new DataSetException("A data conversion failure occurred for field with name '"
-                        + comparisonExpression.getField() + "', reason: " + e.getMessage());
+                if (ComparisonExpression.MATCH_ALL.equals(value)) continue;
+                validate(field, value, comparisonExpression);
             }
-        }
+        });
     }
 
     @Override
     public final List<M> findAll() {
-        return doFindAll();
+        return METRICS.time("Find All", () -> doFindAll());
     }
 
     @Override
     public final List<M> findAllById(Iterable<ID> ids) {
-        return doFindAllById(ids);
+        return METRICS.time("Find All By Id", () -> doFindAllById(ids));
     }
 
     @Override
     public final Optional<M> findById(ID id) {
         requireNonNull(id);
-        return doFindById(id);
+        return METRICS.time("Find By Id", () -> doFindById(id));
     }
 
     @Override
     public final boolean existsById(ID id) {
-        return doExistsById(id);
+        return METRICS.time("Exists By Id", () -> doExistsById(id));
     }
 
     @Override
@@ -381,7 +368,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public final <S extends M> S save(S model) {
         checkReadOnly();
-        return doSave(model);
+        return METRICS.time("Save", () -> doSave(model));
     }
 
     @Override
@@ -395,30 +382,30 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public final void deleteById(ID id) {
         checkReadOnly();
-        doDeleteById(id);
+        METRICS.time("Delete By Id", (t) -> doDeleteById(id));
     }
 
     @Override
     public final void delete(M model) {
         checkReadOnly();
-        doDelete(model);
+        METRICS.time("Delete", (t) -> doDelete(model));
     }
 
     @Override
     public final void deleteAllById(Iterable<? extends ID> ids) {
         checkReadOnly();
-        doDeleteAllById(ids);
+        METRICS.time("Delete All By Id", (t) -> doDeleteAllById(ids));
     }
 
     @Override
     public final void deleteAll(Iterable<? extends M> models) {
         checkReadOnly();
-        doDeleteAll(models);
+        METRICS.time("Delete All", (t) -> doDeleteAll(models));
     }
 
     @Override
     public final void deleteAll() {
-        doDeleteAll();
+        METRICS.time("Delete All", (t) -> doDeleteAll());
     }
 
     @Override
@@ -519,9 +506,83 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         throw new DataSetException("Unsupported operation for data set '" + getMetadata().getName() + "'");
     }
 
+    /**
+     * Filters and sorts a list of models.
+     *
+     * @param models     the models
+     * @param filterable the filter
+     * @param sort       the sort
+     * @return a non-null instance
+     */
+    protected final List<M> filterAndSort(Iterable<M> models, Filter filterable, net.microfalx.bootstrap.model.Sort sort) {
+        return DataSetUtils.filterAndSort(getMetadata(), models, filterable, sort);
+    }
+
+    /**
+     * Sorts a list of models.
+     *
+     * @param models the models
+     * @param sort   the sort
+     * @return a non-null instance
+     */
+    protected final List<M> sort(Iterable<M> models, Sort sort) {
+        return DataSetUtils.sort(getMetadata(), models, sort);
+    }
+
+    /**
+     * Paginates a list of models.
+     *
+     * @param models   the models
+     * @param pageable the page information
+     * @return a page of models
+     */
+    protected final Page<M> getPage(List<M> models, Pageable pageable) {
+        return DataSetUtils.getPage(getMetadata(), models, pageable);
+    }
+
+    /**
+     * Filters and paginates a list of models.
+     *
+     * @param models     the models
+     * @param pageable   the page information
+     * @param filterable the filter
+     * @return a page of models
+     */
+    protected final Page<M> getPage(List<M> models, Pageable pageable, Filter filterable) {
+        return DataSetUtils.getPage(getMetadata(), models, pageable, filterable);
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + "{" + "factory=" + ClassUtils.getName(factory) + ", metadata=" + metadata + '}';
+    }
+
+    private void validate(F field, Object value, ComparisonExpression comparisonExpression) {
+        try {
+            switch (field.getDataType()) {
+                case ENUM:
+                    if (!(value instanceof Enum<?>)) {
+                        Enum<?> resolvedEnum = EnumUtils.fromName((Class<Enum>) field.getDataClass(), Field.from(value, String.class));
+                        LOGGER.debug("   - " + resolvedEnum);
+                    }
+                    break;
+                case DATE:
+                    if (!(value instanceof Temporal)) {
+                        LocalDate date = Field.from(value, LocalDate.class);
+                        LOGGER.debug("   - " + date);
+                    }
+                    break;
+                case DATE_TIME:
+                    if (!(value instanceof Temporal)) {
+                        LocalDateTime dateTime = Field.from(value, LocalDateTime.class);
+                        LOGGER.debug("   - " + dateTime);
+                    }
+                    break;
+            }
+        } catch (Exception e) {
+            throw new DataSetException("A data conversion failure occurred for field with name '"
+                    + comparisonExpression.getField() + "', reason: " + e.getMessage());
+        }
     }
 
     private void initFromMetadata() {
@@ -567,6 +628,6 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         }
     }
 
-    private static final EnumFormatter ENUM_FORMATTER = new EnumFormatter<>();
-    private static final NumberFormatter NUMBER_FORMATTER = new NumberFormatter<>();
+    static final EnumFormatter ENUM_FORMATTER = new EnumFormatter<>();
+    static final NumberFormatter NUMBER_FORMATTER = new NumberFormatter<>();
 }

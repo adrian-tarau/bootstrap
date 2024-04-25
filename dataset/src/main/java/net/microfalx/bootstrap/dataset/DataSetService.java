@@ -2,7 +2,9 @@ package net.microfalx.bootstrap.dataset;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
+import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.MetadataService;
@@ -35,12 +37,17 @@ public final class DataSetService extends ApplicationContextSupport implements I
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
 
     private final Collection<DataSetFactory<?, ?, ?>> factories = new CopyOnWriteArrayList<>();
+    private final Map<Class<?>, DataSetFactory<?, ?, ?>> factoriesCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, LookupProvider<?, ?>> lookupProviders = new ConcurrentHashMap<>();
     private final Map<Class<?>, SoftReference<CachedModelsById<?, ?>>> cachesById = new ConcurrentHashMap<>();
     private final Map<Class<?>, SoftReference<CachedModelsByDisplayValue<?>>> cachesByDisplayName = new ConcurrentHashMap<>();
     private final Map<Class<?>, Repository<?, ?>> repositories = new ConcurrentHashMap<>();
 
     @Autowired
     private MetadataService metadataService;
+
+    @Autowired
+    private I18nService i18nService;
 
     /**
      * Returns the metadata associated with a model.
@@ -60,8 +67,31 @@ public final class DataSetService extends ApplicationContextSupport implements I
     @SuppressWarnings("unchecked")
     public <M, ID> ID getId(M model) {
         requireNonNull(model);
-        DataSet<M, Field<M>, ID> dataSet = lookup((Class<M>) model.getClass());
-        return dataSet.getId(model);
+        if (model instanceof Enum<?>) {
+            return (ID) ((Enum<?>) model).name();
+        } else if (ClassUtils.isBaseClass(model)) {
+            return (ID) model;
+        } else {
+            DataSet<M, Field<M>, ID> dataSet = getDataSet((Class<M>) model.getClass());
+            return dataSet.getId(model);
+        }
+    }
+
+    /**
+     * Returns the model name.
+     *
+     * @param model the model
+     * @return the name
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <M> String getName(M model) {
+        requireNonNull(model);
+        if (model instanceof Enum<?>) {
+            return DataSetUtils.getDisplayValue(i18nService, (Enum) model);
+        } else {
+            DataSet<M, Field<M>, ?> dataSet = getDataSet((Class<M>) model.getClass());
+            return dataSet.getName(model);
+        }
     }
 
     /**
@@ -95,15 +125,43 @@ public final class DataSetService extends ApplicationContextSupport implements I
             CachedModelsByDisplayValue<?> cache = getCacheByDisplayName(valueClass);
             value = cache.models.getIfPresent(displayValue.toLowerCase());
             if (value != null) return value;
-            DataSet fieldDataSet = lookup(field.getDataClass());
+            DataSet fieldDataSet = getDataSet(field.getDataClass());
             Optional<Object> result = fieldDataSet.findByDisplayValue(displayValue);
             value = result.orElse(null);
             if (value != null) registerByDisplayName(value, displayValue);
         } else {
-            DataSet<M, ? extends Field<M>, Object> dataSet = lookup(modelClass);
+            DataSet<M, ? extends Field<M>, Object> dataSet = getDataSet(modelClass);
             value = dataSet.getValue(displayValue, field);
         }
         return value;
+    }
+
+    /**
+     * Returns a data set for lookups from a model class.
+     *
+     * @param modelClass the model class
+     * @param <M>        the model type
+     * @return the data set
+     * @throws DataSetException if a data set cannot be created
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <M, ID, L extends Lookup<ID>> LookupProvider<L, ID> getLookupProvider(Class<M> modelClass, Object... parameters) {
+        requireNonNull(modelClass);
+        LookupProvider<L, ID> lookupProvider;
+        if (modelClass.isEnum()) {
+            Class<? extends Enum> enumClass = (Class<? extends Enum>) modelClass;
+            lookupProvider = new EnumLookupProvider<>(enumClass);
+        } else {
+            lookupProvider = (LookupProvider<L, ID>) lookupProviders.get(modelClass);
+            if (lookupProvider == null) {
+                DataSet<M, Field<M>, ?> dataSet = getDataSet(modelClass, parameters);
+                lookupProvider = new ModelLookupProvider(DefaultLookup.class, dataSet);
+            }
+        }
+        if (lookupProvider instanceof AbstractLookupProvider<L, ID> abstractLookupProvider) {
+            abstractLookupProvider.dataSetService = this;
+        }
+        return lookupProvider;
     }
 
     /**
@@ -115,28 +173,54 @@ public final class DataSetService extends ApplicationContextSupport implements I
      * @throws DataSetException if a data set cannot be created
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <M, F extends Field<M>, ID> DataSet<M, F, ID> lookup(Class<M> modelClass, Object... parameters) {
+    public <M, F extends Field<M>, ID> DataSet<M, F, ID> getDataSet(Class<M> modelClass, Object... parameters) {
         requireNonNull(modelClass);
+        if (ClassUtils.isBaseClass(modelClass)) {
+            throw new DataSetException("Cannot provide a data set for a base JDK class (" + ClassUtils.getName(modelClass) + ")");
+        }
         Metadata<M, Field<M>, ID> metadata = metadataService.getMetadata(modelClass);
-        DataSet<M, F, ID> dataSet = null;
-        for (DataSetFactory factory : factories) {
-            if (factory.supports(metadata)) {
-                dataSet = factory.create(metadata, parameters);
-                break;
+        DataSetFactory cachedFactory = factoriesCache.get(modelClass);
+        if (cachedFactory == null) {
+            for (DataSetFactory factory : factories) {
+                if (factory.supports(metadata)) {
+                    cachedFactory = factory;
+                    break;
+                }
             }
         }
-        if (dataSet != null) {
+        if (cachedFactory != null) {
+            DataSet<M, F, ID> dataSet = cachedFactory.create(metadata, parameters);
             AbstractDataSet abstractDataSet = (AbstractDataSet) dataSet;
             abstractDataSet.dataSetService = this;
             try {
                 abstractDataSet.afterPropertiesSet();
             } catch (Exception e) {
-                throw new DataSetException("A data set for model " + ClassUtils.getName(modelClass) + " failed to be initialized", e);
+                throw new DataSetException("A data set for model '" + ClassUtils.getName(modelClass) + "' failed to be initialized", e);
             }
             return dataSet;
         } else {
             throw new DataSetException("A data set cannot be created for model " + ClassUtils.getName(modelClass));
         }
+    }
+
+    /**
+     * Returns the alert associated with the field.
+     *
+     * @param model the model
+     * @param field the field
+     * @param <M>   the model type
+     * @param <F>   the field type
+     * @return the alert, null
+     */
+    public <M, F extends Field<M>> Optional<Alert> getAlert(M model, F field) {
+        requireNonNull(model);
+        requireNonNull(field);
+        Formattable formattableAnnot = field.findAnnotation(Formattable.class);
+        if (formattableAnnot == null || formattableAnnot.alert() == Formattable.AlertProvider.class)
+            return Optional.empty();
+        Object value = field.get(model);
+        Formattable.AlertProvider<M, F, Object> alertProvider = ClassUtils.create(formattableAnnot.alert());
+        return Optional.of(alertProvider.provide(value, field, model));
     }
 
     /**
@@ -271,7 +355,8 @@ public final class DataSetService extends ApplicationContextSupport implements I
         Collection<Class<LookupProvider>> lookupProviderClasses = ClassUtils.resolveProviders(LookupProvider.class);
         for (Class<LookupProvider> lookupProviderClass : lookupProviderClasses) {
             LOGGER.info(" - " + ClassUtils.getName(lookupProviderClass));
-            factories.add(new LookupDataSetFactory<>(ClassUtils.create(lookupProviderClass)));
+            LookupProvider lookupProvider = ClassUtils.create(lookupProviderClass);
+            lookupProviders.put(lookupProvider.getModel(), lookupProvider);
         }
     }
 

@@ -6,6 +6,7 @@ import jodd.typeconverter.TypeConverterManager;
 import jodd.typeconverter.impl.LocalDateTimeConverter;
 import jodd.util.StringUtil;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ObjectUtils;
 
 import java.time.*;
 import java.time.temporal.Temporal;
@@ -33,6 +34,8 @@ class Converters {
                 return (T) FieldConverters.toEnum((Class<Enum>) target, value);
             } else if (ClassUtils.isSubClassOf(target, Temporal.class)) {
                 return (T) toTemporal(value, (Class<Temporal>) target);
+            } else if (ClassUtils.isSubClassOf(target, Number.class) && ObjectUtils.isEmpty(value)) {
+                return target.isPrimitive() ? from(0, target) : null;
             } else {
                 return convert(value, target);
             }
