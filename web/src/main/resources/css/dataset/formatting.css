@@ -12,3 +12,9 @@
 .dataset-table tags {
     max-width: 800px;
 }
+
+.dataset-table .alert {
+    --bs-alert-padding-x: 0.2rem !important;
+    --bs-alert-padding-y: 0rem !important;
+    --bs-alert-margin-bottom: 0rem !important;
+}

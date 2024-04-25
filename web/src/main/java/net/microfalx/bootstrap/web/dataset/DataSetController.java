@@ -19,6 +19,8 @@ import net.microfalx.bootstrap.web.util.JsonResponse;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.CreatedAt;
+import net.microfalx.lang.annotation.ModifiedAt;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.StreamResource;
 import org.apache.commons.lang3.ClassUtils;
@@ -44,6 +46,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -204,6 +207,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         JsonFormResponse<?> response = JsonFormResponse.success();
         M dataSetModel = bind(null, fields, response);
+        updateCreatedAtFields(dataSet, dataSetModel);
+        updateFields(dataSet, dataSetModel, State.ADD);
         doValidate(dataSetModel, State.ADD, response);
         if (response.isSuccess()) {
             beforePersist(dataSet, dataSetModel, State.ADD);
@@ -221,6 +226,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         JsonFormResponse<?> response = JsonFormResponse.success();
         M dataSetModel = findModel(dataSet, model, id, State.EDIT);
         dataSetModel = bind(dataSetModel, fields, response);
+        updateModifiedAtFields(dataSet, dataSetModel);
+        updateFields(dataSet, dataSetModel, State.EDIT);
         doValidate(dataSetModel, State.EDIT, response);
         if (response.isSuccess()) {
             beforePersist(dataSet, dataSetModel, State.EDIT);
@@ -352,6 +359,17 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     /**
+     * Invoked after to bind but before validation to update the model.
+     *
+     * @param dataSet the data set
+     * @param model   the model
+     * @param state   the state of the data set
+     */
+    protected void updateFields(DataSet<M, Field<M>, ID> dataSet, M model, State state) {
+        // empty
+    }
+
+    /**
      * Validates the model after the default validation.
      *
      * @param model    the model
@@ -393,7 +411,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @SuppressWarnings("unchecked")
     protected final DataSet<M, Field<M>, ID> getDataSet() {
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = getDataSetAnnotation();
-        return dataSetService.lookup((Class<M>) dataSetAnnot.model(), this);
+        return dataSetService.getDataSet((Class<M>) dataSetAnnot.model(), this);
     }
 
     /**
@@ -411,6 +429,20 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             return transactionTemplate.execute(status -> doFindModel(dataSet, model, id, state));
         } else {
             return doFindModel(dataSet, model, id, state);
+        }
+    }
+
+    private void updateModifiedAtFields(DataSet<M, Field<M>, ID> dataSet, M model) {
+        List<Field<M>> fields = dataSet.getMetadata().getFields(ModifiedAt.class);
+        for (Field<M> field : fields) {
+            field.set(model, LocalDateTime.now());
+        }
+    }
+
+    private void updateCreatedAtFields(DataSet<M, Field<M>, ID> dataSet, M model) {
+        List<Field<M>> fields = dataSet.getMetadata().getFields(CreatedAt.class);
+        for (Field<M> field : fields) {
+            field.set(model, LocalDateTime.now());
         }
     }
 
@@ -563,6 +595,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         dataSetErrors.forEach((f, e) -> errors.put(f.getName(), e));
         response.addErrors(errors);
         validate(model, state, response);
+        if (!response.isSuccess()) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("Validation failure for '").append(dataSet.getName()).append("', message ").append(response.getMessage());
+            if (!response.getErrors().isEmpty()) {
+                response.getErrors().forEach((k, v) -> StringUtils.append(builder, "\n  - " + k + "=" + v));
+            }
+        }
     }
 
     private M bind(M model, MultiValueMap<String, String> fields, JsonFormResponse<?> response) {
@@ -575,7 +614,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             if (values == null) continue;
             Object value = null;
             if (values.size() == 1) {
-                value = Field.from(values.get(0), field.getDataClass());
+                value = convert(dataSet, model, field, values.get(0));
             } else {
                 // what to do here?
             }
@@ -583,6 +622,21 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             field.set(model, value);
         }
         return model;
+    }
+
+    private Object convert(DataSet<M, Field<M>, ID> dataSet, M model, Field<M> field, String value) {
+        if (field.getDataType() == Field.DataType.MODEL) {
+            DataSet<?, ? extends Field<?>, Object> fieldDataSet = dataSetService.getDataSet(field.getDataClass());
+            CompositeIdentifier<?, ? extends Field<?>, Object> compositeIdentifier = new CompositeIdentifier<>(fieldDataSet.getMetadata(), value);
+            Object id = compositeIdentifier.toId();
+            return fieldDataSet.findById(id).orElse(null);
+        } else {
+            try {
+                return Field.from(value, field.getDataClass());
+            } catch (Exception e) {
+                throw new DataSetException("Failed to bind field '" + field.getName() + "', value '" + value + "'", e);
+            }
+        }
     }
 
     private TransactionTemplate getTransactionTemplate(DataSet<M, Field<M>, ID> dataSet) {

@@ -4,8 +4,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.Alert;
+import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.jdbc.support.Node;
+import net.microfalx.bootstrap.model.Field;
 import net.microfalx.lang.annotation.*;
 
 import java.time.LocalDateTime;
@@ -47,6 +50,7 @@ public class Database {
     @Position(21)
     @Label("State")
     @Description("The state of the database")
+    @Formattable(alert = AlertProvider.class)
     private Node.State state;
 
     @Position(100)
@@ -65,6 +69,7 @@ public class Database {
 
     @Position(200)
     @Description("The description of the validation failure")
+    @Visible(false)
     private String validationError;
 
     /**
@@ -88,5 +93,19 @@ public class Database {
         model.setValidationError(database.getValidationError());
         model.setState(database.getState());
         return model;
+    }
+
+    public static class AlertProvider implements Formattable.AlertProvider<Database, Field<Database>, Node.State> {
+
+        @Override
+        public Alert provide(Node.State value, Field<Database> field, Database model) {
+            Alert.Type type = switch (value) {
+                case UP -> Alert.Type.SUCCESS;
+                case DOWN -> Alert.Type.DANGER;
+                case STANDBY, RECOVERING -> Alert.Type.SECONDARY;
+                case UNKNOWN -> Alert.Type.LIGHT;
+            };
+            return Alert.builder().type(type).message(model.getValidationError()).build();
+        }
     }
 }

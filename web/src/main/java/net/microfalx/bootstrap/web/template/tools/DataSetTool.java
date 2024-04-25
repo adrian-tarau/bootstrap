@@ -1,9 +1,6 @@
 package net.microfalx.bootstrap.web.template.tools;
 
-import net.microfalx.bootstrap.dataset.DataSet;
-import net.microfalx.bootstrap.dataset.DataSetException;
-import net.microfalx.bootstrap.dataset.DataSetService;
-import net.microfalx.bootstrap.dataset.State;
+import net.microfalx.bootstrap.dataset.*;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Field;
@@ -17,6 +14,7 @@ import org.joor.Reflect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 import org.thymeleaf.context.IContext;
@@ -441,6 +439,28 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the alert associated with the field for a given model
+     *
+     * @param model the model
+     * @param field the field
+     * @return the alert, null if not present
+     */
+    public Alert getAlert(M model, Field<M> field) {
+        return dataSetService.getAlert(model, field).orElse(null);
+    }
+
+    /**
+     * Returns the alert CSS classes.
+     *
+     * @param alert the alert
+     * @return the classes, null if there is no alert
+     */
+    public String getAlertClass(Alert alert) {
+        if (alert == null) return null;
+        return "alert alert-" + alert.getType().name().toLowerCase();
+    }
+
+    /**
      * Retutrns whether the field should use a text or a password field.
      *
      * @param field the field
@@ -452,13 +472,23 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns whether the field associated with the field should be an SELECT type (dropdown)
+     *
+     * @param field the field
+     * @return {@code true} if of type INPUT, {@code false} otherwise
+     */
+    public boolean isDropDownField(Field<M> field) {
+        return isVisible(field) && isLookupField(field);
+    }
+
+    /**
      * Returns whether the field associated with the field should be an INPUT type (everything except checkbox)
      *
      * @param field the field
      * @return {@code true} if of type INPUT, {@code false} otherwise
      */
     public boolean isInputField(Field<M> field) {
-        return isVisible(field) && isTextField(field) && !field.getDataType().isBoolean();
+        return isVisible(field) && !isLookupField(field) && isTextField(field) && !field.getDataType().isBoolean();
     }
 
     /**
@@ -478,7 +508,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if of type INPUT, {@code false} otherwise
      */
     public boolean isTextAreaField(Field<M> field) {
-        return isVisible(field) && getComponentType(field) == Component.Type.TEXT_AREA;
+        return isVisible(field) && !isLookupField(field) && getComponentType(field) == Component.Type.TEXT_AREA;
     }
 
     /**
@@ -543,6 +573,8 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         String classes = field.getDataType().isBoolean() ? EMPTY_STRING : "form-control-sm";
         if (field.getDataType().isBoolean()) {
             classes += " form-check-input";
+        } else if (isLookupField(field)) {
+            classes = "form-select form-select-sm";
         } else {
             classes += " form-control";
         }
@@ -723,6 +755,17 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the name of the record.
+     *
+     * @param model the model
+     * @return a non-null instance
+     */
+    public String getName(M model) {
+        DataSet<M, F, ID> dataSet = getDataSet();
+        return dataSet.getName(model);
+    }
+
+    /**
      * Returns the tooltip for the search field.
      *
      * @return the tooltip
@@ -764,6 +807,42 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the models with a given field.
+     *
+     * @param field the field
+     * @return a non-null instance
+     */
+    public Iterable<Lookup<Object>> getDropDownValues(Field<M> field) {
+        Class<?> model = field.getDataClass();
+        net.microfalx.bootstrap.dataset.annotation.Lookup lookupAnnot = field.findAnnotation(net.microfalx.bootstrap.dataset.annotation.Lookup.class);
+        if (lookupAnnot != null) {
+            model = lookupAnnot.model();
+        }
+        LookupProvider<Lookup<Object>, Object> lookupProvider = dataSetService.getLookupProvider(model);
+        return lookupProvider.findAll(Pageable.ofSize(5000));
+    }
+
+    /**
+     * Returns whether the current lookup is actually pointing to the current value of a model.
+     *
+     * @param model  the current model
+     * @param field  the field which holds another model
+     * @param lookup the lookup
+     * @return {@code true} if the current value is selected, {@code false} otherwise
+     */
+    public boolean isSelected(M model, Field<M> field, Lookup<Object> lookup) {
+        requireNonNull(model);
+        requireNonNull(field);
+        Object value = field.get(model);
+        if (value == null) {
+            return false;
+        } else {
+            value = dataSetService.getId(value);
+            return ObjectUtils.equals(value, lookup.getId());
+        }
+    }
+
+    /**
      * Returns information about current page.
      *
      * @return a non-null instance
@@ -782,6 +861,17 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         requireNonNull(page);
         return "Page " + (formatNumber(page.getNumber() + 1)) + " of " + formatNumber(page.getTotalPages())
                 + " (" + formatNumber(page.getTotalElements()) + ")";
+    }
+
+    /**
+     * Returns whether the field is supported by a lookup (complex or simple, like an ENUM).
+     *
+     * @param field the field
+     * @return {@code true} if a model behind the field, {@code false} otherwise
+     */
+    private boolean isLookupField(Field<M> field) {
+        return field.getDataType() == Field.DataType.MODEL || field.getDataType() == Field.DataType.ENUM
+                || field.hasAnnotation(net.microfalx.bootstrap.dataset.annotation.Lookup.class);
     }
 
     private static void initializeColors() {
