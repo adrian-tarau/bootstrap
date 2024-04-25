@@ -79,12 +79,57 @@ public class BrokerService implements InitializingBean {
     }
 
     /**
+     * Returns the worse status for a topic.
+     *
+     * @param topic the topic
+     * @return a non-null enum
+     */
+    public Topic.Status getStatus(Topic topic) {
+        Topic.Status status = Topic.Status.HEALTHY;
+        for (BrokerConsumer<?, ?> consumer : getConsumers(topic)) {
+            BrokerConsumer.Status consumerStatus = consumer.getStatus();
+            if (consumerStatus == BrokerConsumer.Status.FAILED) status = Topic.Status.FAULTY;
+        }
+        for (BrokerProducer<?, ?> producer : getProducers(topic)) {
+            BrokerProducer.Status producerStatus = producer.getStatus();
+            if (producerStatus == BrokerProducer.Status.FAILED) status = Topic.Status.FAULTY;
+        }
+        return status;
+    }
+
+    /**
+     * Returns the last failures for a topic.
+     *
+     * @param topic the topic
+     * @return a non-null enum
+     */
+    public String getLastError(Topic topic) {
+        StringBuilder builder = new StringBuilder();
+        for (BrokerConsumer<?, ?> consumer : getConsumers(topic)) {
+            StringUtils.append(builder, consumer.getLastFailure());
+        }
+        for (BrokerProducer<?, ?> producer : getProducers(topic)) {
+            StringUtils.append(builder, producer.getLastFailure());
+        }
+        return builder.length() > 0 ? builder.toString() : null;
+    }
+
+    /**
      * Returns a collection of registered consumers.
      *
      * @return a non-null instance
      */
     public Collection<BrokerConsumer<?, ?>> getConsumers() {
         return consumers.stream().map(Reference::get).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a collection of registered consumers for a given topic.
+     *
+     * @return a non-null instance
+     */
+    public Collection<BrokerConsumer<?, ?>> getConsumers(Topic topic) {
+        return getConsumers().stream().filter(c -> c.getTopic().equals(topic)).toList();
     }
 
     /**
@@ -114,6 +159,16 @@ public class BrokerService implements InitializingBean {
     public Collection<BrokerProducer<?, ?>> getProducers() {
         return producers.stream().map(Reference::get).filter(Objects::nonNull).collect(Collectors.toList());
     }
+
+    /**
+     * Returns a collection of registered producers for a given topic.
+     *
+     * @return a non-null instance
+     */
+    public Collection<BrokerProducer<?, ?>> getProducers(Topic topic) {
+        return getProducers().stream().filter(c -> c.getTopic().equals(topic)).toList();
+    }
+
 
     /**
      * Returns a producer by its identifier.

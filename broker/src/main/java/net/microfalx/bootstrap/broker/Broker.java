@@ -7,6 +7,7 @@ import net.microfalx.lang.ObjectUtils;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringJoiner;
 
 import static java.util.Collections.unmodifiableMap;
@@ -73,6 +74,19 @@ public class Broker implements Identifiable<String>, Nameable, Cloneable {
      */
     public Map<String, String> getParameters() {
         return unmodifiableMap(parameters);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Broker broker = (Broker) o;
+        return Objects.equals(id, broker.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     @Override

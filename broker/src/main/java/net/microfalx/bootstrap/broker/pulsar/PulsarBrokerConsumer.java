@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Queue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +22,6 @@ public class PulsarBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
     private volatile Consumer<V> consumer;
 
     private final Queue<MessageId> pendingAcknowledge = new LinkedBlockingQueue<>();
-    private volatile Status status;
 
     public PulsarBrokerConsumer(BrokerService brokerService, Topic topic, PulsarClient client) {
         super(brokerService, topic);
@@ -35,45 +35,29 @@ public class PulsarBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
     }
 
     @Override
-    public Status getStatus() {
-        if (status != null) {
-            return status;
-        } else {
-            return Status.IDLE;
-        }
-    }
-
-    @Override
     public Collection<Partition> getPartitions() {
         return Collections.emptyList();
     }
 
     @Override
     protected Collection<Event<K, V>> doPoll(Duration timeout) {
+        checkClosed();
         Collection<Event<K, V>> events = new ArrayList<>();
         boolean autoCommit = getTopic().isAutoCommit();
         int maximumPollRecords = getTopic().getMaximumPollRecords();
         long end = System.currentTimeMillis() + timeout.toMillis();
         while (end > System.currentTimeMillis()) {
             try {
-                Message<V> message = null;
-                status = Status.POLL;
-                try {
-                    message = consumer.receive(500, TimeUnit.MILLISECONDS);
-                } finally {
-                    status = null;
-                }
-                status = Status.CONSUME;
-                try {
-                    if (message != null) {
+                Message<V> message = doWithStatus(Status.POLL, (Callable<Message<V>>) () -> consumer.receive(500, TimeUnit.MILLISECONDS));
+                if (message != null) {
+                    doWithStatus(Status.CONSUME, (t) -> {
                         PulsarEvent<K, V> event = new PulsarEvent<>(getTopic(), message);
                         events.add(event);
                         if (!autoCommit) pendingAcknowledge.add(message.getMessageId());
-                    }
-                } finally {
-                    status = null;
+                    });
                 }
-            } catch (PulsarClientException e) {
+            } catch (Exception e) {
+                handleException(e);
                 throw new BrokerException("Failed to consume events from '" + getTopic().getName() + "'", e);
             }
             if (events.size() >= maximumPollRecords) break;
@@ -88,27 +72,23 @@ public class PulsarBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
 
     @Override
     protected void doCommit() {
-        status = Status.COMMIT;
-        try {
+        checkClosed();
+        doWithStatus(Status.COMMIT, (t) -> {
             for (MessageId messageId : pendingAcknowledge) {
                 acknowledge(messageId);
             }
             pendingAcknowledge.clear();
-        } finally {
-            status = null;
-        }
+        });
     }
 
     @Override
     protected void doRollback() {
-        status = Status.ROLLBACK;
-        try {
+        checkClosed();
+        doWithStatus(Status.ROLLBACK, (t) -> {
             pendingAcknowledge.clear();
             close();
             initialize();
-        } finally {
-            status = null;
-        }
+        });
     }
 
     @Override
@@ -136,6 +116,7 @@ public class PulsarBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
         try {
             consumer.acknowledge(messageId);
         } catch (PulsarClientException e) {
+            handleException(e);
             throw new BrokerException("Failed to acknowledge event (" + messageId + ") from '" + getTopic().getName() + "'", e);
         }
     }

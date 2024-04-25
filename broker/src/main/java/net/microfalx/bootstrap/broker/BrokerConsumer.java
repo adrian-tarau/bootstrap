@@ -8,10 +8,14 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static net.microfalx.bootstrap.broker.BrokerUtils.METRICS;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 
 /**
  * Base class for all consumers.
@@ -27,6 +31,9 @@ public abstract class BrokerConsumer<K, V> implements Identifiable<String>, Init
     private final AtomicInteger pollCount = new AtomicInteger();
 
     private final LocalDateTime createdAt = LocalDateTime.now();
+    private volatile Status status = Status.IDLE;
+    private volatile boolean closed;
+    private volatile String lastFailure;
 
     public BrokerConsumer(BrokerService brokerService, Topic topic) {
         requireNonNull(brokerService);
@@ -48,6 +55,15 @@ public abstract class BrokerConsumer<K, V> implements Identifiable<String>, Init
      */
     public final Topic getTopic() {
         return topic;
+    }
+
+    /**
+     * Returns whether the consumer was closed by the client.
+     *
+     * @return {@code true} if closed, {@code false} otherwise
+     */
+    public final boolean isClosed() {
+        return closed;
     }
 
     /**
@@ -93,8 +109,21 @@ public abstract class BrokerConsumer<K, V> implements Identifiable<String>, Init
 
     @Override
     public final void release() {
-        brokerService.registerConsumer(this);
-        METRICS.time("Release", (t) -> doRelease());
+        try {
+            brokerService.releaseConsumer(this);
+            METRICS.time("Release", (t) -> doRelease());
+        } finally {
+            closed = true;
+        }
+    }
+
+    /**
+     * Returns the last failure of the consumer, if the consumer is in a failed state
+     *
+     * @return the last failure, null if consumer is healthy
+     */
+    public String getLastFailure() {
+        return lastFailure;
     }
 
     @Override
@@ -150,7 +179,9 @@ public abstract class BrokerConsumer<K, V> implements Identifiable<String>, Init
      *
      * @return a non-null instance
      */
-    public abstract Status getStatus();
+    public Status getStatus() {
+        return status;
+    }
 
     /**
      * Returns the partitions assigned to this consumer.
@@ -197,6 +228,84 @@ public abstract class BrokerConsumer<K, V> implements Identifiable<String>, Init
     protected abstract void doRelease();
 
     /**
+     * Checks whether the consumer was closed and throws an exception if true.
+     */
+    protected final void checkClosed() {
+        if (closed) throw new BrokerException("Consumer '" + BrokerUtils.describe(topic) + "' is closed ");
+    }
+
+    /**
+     * Calls a supplier and updates the status while the supplier runs.
+     *
+     * @param status   the status
+     * @param callable the supplier
+     * @param <T>      the return type
+     * @return the return value
+     */
+    protected final <T> T doWithStatus(Status status, Callable<T> callable) throws Exception {
+        updateStatus(status);
+        try {
+            return callable.call();
+        } finally {
+            updateStatus(Status.IDLE);
+        }
+    }
+
+    /**
+     * Calls a supplier and updates the status while the supplier runs.
+     *
+     * @param status   the status
+     * @param supplier the supplier
+     * @param <T>      the return type
+     * @return the return value
+     */
+    protected final <T> T doWithStatus(Status status, Supplier<T> supplier) {
+        updateStatus(status);
+        try {
+            return supplier.get();
+        } finally {
+            updateStatus(Status.IDLE);
+        }
+    }
+
+    /**
+     * Calls a consumer and updates the status while the supplier runs.
+     *
+     * @param status   the status
+     * @param consumer the supplier
+     * @param <T>      the return type
+     * @return the return value
+     */
+    protected final <T> void doWithStatus(Status status, Consumer<T> consumer) {
+        updateStatus(status);
+        try {
+            consumer.accept(null);
+        } finally {
+            updateStatus(Status.IDLE);
+        }
+    }
+
+    /**
+     * Updates the consumer status.
+     *
+     * @param status the new status
+     */
+    protected final void updateStatus(Status status) {
+        this.status = status == null ? Status.IDLE : status;
+        if (this.status != Status.FAILED) this.lastFailure = null;
+    }
+
+    /**
+     * Handles an exception in the consumer.
+     *
+     * @param throwable the exception
+     */
+    protected final void handleException(Throwable throwable) {
+        updateStatus(Status.FAILED);
+        this.lastFailure = getRootCauseDescription(throwable);
+    }
+
+    /**
      * A status for the consumer
      */
     public enum Status {
@@ -230,6 +339,11 @@ public abstract class BrokerConsumer<K, V> implements Identifiable<String>, Init
          * The consumer is rolling back.
          */
         ROLLBACK,
+
+        /**
+         * The consumer had an error
+         */
+        FAILED
     }
 
 

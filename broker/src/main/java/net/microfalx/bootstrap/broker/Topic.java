@@ -6,6 +6,7 @@ import net.microfalx.lang.Nameable;
 import net.microfalx.lang.StringUtils;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -221,6 +222,19 @@ public final class Topic implements Identifiable<String>, Nameable, Cloneable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Topic topic = (Topic) o;
+        return Objects.equals(id, topic.id) && Objects.equals(broker, topic.broker);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, broker);
+    }
+
+    @Override
     public String toString() {
         return new StringJoiner(", ", Topic.class.getSimpleName() + "[", "]")
                 .add("id='" + id + "'")
@@ -242,6 +256,27 @@ public final class Topic implements Identifiable<String>, Nameable, Cloneable {
         } catch (CloneNotSupportedException e) {
             return ExceptionUtils.throwException(e);
         }
+    }
+
+    /**
+     * An status enum for a topic
+     */
+    public enum Status {
+
+        /**
+         * The topic is healthy, events can be consumed and published
+         */
+        HEALTHY,
+
+        /**
+         * The topic is healthy, but consumers are behind the consumers
+         */
+        LATE,
+
+        /**
+         * The topic cannot be processed due to errors
+         */
+        FAULTY;
     }
 
     /**

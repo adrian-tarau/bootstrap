@@ -42,11 +42,12 @@ public class KafkaBrokerProducer<K, V> extends BrokerProducer<K, V> {
 
     @Override
     protected void doSend(K key, V event) {
-
+checkClosed();
     }
 
     @Override
     protected void doCommit() {
+        checkClosed();
         if (getTopic().isAutoCommit()) {
             producer.flush();
         } else {
@@ -56,6 +57,7 @@ public class KafkaBrokerProducer<K, V> extends BrokerProducer<K, V> {
 
     @Override
     protected void doRollback() {
+        checkClosed();
         if (!getTopic().isAutoCommit()) {
             producer.commitTransaction();
         }

@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static net.microfalx.lang.IOUtils.closeQuietly;
@@ -28,8 +29,6 @@ public class KafkaBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
 
     private final Map<Integer, Long> offsetPositions = new ConcurrentHashMap<>();
     private final Set<Integer> offsetPositionsApplied = new CopyOnWriteArraySet<>();
-
-    private volatile Status status;
 
     public KafkaBrokerConsumer(BrokerService brokerService, Topic topic) {
         super(brokerService, topic);
@@ -60,8 +59,8 @@ public class KafkaBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
 
     @Override
     public Status getStatus() {
-        if (status != null && initialPartitions != null) {
-            return status;
+        if (super.getStatus() != Status.IDLE && initialPartitions != null) {
+            return super.getStatus();
         } else {
             return initialPartitions != null ? Status.IDLE : Status.CONNECT;
         }
@@ -74,54 +73,53 @@ public class KafkaBrokerConsumer<K, V> extends BrokerConsumer<K, V> {
 
     @Override
     protected Collection<Event<K, V>> doPoll(Duration timeout) {
+        checkClosed();
         Topic topic = getTopic();
         try {
             Collection<Event<K, V>> events = new ArrayList<>();
-            status = Status.POLL;
-            ConsumerRecords<K, V> records;
-            try {
-                records = consumer.poll(timeout);
-            } finally {
-                status = null;
-            }
-            status = Status.CONSUME;
-            try {
+            ConsumerRecords<K, V> records = doWithStatus(Status.POLL, (Supplier<ConsumerRecords<K, V>>) () -> consumer.poll(timeout));
+            doWithStatus(Status.CONSUME, (t) -> {
                 for (ConsumerRecord<K, V> record : records) {
                     eventCount.incrementAndGet();
                     events.add(new KafkaEvent<>(topic, record));
                 }
-            } finally {
-                status = null;
-            }
+            });
             return events;
         } catch (Exception e) {
+            handleException(e);
             throw new BrokerException("Failed to poll events from " + BrokerUtils.describe(topic), e);
         }
     }
 
     @Override
     protected void doCommit() {
-        status = Status.COMMIT;
-        try {
-            if (!getTopic().isAutoCommit()) {
-                consumer.commitSync();
-            } else {
-                consumer.commitSync();
+        checkClosed();
+        doWithStatus(Status.COMMIT, (t) -> {
+            try {
+                if (!getTopic().isAutoCommit()) {
+                    consumer.commitSync();
+                } else {
+                    consumer.commitSync();
+                }
+            } catch (Exception e) {
+                handleException(e);
+                throw new BrokerException("Failed to commit events to " + BrokerUtils.describe(getTopic()), e);
             }
-        } finally {
-            status = null;
-        }
+        });
     }
 
     @Override
     protected void doRollback() {
-        status = Status.ROLLBACK;
-        try {
-            close();
-            initialize();
-        } finally {
-            status = null;
-        }
+        checkClosed();
+        doWithStatus(Status.ROLLBACK, (t) -> {
+            try {
+                close();
+                initialize();
+            } catch (Exception e) {
+                handleException(e);
+                throw new BrokerException("Failed to rollback events from " + BrokerUtils.describe(getTopic()), e);
+            }
+        });
     }
 
     private Map<String, Object> createProperties() {

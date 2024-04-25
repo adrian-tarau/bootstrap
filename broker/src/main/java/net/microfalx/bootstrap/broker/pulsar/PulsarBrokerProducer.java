@@ -24,12 +24,12 @@ public class PulsarBrokerProducer<K, V> extends BrokerProducer<K, V> {
 
     @Override
     protected void doCommit() {
-
+        checkClosed();
     }
 
     @Override
     protected void doRollback() {
-
+        checkClosed();
     }
 
     @Override
@@ -44,6 +44,6 @@ public class PulsarBrokerProducer<K, V> extends BrokerProducer<K, V> {
 
     @Override
     protected void doSend(K key, V event) {
-
+        checkClosed();
     }
 }
