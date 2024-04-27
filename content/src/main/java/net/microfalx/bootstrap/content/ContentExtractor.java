@@ -100,7 +100,6 @@ public class ContentExtractor extends DefaultHandler {
     }
 
     private boolean acceptAttributeValue(String value) {
-        if (isIsoDateTime(value)) return false;
         return true;
     }
 

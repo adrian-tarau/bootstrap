@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.bootstrap.content.ContentService;
+import net.microfalx.lang.TimeUtils;
+import net.microfalx.metrics.Metrics;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.net.URI;
 
 import static net.microfalx.bootstrap.search.Document.*;
+import static net.microfalx.bootstrap.search.SearchUtils.NA_TIMESTAMP;
 import static net.microfalx.bootstrap.search.SearchUtils.normalizeText;
 import static net.microfalx.lang.ObjectUtils.isEmpty;
 
@@ -19,7 +22,9 @@ import static net.microfalx.lang.ObjectUtils.isEmpty;
  */
 class DocumentMapper {
 
-    private ContentService contentService;
+    private static final Metrics DROPPED_FIELDS_METRICS = SearchUtils.INDEX_METRICS.withGroup("Dropped");
+
+    private final ContentService contentService;
 
     public DocumentMapper(ContentService contentService) {
         this.contentService = contentService;
@@ -49,16 +54,14 @@ class DocumentMapper {
         ld.add(new IntField(LENGTH_FIELD, document.getLength(), Field.Store.YES));
 
         if (document.getOwner() != null) ld.add(new TextField(OWNER_FIELD, document.getOwner(), Field.Store.YES));
-        if (document.createdAt > 0) {
-            ld.add(new LongPoint(CREATED_AT_FIELD, document.createdAt));
-            ld.add(new SortedNumericDocValuesField(CREATED_AT_FIELD + SORTED_SUFFIX_FIELD, document.createdAt));
-            ld.add(new StoredField(CREATED_AT_FIELD + STORED_SUFFIX_FIELD, document.createdAt));
-        }
-        if (document.modifiedAt > 0) {
-            ld.add(new LongPoint(MODIFIED_AT_FIELD, document.modifiedAt));
-            ld.add(new SortedNumericDocValuesField(MODIFIED_AT_FIELD + SORTED_SUFFIX_FIELD, document.modifiedAt));
-            ld.add(new StoredField(MODIFIED_AT_FIELD + STORED_SUFFIX_FIELD, document.modifiedAt));
-        }
+        if (document.createdAt == NA_TIMESTAMP) document.createdAt = System.currentTimeMillis();
+        ld.add(new LongPoint(CREATED_AT_FIELD, document.createdAt));
+        ld.add(new SortedNumericDocValuesField(CREATED_AT_FIELD + SORTED_SUFFIX_FIELD, document.createdAt));
+        ld.add(new StoredField(CREATED_AT_FIELD + STORED_SUFFIX_FIELD, document.createdAt));
+        if (document.modifiedAt == NA_TIMESTAMP) document.modifiedAt = System.currentTimeMillis();
+        ld.add(new LongPoint(MODIFIED_AT_FIELD, document.modifiedAt));
+        ld.add(new SortedNumericDocValuesField(MODIFIED_AT_FIELD + SORTED_SUFFIX_FIELD, document.modifiedAt));
+        ld.add(new StoredField(MODIFIED_AT_FIELD + STORED_SUFFIX_FIELD, document.modifiedAt));
         if (document.receivedAt > 0) {
             ld.add(new LongPoint(RECEIVED_AT_FIELD, document.receivedAt));
             ld.add(new SortedNumericDocValuesField(RECEIVED_AT_FIELD + SORTED_SUFFIX_FIELD, document.receivedAt));
@@ -88,10 +91,16 @@ class DocumentMapper {
         for (Attribute attribute : document) {
             String name = attribute.getName();
             if (SearchUtils.isStandardFieldName(name)) {
-                throw new IndexException("The item contains an attribute with a reserved name: " + name + ", item " + document);
+                DROPPED_FIELDS_METRICS.count(name);
+                continue;
             }
             Object value = attribute.getValue();
-            if (isEmpty(value)) value = StringUtils.EMPTY;
+            if (isEmpty(value)) {
+                value = StringUtils.EMPTY;
+            } else if (value instanceof String && TimeUtils.seemsTemporal((String) value)) {
+                DROPPED_FIELDS_METRICS.count(name);
+                continue;
+            }
             FieldType type = TYPES[attribute.getOptions()];
             if (type == null) {
                 throw new IllegalStateException("Invalid type for attribute options: " + attribute.getOptions());
@@ -165,7 +174,6 @@ class DocumentMapper {
             IndexableFieldType fieldType = field.fieldType();
             String attrName = field.name();
             String attrValue = field.stringValue();
-
             int options = 0;
             Attribute attribute = item.add(attrName, attrValue);
             if (fieldType.indexOptions() != IndexOptions.NONE) options |= Attribute.INDEXED_MASK;

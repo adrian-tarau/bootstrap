@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.search;
 
 import net.microfalx.bootstrap.model.AbstractAttributes;
 import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceFactory;
@@ -17,6 +16,7 @@ import java.util.*;
 import static net.microfalx.bootstrap.model.Attribute.registerAttributePriority;
 import static net.microfalx.bootstrap.search.SearchUtils.NA_TIMESTAMP;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.defaultIfNull;
 import static net.microfalx.lang.TimeUtils.fromMillis;
 import static net.microfalx.lang.TimeUtils.toMillis;
 
@@ -164,7 +164,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     }
 
     public String getMimeType() {
-        return StringUtils.defaultIfNull(mimeType, MimeType.TEXT_PLAIN.toString());
+        return defaultIfNull(mimeType, MimeType.TEXT_PLAIN.toString());
     }
 
     public void setMimeType(String mimeType) {
@@ -177,7 +177,6 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
 
     public Document setType(String type) {
         this.type = type;
-
         return this;
     }
 
@@ -187,7 +186,6 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
 
     public Document setOwner(String owner) {
         this.owner = owner;
-
         return this;
     }
 

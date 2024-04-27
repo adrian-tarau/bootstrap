@@ -5,7 +5,6 @@ import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.lang.*;
-import net.microfalx.metrics.Metrics;
 import net.microfalx.metrics.Timer;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
@@ -33,6 +32,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -41,9 +41,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-import static net.microfalx.bootstrap.search.SearchUtils.MAX_TERMS_PER_FIELD;
-import static net.microfalx.bootstrap.search.SearchUtils.isNumericField;
+import static java.util.Collections.emptySet;
+import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.FormatterUtils.formatDuration;
+import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.*;
 
@@ -54,8 +56,6 @@ import static net.microfalx.lang.TimeUtils.*;
 public class SearchService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchService.class);
-
-    static Metrics METRICS = Metrics.of("Search");
 
     @Autowired
     private SearchProperties searchProperties;
@@ -70,6 +70,7 @@ public class SearchService implements InitializingBean {
     private ContentService contentService;
 
     private volatile AsyncTaskExecutor taskExecutor;
+    private volatile AsyncTaskExecutor indexReaderExecutor;
 
     private final Object lock = new Object();
     private volatile SearchHolder searchHolder;
@@ -91,6 +92,18 @@ public class SearchService implements InitializingBean {
     public AsyncTaskExecutor getTaskExecutor() {
         if (taskExecutor == null) taskExecutor = TaskExecutorFactory.create("search").createExecutor();
         return taskExecutor;
+    }
+
+    /**
+     * Returns the executor used by to process an index.
+     *
+     * @return a non-null instance
+     */
+    private AsyncTaskExecutor getIndexReaderExecutor() {
+        if (indexReaderExecutor == null) {
+            indexReaderExecutor = TaskExecutorFactory.create("searcher").createExecutor();
+        }
+        return indexReaderExecutor;
     }
 
     /**
@@ -158,27 +171,97 @@ public class SearchService implements InitializingBean {
     public SearchResult search(SearchQuery query) {
         requireNonNull(query);
         try {
-            final Query parsedQuery = createQuery(query);
-            final SearchResult result = new SearchResult(query);
-            result.setRewriteQuery(parsedQuery.toString());
-            LOGGER.info("Searching with '" + query.getDescription() + "', normalized query: '" + getNormalizedQuery(query) + "', parsed query: '" + parsedQuery
-                    + "', auto-wildcard: " + query.isAutoWildcard() + ", leading wildcard: " + query.isAllowLeadingWildcard());
-            RetryTemplate retryTemplate = new RetryTemplate();
-            retryTemplate.registerListener(new RetryListener() {
-                @Override
-                public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-                    LOGGER.info("Searcher failure " + throwable.getMessage());
-                    releaseSearchHolder();
-                }
-            });
-            return retryTemplate.execute((RetryCallback<SearchResult, Exception>) context -> {
-                doSearch(parsedQuery, query, result);
-                return result;
-            });
-        } catch (ParseException e) {
-            throw new SearchException("Failed to parse query string: " + query, e);
+            Query parsedQuery = createQuery(query, "Searching");
+            RetryTemplate retryTemplate = createTemplate(query);
+            return retryTemplate.execute((RetryCallback<SearchResult, Exception>) context -> doSearch(parsedQuery, query));
+        } catch (SearchException e) {
+            throw e;
         } catch (Exception e) {
             throw new SearchException("Exception during search for : " + query, e);
+        }
+    }
+
+    /**
+     * Extracts field trends for all documents matching the query.
+     * <p>
+     * The modified time of the document (which is the same as creation time if the document was not changed) will
+     * be used.
+     * <p>
+     * If a time window is not provided, the last 24h will be used.
+     *
+     * @param query          the query
+     * @param timestampField the field which holds the timestamp
+     * @return the trends
+     */
+    public Collection<FieldTrend> getFieldsTrends(SearchQuery query, String timestampField) {
+        return getFieldsTrends(query, Document.MODIFIED_AT_FIELD, emptySet());
+    }
+
+    /**
+     * Extracts field trends for all documents matching the query.
+     * <p>
+     * A timestamp field is required to create the trends. If not provided, or the document does not have this field,
+     * the modified time will be used (or creation time if document was not modified).
+     * <p>
+     * If a time window is not provided, the last 24h will be used.
+     *
+     * @param query          the query
+     * @param timestampField the field which holds the timestamp
+     * @param fields         a list of field to extract trend for; if empty, extract all non-standard fields
+     * @return the trends
+     */
+    public Collection<FieldTrend> getFieldsTrends(SearchQuery query, String timestampField, Set<String> fields) {
+        requireNonNull(query);
+        try {
+            if (query.getStartTime() == null) query.setStartTime(ZonedDateTime.now().minusHours(24));
+            Query parsedQuery = createQuery(query, "Extract field trends");
+            RetryTemplate retryTemplate = createTemplate(query);
+            return retryTemplate.execute((RetryCallback<Collection<FieldTrend>, Exception>) context -> doGetFieldsTrends(parsedQuery, timestampField, fields));
+        } catch (SearchException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SearchException("Exception during fields trend extraction for : " + query, e);
+        }
+    }
+
+    /**
+     * Extracts document trends for all documents matching the query.
+     * <p>
+     * The modified time of the document (which is the same as creation time if the document was not changed) will
+     * be used.
+     * <p>
+     * If a time window is not provided, the last 24h will be used.
+     *
+     * @param query the query
+     * @return the trends
+     */
+    public DocumentTrend getDocumentTrends(SearchQuery query) {
+        return getDocumentTrends(query, Document.MODIFIED_AT_FIELD);
+    }
+
+    /**
+     * Extracts document trends for all documents matching the query.
+     * <p>
+     * A timestamp field is required to create the trends. If not provided, or the document does not have this field,
+     * the modified time will be used (or creation time if document was not modified).
+     * <p>
+     * If a time window is not provided, the last 24h will be used.
+     *
+     * @param query          the query
+     * @param timestampField the field which holds the timestamp
+     * @return the trends
+     */
+    public DocumentTrend getDocumentTrends(SearchQuery query, String timestampField) {
+        requireNonNull(query);
+        try {
+            if (query.getStartTime() == null) query.setStartTime(ZonedDateTime.now().minusHours(24));
+            Query parsedQuery = createQuery(query, "Extract document trends");
+            RetryTemplate retryTemplate = createTemplate(query);
+            return retryTemplate.execute((RetryCallback<DocumentTrend, Exception>) context -> doGetDocumentTrend(parsedQuery, timestampField));
+        } catch (SearchException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SearchException("Exception during fields trend extraction for : " + query, e);
         }
     }
 
@@ -266,7 +349,7 @@ public class SearchService implements InitializingBean {
         try {
             return retryTemplate.execute((RetryCallback<T, Exception>) context -> {
                 IndexReader indexReader = getIndexSearcher().getIndexReader();
-                return METRICS.time(toIdentifier(capitalizeWords(operation)), () -> callback.apply(indexReader));
+                return SEARCH_METRICS.time(toIdentifier(capitalizeWords(operation)), () -> callback.apply(indexReader));
             });
         } catch (Exception e) {
             throw new SearchException("Exception during index operation : " + operation, e);
@@ -284,31 +367,42 @@ public class SearchService implements InitializingBean {
         return normalizedQuery;
     }
 
-    private Query createQuery(SearchQuery query) throws ParseException {
-        final String normalizedQuery = getNormalizedQuery(query);
-        final QueryParser queryParser = createQueryParser();
-        queryParser.setAllowLeadingWildcard(query.isAllowLeadingWildcard() && searchProperties.isAllowLeadingWildcard());
-        Query parsedQuery = null;
-        if (StringUtils.isNotEmpty(normalizedQuery)) parsedQuery = queryParser.parse(normalizedQuery);
-        Query timeQuery = null;
-        if (query.getStartTime() != null) {
-            timeQuery = LongPoint.newRangeQuery(Document.MODIFIED_AT_FIELD, toMillis(query.getStartTime()), toMillis(query.getEndTime()));
-        }
-        if (parsedQuery == null && timeQuery == null) {
-            return new MatchAllDocsQuery();
-        } else if (parsedQuery != null && timeQuery == null) {
-            return parsedQuery;
-        } else if (parsedQuery == null) {
-            return timeQuery;
-        } else {
-            return new BooleanQuery.Builder().add(parsedQuery, BooleanClause.Occur.MUST)
-                    .add(timeQuery, BooleanClause.Occur.MUST).build();
+    private Query createQuery(SearchQuery query, String logPrefix) throws ParseException {
+        try {
+            final String normalizedQuery = getNormalizedQuery(query);
+            final QueryParser queryParser = createQueryParser();
+            queryParser.setAllowLeadingWildcard(query.isAllowLeadingWildcard() && searchProperties.isAllowLeadingWildcard());
+            Query parsedQuery = null;
+            if (StringUtils.isNotEmpty(normalizedQuery)) parsedQuery = queryParser.parse(normalizedQuery);
+            Query timeQuery = null;
+            if (query.getStartTime() != null) {
+                ZonedDateTime endTime = query.getEndTime() != null ? query.getEndTime() : ZonedDateTime.now();
+                timeQuery = LongPoint.newRangeQuery(Document.MODIFIED_AT_FIELD, toMillis(query.getStartTime()), toMillis(endTime));
+            }
+            Query finalQuery;
+            if (parsedQuery == null && timeQuery == null) {
+                finalQuery = new MatchAllDocsQuery();
+            } else if (parsedQuery != null && timeQuery == null) {
+                finalQuery = parsedQuery;
+            } else if (parsedQuery == null) {
+                finalQuery = timeQuery;
+            } else {
+                finalQuery = new BooleanQuery.Builder().add(parsedQuery, BooleanClause.Occur.MUST)
+                        .add(timeQuery, BooleanClause.Occur.MUST).build();
+            }
+            if (logPrefix != null) {
+                LOGGER.info(logPrefix + "with '" + query.getDescription() + "', normalized query: '" + getNormalizedQuery(query) + "', parsed query: '" + finalQuery
+                        + "', auto-wildcard: " + query.isAutoWildcard() + ", leading wildcard: " + query.isAllowLeadingWildcard());
+            }
+            return finalQuery;
+        } catch (ParseException e) {
+            throw new SearchException("Failed to parse query string: " + query, e);
         }
     }
 
     private Document doFind(String id) throws IOException {
         final IndexSearcher indexSearcher = getIndexSearcher();
-        Document translatedDocument = METRICS.timeCallable("Find", () -> {
+        Document translatedDocument = SEARCH_METRICS.timeCallable("Find", () -> {
             TermQuery query = new TermQuery(new Term(Document.ID_FIELD, id));
             TopDocs topDocs = indexSearcher.search(query, 1);
             DocumentMapper documentMapper = new DocumentMapper(contentService);
@@ -325,12 +419,38 @@ public class SearchService implements InitializingBean {
         return translatedDocument;
     }
 
+    private Collection<FieldTrend> doGetFieldsTrends(Query luceneQuery, String timestampField, Set<String> fields) throws IOException {
+        final IndexSearcher indexSearcher = getIndexSearcher();
+        final FieldTrendCollector.Manager manager = new FieldTrendCollector.Manager(timestampField, fields);
+        SEARCH_METRICS.timeCallable("Extract Field Trends", () -> {
+            indexSearcher.search(luceneQuery, manager);
+            return null;
+        });
+        LOGGER.info("Found " + manager.getTrends().size() + " field trends in " + formatNumber(manager.getMatchingDocCount()) + " matching documents, " +
+                "total documents " + formatNumber(manager.getDocCount()) + ", took " + formatDuration(Timer.last().getDuration()));
+        return manager.getTrends();
+    }
+
+    private DocumentTrend doGetDocumentTrend(Query luceneQuery, String timestampField) throws IOException {
+        final IndexSearcher indexSearcher = getIndexSearcher();
+        final DocumentTrendCollector.Manager manager = new DocumentTrendCollector.Manager(timestampField);
+        SEARCH_METRICS.timeCallable("Extract Document Trends", () -> {
+            indexSearcher.search(luceneQuery, manager);
+            return null;
+        });
+        LOGGER.info("Found " + manager.getTrend().getCount() + " document trends in " + formatNumber(manager.getMatchingDocCount()) + " matching documents, " +
+                "total documents " + formatNumber(manager.getDocCount()) + ", took " + formatDuration(Timer.last().getDuration()));
+        return manager.getTrend();
+    }
+
     @SuppressWarnings("resource")
-    private void doSearch(Query luceneQuery, SearchQuery searchQuery, SearchResult result) throws IOException {
+    private SearchResult doSearch(Query luceneQuery, SearchQuery searchQuery) throws IOException {
+        final SearchResult result = new SearchResult(searchQuery);
+        result.setRewriteQuery(luceneQuery.toString());
         final IndexSearcher indexSearcher = getIndexSearcher();
         final List<Document> items = new ArrayList<>();
         final Sort sort = createSort(searchQuery);
-        TopDocs topDocs = METRICS.timeCallable("Search", () -> {
+        TopDocs topDocs = SEARCH_METRICS.timeCallable("Search", () -> {
             TopDocs docs = indexSearcher.search(luceneQuery, searchQuery.getStart() + searchQuery.getLimit(), sort);
             int startIndex = searchQuery.getStart();
             int counter = searchQuery.getLimit();
@@ -345,9 +465,10 @@ public class SearchService implements InitializingBean {
             }
             return docs;
         });
-        LOGGER.info("Found " + topDocs.totalHits + " total hit(s), took " + FormatterUtils.formatNumber(Timer.last().getDuration()));
+        LOGGER.info("Found " + topDocs.totalHits + " total hit(s), took " + formatDuration(Timer.last().getDuration()));
         result.setDocuments(items);
         result.setTotalHits(topDocs.totalHits.value);
+        return result;
     }
 
     private Sort createSort(SearchQuery searchQuery) {
@@ -385,7 +506,7 @@ public class SearchService implements InitializingBean {
                 if (searchHolder != null) releaseSearchHolder();
                 LOGGER.debug("Open searcher");
                 try {
-                    searchHolder = METRICS.timeCallable("Open", SearchHolder::new);
+                    searchHolder = SEARCH_METRICS.timeCallable("Open", SearchHolder::new);
                 } catch (Exception e) {
                     return ExceptionUtils.throwException(e);
                 }
@@ -398,10 +519,22 @@ public class SearchService implements InitializingBean {
         LOGGER.debug("Release searcher");
         synchronized (lock) {
             if (searchHolder != null) {
-                METRICS.time("Release", (t) -> searchHolder.release());
+                SEARCH_METRICS.time("Release", (t) -> searchHolder.release());
                 searchHolder = null;
             }
         }
+    }
+
+    private RetryTemplate createTemplate(SearchQuery searchQuery) {
+        RetryTemplate retryTemplate = new RetryTemplate();
+        retryTemplate.registerListener(new RetryListener() {
+            @Override
+            public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+                LOGGER.info("Failed to search for '" + searchQuery + ", root cause: " + ExceptionUtils.getRootCauseMessage(throwable));
+                releaseSearchHolder();
+            }
+        });
+        return retryTemplate;
     }
 
     private QueryParser createQueryParser() {
@@ -466,8 +599,8 @@ public class SearchService implements InitializingBean {
         private SearchHolder() throws IOException {
             File indexDirectory = getIndexDirectory();
             directory = new NIOFSDirectory(indexDirectory.toPath(), NativeFSLockFactory.getDefault());
-            indexReader = METRICS.timeCallable("Open Reader", () -> DirectoryReader.open(directory));
-            indexSearcher = METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(indexReader));
+            indexReader = SEARCH_METRICS.timeCallable("Open Reader", () -> DirectoryReader.open(directory));
+            indexSearcher = SEARCH_METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(indexReader, getIndexReaderExecutor()));
         }
 
         public IndexReader getIndexReader() {

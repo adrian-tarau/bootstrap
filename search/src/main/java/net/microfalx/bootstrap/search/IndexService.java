@@ -4,7 +4,6 @@ import jakarta.annotation.PreDestroy;
 import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.resource.ResourceService;
-import net.microfalx.metrics.Metrics;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
 import org.apache.commons.io.FileUtils;
@@ -26,6 +25,7 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
+import static net.microfalx.bootstrap.search.SearchUtils.INDEX_METRICS;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.throwException;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
@@ -37,8 +37,6 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 public class IndexService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexService.class);
-
-    static Metrics METRICS = Metrics.of("Index");
 
     @Autowired
     private SearchProperties searchProperties;
@@ -232,7 +230,7 @@ public class IndexService implements InitializingBean {
     protected synchronized IndexHolder openIndex() {
         if (index != null) return index;
         try {
-            index = METRICS.time("Open", (Supplier<IndexHolder>) () -> createIndex(false));
+            index = INDEX_METRICS.time("Open", (Supplier<IndexHolder>) () -> createIndex(false));
             return index;
         } catch (Exception e) {
             if (index != null) index.release();
@@ -248,7 +246,7 @@ public class IndexService implements InitializingBean {
     protected void doWithIndex(String name, final IndexCallback indexCallback) {
         IndexHolder index = openIndex();
         try {
-            METRICS.getTimer(name).record(() -> {
+            INDEX_METRICS.getTimer(name).record(() -> {
                 try {
                     indexCallback.doWithIndex(index.indexWriter);
                 } catch (Exception e) {

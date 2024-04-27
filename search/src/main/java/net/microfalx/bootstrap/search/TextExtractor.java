@@ -22,11 +22,10 @@ public class TextExtractor {
 
     private static final int MAX_LINE_LENGTH = 160;
 
+    private final ContentService contentService;
     private final Document document;
     private final Resource body;
     private boolean forDisplay;
-
-    private ContentService contentService;
 
     public TextExtractor(ContentService contentService, Resource body) {
         requireNonNull(contentService);

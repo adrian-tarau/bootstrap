@@ -24,6 +24,11 @@ public class TermStatistics implements Nameable {
         this.value = value;
     }
 
+    @Override
+    public String getName() {
+        return field;
+    }
+
     /**
      * Returns the field name.
      *
@@ -39,11 +44,6 @@ public class TermStatistics implements Nameable {
      * @return a non-null instance
      */
     public String getValue() {
-        return value;
-    }
-
-    @Override
-    public String getName() {
         return value;
     }
 
