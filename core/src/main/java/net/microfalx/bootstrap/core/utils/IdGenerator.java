@@ -1,20 +1,28 @@
 package net.microfalx.bootstrap.core.utils;
 
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.Identifiable;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.lang.System.currentTimeMillis;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
  * An UUID generator based on Twitter <a href="https://blog.twitter.com/engineering/en_us/a/2010/announcing-snowflake">snowflake</a>.
  */
-public class IdGenerator {
+public class IdGenerator implements Identifiable<String> {
+
+    private static final String DEFAULT_ID = "default";
 
     static final long BOUND = 8192;
     static final long EPOCH = ZonedDateTime.parse("2024-01-01T00:00:00Z").toInstant().toEpochMilli();
@@ -22,9 +30,11 @@ public class IdGenerator {
     static volatile int SERVER_ID = -1;
 
     private final long prefix;
+    private final String id;
     private AtomicInteger sequence = new AtomicInteger();
 
     private static volatile IdGenerator GENERATOR;
+    private static final Map<String, IdGenerator> GENERATORS = new ConcurrentHashMap<>();
 
     /**
      * Returns the instance of the next generator.
@@ -35,12 +45,39 @@ public class IdGenerator {
         if (GENERATOR == null || !GENERATOR.isValid()) {
             synchronized (IdGenerator.class) {
                 if (GENERATOR == null || !GENERATOR.isValid()) {
-                    GENERATOR = new IdGenerator(System.currentTimeMillis(), getServerId());
+                    GENERATOR = new IdGenerator(DEFAULT_ID, currentTimeMillis(), getServerId());
                 }
             }
         }
         return GENERATOR;
     }
+
+    /**
+     * Returns the instance of the next generator with a given identifier.
+     * <p>
+     * It should not be cached.
+     */
+    public static IdGenerator get(String id) {
+        if (isEmpty(id)) return get();
+        id = toIdentifier(id);
+        IdGenerator idGenerator = GENERATORS.get(id);
+        if (idGenerator == null || !idGenerator.isValid()) {
+            synchronized (IdGenerator.class) {
+                idGenerator = GENERATORS.get(id);
+                if (idGenerator == null || !idGenerator.isValid()) {
+                    idGenerator = new IdGenerator(id, currentTimeMillis(), getServerId());
+                    GENERATORS.put(id, idGenerator);
+                }
+            }
+        }
+        return idGenerator;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
 
     /**
      * Returns the start of the id range for a given instance.
@@ -58,7 +95,8 @@ public class IdGenerator {
         return value;
     }
 
-    IdGenerator(long timestamp, int machineId) {
+    IdGenerator(String id, long timestamp, int machineId) {
+        this.id = isEmpty(id) ? DEFAULT_ID : id;
         prefix = generatePrefix(timestamp, machineId);
     }
 
@@ -74,6 +112,16 @@ public class IdGenerator {
         } else {
             return prefix + next;
         }
+    }
+
+    /**
+     * Returns the next (sortable) UUID as a string.
+     *
+     * @return a non-null String
+     */
+    public String nextAsString() {
+        long id = next();
+        return Long.toString(id, Character.MAX_RADIX);
     }
 
     private boolean isValid() {
