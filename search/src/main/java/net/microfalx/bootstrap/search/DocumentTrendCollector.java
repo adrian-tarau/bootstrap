@@ -1,11 +1,16 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.metrics.Aggregation;
+import net.microfalx.bootstrap.metrics.Matrix;
+import net.microfalx.bootstrap.metrics.Metric;
+import net.microfalx.bootstrap.metrics.Value;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.CollectorManager;
 import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.search.SimpleCollector;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,22 +18,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.microfalx.bootstrap.search.Document.STORED_SUFFIX_FIELD;
 import static net.microfalx.bootstrap.search.FieldTrendCollector.getStoredTimestampField;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
-public class DocumentTrendCollector extends SimpleCollector {
+class DocumentTrendCollector extends SimpleCollector {
 
     private static final String CREATED_AT_FIELD = net.microfalx.bootstrap.search.Document.CREATED_AT_FIELD + STORED_SUFFIX_FIELD;
+    private static final Metric metric = Metric.create("document.trend");
 
     private final String timestampField;
     private final Set<String> fieldsToLoad = new HashSet<>();
-    private DocumentTrend trend = new DocumentTrend();
+    private final Aggregation aggregation = new Aggregation();
     private LeafReaderContext context;
     private final AtomicInteger docCount = new AtomicInteger();
     private final AtomicInteger matchingDocCount = new AtomicInteger();
 
-    DocumentTrendCollector(String timestampField) {
+    DocumentTrendCollector(String timestampField, Duration step) {
         this.timestampField = getStoredTimestampField(timestampField);
         this.fieldsToLoad.add(timestampField);
         this.fieldsToLoad.add(CREATED_AT_FIELD);
+        this.aggregation.setStep(step);
     }
 
     @Override
@@ -36,8 +44,7 @@ public class DocumentTrendCollector extends SimpleCollector {
         matchingDocCount.incrementAndGet();
         org.apache.lucene.document.Document document = context.reader().storedFields().document(doc, fieldsToLoad);
         long timestamp = getTimestamp(document);
-        if (timestamp > 0) trend.increment(timestamp);
-
+        if (timestamp > 0) aggregation.add(metric, Value.create(timestamp, 1));
     }
 
     @Override
@@ -59,14 +66,18 @@ public class DocumentTrendCollector extends SimpleCollector {
 
     static class Manager implements CollectorManager<DocumentTrendCollector, Integer> {
 
+        private final Duration step;
         private final String timestampField;
 
-        private DocumentTrend trend;
+        private Matrix trend;
         private int docCount;
         private int matchingDocCount;
 
-        public Manager(String timestampField) {
+        public Manager(String timestampField, Duration step) {
+            requireNonNull(timestampField);
+            requireNonNull(step);
             this.timestampField = timestampField;
+            this.step = step;
         }
 
         int getDocCount() {
@@ -77,24 +88,25 @@ public class DocumentTrendCollector extends SimpleCollector {
             return matchingDocCount;
         }
 
-        DocumentTrend getTrend() {
+        Matrix getTrend() {
             return trend;
         }
 
         @Override
         public DocumentTrendCollector newCollector() throws IOException {
-            return new DocumentTrendCollector(timestampField);
+            return new DocumentTrendCollector(timestampField, step);
         }
 
         @Override
         public Integer reduce(Collection<DocumentTrendCollector> collectors) throws IOException {
-            trend = new DocumentTrend();
+            Aggregation aggregation = new Aggregation().setStep(step);
             for (DocumentTrendCollector collector : collectors) {
                 matchingDocCount += collector.matchingDocCount.get();
                 docCount += collector.docCount.get();
-                trend.merge(collector.trend);
+                aggregation.merge(collector.aggregation);
             }
-            return this.trend.getCounts().size();
+            trend = aggregation.toMatrixes().iterator().next();
+            return trend.getValues().size();
         }
     }
 }

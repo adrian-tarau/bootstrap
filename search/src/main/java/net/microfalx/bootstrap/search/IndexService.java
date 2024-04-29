@@ -333,7 +333,6 @@ public class IndexService implements InitializingBean {
         writerConfig.setRAMPerThreadHardLimitMB(getRAMBPerThreadBufferSizeMB());
 
         if (LOGGER.isDebugEnabled()) writerConfig.setInfoStream(new LoggerInfoStream());
-
         try {
             Directory directory = new NIOFSDirectory(getIndexDirectory().toPath());
             IndexWriter indexWriter = new IndexWriter(directory, writerConfig);

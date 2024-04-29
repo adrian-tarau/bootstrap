@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.search;
 import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
+import net.microfalx.bootstrap.metrics.Matrix;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.lang.*;
 import net.microfalx.metrics.Timer;
@@ -182,6 +183,15 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * Triggers a reload of the index.
+     * <p>
+     * Next search will see latests documents available in the index.
+     */
+    public void reload() {
+        releaseSearchHolder();
+    }
+
+    /**
      * Extracts field trends for all documents matching the query.
      * <p>
      * The modified time of the document (which is the same as creation time if the document was not changed) will
@@ -193,8 +203,8 @@ public class SearchService implements InitializingBean {
      * @param timestampField the field which holds the timestamp
      * @return the trends
      */
-    public Collection<FieldTrend> getFieldsTrends(SearchQuery query, String timestampField) {
-        return getFieldsTrends(query, Document.MODIFIED_AT_FIELD, emptySet());
+    public Collection<Matrix> getFieldsTrends(SearchQuery query, String timestampField, Duration step) {
+        return getFieldsTrends(query, timestampField, emptySet(), step);
     }
 
     /**
@@ -210,13 +220,14 @@ public class SearchService implements InitializingBean {
      * @param fields         a list of field to extract trend for; if empty, extract all non-standard fields
      * @return the trends
      */
-    public Collection<FieldTrend> getFieldsTrends(SearchQuery query, String timestampField, Set<String> fields) {
+    public Collection<Matrix> getFieldsTrends(SearchQuery query, String timestampField, Set<String> fields, Duration step) {
         requireNonNull(query);
         try {
             if (query.getStartTime() == null) query.setStartTime(ZonedDateTime.now().minusHours(24));
             Query parsedQuery = createQuery(query, "Extract field trends");
             RetryTemplate retryTemplate = createTemplate(query);
-            return retryTemplate.execute((RetryCallback<Collection<FieldTrend>, Exception>) context -> doGetFieldsTrends(parsedQuery, timestampField, fields));
+            return retryTemplate.execute((RetryCallback<Collection<Matrix>, Exception>) context
+                    -> doGetFieldsTrends(parsedQuery, timestampField, fields, step));
         } catch (SearchException e) {
             throw e;
         } catch (Exception e) {
@@ -235,8 +246,8 @@ public class SearchService implements InitializingBean {
      * @param query the query
      * @return the trends
      */
-    public DocumentTrend getDocumentTrends(SearchQuery query) {
-        return getDocumentTrends(query, Document.MODIFIED_AT_FIELD);
+    public Matrix getDocumentTrends(SearchQuery query, Duration step) {
+        return getDocumentTrends(query, Document.MODIFIED_AT_FIELD, step);
     }
 
     /**
@@ -251,13 +262,13 @@ public class SearchService implements InitializingBean {
      * @param timestampField the field which holds the timestamp
      * @return the trends
      */
-    public DocumentTrend getDocumentTrends(SearchQuery query, String timestampField) {
+    public Matrix getDocumentTrends(SearchQuery query, String timestampField, Duration step) {
         requireNonNull(query);
         try {
             if (query.getStartTime() == null) query.setStartTime(ZonedDateTime.now().minusHours(24));
             Query parsedQuery = createQuery(query, "Extract document trends");
             RetryTemplate retryTemplate = createTemplate(query);
-            return retryTemplate.execute((RetryCallback<DocumentTrend, Exception>) context -> doGetDocumentTrend(parsedQuery, timestampField));
+            return retryTemplate.execute((RetryCallback<Matrix, Exception>) context -> doGetDocumentTrend(parsedQuery, timestampField, step));
         } catch (SearchException e) {
             throw e;
         } catch (Exception e) {
@@ -419,9 +430,9 @@ public class SearchService implements InitializingBean {
         return translatedDocument;
     }
 
-    private Collection<FieldTrend> doGetFieldsTrends(Query luceneQuery, String timestampField, Set<String> fields) throws IOException {
+    private Collection<Matrix> doGetFieldsTrends(Query luceneQuery, String timestampField, Set<String> fields, Duration step) throws IOException {
         final IndexSearcher indexSearcher = getIndexSearcher();
-        final FieldTrendCollector.Manager manager = new FieldTrendCollector.Manager(timestampField, fields);
+        final FieldTrendCollector.Manager manager = new FieldTrendCollector.Manager(timestampField, fields, step);
         SEARCH_METRICS.timeCallable("Extract Field Trends", () -> {
             indexSearcher.search(luceneQuery, manager);
             return null;
@@ -431,9 +442,9 @@ public class SearchService implements InitializingBean {
         return manager.getTrends();
     }
 
-    private DocumentTrend doGetDocumentTrend(Query luceneQuery, String timestampField) throws IOException {
+    private Matrix doGetDocumentTrend(Query luceneQuery, String timestampField, Duration step) throws IOException {
         final IndexSearcher indexSearcher = getIndexSearcher();
-        final DocumentTrendCollector.Manager manager = new DocumentTrendCollector.Manager(timestampField);
+        final DocumentTrendCollector.Manager manager = new DocumentTrendCollector.Manager(timestampField, step);
         SEARCH_METRICS.timeCallable("Extract Document Trends", () -> {
             indexSearcher.search(luceneQuery, manager);
             return null;
