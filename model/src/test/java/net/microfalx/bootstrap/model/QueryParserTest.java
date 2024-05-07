@@ -2,17 +2,22 @@ package net.microfalx.bootstrap.model;
 
 import com.google.common.collect.Iterators;
 import jakarta.persistence.Transient;
+import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.lang.annotation.Id;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class QueryParserTest {
+
+    @Spy
+    private I18nService i18nService = new I18nService();
 
     @InjectMocks
     private MetadataService metadataService;
@@ -21,6 +26,8 @@ class QueryParserTest {
 
     @BeforeEach
     void before() throws Exception {
+        i18nService.afterPropertiesSet();
+        //Reflect.on(metadataService).set()
         metadataService.afterPropertiesSet();
         parser = createParser(null);
     }
@@ -115,6 +122,12 @@ class QueryParserTest {
         assertEquals("age", secondExpression.getField());
         assertEquals(ComparisonExpression.Operator.GREATER_OR_EQUAL, secondExpression.getOperator());
         assertEquals("20", secondExpression.getValue());
+    }
+
+    @Test
+    void parseInfiniteLoop() {
+        parser = createParser("  demo").addDefaultField("name");
+        LogicalExpression expression = parser.parse();
     }
 
     private QueryParser<Person, Field<Person>, String> createParser(String text) {

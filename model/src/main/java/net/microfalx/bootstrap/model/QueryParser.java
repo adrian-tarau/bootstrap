@@ -84,7 +84,7 @@ public final class QueryParser<M, F extends Field<M>, ID> {
     }
 
     /**
-     * Validates and and if the validation fails, it returns the reason why it fails.
+     * Validates and if the validation fails, it returns the reason why it fails.
      *
      * @return the error message if there are errors, null if successful
      */
@@ -105,13 +105,17 @@ public final class QueryParser<M, F extends Field<M>, ID> {
 
     private void doParse() {
         reset();
-        while (hasNext()) {
+        int maxIterations = 20;
+        while (hasNext() && maxIterations-- > 0) {
             Expression expression = parseExpression();
             skipWhitespaces();
             expressions.offer(expression);
             if (hasNext() && isLogicalOperator(peek(TokenType.IDENTIFIER))) {
                 operator = EnumUtils.fromName(LogicalExpression.Operator.class, next(TokenType.IDENTIFIER), LogicalExpression.Operator.AND);
             }
+        }
+        if (maxIterations == 0) {
+            throw new QueryException("Infinite loop while parsing '" + text + "'");
         }
     }
 
