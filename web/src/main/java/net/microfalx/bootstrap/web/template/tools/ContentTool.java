@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.template.tools;
 import net.microfalx.bootstrap.content.Content;
 import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.resource.MimeType;
+import org.apache.commons.lang3.StringUtils;
 import org.thymeleaf.context.IContext;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -39,6 +40,28 @@ public class ContentTool extends AbstractTool {
      */
     public String getEditUri(Content content) {
         return getSrc(EDIT_ACTION, content);
+    }
+
+    /**
+     * Abbreviates the end of a String using ellipses.
+     *
+     * @param value    the value
+     * @param maxWidth the maximum width
+     * @return the abbreviated string
+     */
+    public String abbreviate(String value, int maxWidth) {
+        return StringUtils.abbreviate(value, maxWidth);
+    }
+
+    /**
+     * Abbreviates the middle a String using ellipses.
+     *
+     * @param value    the value
+     * @param maxWidth the maximum width
+     * @return the abbreviated string
+     */
+    public String abbreviateMiddle(String value, int maxWidth) {
+        return StringUtils.abbreviateMiddle(value, "...", maxWidth);
     }
 
     private boolean needsEditor(Content content) {
