@@ -268,6 +268,7 @@ Application.loadModal = function (id, html) {
     let modal = new bootstrap.Modal('#' + id, {});
     modal.show();
     this.registerModal(modal);
+    tippy('[data-tippy-content]');
 }
 
 /**
