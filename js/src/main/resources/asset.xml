@@ -22,7 +22,14 @@
         <asset path="jquery.datetimepicker.css" type="stylesheet"/>
 
         <asset path="jquery.form.js" type="script"/>
-        <asset path="jquery.sparkline.js" type="stylesheet"/>
+        <asset path="jquery.sparkline.js" type="script"/>
+        <asset path="jquery.loadingoverlay.js" type="script"/>
+    </asset-bundle>
+
+    <!-- Apex Chart  -->
+    <asset-bundle id="chart" path="chart" version="3.7.0" name="Chart">
+        <asset path="apexcharts.js" type="script"/>
+        <asset path="apexcharts.css" type="stylesheet"/>
     </asset-bundle>
 
     <asset-bundle id="misc" path="misc" version="1.0.0" name="Miscellaneous">
