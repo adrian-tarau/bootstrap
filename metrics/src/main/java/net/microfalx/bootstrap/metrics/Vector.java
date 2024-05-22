@@ -6,7 +6,7 @@ import lombok.ToString;
  * An instant value for a metric.
  */
 @ToString
-public class Vector {
+public final class Vector {
 
     private final Metric metric;
     private final Value value;

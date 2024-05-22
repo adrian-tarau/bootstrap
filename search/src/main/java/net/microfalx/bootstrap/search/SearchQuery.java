@@ -80,7 +80,7 @@ public class SearchQuery implements Serializable {
     }
 
     public ZonedDateTime getStartTime() {
-        return startTime;
+        return startTime != null ? startTime : ZonedDateTime.now().minusHours(24);
     }
 
     public SearchQuery setStartTime(ZonedDateTime startTime) {
@@ -89,7 +89,7 @@ public class SearchQuery implements Serializable {
     }
 
     public ZonedDateTime getEndTime() {
-        return endTime;
+        return endTime != null ? endTime : ZonedDateTime.now();
     }
 
     public SearchQuery setEndTime(ZonedDateTime endTime) {

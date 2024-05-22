@@ -147,4 +147,11 @@ public @interface DataSet {
      * @return the classes
      */
     String[] viewClasses() default "";
+
+    /**
+     * Returns whether the data set can display trends.
+     *
+     * @return {@code true} if trends can be displayed, {@code false} otherwise
+     */
+    boolean trend() default false;
 }

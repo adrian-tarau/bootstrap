@@ -1,10 +1,7 @@
 package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.*;
-import net.microfalx.lang.annotation.Glue;
-import net.microfalx.lang.annotation.I18n;
-import net.microfalx.lang.annotation.Name;
-import net.microfalx.lang.annotation.Timestamp;
+import net.microfalx.lang.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -15,6 +12,7 @@ import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
 
 import java.lang.annotation.Annotation;
+import java.util.Optional;
 import java.util.*;
 
 import static java.util.Collections.unmodifiableList;
@@ -43,6 +41,8 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     private final List<F> idFields = new ArrayList<>();
     private final Map<String, F> idFieldsById = new HashMap<>();
     private F timestampField;
+    private F createdAtField;
+    private F modifiedAtField;
     private Class<ID> idClass;
 
     MetadataService metadataService;
@@ -142,7 +142,24 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
 
     @Override
     public F findTimestampField() {
+        if (timestampField == null) {
+            if (createdAtField == null) {
+                timestampField = createdAtField;
+            } else {
+                timestampField = modifiedAtField;
+            }
+        }
         return timestampField;
+    }
+
+    @Override
+    public F findCreatedAtField() {
+        return createdAtField;
+    }
+
+    @Override
+    public F findModifiedAtField() {
+        return modifiedAtField;
     }
 
     @Override
@@ -284,6 +301,8 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
         }
         if (idFields.size() > 1) idField = null;
         if (field.hasAnnotation(Timestamp.class)) timestampField = field;
+        if (field.hasAnnotation(CreatedAt.class)) createdAtField = field;
+        if (field.hasAnnotation(ModifiedAt.class)) modifiedAtField = field;
     }
 
     /**

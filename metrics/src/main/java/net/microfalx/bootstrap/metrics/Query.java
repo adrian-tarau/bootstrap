@@ -18,7 +18,7 @@ import static net.microfalx.lang.StringUtils.defaultIfEmpty;
  * If no time reference is passed, the query selects the last 24.
  */
 @ToString
-public class Query implements Cloneable {
+public final class Query implements Cloneable {
 
     private final String type;
     private final String text;

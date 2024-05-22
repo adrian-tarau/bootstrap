@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.dataset;
 
+import net.microfalx.bootstrap.metrics.Matrix;
 import net.microfalx.bootstrap.model.CompositeIdentifier;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
@@ -12,9 +13,7 @@ import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.ListPagingAndSortingRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * An abstract over a collection of records with CRUD support.
@@ -229,4 +228,21 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
      * @return a page of models
      */
     Page<M> findAll(Pageable pageable, Filter filterable);
+
+    /**
+     * Returns the trend (distribution in time) of models.
+     *
+     * @param filterable the filter
+     * @return matrix
+     */
+    Matrix getTrend(Filter filterable);
+
+    /**
+     * Returns the trend (distribution in time) of fields.
+     *
+     * @param filterable the filter
+     * @param fields the fields
+     * @return matrix
+     */
+    Collection<Matrix> getTrend(Filter filterable, Set<Field<M>> fields);
 }

@@ -80,10 +80,27 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
 
     /**
      * Returns the field which identifies the (main) timestamp.
+     * <p>
+     * Any field annotated with {@link net.microfalx.lang.annotation.Timestamp}, {@link net.microfalx.lang.annotation.CreatedAt}
+     * or {@link net.microfalx.lang.annotation.ModifiedAt} will be considered, in this order.
      *
      * @return the field, null if there is no field which holds the timestamp
      */
     F findTimestampField();
+
+    /**
+     * Returns the field which identifies the timestamp when the record was created.
+     *
+     * @return the field, null if there is no field which holds the timestamp
+     */
+    F findCreatedAtField();
+
+    /**
+     * Returns the field which identifies the timestamp when the model was modified.
+     *
+     * @return the field, null if there is no field which holds the timestamp
+     */
+    F findModifiedAtField();
 
     /**
      * Returns a field by its name or property name, if exists.

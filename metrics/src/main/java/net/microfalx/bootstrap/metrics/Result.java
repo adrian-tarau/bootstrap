@@ -14,7 +14,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * A result of a {@link Query}.
  */
 @ToString
-public class Result implements Cloneable {
+public final class Result implements Cloneable {
 
     private final Query query;
     private final Type type;

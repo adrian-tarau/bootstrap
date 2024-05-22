@@ -21,7 +21,7 @@ import static net.microfalx.lang.StringUtils.toIdentifier;
  * A metric and its labels (dimensions).
  */
 @ToString
-public class Metric implements Identifiable<String>, Nameable {
+public final class Metric implements Identifiable<String>, Nameable {
 
     public static String UNNAMED = "UNNAMED";
     private static final int MAX_CACHE_SIZE = 10_000;

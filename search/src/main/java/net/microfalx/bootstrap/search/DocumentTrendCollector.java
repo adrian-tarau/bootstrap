@@ -12,6 +12,7 @@ import org.apache.lucene.search.SimpleCollector;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,7 +35,7 @@ class DocumentTrendCollector extends SimpleCollector {
 
     DocumentTrendCollector(String timestampField, Duration step) {
         this.timestampField = getStoredTimestampField(timestampField);
-        this.fieldsToLoad.add(timestampField);
+        this.fieldsToLoad.add(this.timestampField);
         this.fieldsToLoad.add(CREATED_AT_FIELD);
         this.aggregation.setStep(step);
     }
@@ -105,7 +106,8 @@ class DocumentTrendCollector extends SimpleCollector {
                 docCount += collector.docCount.get();
                 aggregation.merge(collector.aggregation);
             }
-            trend = aggregation.toMatrixes().iterator().next();
+            Collection<Matrix> matrixes = aggregation.toMatrixes();
+            trend = matrixes.isEmpty() ? Matrix.create(metric, Collections.emptyList()) : matrixes.iterator().next();
             return trend.getValues().size();
         }
     }

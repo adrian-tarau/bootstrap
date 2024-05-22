@@ -54,6 +54,13 @@ public interface Filter extends Nameable, Descriptable, ComparisonExpressionLoca
     Expression getExpression();
 
     /**
+     * Returns the attributes associated with a filter.
+     *
+     * @return
+     */
+    Attributes<Attribute> getAttributes();
+
+    /**
      * Returns the index of the first model and it used to paginate
      *
      * @return a positive integer, 0 is first record

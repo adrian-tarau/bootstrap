@@ -1,73 +1,68 @@
 package net.microfalx.bootstrap.metrics;
 
 import lombok.ToString;
-import net.microfalx.lang.CollectionUtils;
+import net.microfalx.lang.Nameable;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
 import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.CollectionUtils.toList;
 
 /**
- * A matrix of values for a metric.
+ * A collection of point in time for a named series.
  */
 @ToString
-public final class Matrix {
+public final class Series implements Nameable {
 
-    private final Metric metric;
+    private final String name;
     private final List<Value> values;
 
     /**
-     * Creates a matrix for a given metric and its values.
+     * Creates an empty series for a given metric and its values.
      *
-     * @param metric the metric
-     * @param values the values
+     * @param name the name of the series
      * @return a non-null instance
      */
-    public static Matrix create(Metric metric, Iterator<Value> values) {
-        return new Matrix(metric, CollectionUtils.toIterable(values));
+    public static Series create(String name) {
+        return new Series(name, null);
     }
 
     /**
-     * Creates a matrix for a given metric and its values.
+     * Creates a series from a list of values.
      *
-     * @param metric the metric
-     * @param values the values
+     * @param name   the name of the series
+     * @param values the iterable
      * @return a non-null instance
      */
-    public static Matrix create(Metric metric, Iterable<Value> values) {
-        return new Matrix(metric, values);
+    public static Series create(String name, Iterable<Value> values) {
+        return new Series(name, values);
     }
 
-    Matrix(Metric metric, Iterable<Value> values) {
-        requireNonNull(metric);
-        this.metric = metric;
-        this.values = CollectionUtils.toList(values);
+    Series(String name, Iterable<Value> values) {
+        requireNonNull(name);
+        this.name = name;
+        this.values = toList(values);
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     /**
-     * Returns the metric.
+     * Return a list of values.
      *
      * @return a non-null instance
-     */
-    public Metric getMetric() {
-        return metric;
-    }
-
-    /**
-     * Returns the values.
-     *
-     * @return a non-nll instance
      */
     public List<Value> getValues() {
         return unmodifiableList(values);
     }
 
     /**
-     * Returns the number of points this matrix has.
+     * Returns the number of points this series has.
      *
      * @return a positive integer
      */
@@ -76,7 +71,7 @@ public final class Matrix {
     }
 
     /**
-     * Returns first value in the matrix.
+     * Returns first value in the series.
      *
      * @return an optional value
      */
@@ -85,7 +80,7 @@ public final class Matrix {
     }
 
     /**
-     * Returns last (most recent) value in the matrix.
+     * Returns last (most recent) value in the series.
      *
      * @return the value, null if there are no values available
      */
@@ -94,7 +89,7 @@ public final class Matrix {
     }
 
     /**
-     * Returns the average across in the matrix.
+     * Returns the average across in the series.
      *
      * @return a optional average
      */
@@ -103,7 +98,7 @@ public final class Matrix {
     }
 
     /**
-     * Returns the minimum across in the matrix.
+     * Returns the minimum across in the series.
      *
      * @return a optional average
      */
@@ -112,20 +107,11 @@ public final class Matrix {
     }
 
     /**
-     * Returns the maximum across in the matrix.
+     * Returns the maximum across in the series.
      *
      * @return a optional average
      */
     public OptionalDouble getMaximum() {
         return values.stream().mapToDouble(Value::asDouble).max();
-    }
-
-    /**
-     * Creates a series out of a matrix.
-     *
-     * @return a non-null instance
-     */
-    public Series toSeries() {
-        return Series.create(String.join(" / ", metric.getLabels()), values);
     }
 }

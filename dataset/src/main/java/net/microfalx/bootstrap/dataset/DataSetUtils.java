@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.dataset;
 
 import net.microfalx.bootstrap.core.i18n.I18n;
 import net.microfalx.bootstrap.model.*;
+import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.lang.EnumUtils;
 import net.microfalx.metrics.Metrics;
 import org.apache.commons.lang3.ClassUtils;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +27,11 @@ import static org.apache.commons.lang3.ClassUtils.isAssignable;
 public class DataSetUtils {
 
     static Metrics METRICS = Metrics.of("DataSet");
+
+    /**
+     * Default number of points per interval for trends.
+     */
+    public final static int DEFAULT_POINTS = 100;
 
     /**
      * The operator injected when the user clicks on a field value in the grid.
@@ -130,6 +138,42 @@ public class DataSetUtils {
     }
 
     /**
+     * Returns the step (aggregation interval) for a time interval.
+     * <p>
+     * It uses a default number of {@link #DEFAULT_POINTS points}.
+     *
+     * @param start the start time
+     * @param end   the end time
+     * @return a non-null instance, rounded
+     */
+    public static Duration getStep(ZonedDateTime start, ZonedDateTime end) {
+        return getStep(start, end, DEFAULT_POINTS);
+    }
+
+    /**
+     * Returns the step (aggregation interval) for a time interval and number of points.
+     *
+     * @param start  the start time
+     * @param end    the end time
+     * @param points the number of points
+     * @return a non-null instance, rounded
+     */
+    public static Duration getStep(ZonedDateTime start, ZonedDateTime end, int points) {
+        ArgumentUtils.requireNonNull(start);
+        ArgumentUtils.requireNonNull(end);
+        Duration duration = Duration.between(start, end).dividedBy(points);
+        for (int index = 1; index < STEP_LIMIT.length; index++) {
+            int limitLow = STEP_LIMIT[index - 1];
+            int limitHigh = STEP_LIMIT[index];
+            if (duration.toMinutes() >= limitLow && duration.toMinutes() < limitHigh) {
+                int round = STEP_ROUND[index - 1];
+                return Duration.ofSeconds((duration.toSeconds() / round) * round);
+            }
+        }
+        return Duration.ofMinutes(60 * (duration.toMinutes() / 60));
+    }
+
+    /**
      * Creates a data set sort form a Spring Data sort.
      *
      * @param sort the initial sort
@@ -161,4 +205,7 @@ public class DataSetUtils {
             case NULLS_LAST -> net.microfalx.bootstrap.model.Sort.NullHandling.NULLS_LAST;
         };
     }
+
+    private static final int[] STEP_LIMIT = {0, 1, 5, 60, 60 * 24};
+    private static final int[] STEP_ROUND = {10, 60, 5 * 60, 15 * 60};
 }

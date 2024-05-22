@@ -12,7 +12,7 @@ import static java.time.Instant.ofEpochMilli;
 /**
  * A class which holds a numeric value at a point in time.
  */
-public class Value {
+public final class Value {
 
     private final long timestamp;
     private final double value;

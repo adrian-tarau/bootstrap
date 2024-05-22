@@ -11,12 +11,12 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * <p>
  * The default aggregation interval is 5 minutes.
  */
-public class Aggregation {
+public final class Aggregation {
 
     private Type type = Type.SUM;
     private Duration step;
     private long stepAsMillis;
-    private final Map<String, Timeseries> timeSeries = new HashMap<>();
+    private final Map<String, TimeSeries> timeSeries = new HashMap<>();
 
     public Aggregation() {
         setStep(Duration.ofMinutes(5));
@@ -87,8 +87,8 @@ public class Aggregation {
      */
     public void merge(Aggregation aggregation) {
         requireNonNull(aggregation);
-        for (Timeseries timeseries : aggregation.timeSeries.values()) {
-            getTimeSeries(timeseries.metric).merge(timeseries);
+        for (TimeSeries timeSeries : aggregation.timeSeries.values()) {
+            getTimeSeries(timeSeries.metric).merge(timeSeries);
         }
     }
 
@@ -98,7 +98,7 @@ public class Aggregation {
      * @return a non-null instance
      */
     public Collection<Matrix> toMatrixes() {
-        return timeSeries.values().stream().map(Timeseries::toMatrix).collect(Collectors.toList());
+        return timeSeries.values().stream().map(TimeSeries::toMatrix).collect(Collectors.toList());
     }
 
     private void checkStarted() {
@@ -107,8 +107,8 @@ public class Aggregation {
         }
     }
 
-    private Timeseries getTimeSeries(Metric metric) {
-        return this.timeSeries.computeIfAbsent(metric.getHash(), s -> new Timeseries(metric));
+    private TimeSeries getTimeSeries(Metric metric) {
+        return this.timeSeries.computeIfAbsent(metric.getHash(), s -> new TimeSeries(metric));
     }
 
     @Override
@@ -146,13 +146,13 @@ public class Aggregation {
         AVG
     }
 
-    private class Timeseries {
+    private class TimeSeries {
 
         private final Metric metric;
         private final Map<Long, Value> values = new HashMap<>();
         private final Map<Long, Integer> counts = new HashMap<>();
 
-        public Timeseries(Metric metric) {
+        public TimeSeries(Metric metric) {
             this.metric = metric;
         }
 
@@ -171,11 +171,11 @@ public class Aggregation {
             });
         }
 
-        private void merge(Timeseries timeseries) {
-            if (!metric.equals(timeseries.metric))
+        private void merge(TimeSeries timeSeries) {
+            if (!metric.equals(timeSeries.metric))
                 throw new MetricException("Cannot merge two time-series with different metrics, " +
-                        ", source: " + timeseries.metric + ", target: " + metric);
-            for (Value value : timeseries.values.values()) {
+                        ", source: " + timeSeries.metric + ", target: " + metric);
+            for (Value value : timeSeries.values.values()) {
                 add(value);
             }
         }
@@ -197,7 +197,7 @@ public class Aggregation {
 
         @Override
         public String toString() {
-            return new StringJoiner(", ", Timeseries.class.getSimpleName() + "[", "]")
+            return new StringJoiner(", ", TimeSeries.class.getSimpleName() + "[", "]")
                     .add("metric=" + metric)
                     .add("values=" + values.size())
                     .add("counts=" + counts.size())

@@ -8,6 +8,7 @@ class FilterImpl extends AbstractComparisonExpressionLocator implements Filter {
     private final Expression expression;
     private final int offset;
     private final int limit;
+    private final Attributes<Attribute> attributes = Attributes.create();
 
     FilterImpl(Expression expression, int offset, int limit) {
         requireNonNull(expression);
@@ -46,6 +47,11 @@ class FilterImpl extends AbstractComparisonExpressionLocator implements Filter {
     @Override
     public boolean isEmpty() {
         return expression instanceof LogicalExpression && ((LogicalExpression) expression).getExpressions().isEmpty();
+    }
+
+    @Override
+    public Attributes<Attribute> getAttributes() {
+        return attributes;
     }
 
     @Override
