@@ -231,3 +231,36 @@ Utils.toString = function (value, quoteStrings) {
     }
 }
 
+/**
+ * Intercepts an object and creates anonymous function for properties which look like functions.
+ *
+ * @param  {object} value the object to intercept
+ * @param {Function} [interceptor] an optional interceptor of a string value
+ * @return {object} the intercepted object
+ */
+Utils.intercept = function (value, interceptor) {
+    const me = this;
+    if (value === undefined || value === null) {
+        return value;
+    } else if (Utils.isArray(value)) {
+        value.forEach(function (value, index, array) {
+            array[index] = me.intercept(value, interceptor);
+        });
+        return value;
+    } else if (Utils.isObject(value)) {
+        for (const [p, v] of Object.entries(value)) {
+            value[p] = me.intercept(v, interceptor);
+        }
+        return value;
+    } else if (Utils.isString(value)) {
+        if (value.match(/function(.*)\s{/g) != null) {
+            value = eval("(" + value + ")");
+        } else if (interceptor) {
+            value = interceptor.call(interceptor, value)
+        }
+        return value;
+    } else {
+        return value;
+    }
+}
+

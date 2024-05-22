@@ -11,6 +11,7 @@
         <asset path="component.css" type="stylesheet"/>
         <asset path="dropzone.css" type="stylesheet"/>
         <asset path="help.css" type="stylesheet"/>
+        <asset path="chart.css" type="stylesheet"/>
 
         <asset path="utils.js" type="script"/>
         <asset path="logger.js" type="script"/>
@@ -18,6 +19,7 @@
         <asset path="alert.js" type="script"/>
         <asset path="help.js" type="script"/>
         <asset path="ajax.js" type="script"/>
+        <asset path="chart.js" type="script"/>
         <asset path="scroll_top.js" type="script"/>
         <asset path="search.js" type="script"/>
     </asset-bundle>
@@ -40,6 +42,7 @@
         <asset path="sort.css" type="stylesheet"/>
         <asset path="grid.css" type="stylesheet"/>
         <asset path="formatting.css" type="stylesheet"/>
+        <asset path="tools.css" type="stylesheet"/>
 
         <asset path="core.js" type="script"/>
         <asset path="sort.js" type="script"/>

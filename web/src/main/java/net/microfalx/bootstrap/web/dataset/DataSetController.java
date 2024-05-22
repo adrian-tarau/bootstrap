@@ -5,7 +5,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.dataset.*;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.dataset.annotation.Searchable;
+import net.microfalx.bootstrap.metrics.Series;
 import net.microfalx.bootstrap.model.*;
+import net.microfalx.bootstrap.web.chart.Chart;
+import net.microfalx.bootstrap.web.chart.Events;
+import net.microfalx.bootstrap.web.chart.Options;
+import net.microfalx.bootstrap.web.chart.Type;
+import net.microfalx.bootstrap.web.chart.plot.Bar;
+import net.microfalx.bootstrap.web.chart.plot.PlotOptions;
+import net.microfalx.bootstrap.web.chart.tooltip.Tooltip;
 import net.microfalx.bootstrap.web.component.Button;
 import net.microfalx.bootstrap.web.component.Item;
 import net.microfalx.bootstrap.web.component.Menu;
@@ -177,6 +185,16 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         } else {
             return throwModelNotFound(id);
         }
+    }
+
+    @GetMapping("/trend")
+    public final String trend(Model model,
+                              @RequestParam(value = "range", defaultValue = "") String rangeParameter,
+                              @RequestParam(value = "query", defaultValue = "") String queryParameter) {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        model.addAttribute("trendCharts", getTrendCharts(dataSet, model, rangeParameter, queryParameter));
+        log(dataSet, "trend", 0, null, null, null);
+        return "dataset/trend::#dataset-modal";
     }
 
     @PostMapping(value = "upload", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -547,6 +565,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         model.addAttribute("toolbar", getToolBar(dataSet));
         model.addAttribute("actions", getMenu(dataSet));
         model.addAttribute("model", null);
+        model.addAttribute("hasTrend", getDataSetAnnotation().trend() && hasTimeRange(dataSet));
         updateModelTemplate(dataSet, model);
     }
 
@@ -806,6 +825,26 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         parts[0] = template.substring(0, index).trim();
         parts[1] = template.substring(index + 2).trim();
         return parts;
+    }
+
+    private Collection<Chart> getTrendCharts(DataSet<M, Field<M>, ID> dataSet, Model model, String rangeParameter, String queryParameter) {
+        Filter filter = getFilter(dataSet, model, rangeParameter, queryParameter);
+        Collection<Chart> charts = new ArrayList<>();
+        charts.add(getRecordTrend(dataSet, filter));
+        return charts;
+    }
+
+    private Chart getRecordTrend(DataSet<M, Field<M>, ID> dataSet, Filter filter) {
+        Options options = Options.create(Type.BAR).sparkline().setHeight("120px");
+        Chart chart = Chart.create(options).setName("Records");
+        chart.setPlotOptions(PlotOptions.bar(new Bar().setColumnWidth("80%")))
+                .setTooltip(Tooltip.valueWithTimestamp())
+                .setProvider(c -> {
+                    Series series = dataSet.getTrend(filter).toSeries();
+                    c.addSeries(series);
+                });
+        chart.getOptions().setEvents(new Events().setClick("DataSet.trendClick"));
+        return chart;
     }
 
     private ZonedDateTime atEndOfDay(ZonedDateTime dateTime) {

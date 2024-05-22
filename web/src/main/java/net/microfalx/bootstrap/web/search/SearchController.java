@@ -28,7 +28,7 @@ import static net.microfalx.bootstrap.search.SearchUtils.DEFAULT_FILTER_QUOTE_CH
 
 @Controller
 @RequestMapping(value = "/search")
-@DataSet(rawQuery = true, model = SearchResult.class, viewTemplate = "search/view", detailTemplate = "search/detail",
+@DataSet(rawQuery = true, trend = true, model = SearchResult.class, viewTemplate = "search/view", detailTemplate = "search/detail",
         viewClasses = "modal-xl", filterOperator = DEFAULT_FILTER_OPERATOR, filterQuoteChar = DEFAULT_FILTER_QUOTE_CHAR,
         queryHelp = "/help/dataset/search_engine.html")
 @Help("search")

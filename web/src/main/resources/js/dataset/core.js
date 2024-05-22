@@ -273,6 +273,22 @@ DataSet.save = function () {
 }
 
 /**
+ * Loads the trends for this data set.
+ */
+DataSet.trend = function () {
+    DataSet.get("trend", {}, function (data) {
+        DataSet.loadModal(data);
+    });
+}
+
+/**
+ * Handles a click on the trend chart
+ */
+DataSet.trendClick = function (event, chartContext, config) {
+    Application.showInfoAlert("Trend Click", Utils.toString(event));
+}
+
+/**
  * Updates for data before it is sent to the server
  * @param {Array} data an array with object, one property "name" with the value
  */

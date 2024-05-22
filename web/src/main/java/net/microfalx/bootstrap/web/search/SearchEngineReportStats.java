@@ -111,8 +111,8 @@ class SearchEngineReportStats {
         return Column.create(7).setTitle("Top 100 Terms").setMaxHeight(MAX_HEIGHT)
                 .add(Table.create("Field", "Value", "Documents")
                         .addRows(table -> terms.forEach(term -> table
-                                .addRow(abbreviate(term.getField(), MAX_FIELD_LENGTH),
-                                        termLink(term.getField(), abbreviate(term.getValue(), MAX_ATTRIBUTE_DISPLAY_LENGTH)),
+                                .addRow(abbreviate(term.getValue(), MAX_FIELD_LENGTH),
+                                        termLink(term.getValue(), abbreviate(term.getValue(), MAX_ATTRIBUTE_DISPLAY_LENGTH)),
                                         term.getCount())))
                 );
     }
@@ -127,7 +127,7 @@ class SearchEngineReportStats {
     private Table createTermsTable(String fieldName, List<TermStatistics> terms) {
         Iterable<TermStatistics> limitedTerms = Iterables.limit(terms, limit);
         return Table.create("Value", "Count").setMaxHeight(MAX_HEIGHT)
-                .addRows(table -> limitedTerms.forEach(term -> table.addRow(termLink(fieldName, abbreviate(term.getName(), MAX_ATTRIBUTE_DISPLAY_LENGTH)),
+                .addRows(table -> limitedTerms.forEach(term -> table.addRow(termLink(fieldName, abbreviate(term.getValue(), MAX_ATTRIBUTE_DISPLAY_LENGTH)),
                         term.getCount())));
     }
 

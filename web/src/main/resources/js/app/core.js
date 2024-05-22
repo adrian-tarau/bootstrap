@@ -96,8 +96,10 @@ Application.reload = function () {
  * @param {Object} [options] an optional object, to control how parameters are calculated
  * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
  * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
- * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {String} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.mask] an optional DOM selector, which will be masked while the request is running
  * @param {Boolean} [options.error] an optional function, to be called if the request fails
+ * @param {Boolean} [options.complete] an optional function, to be called when the request ends (successful or not)
  */
 Application.get = function (path, params, callback, options) {
     Application.ajax('GET', path, params, callback, options);
@@ -113,7 +115,9 @@ Application.get = function (path, params, callback, options) {
  * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
  * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
  * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.mask] an optional DOM selector, which will be masked while the request is running
  * @param {Boolean} [options.error] an optional function, to be called if the request fails
+ * @param {Boolean} [options.complete] an optional function, to be called when the request ends (successful or not)
  */
 Application.post = function (path, params, callback, options) {
     Application.ajax('POST', path, params, callback, options);
@@ -129,7 +133,9 @@ Application.post = function (path, params, callback, options) {
  * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
  * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
  * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.mask] an optional DOM selector, which will be masked while the request is running
  * @param {Boolean} [options.error] an optional function, to be called if the request fails
+ * @param {Boolean} [options.complete] an optional function, to be called when the request ends (successful or not)
  */
 Application.delete = function (path, params, callback, options) {
     Application.ajax('DELETE', path, params, callback, options);
@@ -146,9 +152,12 @@ Application.delete = function (path, params, callback, options) {
  * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
  * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
  * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.mask] an optional DOM selector, which will be masked while the request is running
  * @param {Boolean} [options.error] an optional function, to be called if the request fails
+ * @param {Boolean} [options.complete] an optional function, to be called when the request ends (successful or not)
  */
 Application.ajax = function (type, path, params, callback, options) {
+    const me = this;
     options = options || {};
     options.self = Utils.isDefined(options.self) ? options.self : true;
     options.params = Utils.isDefined(options.params) ? options.params : false;
@@ -161,6 +170,7 @@ Application.ajax = function (type, path, params, callback, options) {
     type = Utils.defaultIfNotDefinedOrNull(type, "GET");
     let uri = this.getUri(path, {}, options);
     Logger.info("Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);
+    if (options.mask) me.mask(options.mask);
     $.ajax({
         url: uri,
         type: type,
@@ -169,9 +179,15 @@ Application.ajax = function (type, path, params, callback, options) {
         timeout: APP_AJAX_DEFAULT_TIMEOUT,
         headers: {"X-TimeZone": Application.getTimezoneOffset()},
         success: function (output, status, xhr) {
+            if (options.complete) options.complete.apply(this, arguments);
+            if (options.mask) me.unmask(options.mask);
             callback.apply(this, [output, status, xhr]);
         },
-        error: options.error
+        error: function (xhr, status, error) {
+            if (options.error) options.error.apply(this, arguments);
+            if (options.complete) options.complete.apply(this, arguments);
+            if (options.mask) me.unmask(options.mask);
+        }
     });
 }
 
@@ -296,6 +312,20 @@ Application.getModals = function () {
  */
 Application.getTimezoneOffset = function () {
     return new Date().getTimezoneOffset();
+}
+
+/**
+ * Masks the element with a given selector.
+ */
+Application.mask = function (selector) {
+    if (selector) $(selector).LoadingOverlay("show");
+}
+
+/**
+ * Unmasks the element with a given selector.
+ */
+Application.unmask = function (selector) {
+    if (selector) $(selector).LoadingOverlay("hide", true);
 }
 
 /**

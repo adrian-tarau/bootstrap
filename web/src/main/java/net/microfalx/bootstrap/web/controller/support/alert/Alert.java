@@ -31,6 +31,7 @@ public class Alert {
     @Position(2)
     @Description("The last time when the alert fired")
     @OrderBy(OrderBy.Direction.DESC)
+    @Timestamp
     private LocalDateTime updatedAt;
 
     @Position(3)

@@ -6,7 +6,7 @@ $(document).on({
         $("#ajax").hide();
     },
     ajaxError: function (event, jqxhr, settings, exception) {
-        let json = {"error": "Internal server error"};
+        let json = {"error": exception ? exception : "Internal server error"};
         try {
             json = JSON.parse(jqxhr.responseText);
         } catch (e) {

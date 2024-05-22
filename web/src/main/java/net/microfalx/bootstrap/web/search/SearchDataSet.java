@@ -1,11 +1,10 @@
 package net.microfalx.bootstrap.web.search;
 
 import net.microfalx.bootstrap.dataset.DataSetFactory;
+import net.microfalx.bootstrap.dataset.DataSetUtils;
 import net.microfalx.bootstrap.dataset.PojoDataSet;
-import net.microfalx.bootstrap.model.ComparisonExpression;
-import net.microfalx.bootstrap.model.Filter;
-import net.microfalx.bootstrap.model.Metadata;
-import net.microfalx.bootstrap.model.PojoField;
+import net.microfalx.bootstrap.metrics.Matrix;
+import net.microfalx.bootstrap.model.*;
 import net.microfalx.bootstrap.search.Attribute;
 import net.microfalx.bootstrap.search.Document;
 import net.microfalx.bootstrap.search.SearchQuery;
@@ -17,10 +16,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static net.microfalx.bootstrap.model.AttributeConstants.DEFAULT_MAXIMUM_ATTRIBUTES;
 import static net.microfalx.bootstrap.model.FieldConstants.CREATED_AT;
@@ -52,20 +51,37 @@ public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchRes
 
     @Override
     protected Page<SearchResult> doFindAll(Pageable pageable, Filter filterable) {
-        net.microfalx.bootstrap.search.SearchResult result = searchService.search(convert(pageable, filterable));
+        net.microfalx.bootstrap.search.SearchResult result = searchService.search(convert(filterable, pageable));
         return convert(pageable, result);
     }
 
-    private SearchQuery convert(Pageable pageable, Filter filterable) {
+    @Override
+    public Matrix getTrend(Filter filterable) {
+        SearchQuery query = convert(filterable, null);
+        Duration step = DataSetUtils.getStep(query.getStartTime(), query.getEndTime());
+        return searchService.getDocumentTrends(query, step);
+    }
+
+    @Override
+    public Collection<Matrix> getTrend(Filter filterable, Set<Field<SearchResult>> fields) {
+        SearchQuery query = convert(filterable, null);
+        Duration step = DataSetUtils.getStep(query.getStartTime(), query.getEndTime());
+        Set<String> fieldNames = fields.stream().map(Field::getName).collect(Collectors.toSet());
+        return searchService.getFieldsTrends(query, Document.CREATED_AT_FIELD, fieldNames, step);
+    }
+
+    private SearchQuery convert(Filter filterable, Pageable pageable) {
         SearchQuery query = new SearchQuery(getQuery(filterable));
-        query.setStart((int) pageable.getOffset()).setLimit((int) (pageable.getOffset() + pageable.getPageSize()));
         updateTimeFilter(filterable, query);
-        Sort sort = pageable.getSort();
-        if (sort.isSorted()) {
-            Sort.Order order = sort.stream().iterator().next();
-            if (CREATED_AT.equalsIgnoreCase(order.getProperty()) || MODIFIED_AT.equalsIgnoreCase(order.getProperty())) {
-                String field = CREATED_AT.equalsIgnoreCase(order.getProperty()) ? Document.CREATED_AT_FIELD : Document.MODIFIED_AT_FIELD;
-                query.setSort(new SearchQuery.Sort(SearchQuery.Sort.Type.FIELD, field, order.isDescending()));
+        if (pageable != null) {
+            query.setStart((int) pageable.getOffset()).setLimit((int) (pageable.getOffset() + pageable.getPageSize()));
+            Sort sort = pageable.getSort();
+            if (sort.isSorted()) {
+                Sort.Order order = sort.stream().iterator().next();
+                if (CREATED_AT.equalsIgnoreCase(order.getProperty()) || MODIFIED_AT.equalsIgnoreCase(order.getProperty())) {
+                    String field = CREATED_AT.equalsIgnoreCase(order.getProperty()) ? Document.CREATED_AT_FIELD : Document.MODIFIED_AT_FIELD;
+                    query.setSort(new SearchQuery.Sort(SearchQuery.Sort.Type.FIELD, field, order.isDescending()));
+                }
             }
         }
         return query;
