@@ -7,7 +7,7 @@ window.Application = window.Application || {};
  * Default params for ajax requests.
  */
 const APP_AJAX_DEFAULT_OPTIONS = {self: true, params: false};
-const APP_AJAX_DEFAULT_TIMEOUT = 30000;
+const APP_AJAX_DEFAULT_TIMEOUT = 120 * 1000;
 
 /**
  * Returns the path of the current request.
