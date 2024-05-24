@@ -1,11 +1,32 @@
 package net.microfalx.bootstrap.metrics;
 
+import net.microfalx.bootstrap.core.utils.IdGenerator;
+
 import java.time.Duration;
 
 /**
  * Various utilities around metrics.
  */
 public class MetricUtils {
+
+    /**
+     * Returns the id generator for metrics objects.
+     *
+     * @return a non-null instance
+     */
+    static IdGenerator getIdGenerator() {
+        return IdGenerator.get("metrics");
+    }
+
+    /**
+     * Returns the next identifier for metrics objects.
+     *
+     * @param prefix the prefix
+     * @return a non-null string
+     */
+    static String nextId(String prefix) {
+        return prefix + "_" + getIdGenerator().nextAsString();
+    }
 
     /**
      * Rounds the duration at 5s, 60s or 5min, depending on the value.

@@ -3,10 +3,7 @@ package net.microfalx.bootstrap.metrics;
 import lombok.ToString;
 import net.microfalx.lang.CollectionUtils;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.OptionalDouble;
+import java.util.*;
 
 import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -46,6 +43,7 @@ public final class Matrix {
         requireNonNull(metric);
         this.metric = metric;
         this.values = CollectionUtils.toList(values);
+        this.values.sort(Comparator.comparing(Value::getTimestamp));
     }
 
     /**

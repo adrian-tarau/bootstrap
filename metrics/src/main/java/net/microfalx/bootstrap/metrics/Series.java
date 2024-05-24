@@ -1,8 +1,10 @@
 package net.microfalx.bootstrap.metrics;
 
 import lombok.ToString;
+import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
@@ -15,10 +17,17 @@ import static net.microfalx.lang.CollectionUtils.toList;
  * A collection of point in time for a named series.
  */
 @ToString
-public final class Series implements Nameable {
+public final class Series implements Identifiable<String>, Nameable {
 
+    private final String id = MetricUtils.nextId("series");
     private final String name;
     private final List<Value> values;
+
+    private OptionalDouble average;
+    private OptionalDouble minimum;
+    private OptionalDouble maximum;
+
+    private double weight = Double.MIN_VALUE;
 
     /**
      * Creates an empty series for a given metric and its values.
@@ -45,6 +54,12 @@ public final class Series implements Nameable {
         requireNonNull(name);
         this.name = name;
         this.values = toList(values);
+        this.values.sort(Comparator.comparing(Value::getTimestamp));
+    }
+
+    @Override
+    public String getId() {
+        return id;
     }
 
     @Override
@@ -94,7 +109,10 @@ public final class Series implements Nameable {
      * @return a optional average
      */
     public OptionalDouble getAverage() {
-        return values.stream().mapToDouble(Value::asDouble).average();
+        if (average == null) {
+            average = values.stream().mapToDouble(Value::asDouble).average();
+        }
+        return average;
     }
 
     /**
@@ -103,7 +121,10 @@ public final class Series implements Nameable {
      * @return a optional average
      */
     public OptionalDouble getMinimum() {
-        return values.stream().mapToDouble(Value::asDouble).min();
+        if (minimum == null) {
+            minimum = values.stream().mapToDouble(Value::asDouble).min();
+        }
+        return minimum;
     }
 
     /**
@@ -112,6 +133,23 @@ public final class Series implements Nameable {
      * @return a optional average
      */
     public OptionalDouble getMaximum() {
-        return values.stream().mapToDouble(Value::asDouble).max();
+        if (maximum == null) {
+            maximum = values.stream().mapToDouble(Value::asDouble).max();
+        }
+        return maximum;
+    }
+
+    /**
+     * Returns the weight of this series.
+     * <p>
+     * The weight is useful to compare which series has more "stuff" and can be display first (or kept).
+     *
+     * @return a positive number
+     */
+    public double getWeight() {
+        if (weight == Double.MIN_VALUE) {
+            weight = getMaximum().orElse(0) / values.size();
+        }
+        return weight;
     }
 }

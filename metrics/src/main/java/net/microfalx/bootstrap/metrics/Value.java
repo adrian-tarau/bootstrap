@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.metrics;
 import net.microfalx.lang.TimeUtils;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -24,6 +25,15 @@ public final class Value {
      */
     public static Value zero() {
         return create(currentTimeMillis(), 0);
+    }
+
+    /**
+     * Creates an instance with a timestamp and a value.
+     *
+     * @return non-null instance
+     */
+    public static Value create(LocalDateTime timestamp, double value) {
+        return new Value(TimeUtils.toMillis(timestamp), value);
     }
 
     /**
