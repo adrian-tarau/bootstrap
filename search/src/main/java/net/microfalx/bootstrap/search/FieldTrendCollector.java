@@ -8,6 +8,7 @@ import net.microfalx.lang.StringUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.search.CollectorManager;
 import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.search.SimpleCollector;
@@ -31,6 +32,7 @@ class FieldTrendCollector extends SimpleCollector {
 
     private final String timestampField;
     private final Set<String> fields;
+    private final Set<String> allFields;
     private final boolean hasFields;
     private LeafReaderContext context;
     private final AtomicInteger docCount = new AtomicInteger();
@@ -41,6 +43,9 @@ class FieldTrendCollector extends SimpleCollector {
     FieldTrendCollector(String timestampField, Set<String> fields, Duration step) {
         this.timestampField = getStoredTimestampField(timestampField);
         this.fields = new HashSet<>(fields);
+        this.allFields = new HashSet<>(this.fields);
+        this.allFields.add(this.timestampField);
+        this.allFields.add(DocumentTrendCollector.CREATED_AT_FIELD);
         this.hasFields = !fields.isEmpty();
         this.aggregation.setStep(step);
     }
@@ -48,7 +53,8 @@ class FieldTrendCollector extends SimpleCollector {
     @Override
     public void collect(int doc) throws IOException {
         matchingDocCount.incrementAndGet();
-        Document document = context.reader().storedFields().document(doc);
+        StoredFields storedFields = context.reader().storedFields();
+        Document document = hasFields ? storedFields.document(doc, allFields) : storedFields.document(doc);
         long timestamp = getTimestamp(document);
         if (timestamp == 0) return;
         for (IndexableField field : document.getFields()) {

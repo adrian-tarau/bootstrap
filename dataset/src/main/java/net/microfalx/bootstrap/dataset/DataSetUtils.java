@@ -31,7 +31,12 @@ public class DataSetUtils {
     /**
      * Default number of points per interval for trends.
      */
-    public final static int DEFAULT_POINTS = 100;
+    public final static int TREND_DEFAULT_POINTS = 30;
+
+    /**
+     * Maximum number of points per interval for trends.
+     */
+    public final static int TREND_MAXIMUM_POINTS = 100;
 
     /**
      * The operator injected when the user clicks on a field value in the grid.
@@ -140,14 +145,14 @@ public class DataSetUtils {
     /**
      * Returns the step (aggregation interval) for a time interval.
      * <p>
-     * It uses a default number of {@link #DEFAULT_POINTS points}.
+     * It uses a default number of {@link #TREND_DEFAULT_POINTS points}.
      *
      * @param start the start time
      * @param end   the end time
      * @return a non-null instance, rounded
      */
     public static Duration getStep(ZonedDateTime start, ZonedDateTime end) {
-        return getStep(start, end, DEFAULT_POINTS);
+        return getStep(start, end, TREND_DEFAULT_POINTS);
     }
 
     /**
@@ -155,12 +160,13 @@ public class DataSetUtils {
      *
      * @param start  the start time
      * @param end    the end time
-     * @param points the number of points
+     * @param points the number of points, 0 or less for default
      * @return a non-null instance, rounded
      */
     public static Duration getStep(ZonedDateTime start, ZonedDateTime end, int points) {
         ArgumentUtils.requireNonNull(start);
         ArgumentUtils.requireNonNull(end);
+        if (points <= 0) points = TREND_DEFAULT_POINTS;
         Duration duration = Duration.between(start, end).dividedBy(points);
         for (int index = 1; index < STEP_LIMIT.length; index++) {
             int limitLow = STEP_LIMIT[index - 1];

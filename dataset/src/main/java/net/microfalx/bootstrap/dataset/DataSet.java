@@ -235,14 +235,29 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
      * @param filterable the filter
      * @return matrix
      */
-    Matrix getTrend(Filter filterable);
+    Matrix getTrend(Filter filterable, int points);
 
     /**
      * Returns the trend (distribution in time) of fields.
      *
      * @param filterable the filter
-     * @param fields the fields
+     * @param fields     the fields/attributes
      * @return matrix
      */
-    Collection<Matrix> getTrend(Filter filterable, Set<Field<M>> fields);
+    Collection<Matrix> getTrend(Filter filterable, Set<String> fields, int points);
+
+    /**
+     * Returns a set of fields which can be trended.
+     *
+     * @return a non-null instance
+     */
+    Set<String> getTrendFields();
+
+    /**
+     * Returns the estimate number of unique terms for a field.
+     *
+     * @param fieldName the field name
+     * @return the estimated count
+     */
+    int getTrendTermCount(String fieldName);
 }

@@ -127,6 +127,19 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * Returns all fields available in the index.
+     *
+     * @return a non-null instance
+     */
+    public Collection<FieldStatistics> getFieldStatistics(int top) {
+        List<FieldStatistics> fieldStatistics = new ArrayList<>(getFieldStatistics());
+        if (top <= 0) return fieldStatistics;
+        fieldStatistics.sort(Comparator.comparing(FieldStatistics::getTermCount).reversed());
+        if (fieldStatistics.size() < top) return fieldStatistics;
+        return fieldStatistics.subList(0, top);
+    }
+
+    /**
      * Returns statistics about a field.
      *
      * @param name the field name
@@ -346,6 +359,7 @@ public class SearchService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         initListeners();
         initTaskExecutor();
+        initTasks();
     }
 
     private <T> T doWithIndex(String operation, Function<IndexReader, T> callback) {
@@ -570,6 +584,10 @@ public class SearchService implements InitializingBean {
 
     private void initTaskExecutor() {
         taskExecutor = TaskExecutorFactory.create().setSuffix("search").createExecutor();
+    }
+
+    private void initTasks() {
+        taskExecutor.submit(() -> getFieldStatistics());
     }
 
     private String getI18n(String suffix) {

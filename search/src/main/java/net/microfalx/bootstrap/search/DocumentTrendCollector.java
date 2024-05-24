@@ -23,7 +23,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 class DocumentTrendCollector extends SimpleCollector {
 
-    private static final String CREATED_AT_FIELD = net.microfalx.bootstrap.search.Document.CREATED_AT_FIELD + STORED_SUFFIX_FIELD;
+     static final String CREATED_AT_FIELD = net.microfalx.bootstrap.search.Document.CREATED_AT_FIELD + STORED_SUFFIX_FIELD;
     private static final Metric metric = Metric.create("document.trend");
 
     private final String timestampField;

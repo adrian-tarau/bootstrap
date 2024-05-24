@@ -405,13 +405,23 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
-    public Matrix getTrend(Filter filterable) {
+    public Matrix getTrend(Filter filterable, int points) {
         return throwUnsupported();
     }
 
     @Override
-    public Collection<Matrix> getTrend(Filter filterable, Set<Field<M>> fields) {
+    public Collection<Matrix> getTrend(Filter filterable, Set<String> fields, int points) {
         return throwUnsupported();
+    }
+
+    @Override
+    public Set<String> getTrendFields() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public int getTrendTermCount(String fieldName) {
+        return 0;
     }
 
     @Override
