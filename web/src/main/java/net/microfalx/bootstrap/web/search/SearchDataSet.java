@@ -85,7 +85,13 @@ public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchRes
     @Override
     public int getTrendTermCount(String fieldName) {
         FieldStatistics fieldStatistics = searchService.getFieldStatistics(fieldName);
-        return fieldStatistics != null ? fieldStatistics.getTerms().size() : 0;
+        if (fieldStatistics != null) {
+            int termCount = fieldStatistics.getTerms().size();
+            if (fieldStatistics.isIncomplete()) termCount = -termCount;
+            return termCount;
+        } else {
+            return 0;
+        }
     }
 
     private SearchQuery convert(Filter filterable, Pageable pageable) {

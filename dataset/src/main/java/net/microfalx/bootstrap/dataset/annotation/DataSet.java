@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.dataset.annotation;
 
 import net.microfalx.bootstrap.dataset.DataSetUtils;
+import net.microfalx.bootstrap.model.Metadata;
 
 import java.lang.annotation.*;
 
@@ -147,6 +148,14 @@ public @interface DataSet {
      * @return the classes
      */
     String[] viewClasses() default "";
+
+    /**
+     * Returns whether the data set will be filtered by time, based on one of the available timestamp fields.
+     *
+     * @return {@code true} to filter, {@code false} to show all records
+     * @see Metadata#findTimestampField()
+     */
+    boolean timeFilter() default true;
 
     /**
      * Returns whether the data set can display trends.

@@ -257,7 +257,7 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
      * Returns the estimate number of unique terms for a field.
      *
      * @param fieldName the field name
-     * @return the estimated count
+     * @return the estimated count, with negative sign if the estimation is incomplete
      */
     int getTrendTermCount(String fieldName);
 }

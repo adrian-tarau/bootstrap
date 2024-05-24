@@ -43,6 +43,10 @@ public class Tooltip {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Style style;
 
+    public static Tooltip disable() {
+        return new Tooltip().setEnabled(false);
+    }
+
     public static Tooltip onlyValue() {
         Tooltip tooltip = new Tooltip();
         tooltip.setFixed(new Fixed(false));

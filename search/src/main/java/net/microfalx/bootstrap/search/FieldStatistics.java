@@ -18,6 +18,7 @@ public class FieldStatistics implements Nameable {
     long documentCount;
     int termCount;
     private List<TermStatistics> terms = new ArrayList<>();
+    private boolean incomplete;
 
     FieldStatistics(String name) {
         requireNonNull(name);
@@ -57,12 +58,22 @@ public class FieldStatistics implements Nameable {
     }
 
     /**
+     * Returns whether the list of terms is incomplete.
+     *
+     * @return {@code true} if incomplete, {@code false} otherwise
+     */
+    public boolean isIncomplete() {
+        return incomplete;
+    }
+
+    /**
      * Updates the list of terms.
      *
      * @param terms the terms
      */
-    void setTerms(List<TermStatistics> terms) {
+    void setTerms(List<TermStatistics> terms, boolean incomplete) {
         this.terms = new ArrayList<>(terms);
+        this.incomplete = incomplete;
         this.terms.sort(comparingLong(TermStatistics::getCount).reversed());
     }
 

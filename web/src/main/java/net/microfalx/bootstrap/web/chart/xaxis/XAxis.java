@@ -46,4 +46,8 @@ public class XAxis {
         return new XAxis().setType(XAxisType.DATETIME);
     }
 
+    public static XAxis dateTimeNoTooltip() {
+        return new XAxis().setType(XAxisType.DATETIME).setTooltip(Tooltip.disable());
+    }
+
 }

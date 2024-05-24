@@ -274,10 +274,11 @@ public class SearchUtils {
                         priorityQueue.poll();
                     }
                 }
+                boolean incomplete = priorityQueue.size() > maxTerms;
                 while (priorityQueue.size() > maxTerms) {
                     priorityQueue.poll();
                 }
-                fieldStatistic.setTerms(priorityQueue.stream().sorted(comparingLong(TermStatistics::getCount).reversed()).toList());
+                fieldStatistic.setTerms(priorityQueue.stream().sorted(comparingLong(TermStatistics::getCount).reversed()).toList(), incomplete);
             } catch (Exception e) {
                 LOGGER.warn("Failed to extract terms for '" + fieldName + ", root cause: " + e.getMessage());
             }

@@ -13,4 +13,8 @@ public class Tooltip {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Double offsetY;
 
+    public static Tooltip disable() {
+        return new Tooltip().setEnabled(false);
+    }
+
 }

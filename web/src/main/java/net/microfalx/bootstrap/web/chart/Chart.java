@@ -176,6 +176,16 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
     }
 
     /**
+     * Sets a list of colors to be used to plot the chart.
+     * @param colors an array of colors.
+     * @return self
+     */
+    public Chart setColors(String...colors) {
+        this.colors = colors;
+        return this;
+    }
+
+    /**
      * Generates the JSON which describes the chart.
      *
      * @return a non-empty String

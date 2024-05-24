@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("security/groups")
-@DataSet(model = Group.class)
+@DataSet(model = Group.class, timeFilter = false)
 @Help("admin/security/group")
 public class GroupController extends DataSetController<Group, Integer> {
 

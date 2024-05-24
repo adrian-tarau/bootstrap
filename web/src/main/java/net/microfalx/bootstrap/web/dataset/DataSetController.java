@@ -819,7 +819,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     private boolean hasTimeRange(DataSet<M, Field<M>, ID> dataSet) {
-        return dataSet.getMetadata().findTimestampField() != null;
+        return dataSet.getMetadata().findTimestampField() != null && getDataSetAnnotation().timeFilter();
     }
 
     private QueryParser<M, Field<M>, ID> createQueryParser(DataSet<M, Field<M>, ID> dataSet, String query) {
@@ -872,13 +872,12 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Collection<Chart> charts = new ArrayList<>();
         for (String trendField : trendFields) {
             int trendTermCount = dataSet.getTrendTermCount(trendField);
-            boolean tooManyTerms = trendTermCount > TREND_MAX_LANES;
-            int height = 90 + 18 * Math.min(trendTermCount, TREND_MAX_LANES);
+            boolean tooManyTerms = trendTermCount < 0 || Math.abs(trendTermCount) > TREND_MAX_LANES;
+            int height = 90 + 18 * Math.min(Math.abs(trendTermCount), TREND_MAX_LANES);
             Options options = Options.create(Type.HEATMAP).setHeight(height);
-            Chart chart = Chart.create(options).setName(StringUtils.capitalizeWords(trendField + (tooManyTerms ? " *" : EMPTY_STRING)))
-                    .setTooltip(Tooltip.valueWithTimestamp())
-                    .setDataLabels(DataLabels.disabled())
-                    .setXaxis(XAxis.dateTime());
+            Chart chart = Chart.create(options).setName(StringUtils.capitalizeWords(trendField + (tooManyTerms ? " (*)" : EMPTY_STRING)))
+                    .setColors("#008FFB").setTooltip(Tooltip.valueWithTimestamp())
+                    .setDataLabels(DataLabels.disabled()).setXaxis(XAxis.dateTimeNoTooltip());
             chart.getAttributes().add("field", trendField);
             chart.setProvider(c -> {
                 try {

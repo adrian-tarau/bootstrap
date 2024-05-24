@@ -319,11 +319,14 @@ Application.getTimezoneOffset = function () {
  */
 Application.mask = function (selector) {
     let options = {
-        size : 32,
-        minSize : 16,
-        maxSize : 32
+        image: false,
+        fontawesome: "fa-solid fa-arrows-rotate",
+        fontawesomeAnimation: 'rotate_right',
+        minSize: 20,
+        maxSize: 40
     }
-    if (selector) $(selector).LoadingOverlay("show", options);
+    $.LoadingOverlaySetup(options);
+    if (selector) $(selector).LoadingOverlay("show");
 }
 
 /**

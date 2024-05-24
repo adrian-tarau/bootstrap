@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("security/users")
-@DataSet(model = User.class)
+@DataSet(model = User.class, timeFilter = false)
 @Help("admin/security/user")
 public class UserController extends DataSetController<User, Integer> {
 
