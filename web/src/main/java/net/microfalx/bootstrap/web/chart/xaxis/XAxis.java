@@ -42,4 +42,8 @@ public class XAxis {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Labels labels;
 
+    public static XAxis dateTime() {
+        return new XAxis().setType(XAxisType.DATETIME);
+    }
+
 }

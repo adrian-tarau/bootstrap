@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.io.IOException;
+import java.time.Duration;
 
 import static net.microfalx.bootstrap.web.controller.AssetUtils.getContentType;
 import static net.microfalx.lang.StringUtils.removeStartSlash;
@@ -54,6 +56,7 @@ public final class AssetBundleController {
         try {
             Resource content = applicationService.getAssetBundleContent(type, id);
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(getContentType(type)))
+                    .eTag(content.toHash()).cacheControl(CacheControl.maxAge(Duration.ofMinutes(15)))
                     .body(new InputStreamResource(content.getInputStream()));
         } catch (ApplicationException e) {
             return ResponseEntity.notFound().build();

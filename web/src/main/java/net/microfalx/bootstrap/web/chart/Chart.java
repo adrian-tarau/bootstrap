@@ -10,6 +10,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Data;
 import lombok.ToString;
 import net.microfalx.bootstrap.core.utils.IdGenerator;
+import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.bootstrap.web.chart.annotations.Annotations;
 import net.microfalx.bootstrap.web.chart.datalabels.DataLabels;
 import net.microfalx.bootstrap.web.chart.grid.Grid;
@@ -104,6 +105,8 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
 
     @JsonIgnore
     private ChartProvider provider;
+    @JsonIgnore
+    private Attributes<?> attributes = Attributes.create();
 
     public static Chart create(Type type) {
         requireNonNull(type);
@@ -197,6 +200,15 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
         this.labels = new String[0];
         this.xaxis = null;
         this.yaxis = null;
+    }
+
+    /**
+     * Returns the attributes associated with the chart.
+     *
+     * @return a non-null instance
+     */
+    public Attributes<?> getAttributes() {
+        return attributes;
     }
 
     private void update() {

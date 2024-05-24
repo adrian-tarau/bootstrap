@@ -71,4 +71,24 @@ public class Options {
         this.sparkline = new Sparkline(true);
         return this;
     }
+
+    public Options setHeight(int pixels) {
+        this.height = pixels + "px";
+        return this;
+    }
+
+    public Options setHeight(String height) {
+        this.height = height;
+        return this;
+    }
+
+    public Options setWidth(int pixels) {
+        this.width = pixels + "px";
+        return this;
+    }
+
+    public Options setWidth(String width) {
+        this.width = width;
+        return this;
+    }
 }

@@ -25,4 +25,8 @@ public class NoData {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Style style;
 
+    public static NoData create(String text) {
+        return new NoData().setText(text);
+    }
+
 }

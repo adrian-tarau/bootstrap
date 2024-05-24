@@ -4,11 +4,11 @@ import net.microfalx.bootstrap.dataset.DataSetFactory;
 import net.microfalx.bootstrap.dataset.DataSetUtils;
 import net.microfalx.bootstrap.dataset.PojoDataSet;
 import net.microfalx.bootstrap.metrics.Matrix;
-import net.microfalx.bootstrap.model.*;
-import net.microfalx.bootstrap.search.Attribute;
-import net.microfalx.bootstrap.search.Document;
-import net.microfalx.bootstrap.search.SearchQuery;
-import net.microfalx.bootstrap.search.SearchService;
+import net.microfalx.bootstrap.model.ComparisonExpression;
+import net.microfalx.bootstrap.model.Filter;
+import net.microfalx.bootstrap.model.Metadata;
+import net.microfalx.bootstrap.model.PojoField;
+import net.microfalx.bootstrap.search.*;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Provider;
 import org.springframework.data.domain.Page;
@@ -19,11 +19,11 @@ import org.springframework.data.domain.Sort;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static net.microfalx.bootstrap.model.AttributeConstants.DEFAULT_MAXIMUM_ATTRIBUTES;
 import static net.microfalx.bootstrap.model.FieldConstants.CREATED_AT;
 import static net.microfalx.bootstrap.model.FieldConstants.MODIFIED_AT;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.*;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 
@@ -56,18 +56,36 @@ public class SearchDataSet extends PojoDataSet<SearchResult, PojoField<SearchRes
     }
 
     @Override
-    public Matrix getTrend(Filter filterable) {
+    public Matrix getTrend(Filter filterable, int points) {
+        requireNonNull(filterable);
         SearchQuery query = convert(filterable, null);
-        Duration step = DataSetUtils.getStep(query.getStartTime(), query.getEndTime());
+        Duration step = DataSetUtils.getStep(query.getStartTime(), query.getEndTime(), points);
         return searchService.getDocumentTrends(query, step);
     }
 
     @Override
-    public Collection<Matrix> getTrend(Filter filterable, Set<Field<SearchResult>> fields) {
+    public Collection<Matrix> getTrend(Filter filterable, Set<String> fields, int points) {
+        requireNonNull(filterable);
+        requireNonNull(fields);
+        if (fields.isEmpty()) fields = getTrendFields();
         SearchQuery query = convert(filterable, null);
-        Duration step = DataSetUtils.getStep(query.getStartTime(), query.getEndTime());
-        Set<String> fieldNames = fields.stream().map(Field::getName).collect(Collectors.toSet());
-        return searchService.getFieldsTrends(query, Document.CREATED_AT_FIELD, fieldNames, step);
+        Duration step = DataSetUtils.getStep(query.getStartTime(), query.getEndTime(), points);
+        return searchService.getFieldsTrends(query, Document.CREATED_AT_FIELD, fields, step);
+    }
+
+    @Override
+    public Set<String> getTrendFields() {
+        Set<String> fields = new LinkedHashSet<>();
+        fields.addAll(Arrays.asList(Document.OWNER_FIELD, Document.TYPE_FIELD, Document.SEVERITY_FIELD, Document.SOURCE_FIELD, Document.TARGET_FIELD));
+        Collection<FieldStatistics> fieldStatistics = searchService.getFieldStatistics(20);
+        fieldStatistics.forEach(s -> fields.add(s.getName()));
+        return fields;
+    }
+
+    @Override
+    public int getTrendTermCount(String fieldName) {
+        FieldStatistics fieldStatistics = searchService.getFieldStatistics(fieldName);
+        return fieldStatistics != null ? fieldStatistics.getTerms().size() : 0;
     }
 
     private SearchQuery convert(Filter filterable, Pageable pageable) {

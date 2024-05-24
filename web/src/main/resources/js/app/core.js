@@ -318,7 +318,12 @@ Application.getTimezoneOffset = function () {
  * Masks the element with a given selector.
  */
 Application.mask = function (selector) {
-    if (selector) $(selector).LoadingOverlay("show");
+    let options = {
+        size : 32,
+        minSize : 16,
+        maxSize : 32
+    }
+    if (selector) $(selector).LoadingOverlay("show", options);
 }
 
 /**

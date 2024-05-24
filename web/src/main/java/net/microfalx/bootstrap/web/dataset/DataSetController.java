@@ -5,15 +5,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.dataset.*;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.dataset.annotation.Searchable;
+import net.microfalx.bootstrap.metrics.HeatMap;
+import net.microfalx.bootstrap.metrics.Matrix;
 import net.microfalx.bootstrap.metrics.Series;
 import net.microfalx.bootstrap.model.*;
 import net.microfalx.bootstrap.web.chart.Chart;
 import net.microfalx.bootstrap.web.chart.Events;
 import net.microfalx.bootstrap.web.chart.Options;
 import net.microfalx.bootstrap.web.chart.Type;
+import net.microfalx.bootstrap.web.chart.datalabels.DataLabels;
+import net.microfalx.bootstrap.web.chart.nodata.NoData;
 import net.microfalx.bootstrap.web.chart.plot.Bar;
 import net.microfalx.bootstrap.web.chart.plot.PlotOptions;
 import net.microfalx.bootstrap.web.chart.tooltip.Tooltip;
+import net.microfalx.bootstrap.web.chart.xaxis.XAxis;
 import net.microfalx.bootstrap.web.component.Button;
 import net.microfalx.bootstrap.web.component.Item;
 import net.microfalx.bootstrap.web.component.Menu;
@@ -37,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -57,7 +63,14 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_DEFAULT_POINTS;
+import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_MAXIMUM_POINTS;
 import static net.microfalx.lang.StringUtils.*;
 
 /**
@@ -72,12 +85,16 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private static final String DATE_RANGE_SEPARATOR = "|";
     private static final String BROWSE_VIEW = "dataset/browse";
     private static final String FRAGMENT_SEPARATOR = "::";
+    private static final int TREND_MAX_LANES = 20;
 
     @Autowired
     private DataSetService dataSetService;
 
     @Autowired
     private PreferenceService preferenceService;
+
+    @Autowired
+    private AsyncTaskExecutor taskExecutor;
 
     @Autowired(required = false)
     private PlatformTransactionManager transactionManager;
@@ -831,6 +848,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Filter filter = getFilter(dataSet, model, rangeParameter, queryParameter);
         Collection<Chart> charts = new ArrayList<>();
         charts.add(getRecordTrend(dataSet, filter));
+        charts.addAll(getFieldTrends(dataSet, filter));
         return charts;
     }
 
@@ -839,12 +857,47 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Chart chart = Chart.create(options).setName("Records");
         chart.setPlotOptions(PlotOptions.bar(new Bar().setColumnWidth("80%")))
                 .setTooltip(Tooltip.valueWithTimestamp())
+                .setXaxis(XAxis.dateTime())
                 .setProvider(c -> {
-                    Series series = dataSet.getTrend(filter).toSeries();
+                    Series series = dataSet.getTrend(filter, TREND_MAXIMUM_POINTS).toSeries();
                     c.addSeries(series);
                 });
         chart.getOptions().setEvents(new Events().setClick("DataSet.trendClick"));
         return chart;
+    }
+
+    private Collection<Chart> getFieldTrends(DataSet<M, Field<M>, ID> dataSet, Filter filter) {
+        Set<String> trendFields = dataSet.getTrendFields();
+        Future<Map<String, HeatMap>> future = taskExecutor.submit(new TrendCallable<>(dataSet, filter, trendFields));
+        Collection<Chart> charts = new ArrayList<>();
+        for (String trendField : trendFields) {
+            int trendTermCount = dataSet.getTrendTermCount(trendField);
+            boolean tooManyTerms = trendTermCount > TREND_MAX_LANES;
+            int height = 90 + 18 * Math.min(trendTermCount, TREND_MAX_LANES);
+            Options options = Options.create(Type.HEATMAP).setHeight(height);
+            Chart chart = Chart.create(options).setName(StringUtils.capitalizeWords(trendField + (tooManyTerms ? " *" : EMPTY_STRING)))
+                    .setTooltip(Tooltip.valueWithTimestamp())
+                    .setDataLabels(DataLabels.disabled())
+                    .setXaxis(XAxis.dateTime());
+            chart.getAttributes().add("field", trendField);
+            chart.setProvider(c -> {
+                try {
+                    Map<String, HeatMap> heatMaps = future.get(5, TimeUnit.MINUTES);
+                    HeatMap heatMap = heatMaps.get((String) c.getAttributes().get("field").getValue());
+                    if (heatMap == null) {
+                        c.setNoData(NoData.create("No data to trend"));
+                    } else {
+                        for (Series series : heatMap.getSeries()) {
+                            c.addSeries(series);
+                        }
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to extract heat map for " + c.getName(), e);
+                }
+            });
+            charts.add(chart);
+        }
+        return charts;
     }
 
     private ZonedDateTime atEndOfDay(ZonedDateTime dateTime) {
@@ -866,5 +919,26 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         sort = defaultIfEmpty(sort, "<empty>");
         LOGGER.debug("{} data set {}, page {}, range{}, query {}, sort {}", capitalizeWords(action), dataSet.getName(),
                 page, range, query, sort);
+    }
+
+    static class TrendCallable<M, ID> implements Callable<Map<String, HeatMap>> {
+
+        private final DataSet<M, Field<M>, ID> dataSet;
+        private final Filter filter;
+        private final Set<String> trendFields;
+
+        TrendCallable(DataSet<M, Field<M>, ID> dataSet, Filter filter, Set<String> trendFields) {
+            this.dataSet = dataSet;
+            this.filter = filter;
+            this.trendFields = trendFields;
+        }
+
+
+        @Override
+        public Map<String, HeatMap> call() throws Exception {
+            Collection<Matrix> matrices = dataSet.getTrend(filter, trendFields, TREND_DEFAULT_POINTS);
+            Collection<HeatMap> heatMaps = HeatMap.create(matrices, TREND_MAX_LANES);
+            return heatMaps.stream().collect(Collectors.toMap(HeatMap::getName, Function.identity()));
+        }
     }
 }

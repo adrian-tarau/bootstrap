@@ -7,11 +7,13 @@ import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
+import java.time.Duration;
 
 import static net.microfalx.lang.StringUtils.removeStartSlash;
 
@@ -39,6 +41,7 @@ public class AssetUtils {
             Resource content = ClassPathResource.file(typePath + "/" + removeStartSlash(path));
             if (!content.exists()) return ResponseEntity.notFound().build();
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(getContentType(type)))
+                    .eTag(content.toHash()).cacheControl(CacheControl.maxAge(Duration.ofMinutes(15)))
                     .body(new InputStreamResource(content.getInputStream()));
         } catch (IOException e) {
             String message = "Failed to retrieve " + type.name().toLowerCase() + " at " + path;

@@ -10,8 +10,10 @@
                 <h5 class="modal-title">Trends</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" th:each="chart : ${trendCharts}">
-                <chart:render value="${chart}"></chart:render>
+            <div class="modal-body">
+                <div th:each="chart : ${trendCharts}" th:class="mb-3">
+                    <chart:render value="${chart}"></chart:render>
+                </div>
             </div>
         </div>
     </div>

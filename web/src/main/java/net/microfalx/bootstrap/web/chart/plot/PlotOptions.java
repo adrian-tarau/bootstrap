@@ -41,4 +41,9 @@ public class PlotOptions {
         return new PlotOptions().setPie(pie);
     }
 
+    public static PlotOptions heatMap(Heatmap heatmap) {
+        requireNonNull(heatmap);
+        return new PlotOptions().setHeatmap(heatmap);
+    }
+
 }
