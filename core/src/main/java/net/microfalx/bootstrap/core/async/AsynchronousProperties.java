@@ -14,7 +14,7 @@ public class AsynchronousProperties {
     private int coreThreads = 5;
     private int maximumThreads = 8;
     private int queueCapacity = 50;
-    private String prefix = "boostrap";
+    private String prefix = "boot";
     private String suffix;
     private boolean waitForTasks = true;
     private boolean removeOnCancel = true;

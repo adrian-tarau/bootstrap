@@ -20,21 +20,25 @@ import java.util.List;
 public class RetryConfig {
 
     @Autowired
-    private RetryProperties properties;
+    private RetryProperties properties = new RetryProperties();
 
     @Bean
     public RetryTemplate retryTemplate() {
         RetryTemplate retryTemplate = new RetryTemplate();
+        List<RetryPolicy> retryPolicies = new ArrayList<>();
 
         ExponentialRandomBackOffPolicy exponentialBackOffPolicy = new ExponentialRandomBackOffPolicy();
         exponentialBackOffPolicy.setInitialInterval(properties.getInitialInterval());
         exponentialBackOffPolicy.setMaxInterval(properties.getMaxInterval());
         exponentialBackOffPolicy.setMultiplier(properties.getMultiplier());
 
-        List<RetryPolicy> retryPolicies = new ArrayList<>();
-        retryPolicies.add(new ExceptionClassifierRetryPolicy());
-        retryPolicies.add(new CircuitBreakerRetryPolicy());
-        retryPolicies.add(new TimeoutRetryPolicy());
+        ExceptionClassifierRetryPolicy exceptionClassifierRetryPolicy = new ExceptionClassifierRetryPolicy();
+        retryPolicies.add(exceptionClassifierRetryPolicy);
+        CircuitBreakerRetryPolicy circuitBreakerRetryPolicy = new CircuitBreakerRetryPolicy();
+        retryPolicies.add(circuitBreakerRetryPolicy);
+        TimeoutRetryPolicy timeoutRetryPolicy = new TimeoutRetryPolicy();
+        timeoutRetryPolicy.setTimeout(properties.getMaxInterval());
+        retryPolicies.add(timeoutRetryPolicy);
         CompositeRetryPolicy retryPolicy = new CompositeRetryPolicy();
         retryPolicy.setPolicies(retryPolicies.toArray(new RetryPolicy[0]));
         retryTemplate.setRetryPolicy(retryPolicy);

@@ -1,11 +1,17 @@
 package net.microfalx.bootstrap.core.config;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 
 @Configuration
 @ConfigurationProperties("bootstrap.retry")
+@Getter
+@Setter
+@ToString
 public class RetryProperties {
 
     private int maxAttempts = 3;
@@ -26,28 +32,4 @@ public class RetryProperties {
      */
     private double multiplier = ExponentialBackOffPolicy.DEFAULT_MULTIPLIER;
 
-
-    public long getInitialInterval() {
-        return initialInterval;
-    }
-
-    public void setInitialInterval(long initialInterval) {
-        this.initialInterval = initialInterval;
-    }
-
-    public long getMaxInterval() {
-        return maxInterval;
-    }
-
-    public void setMaxInterval(long maxInterval) {
-        this.maxInterval = maxInterval;
-    }
-
-    public double getMultiplier() {
-        return multiplier;
-    }
-
-    public void setMultiplier(double multiplier) {
-        this.multiplier = multiplier;
-    }
 }
