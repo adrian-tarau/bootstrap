@@ -103,6 +103,7 @@
         <logstash-gelf.version>1.15.1</logstash-gelf.version>
         <datafaker.version>2.1.0</datafaker.version>
         <logback.version>1.5.6</logback.version>
+        <h2.version>2.1.214</h2.version>
         <resource.version>1.0.0-SNAPSHOT</resource.version>
         <jdbcpool.version>1.0.0-SNAPSHOT</jdbcpool.version>
         <threadpool.version>1.0.0-SNAPSHOT</threadpool.version>
@@ -479,6 +480,13 @@
                 <groupId>org.testcontainers</groupId>
                 <artifactId>junit-jupiter</artifactId>
                 <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.version}</version>
                 <scope>test</scope>
             </dependency>
 

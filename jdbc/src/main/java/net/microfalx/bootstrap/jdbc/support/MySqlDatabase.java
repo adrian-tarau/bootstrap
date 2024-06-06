@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.ResultSet;
@@ -46,6 +47,7 @@ public class MySqlDatabase extends AbstractDatabase {
         if (clustered) {
             try {
                 return extractNodesFromCluster();
+            } catch (CannotGetJdbcConnectionException e) {
             } catch (DataAccessException e) {
                 Throwable rootCause = ExceptionUtils.getRootCause(e);
                 if (rootCause instanceof SQLException sqlException) {

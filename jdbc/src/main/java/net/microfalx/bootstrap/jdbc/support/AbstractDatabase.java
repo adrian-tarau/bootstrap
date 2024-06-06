@@ -7,6 +7,7 @@ import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Metrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -24,6 +25,7 @@ import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.createJdbcUri;
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.describe;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
 import static net.microfalx.lang.TimeUtils.TEN_SECONDS;
@@ -65,6 +67,8 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
                         Collection<Node> extractedNodes = timeCallable("Extract Nodes", this::extractNodes);
                         copyNodeAttributes(extractedNodes);
                         nodes = extractedNodes.stream().collect(Collectors.toMap(node -> toIdentifier(node.getId()), node -> node));
+                    } catch (CannotGetJdbcConnectionException e) {
+                        LOGGER.debug("Failed to extract database nodes for " + describe(this) + ", database is not available, root cause: " + getRootCauseMessage(e));
                     } catch (Exception e) {
                         LOGGER.error("Failed to extract database nodes for " + describe(this), e);
                     }

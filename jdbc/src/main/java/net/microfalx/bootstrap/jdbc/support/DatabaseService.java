@@ -13,6 +13,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -624,14 +625,15 @@ public class DatabaseService implements InitializingBean {
         @Override
         public Collection<Session> call() throws Exception {
             return ConcurrencyUtils.withTryLock(getDatabaseLock(database), () -> {
-                Collection<Session> sessions = null;
+                Collection<Session> sessions = Collections.emptyList();
                 try {
                     sessions = database.getSessions();
                     registerAvailability(database);
+                } catch (CannotGetJdbcConnectionException e) {
+                    registerFailure(database, e);
                 } catch (Exception e) {
                     registerFailure(database, e);
                     LOGGER.error("Failed to extract sessions from " + describe(database), e);
-                    sessions = Collections.emptyList();
                 }
                 registerStatements(sessions);
                 return sessions;
@@ -658,10 +660,12 @@ public class DatabaseService implements InitializingBean {
         @Override
         public Collection<Transaction> call() throws Exception {
             return ConcurrencyUtils.withTryLock(getDatabaseLock(database), () -> {
-                Collection<Transaction> transactions = null;
+                Collection<Transaction> transactions = Collections.emptyList();
                 try {
                     transactions = database.getTransactions();
                     registerAvailability(database);
+                } catch (CannotGetJdbcConnectionException e) {
+                    registerFailure(database, e);
                 } catch (Exception e) {
                     registerFailure(database, e);
                     LOGGER.error("Failed to extract statements from " + describe(database), e);
@@ -680,7 +684,7 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    static class ExtractStatementsForDatabase implements Callable<Collection<Statement>> {
+    class ExtractStatementsForDatabase implements Callable<Collection<Statement>> {
 
         private final LocalDateTime start;
         private final LocalDateTime end;
@@ -696,10 +700,12 @@ public class DatabaseService implements InitializingBean {
         public Collection<Statement> call() throws Exception {
             try {
                 return database.getStatements(start, end);
+            } catch (CannotGetJdbcConnectionException e) {
+                registerFailure(database, e);
             } catch (Exception e) {
                 LOGGER.error("Failed to extract statements from " + describe(database), e);
-                return Collections.emptyList();
             }
+            return Collections.emptyList();
         }
 
         @Override
