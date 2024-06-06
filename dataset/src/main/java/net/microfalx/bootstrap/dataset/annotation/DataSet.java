@@ -163,4 +163,11 @@ public @interface DataSet {
      * @return {@code true} if trends can be displayed, {@code false} otherwise
      */
     boolean trend() default false;
+
+    /**
+     * Returns a list of fields to trend.
+     *
+     * @return an array of field names, empty to leave the data set provide the field names.
+     */
+    String[] trendFieldNames() default {};
 }

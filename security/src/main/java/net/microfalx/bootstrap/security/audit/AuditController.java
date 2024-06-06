@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("security/audit")
-@DataSet(model = Audit.class)
+@DataSet(model = Audit.class, trend = true, trendFieldNames = {"action", "module", "category", "client_info"})
 @Help("admin/security/audit")
 public class AuditController extends DataSetController<Audit, Integer> {
 
