@@ -10,6 +10,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
+import org.springframework.validation.beanvalidation.CustomValidatorBean;
 
 import java.lang.annotation.Annotation;
 import java.util.Optional;
@@ -168,12 +169,30 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
         return fieldsById.get(StringUtils.toIdentifier(nameOrProperty));
     }
 
+    @Override
+    public <A extends Annotation> F findAnnotated(Class<A> annotationClass) {
+        ArgumentUtils.requireNonNull(annotationClass);
+        for (F field : fields) {
+            if (field.hasAnnotation(annotationClass)) return field;
+        }
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public F get(String nameOrProperty) {
         F field = find(nameOrProperty);
         if (field == null) {
             throw new FieldNotFoundException("A field with name or property '" + nameOrProperty + "' is not registered in " + getName());
+        }
+        return field;
+    }
+
+    @Override
+    public <A extends Annotation> F getAnnotated(Class<A> annotationClass) {
+        F field = findAnnotated(annotationClass);
+        if (field == null) {
+            throw new FieldNotFoundException("A field annotated with '" + ClassUtils.getName(annotationClass) + "' is not registered in " + getName());
         }
         return field;
     }
@@ -195,23 +214,27 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     }
 
     @Override
-    public Class<ID> getIdClass() {
+    public final Class<ID> getIdClass() {
         return idClass;
     }
 
+    protected final void setIdClass(Class<ID> idClass) {
+        this.idClass = idClass;
+    }
+
     @Override
-    public CompositeIdentifier<M, F, ID> getId(M model) {
+    public final CompositeIdentifier<M, F, ID> getId(M model) {
         return new CompositeIdentifier<>(this, model);
     }
 
     @Override
-    public CompositeIdentifier<M, F, ID> getId(String id) {
+    public final CompositeIdentifier<M, F, ID> getId(String id) {
         return new CompositeIdentifier<>(this, id);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public boolean identical(M firstModel, M secondModel) {
+    public final boolean identical(M firstModel, M secondModel) {
         if (firstModel == null && secondModel == null) return true;
         if (isNull(firstModel, secondModel)) return false;
         for (F field : fields) {
@@ -223,7 +246,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
             if (isBaseClass(type)) {
                 if (!ObjectUtils.equals(firstValue, secondValue)) return false;
             } else {
-                Metadata metadata = metadataService.getMetadata(type);
+                Metadata metadata = createMetadata(type);
                 if (!metadata.identical(firstValue, secondValue)) return false;
             }
         }
@@ -231,13 +254,13 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     }
 
     @Override
-    public M copy(M model) {
+    public final M copy(M model) {
         return copy(model, false);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public M copy(M model, boolean deep) {
+    public final M copy(M model, boolean deep) {
         if (model == null) return null;
         M newModel = create();
         for (F field : fields) {
@@ -247,7 +270,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
                     if (ClassUtils.isBaseClass(value)) {
                         value = ObjectUtils.copy(value);
                     } else {
-                        Metadata metadata = metadataService.getMetadata(value);
+                        Metadata metadata = createMetadata(value.getClass());
                         value = metadata.copy(value, true);
                     }
                 }
@@ -271,12 +294,12 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     }
 
     @Override
-    public <A extends Annotation> A findAnnotation(Class<A> annotationClass) {
+    public final <A extends Annotation> A findAnnotation(Class<A> annotationClass) {
         return modelClass.getAnnotation(annotationClass);
     }
 
     @Override
-    public <A extends Annotation> boolean hasAnnotation(Class<A> annotationClass) {
+    public final <A extends Annotation> boolean hasAnnotation(Class<A> annotationClass) {
         return findAnnotation(annotationClass) != null;
     }
 
@@ -285,7 +308,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
      *
      * @param field the field
      */
-    public void addField(F field) {
+    public final void addField(F field) {
         requireNonNull(field);
         fields.add(field);
         fieldsById.put(field.getId(), field);
@@ -311,6 +334,11 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     protected void initialize() {
         initName();
         initI18n();
+        if (validator == null) {
+            CustomValidatorBean validator = new CustomValidatorBean();
+            validator.afterPropertiesSet();
+            this.validator = validator;
+        }
     }
 
     /**
@@ -332,10 +360,14 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
      * @return the value, null if not defined
      */
     protected final String getI18n(String key) {
-        try {
-            return messageSource.getMessage(key, ObjectUtils.EMPTY_ARRAY, LocaleContextHolder.getLocale());
-        } catch (NoSuchMessageException e) {
-            LOGGER.debug("Missing i18n '" + key + "' for model " + getModel().getName());
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(key, ObjectUtils.EMPTY_ARRAY, LocaleContextHolder.getLocale());
+            } catch (NoSuchMessageException e) {
+                LOGGER.debug("Missing i18n '" + key + "' for model " + getModel().getName());
+                return null;
+            }
+        } else {
             return null;
         }
     }
@@ -382,6 +414,14 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
         });
     }
 
+    private <MS, FS extends Field<MS>, IDS> Metadata<MS, FS, IDS> createMetadata(Class<MS> type) {
+        if (metadataService != null) {
+            return metadataService.getMetadata(type);
+        } else {
+            return Metadata.create(type);
+        }
+    }
+
     private void initI18n() {
         this.name = defaultIfEmpty(getI18n(getI18nPrefix() + "name"), this.name);
         this.description = getI18n(getI18nPrefix() + "description");
@@ -399,7 +439,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
 
     @Override
     public String toString() {
-        return "AbstractMetadata{" +
+        return getClass().getSimpleName() + "{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +

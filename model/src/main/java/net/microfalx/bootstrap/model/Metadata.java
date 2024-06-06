@@ -15,6 +15,24 @@ import java.util.Map;
 public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String>, Nameable, Descriptable {
 
     /**
+     * Creates a metadata instance for a POJO.
+     * <p>
+     * Mostly used for testing or when handling the class as a normal POJO is enough.
+     *
+     * @param type the POJO type
+     * @param <M>  the model type
+     * @param <F>  the field type
+     * @param <ID> the identifier type
+     * @return the metadata
+     */
+    @SuppressWarnings("unchecked")
+    static <M, F extends Field<M>, ID> Metadata<M, F, ID> create(Class<M> type) {
+        PojoMetadataProvider.DefaultPojoMetadata<M, Object> metadata = new PojoMetadataProvider.DefaultPojoMetadata<>(type);
+        metadata.initialize();
+        return (Metadata<M, F, ID>) metadata;
+    }
+
+    /**
      * Creates a new instance of the model.
      *
      * @return a non-null instance
@@ -111,6 +129,15 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
     F find(String nameOrProperty);
 
     /**
+     * Returns a field annotated with a given annotation, if exists.
+     *
+     * @param annotationClass the annotation class
+     * @param <A>             the annotation type
+     * @return the field, null if it does not exist
+     */
+    <A extends Annotation> F findAnnotated(Class<A> annotationClass);
+
+    /**
      * Returns a field by its name or property name.
      *
      * @param nameOrProperty the name or property name
@@ -118,6 +145,16 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
      * @throws FieldNotFoundException if the field does not exist
      */
     F get(String nameOrProperty);
+
+    /**
+     * Returns a field annotated with a given annotation
+     *
+     * @param annotationClass the annotation class
+     * @param <A>             the annotation type
+     * @return the field
+     * @throws FieldNotFoundException if the field does not exist
+     */
+    <A extends Annotation> F getAnnotated(Class<A> annotationClass);
 
     /**
      * Returns the model name.

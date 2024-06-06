@@ -6,6 +6,7 @@ import net.microfalx.resource.Resource;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -178,6 +179,12 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
      * @return a positive integer
      */
     int size();
+
+    /**
+     * Returns the attribute names.
+     * @return a non-null instance
+     */
+    Set<String> getNames();
 
     /**
      * Returns the attributes/parameters as a read-only map.

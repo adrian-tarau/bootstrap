@@ -35,6 +35,12 @@ public abstract class PojoField<M> extends AbstractField<M> {
     }
 
     @Override
+    public <V> V get(M model, Class<V> type) {
+        Object value = get(model);
+        return Field.from(value, type);
+    }
+
+    @Override
     public void set(M model, Object value) {
         if (setter == null) throw new ModelException("The field '" + getName() + "' is read only");
         try {

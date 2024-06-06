@@ -164,6 +164,16 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
     Object get(M model);
 
     /**
+     * Returns the value of the field, converted to a given type.
+     *
+     * @param model the model
+     * @param type  the target type
+     * @param <V>   the type of the value
+     * @return the converted value
+     */
+    <V> V get(M model, Class<V> type);
+
+    /**
      * Changes the value in the model for a given field.
      *
      * @param model the model

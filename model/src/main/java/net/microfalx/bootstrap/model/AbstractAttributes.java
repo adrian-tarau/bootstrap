@@ -4,10 +4,7 @@ import net.microfalx.lang.CollectionUtils;
 import net.microfalx.resource.Resource;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -143,6 +140,11 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     @Override
     public final Map<String, A> toMap() {
         return attributes != null ? unmodifiableMap(attributes) : emptyMap();
+    }
+
+    @Override
+    public Set<String> getNames() {
+        return attributes != null ? unmodifiableSet(attributes.keySet()) : emptySet();
     }
 
     @Override
