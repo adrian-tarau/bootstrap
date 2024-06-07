@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.annotation.CreatedAt;
+import net.microfalx.lang.annotation.ModifiedAt;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
@@ -65,12 +67,13 @@ public class ModelComparator<M, F extends Field<M>, ID> implements Comparator<M>
         if (metadata == null) metadata = metadataService.getMetadata((Class<M>) o1.getClass());
         int result = 0;
         for (F field : metadata.getFields()) {
+            if (!accept(field)) continue;
             Object value1 = field.get(o1);
             Object value2 = field.get(o2);
-            if (value1 == null) {
+            if (value1 == null && value2 != null) {
                 differenceFields.add(field);
                 if (result == 0) result = -1;
-            } else if (value2 == null) {
+            } else if (value1 != null && value2 == null) {
                 differenceFields.add(field);
                 if (result == 0) result = 1;
             } else if (value1 instanceof Comparable<?> && value1.getClass() == value2.getClass()) {
@@ -78,7 +81,7 @@ public class ModelComparator<M, F extends Field<M>, ID> implements Comparator<M>
                 if (result == 0) result = newResult;
             } else if (ClassUtils.isJdkClass(value1)) {
                 return value1.toString().compareTo(value2.toString());
-            } else {
+            } else if (!(value1 == null && value2 == null)) {
                 ModelComparator<Object, Field<Object>, Object> newComparator = new ModelComparator<>(metadataService);
                 int newResult = newComparator.compare(value1, value2);
                 if (result == 0) result = newResult;
@@ -86,5 +89,11 @@ public class ModelComparator<M, F extends Field<M>, ID> implements Comparator<M>
             if (result != 0 && !trackChanges) break;
         }
         return result;
+    }
+
+    private boolean accept(F field) {
+        boolean timestamp = field.hasAnnotation(CreatedAt.class) || field.hasAnnotation(ModifiedAt.class);
+        boolean id = field.isId() || field.isNaturalId();
+        return !(id || timestamp);
     }
 }

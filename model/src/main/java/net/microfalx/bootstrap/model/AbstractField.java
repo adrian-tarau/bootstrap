@@ -31,6 +31,7 @@ public abstract class AbstractField<M> implements Field<M> {
     private final String name;
     private final String property;
     private boolean isId;
+    private boolean isNaturalId;
     private boolean isName;
     private int index;
     private int position;
@@ -134,12 +135,21 @@ public abstract class AbstractField<M> implements Field<M> {
     }
 
     @Override
-    public boolean isId() {
+    public final boolean isId() {
         return isId;
     }
 
     protected final void setIsId(boolean isId) {
         this.isId = isId;
+    }
+
+    @Override
+    public final boolean isNaturalId() {
+        return isNaturalId;
+    }
+
+    protected final void setNaturalId(boolean naturalId) {
+        isNaturalId = naturalId;
     }
 
     @Override

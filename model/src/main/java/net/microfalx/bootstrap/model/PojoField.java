@@ -80,6 +80,7 @@ public abstract class PojoField<M> extends AbstractField<M> {
         Position positionAnnot = findAnnotation(Position.class);
         setPosition(positionAnnot != null ? positionAnnot.value() : 1 + getIndex() * 10);
         setIsId(hasAnnotation(Id.class));
+        setNaturalId(hasAnnotation(NaturalId.class));
         setIsName(hasAnnotation(Name.class));
         return true;
     }

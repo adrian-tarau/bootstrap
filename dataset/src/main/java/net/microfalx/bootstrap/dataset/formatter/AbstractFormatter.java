@@ -5,6 +5,8 @@ import net.microfalx.bootstrap.model.Field;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ObjectUtils;
 
+import static net.microfalx.bootstrap.dataset.annotation.Formattable.AUTO;
+
 /**
  * Base class for all formatters
  *
@@ -19,7 +21,9 @@ public abstract class AbstractFormatter<M, F extends Field<M>, T> implements For
     public String format(T value, F field, M model) {
         if (value == null) return getFormattable(field).nullValue();
         if (ObjectUtils.isEmpty(value)) return getFormattable(field).emptyValue();
-        if (value instanceof Number && ((Number) value).doubleValue() < 0) return getFormattable(field).negativeValue();
+        if (value instanceof Number && ((Number) value).doubleValue() < 0 && !AUTO.equals(getFormattable(field).negativeValue())) {
+            return getFormattable(field).negativeValue();
+        }
         return doFormat(value, field, model);
     }
 

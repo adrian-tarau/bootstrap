@@ -103,6 +103,13 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
     boolean isId();
 
     /**
+     * Returns whether the field holds the natural identifier of the model.
+     *
+     * @return {@code true} if the natural identifier, {@code false} otherwise
+     */
+    boolean isNaturalId();
+
+    /**
      * Returns whether the field is part of the model name.
      *
      * @return {@code true} if part of the model name, {@code false} otherwise

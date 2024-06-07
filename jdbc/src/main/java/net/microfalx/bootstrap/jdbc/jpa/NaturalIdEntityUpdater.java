@@ -12,7 +12,6 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.retry.support.RetryTemplate;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -110,6 +109,7 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
         if (comparator.setTrackChanges(false).compare(entity, persistedEntity) != 0) {
             return getRetryTemplate().execute(context -> {
                 updateModified(entity);
+                copyIds(persistedEntity, entity);
                 return repository.saveAndFlush(entity);
             });
         }
@@ -126,10 +126,6 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
         return field;
     }
 
-    private Collection<Field<M>> findPrimaryKeys() {
-        return getMetadata().getIdFields();
-    }
-
     private String getNaturalKey(M entity) {
         return findNaturalKey().get(entity, String.class);
     }
@@ -142,6 +138,12 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
     private void updateModified(M entity) {
         Field<M> modifiedAtField = getMetadata().findModifiedAtField();
         if (modifiedAtField != null) modifiedAtField.set(entity, LocalDateTime.now());
+    }
+
+    private void copyIds(M previousEntity, M currentEntity) {
+        for (Field<M> idField : getMetadata().getIdFields()) {
+            idField.set(currentEntity, idField.get(previousEntity));
+        }
     }
 
     private Metadata<M, Field<M>, ID> getMetadata() {
