@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.BadSqlGrammarException;
-import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.ResultSet;
@@ -28,6 +27,7 @@ public class MySqlDatabase extends AbstractDatabase {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseService.class);
 
     private static final int TABLE_NOT_FOUND_ERROR = 1146;
+    private static final int COMMAND_DENIED_ERROR = 1142;
     private static final int ACCESS_DENIED_ERROR = 1227;
     private static final String GARB_NODE_NAME = "garb";
 
@@ -47,12 +47,11 @@ public class MySqlDatabase extends AbstractDatabase {
         if (clustered) {
             try {
                 return extractNodesFromCluster();
-            } catch (CannotGetJdbcConnectionException e) {
             } catch (DataAccessException e) {
                 Throwable rootCause = ExceptionUtils.getRootCause(e);
                 if (rootCause instanceof SQLException sqlException) {
                     int errorCode = sqlException.getErrorCode();
-                    clustered = !(errorCode == TABLE_NOT_FOUND_ERROR);
+                    clustered = !(errorCode == TABLE_NOT_FOUND_ERROR || errorCode == COMMAND_DENIED_ERROR);
                     if (clustered) LOGGER.error("Could not extract nodes from " + getName(), e);
                 } else {
                     return net.microfalx.lang.ExceptionUtils.throwException(e);
