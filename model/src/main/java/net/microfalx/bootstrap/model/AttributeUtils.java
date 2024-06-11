@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
@@ -168,6 +169,29 @@ public class AttributeUtils {
     public static void registerAttributePriority(String name, int priority) {
         requireNonNull(name);
         ATTRIBUTE_PRIORITY.put(name.toLowerCase(), priority);
+    }
+
+    /**
+     * Replaces the variables in the given text.
+     * <p>
+     * Variables can be accessed by using the placeholder <code>${name}</code>. Parameters are case-insensitive.
+     *
+     * @param attributes the attributes which provide the variables
+     * @param text       the text with variables
+     * @return the text with all variables replaced
+     */
+    public static String replaceVariables(Attributes<?> attributes, String text) {
+        requireNonNull(attributes);
+        if (StringUtils.isEmpty(text)) return text;
+        for (; ; ) {
+            int startIndex = text.indexOf("${");
+            if (startIndex == -1) break;
+            int endIndex = text.indexOf("}", startIndex);
+            String name = text.substring(startIndex + 2, endIndex);
+            String value = attributes.get(name, StringUtils.EMPTY_STRING).asString();
+            text = text.substring(0, startIndex) + value + text.substring(endIndex + 1);
+        }
+        return text;
     }
 
     static Comparator<Attribute> ATTRIBUTE_COMPARATOR = new AttributeComparator();

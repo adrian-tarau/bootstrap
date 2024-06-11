@@ -234,4 +234,14 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
      * @return a non-null instance
      */
     Resource toJson();
+
+    /**
+     * Replaces the variables in the given text.
+     * <p>
+     * Variables can be accessed by using the placeholder <code>${name}</code>. Parameters are case-insensitive.
+     *
+     * @param text the text with variables
+     * @return the text with all variables replaced
+     */
+    String replaceVariables(String text);
 }

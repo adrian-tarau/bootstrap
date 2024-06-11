@@ -176,6 +176,11 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     }
 
     @Override
+    public String replaceVariables(String text) {
+        return AttributeUtils.replaceVariables(this, text);
+    }
+
+    @Override
     public final Iterator<A> iterator() {
         return getRawAttributes(this).iterator();
     }
