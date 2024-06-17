@@ -27,6 +27,7 @@ public class AsynchronousProperties {
 
     public void setCoreThreads(int coreThreads) {
         this.coreThreads = coreThreads;
+        if (maximumThreads < coreThreads) maximumThreads = coreThreads;
     }
 
     public int getMaximumThreads() {
