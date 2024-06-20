@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
+import net.microfalx.bootstrap.core.utils.HostnameUtils;
 import net.microfalx.bootstrap.jdbc.support.Transaction.IsolationLevel;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -107,11 +108,19 @@ public class MySqlDatabase extends AbstractDatabase {
             while (rs.next()) {
                 String id = rs.getString("node_uuid");
                 String name = rs.getString("node_name");
+                String displayName = name;
                 if (GARB_NODE_NAME.equals(name)) continue;
                 String host = rs.getString("node_incoming_address");
+                if (HostnameUtils.isHostname(host)) {
+                    displayName = HostnameUtils.getServerNameFromHost(host);
+                } else {
+                    displayName = HostnameUtils.getServerNameFromHost(name);
+                }
                 int port = getPortFromHostAndPort(host);
                 host = getHostFromHostAndPort(host);
-                nodes.add(createNode(id, name, host, port));
+                MySqlNode node = createNode(id, name, host, port);
+                node.setDisplayName(displayName);
+                nodes.add(node);
             }
             return nodes;
         });

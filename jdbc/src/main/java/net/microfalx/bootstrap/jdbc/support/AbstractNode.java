@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
 
 import java.net.InetAddress;
@@ -27,6 +28,7 @@ public abstract class AbstractNode implements Node {
     String databaseId;
     private final String id;
     private final String name;
+    private String displayName;
 
     private transient DataSource dataSource;
     String dataSourceId;
@@ -58,6 +60,15 @@ public abstract class AbstractNode implements Node {
     @Override
     public final String getName() {
         return name;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return StringUtils.defaultIfEmpty(displayName, name);
+    }
+
+    protected final void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     @Override

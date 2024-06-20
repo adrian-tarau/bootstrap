@@ -13,6 +13,13 @@ import java.time.ZoneId;
 public interface Node extends Identifiable<String>, Nameable, Descriptable {
 
     /**
+     * Returns the display name for a node.
+     *
+     * @return a non-null instance
+     */
+    String getDisplayName();
+
+    /**
      * Returns the time zone of the node/database.
      *
      * @return a non-null instance

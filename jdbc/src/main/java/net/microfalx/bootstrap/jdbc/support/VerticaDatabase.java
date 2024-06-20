@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
+import net.microfalx.bootstrap.core.utils.HostnameUtils;
 import net.microfalx.bootstrap.metrics.util.SimpleStatisticalSummary;
 import net.microfalx.lang.TimeUtils;
 import org.slf4j.Logger;
@@ -40,13 +41,20 @@ public class VerticaDatabase extends AbstractDatabase {
             while (rs.next()) {
                 String id = rs.getString("node_id");
                 String name = rs.getString("node_name");
+                String displayName = name;
                 String state = rs.getString("node_state");
                 String host = rs.getString("export_address");
                 if (isLocalHost(host)) host = getDataSource().getHostname();
+                if (HostnameUtils.isHostname(host)) {
+                    displayName = HostnameUtils.getServerNameFromHost(host);
+                } else {
+                    displayName = HostnameUtils.getServerNameFromHost(name);
+                }
                 Node.State stateEnum = fromName(Node.State.class, state, Node.State.UNKNOWN);
                 int port = getPortFromHostAndPort(host);
                 host = getHostFromHostAndPort(host);
                 VerticaNode node = createNode(id, name, host, port);
+                node.setDisplayName(displayName);
                 node.setState(stateEnum);
                 nodes.add(node);
             }
