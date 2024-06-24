@@ -9,11 +9,13 @@ import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.stereotype.Service;
@@ -220,7 +222,14 @@ public final class DataSetService extends ApplicationContextSupport implements I
             return Optional.empty();
         Object value = field.get(model);
         Formattable.AlertProvider<M, F, Object> alertProvider = ClassUtils.create(formattableAnnot.alert());
-        return Optional.of(alertProvider.provide(value, field, model));
+        if (alertProvider instanceof ApplicationContextAware) {
+            ((ApplicationContextAware) alertProvider).setApplicationContext(getApplicationContext());
+        }
+        try {
+            return Optional.of(alertProvider.provide(value, field, model));
+        } catch (Exception e) {
+            return Optional.of(new Alert(Alert.Type.DARK, "#ERROR: " + ExceptionUtils.getRootCauseName(e)));
+        }
     }
 
     /**
