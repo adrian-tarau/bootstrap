@@ -62,7 +62,6 @@
         <module>metrics</module>
         <module>help</module>
         <module>search</module>
-        <module>js</module>
         <module>model</module>
         <module>template</module>
         <module>dataset</module>
@@ -105,6 +104,7 @@
         <logback.version>1.5.6</logback.version>
         <ipaddress.version>5.4.0</ipaddress.version>
         <h2.version>2.1.214</h2.version>
+        <bootstrap-js.version>1.0.0-SNAPSHOT</bootstrap-js.version>
         <resource.version>1.0.0-SNAPSHOT</resource.version>
         <jdbcpool.version>1.0.0-SNAPSHOT</jdbcpool.version>
         <threadpool.version>1.0.0-SNAPSHOT</threadpool.version>
@@ -335,6 +335,12 @@
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-avro-serializer</artifactId>
                 <version>${confluent.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-js</artifactId>
+                <version>${bootstrap-js.version}</version>
             </dependency>
 
             <dependency>
