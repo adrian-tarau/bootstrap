@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.web.controller.admin.database;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.Alert;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.dataset.model.NamedIdentityAware;
 import net.microfalx.bootstrap.jdbc.support.Node;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.lang.annotation.*;
@@ -15,22 +15,12 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
 @ToString
 @Name("Databases")
 @ReadOnly
-public class Database {
+public class Database extends NamedIdentityAware<String> {
 
-    @Id
-    @Visible(value = false)
-    private String id;
-
-    @Position(1)
-    @Name
-    @Description("The name of the database (cluster)")
-    private String name;
-
-    @Position(2)
+    @Position(6)
     @Description("The type of the database (cluster)")
     private net.microfalx.bootstrap.jdbc.support.Database.Type type;
 

@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.web.controller.admin.broker;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.broker.Broker;
 import net.microfalx.bootstrap.broker.Topic;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.lang.annotation.*;
 
 import java.time.Duration;
@@ -14,15 +14,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
 @ToString
 @Name("Consumers")
 @ReadOnly
-public class BrokerProducer {
-
-    @Id
-    @Visible(value = false)
-    private String id;
+public class BrokerProducer extends IdentityAware<String> {
 
     @Position(1)
     @Description("The name of the broker (cluster)")

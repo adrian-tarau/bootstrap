@@ -1,23 +1,18 @@
 package net.microfalx.bootstrap.web.controller.support.executor;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.lang.annotation.*;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
 @ToString
 @Name("Executors")
 @ReadOnly
-public class Executor {
-
-    @Id
-    @Visible(value = false)
-    private String id;
+public class Executor extends IdentityAware<String> {
 
     @Position(1)
     @Name

@@ -1,10 +1,10 @@
 package net.microfalx.bootstrap.web.controller.support.store;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.model.NamedIdentityAware;
 import net.microfalx.bootstrap.store.StoreUtils;
 import net.microfalx.lang.annotation.*;
 import net.microfalx.metrics.Timer;
@@ -13,20 +13,10 @@ import java.time.Duration;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
 @ToString
 @Name("Stores")
 @ReadOnly
-public class Store {
-
-    @Id
-    @Visible(value = false)
-    private String id;
-
-    @Position(1)
-    @Name
-    @Description("The name of the store")
-    private String name;
+public class Store extends NamedIdentityAware<String> {
 
     @Position(20)
     @Label(value = "Count", group = "Memory")

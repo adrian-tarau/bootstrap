@@ -254,7 +254,7 @@ final class StoreImpl<T extends Identifiable<ID>, ID> implements Store<T, ID> {
     private boolean isBetween(T object, LocalDateTime start, LocalDateTime end) {
         if (!(object instanceof Timestampable)) return true;
         Timestampable<? extends Temporal> timestampable = (Timestampable<? extends Temporal>) object;
-        return TimeUtils.isBetween(timestampable.getUpdatedAt(), start, end);
+        return TimeUtils.isBetween(timestampable.getModifiedAt(), start, end);
     }
 
     private byte[] readData(ID id) {

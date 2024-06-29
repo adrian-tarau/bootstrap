@@ -1,34 +1,40 @@
 package net.microfalx.bootstrap.security.user;
 
+import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
-import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
-import net.microfalx.lang.annotation.Description;
-import net.microfalx.lang.annotation.Label;
-import net.microfalx.lang.annotation.Position;
-import net.microfalx.lang.annotation.Visible;
+import net.microfalx.bootstrap.dataset.annotation.Filterable;
+import net.microfalx.bootstrap.jdbc.entity.TimestampAware;
+import net.microfalx.lang.annotation.*;
+
+import java.util.Objects;
 
 @Entity
 @Table(name = "security_users")
 @Getter
 @Setter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true,callSuper = false)
 @ToString
-public class User extends NamedTimestampAware {
+public class User extends TimestampAware {
 
     @Id
     @Column(name = "username", nullable = false)
     @NotBlank
     @Position(1)
-    @EqualsAndHashCode.Include
     @Description("The user name associated with a {name}")
     @Visible(modes = Visible.Mode.ADD)
     private String userName;
+
+    @Column(name = "name", nullable = false)
+    @NotBlank
+    @Name
+    @Position(5)
+    @Description("A name for a {name}")
+    @Width("200px")
+    private String name;
 
     @Column(name = "password", nullable = false)
     @NotBlank
@@ -51,4 +57,24 @@ public class User extends NamedTimestampAware {
     @Position(20)
     @Description("The email associated with a {name}")
     private String email;
+
+    @Column(name = "description")
+    @Position(1000)
+    @Component(Component.Type.TEXT_AREA)
+    @Description("A description for a {name}")
+    @Width("300px")
+    @Filterable()
+    private String description;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User user)) return false;
+        return Objects.equals(userName, user.userName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName);
+    }
 }

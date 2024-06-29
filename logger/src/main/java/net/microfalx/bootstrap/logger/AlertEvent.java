@@ -24,7 +24,7 @@ public class AlertEvent implements Identifiable<String>, Timestampable<LocalDate
     private String id;
     private LoggerEvent event;
     private long createdAt;
-    private long updatedAt;
+    private long modifiedAt;
 
     private int totalEventCount;
     private int pendingEventCount;
@@ -47,8 +47,8 @@ public class AlertEvent implements Identifiable<String>, Timestampable<LocalDate
     }
 
     @Override
-    public LocalDateTime getUpdatedAt() {
-        return TimeUtils.toLocalDateTime(updatedAt);
+    public LocalDateTime getModifiedAt() {
+        return TimeUtils.toLocalDateTime(modifiedAt);
     }
 
     /**
@@ -62,9 +62,9 @@ public class AlertEvent implements Identifiable<String>, Timestampable<LocalDate
         long timestamp = event.getTimestamp();
         if (createdAt == 0) {
             createdAt = timestamp;
-            updatedAt = createdAt;
+            modifiedAt = createdAt;
         } else {
-            if (timestamp > updatedAt) updatedAt = timestamp;
+            if (timestamp > modifiedAt) modifiedAt = timestamp;
         }
         failureClass = event.getExceptionClassName();
         failureType = StringUtils.isNotEmpty(failureClass) ? getRootCauseName(failureClass) : null;

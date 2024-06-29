@@ -10,12 +10,12 @@ import net.microfalx.bootstrap.jdbc.entity.TimestampAware;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Table(name = "security_users_settings")
 @Getter
 @Setter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @ToString
 @IdClass(UserSetting.Id.class)
 public class UserSetting extends TimestampAware {
@@ -23,17 +23,27 @@ public class UserSetting extends TimestampAware {
     @jakarta.persistence.Id
     @Column(name = "username", nullable = false)
     @NotBlank
-    @EqualsAndHashCode.Include
     private String userName;
 
     @jakarta.persistence.Id
     @Column(name = "name", nullable = false)
     @NotBlank
-    @EqualsAndHashCode.Include
     private String name;
 
     @Column(name = "value")
     private byte[] value;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserSetting setting)) return false;
+        return Objects.equals(userName, setting.userName) && Objects.equals(name, setting.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName, name);
+    }
 
     @Getter
     @EqualsAndHashCode

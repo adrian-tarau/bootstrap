@@ -1,11 +1,11 @@
 package net.microfalx.bootstrap.web.search;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.bootstrap.search.Attribute;
 import net.microfalx.lang.annotation.*;
 import net.microfalx.resource.Resource;
@@ -16,15 +16,10 @@ import java.util.Collection;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
 @ToString
 @Name("Search")
 @ReadOnly
-public class SearchResult {
-
-    @Id
-    @Visible(value = false)
-    private String id;
+public class SearchResult extends IdentityAware<String> {
 
     @Visible(false)
     private String name;

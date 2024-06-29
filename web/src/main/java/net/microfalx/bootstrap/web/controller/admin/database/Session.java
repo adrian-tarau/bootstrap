@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.web.controller.admin.database;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.lang.annotation.*;
 import org.apache.commons.lang3.StringUtils;
 
@@ -15,15 +15,10 @@ import java.time.ZonedDateTime;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
 @ToString
 @Name("Sessions")
 @ReadOnly
-public class Session {
-
-    @Id
-    @Visible(value = false)
-    private String id;
+public class Session extends IdentityAware<String> {
 
     @Position(1)
     @Label(value = "Name", group = "Database")

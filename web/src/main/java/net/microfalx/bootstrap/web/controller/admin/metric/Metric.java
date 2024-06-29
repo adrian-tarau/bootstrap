@@ -1,10 +1,13 @@
 package net.microfalx.bootstrap.web.controller.admin.metric;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import net.microfalx.lang.annotation.*;
+import net.microfalx.bootstrap.dataset.model.IdentityAware;
+import net.microfalx.lang.annotation.Description;
+import net.microfalx.lang.annotation.Name;
+import net.microfalx.lang.annotation.Position;
+import net.microfalx.lang.annotation.ReadOnly;
 import net.microfalx.metrics.Meter;
 
 import java.time.LocalDateTime;
@@ -13,13 +16,7 @@ import java.time.LocalDateTime;
 @Setter
 @ToString
 @ReadOnly
-@EqualsAndHashCode(of = "id")
-public abstract class Metric {
-
-    @Id
-    @Position(1)
-    @Visible(value = false)
-    private String id;
+public abstract class Metric extends IdentityAware<String> {
 
     @Position(2)
     @Description("The group of the timer")

@@ -1,11 +1,12 @@
 package net.microfalx.bootstrap.security.group;
 
-import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
+import net.microfalx.bootstrap.jdbc.entity.NamedAndTimestampedIdentityAware;
 import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Position;
 
@@ -13,15 +14,8 @@ import net.microfalx.lang.annotation.Position;
 @Table(name = "security_groups")
 @Getter
 @Setter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @ToString
-public class Group extends NamedTimestampAware {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    @EqualsAndHashCode.Include
-    private Integer id;
+public class Group extends NamedAndTimestampedIdentityAware<Integer> {
 
     @Column(name = "enabled", nullable = false)
     @Position(10)

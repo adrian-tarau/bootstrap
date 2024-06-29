@@ -1,10 +1,10 @@
 package net.microfalx.bootstrap.web.controller.support.alert;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.bootstrap.logger.AlertEvent;
 import net.microfalx.bootstrap.logger.LoggerEvent;
 import net.microfalx.lang.annotation.*;
@@ -14,15 +14,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
 @ToString
 @Name("Alerts")
 @ReadOnly
-public class Alert {
-
-    @Id
-    @Visible(value = false)
-    private String id;
+public class Alert extends IdentityAware<String> {
 
     @Position(1)
     @Description("The time when the alert started to fire")
@@ -32,7 +27,7 @@ public class Alert {
     @Description("The last time when the alert fired")
     @OrderBy(OrderBy.Direction.DESC)
     @Timestamp
-    private LocalDateTime updatedAt;
+    private LocalDateTime modifiedAt;
 
     @Position(3)
     @Description("The severity level")
@@ -71,7 +66,7 @@ public class Alert {
         Alert model = new Alert();
         model.setId(event.getId());
         model.setCreatedAt(event.getCreatedAt());
-        model.setUpdatedAt(event.getUpdatedAt());
+        model.setModifiedAt(event.getModifiedAt());
         model.setLevel(event.getLevel());
         model.setMessage(StringUtils.abbreviate(event.getMessage(), 80));
         model.setAcknowledged(event.isAcknowledged());

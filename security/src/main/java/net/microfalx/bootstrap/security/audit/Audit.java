@@ -1,15 +1,14 @@
 package net.microfalx.bootstrap.security.audit;
 
-import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.jdbc.entity.IdentityAware;
 import net.microfalx.bootstrap.security.user.User;
 import net.microfalx.lang.annotation.*;
 
@@ -20,22 +19,14 @@ import java.time.LocalDateTime;
 @ReadOnly
 @Getter
 @Setter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
-public class Audit {
+public class Audit extends IdentityAware<Integer> {
 
     public static String OPEN = "Open";
     public static String ADD = "Add";
     public static String EDIT = "Edit";
     public static String DELETE = "Delete";
     public static String EXECUTE = "Execute";
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    @EqualsAndHashCode.Include
-    @Visible(false)
-    private Integer id;
 
     @JoinColumn(name = "username", nullable = false)
     @NotNull

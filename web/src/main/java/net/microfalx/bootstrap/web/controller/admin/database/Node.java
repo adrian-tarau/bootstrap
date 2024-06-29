@@ -1,29 +1,22 @@
 package net.microfalx.bootstrap.web.controller.admin.database;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.lang.annotation.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "id")
 @ToString
 @Name("Nodes")
 @ReadOnly
-public class Node {
+public class Node extends IdentityAware<String> {
 
-    @Id
-    @Visible(value = false)
-    private String id;
-
-    @Column(name = "name", nullable = false)
     @NotBlank
     @Position(5)
     private String name;
