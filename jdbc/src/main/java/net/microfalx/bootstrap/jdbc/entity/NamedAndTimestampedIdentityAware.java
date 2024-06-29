@@ -13,23 +13,17 @@ import net.microfalx.lang.annotation.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * A base class for all entities which can be timestamped.
- * <p>
- * All these entities are named entities too.
+ * A base class for all entities which can be named and have timestamps.
  */
 @MappedSuperclass
 @ToString
 @Getter
 @Setter
-public abstract class TimestampAware implements Timestampable<LocalDateTime>, Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1541768280285586132L;
+public abstract class NamedAndTimestampedIdentityAware<T extends Serializable> extends NamedIdentityAware<T> implements Timestampable<LocalDateTime> {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @NotNull

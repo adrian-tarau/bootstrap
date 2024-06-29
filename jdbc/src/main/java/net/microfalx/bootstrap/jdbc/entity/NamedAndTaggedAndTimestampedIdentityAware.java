@@ -11,6 +11,8 @@ import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Width;
 
+import java.io.Serializable;
+
 /**
  * A base class for all entities which can be named and tagged and have timestamps.
  */
@@ -18,7 +20,7 @@ import net.microfalx.lang.annotation.Width;
 @ToString
 @Getter
 @Setter
-public abstract class NamedAndTaggedTimestampAware extends NamedTimestampAware {
+public abstract class NamedAndTaggedAndTimestampedIdentityAware<T extends Serializable> extends NamedAndTimestampedIdentityAware<T> {
 
     @Column(name = "tags")
     @Position(400)

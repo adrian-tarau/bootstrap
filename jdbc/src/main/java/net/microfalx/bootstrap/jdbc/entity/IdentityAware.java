@@ -1,0 +1,43 @@
+package net.microfalx.bootstrap.jdbc.entity;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.Identifiable;
+import net.microfalx.lang.annotation.Position;
+import net.microfalx.lang.annotation.Visible;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Objects;
+
+@MappedSuperclass
+@ToString
+@Getter
+@Setter
+public class IdentityAware<T extends Serializable> implements Identifiable<T>, Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1023653519669708398L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    @Position(1)
+    @Visible(false)
+    private T id;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(ClassUtils.isSubClassOf(o.getClass(), getClass()))) return false;
+        return Objects.equals(id, ((IdentityAware<T>) o).id);
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(id);
+    }
+}

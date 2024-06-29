@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import net.microfalx.bootstrap.jdbc.entity.NamedTimestampAware;
+import net.microfalx.bootstrap.jdbc.entity.NamedAndTimestampedIdentityAware;
 import net.microfalx.lang.ExceptionUtils;
 import org.hibernate.annotations.NaturalId;
 
@@ -13,7 +13,7 @@ import org.hibernate.annotations.NaturalId;
 @Getter
 @Setter
 @ToString
-public class TestEntity extends NamedTimestampAware implements Cloneable {
+public class TestEntity extends NamedAndTimestampedIdentityAware implements Cloneable {
 
     @Id
     @Column(name = "id", nullable = false)

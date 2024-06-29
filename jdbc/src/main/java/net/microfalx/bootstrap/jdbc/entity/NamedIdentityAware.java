@@ -7,7 +7,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
+import net.microfalx.bootstrap.dataset.annotation.Filterable;
+import net.microfalx.lang.Nameable;
+import net.microfalx.lang.annotation.Description;
+import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Position;
+import net.microfalx.lang.annotation.Width;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -19,19 +24,26 @@ import java.io.Serializable;
 @ToString
 @Getter
 @Setter
-public abstract class NameAware implements Serializable {
+public abstract class NamedIdentityAware<T extends Serializable> extends IdentityAware<T> implements Nameable {
 
     @Serial
     private static final long serialVersionUID = -720697127573911840L;
 
     @Column(name = "name", nullable = false)
     @NotBlank
+    @Name
     @Position(5)
+    @Description("A name for a {name}")
+    @Width("200px")
     private String name;
 
     @Column(name = "description")
-    @Component(Component.Type.TEXT_AREA)
     @Position(1000)
+    @Component(Component.Type.TEXT_AREA)
+    @Description("A description for a {name}")
+    @Width("300px")
+    @Filterable()
     private String description;
+
 
 }

@@ -20,6 +20,7 @@ import net.microfalx.lang.annotation.ReadOnly;
 public abstract class AbstractLookup<T> implements Lookup<T> {
 
     @Id
+    @EqualsAndHashCode.Include
     private T id;
 
     @Name

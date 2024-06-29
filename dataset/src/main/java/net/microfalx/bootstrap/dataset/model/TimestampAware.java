@@ -1,9 +1,5 @@
-package net.microfalx.bootstrap.jdbc.entity;
+package net.microfalx.bootstrap.dataset.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -18,11 +14,10 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * A base class for all entities which can be timestamped.
+ * A base class for all models which can be timestamped.
  * <p>
  * All these entities are named entities too.
  */
-@MappedSuperclass
 @ToString
 @Getter
 @Setter
@@ -31,8 +26,6 @@ public abstract class TimestampAware implements Timestampable<LocalDateTime>, Se
     @Serial
     private static final long serialVersionUID = 1541768280285586132L;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @NotNull
     @Position(500)
     @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
     @Description("The timestamp when the {name} was created")
@@ -41,17 +34,11 @@ public abstract class TimestampAware implements Timestampable<LocalDateTime>, Se
     @CreatedAt
     private LocalDateTime createdAt;
 
-    @Column(name = "modified_at")
     @Position(501)
     @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
     @Description("The timestamp when the {name} was last time modified")
+    @Timestamp
     @LastModifiedDate
     @ModifiedAt
     private LocalDateTime modifiedAt;
-
-    @PrePersist
-    void beforePersist() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        if (modifiedAt == null) modifiedAt = createdAt;
-    }
 }
