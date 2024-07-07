@@ -9,7 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.*;
-import static net.microfalx.bootstrap.model.AttributeUtils.decodeAttributes;
+import static net.microfalx.bootstrap.model.AttributeUtils.decodeJson;
 import static net.microfalx.bootstrap.model.AttributeUtils.sortAndFilter;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ObjectUtils.defaultIfNull;
@@ -133,7 +133,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     @Override
     public Attributes<A> copyFrom(Resource resource) throws IOException {
         requireNonNull(resource);
-        decodeAttributes(resource, this);
+        decodeJson(resource, this);
         return this;
     }
 
@@ -172,7 +172,12 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
 
     @Override
     public final Resource toJson() {
-        return AttributeUtils.encodeAttributes(this);
+        return AttributeUtils.encodeJson(this);
+    }
+
+    @Override
+    public Resource toProperties() {
+        return AttributeUtils.encodeProperties(this);
     }
 
     @Override
@@ -205,7 +210,7 @@ public abstract class AbstractAttributes<A extends Attribute> implements Attribu
     @Override
     public String toString() {
         return getClass().getSimpleName() + "{" +
-                "attributes=" + attributes.size() +
+                "attributes=" + (attributes != null ? attributes.size() : 0) +
                 ", readOnly=" + readOnly +
                 '}';
     }

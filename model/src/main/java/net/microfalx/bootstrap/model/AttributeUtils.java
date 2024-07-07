@@ -54,41 +54,87 @@ public class AttributeUtils {
     }
 
     /**
+     * Encodes the attributes into a Java properties text.
+     *
+     * @param attributes the attributes
+     * @return the resource
+     */
+    public static <A extends Attribute> Resource encodeProperties(Attributes<A> attributes) {
+        requireNonNull(attributes);
+        Properties properties = new Properties();
+        properties.putAll(attributes.toMap());
+        StringWriter writer = new StringWriter();
+        try {
+            properties.store(writer, null);
+        } catch (IOException e) {
+            // it will never happen since it is in memory
+        }
+        return MemoryResource.create(writer.toString()).withMimeType(MimeType.APPLICATION_JSON);
+    }
+
+    /**
+     * Decodes the attributes from a property file content.
+     *
+     * @param resource the JSON as a resource
+     * @return the attributes
+     */
+    public static <A extends Attribute> Attributes<A> decodeProperties(Resource resource) throws IOException {
+        Attributes<A> attributes = Attributes.create();
+        return decodeProperties(resource, attributes);
+    }
+
+    /**
+     * Decodes the attributes from a property file content.
+     *
+     * @param resource the JSON as a resource
+     * @return the attributes
+     */
+    public static <A extends Attribute> Attributes<A> decodeProperties(Resource resource, Attributes<A> attributes) throws IOException {
+        requireNonNull(resource);
+        requireNonNull(attributes);
+        if (!resource.exists()) return attributes;
+        Properties properties = new Properties();
+        properties.load(resource.getInputStream());
+        properties.forEach((k, v) -> attributes.add(k.toString(), v));
+        return attributes;
+    }
+
+    /**
      * Encodes the attributes into a JSON.
      *
      * @param attributes the attributes
      * @return the resource
      */
-    public static <A extends Attribute> Resource encodeAttributes(Attributes<A> attributes) {
+    public static <A extends Attribute> Resource encodeJson(Attributes<A> attributes) {
         requireNonNull(attributes);
         ObjectMapper objectMapper = new ObjectMapper();
         StringWriter writer = new StringWriter();
         try {
             objectMapper.writeValue(writer, attributes.toMap().values());
         } catch (IOException e) {
-            // It will never happen since it is in memory
+            // it will never happen since it is in memory
         }
         return MemoryResource.create(writer.toString()).withMimeType(MimeType.APPLICATION_JSON);
     }
 
     /**
-     * Encodes the attributes from a JSON.
+     * Decodes the attributes from a JSON content.
      *
      * @param resource the JSON as a resource
      * @return the attributes
      */
-    public static <A extends Attribute> Attributes<A> decodeAttributes(Resource resource) throws IOException {
+    public static <A extends Attribute> Attributes<A> decodeJson(Resource resource) throws IOException {
         Attributes<A> attributes = Attributes.create();
-        return decodeAttributes(resource, attributes);
+        return decodeJson(resource, attributes);
     }
 
     /**
-     * Encodes the attributes from a JSON.
+     * Decodes the attributes from a JSON content.
      *
      * @param resource the JSON as a resource
      * @return the attributes
      */
-    public static <A extends Attribute> Attributes<A> decodeAttributes(Resource resource, Attributes<A> attributes) throws IOException {
+    public static <A extends Attribute> Attributes<A> decodeJson(Resource resource, Attributes<A> attributes) throws IOException {
         requireNonNull(resource);
         requireNonNull(attributes);
         if (!resource.exists()) return attributes;

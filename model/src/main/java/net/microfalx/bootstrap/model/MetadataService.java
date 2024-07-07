@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.model;
 
 import net.microfalx.bootstrap.core.i18n.I18nService;
-import org.apache.commons.lang3.ClassUtils;
+import net.microfalx.lang.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -15,6 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.microfalx.lang.AnnotationUtils.sort;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ClassUtils.isSubClassOf;
 
 /**
  * A service which provides metadata about (data) models.
@@ -100,6 +101,33 @@ public class MetadataService implements InitializingBean {
         requireNonNull(model);
         Metadata<M, F, ID> metadata = getMetadata(model);
         return (Map<Field<M>, String>) metadata.validate(model);
+    }
+
+    /**
+     * Copies all the fields with the same name and type from the source model to the target model.
+     *
+     * @param source the source
+     * @param target the target
+     * @param <MS>   the model type of the source
+     * @param <FS>   the field type of the source model
+     * @param <IDS>  the identifier type of the source model
+     * @param <MT>   the model type of the source
+     * @param <FT>   the field type of the source model
+     * @param <IDT>  the identifier type of the source model
+     * @return the target
+     */
+    public <MS, FS extends Field<MS>, IDS, MT, FT extends Field<MT>, IDT> MT copy(MS source, MT target) {
+        requireNonNull(source);
+        requireNonNull(target);
+        Metadata<MS, FS, IDS> sourceMetadata = getMetadata(source);
+        Metadata<MT, FT, IDT> targetMetadata = getMetadata(target);
+        for (FS sourceField : sourceMetadata.getFields()) {
+            FT targetField = targetMetadata.find(sourceField.getName());
+            if (targetField != null && isSubClassOf(targetField.getDataClass(), sourceField.getDataClass())) {
+                targetField.set(target, sourceField.get(source));
+            }
+        }
+        return target;
     }
 
     @Override

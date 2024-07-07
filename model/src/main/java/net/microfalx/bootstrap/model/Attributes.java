@@ -137,7 +137,7 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
     Attributes<A> copyFrom(Map<String, Object> values, Function<String, Boolean> filter);
 
     /**
-     * Copies the attributes/parameters from JSON.
+     * Copies the attributes/parameters from JSON/Properties.
      *
      * @param resource the resource
      * @see #toJson()
@@ -234,6 +234,13 @@ public interface Attributes<A extends Attribute> extends Iterable<A> {
      * @return a non-null instance
      */
     Resource toJson();
+
+    /**
+     * Converts the attributes/parameters to properties.
+     *
+     * @return a non-null instance
+     */
+    Resource toProperties();
 
     /**
      * Replaces the variables in the given text.
