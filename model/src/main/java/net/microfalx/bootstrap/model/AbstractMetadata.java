@@ -131,7 +131,6 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
             }
             nameFields = Arrays.asList(firstString.get());
         }
-
         return Collections.unmodifiableList(nameFields);
     }
 

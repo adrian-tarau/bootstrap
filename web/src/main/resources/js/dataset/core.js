@@ -278,6 +278,7 @@ DataSet.save = function () {
 DataSet.trend = function () {
     DataSet.get("trend", {}, function (data) {
         DataSet.loadModal(data);
+        Chart.process("#dataset-modal");
     });
 }
 

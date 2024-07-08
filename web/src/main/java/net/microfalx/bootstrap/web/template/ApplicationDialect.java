@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.template;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.search.SearchUtils;
 import net.microfalx.bootstrap.web.application.ApplicationService;
+import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.container.WebContainerRequest;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.template.tools.LinkTool;
@@ -33,11 +34,13 @@ public class ApplicationDialect extends AbstractProcessorDialect {
 
     private ApplicationService applicationService;
     private DataSetService dataSetService;
+    private ChartService chartService;
 
-    public ApplicationDialect(ApplicationService applicationService, DataSetService dataSetService) {
+    public ApplicationDialect(ApplicationService applicationService, DataSetService dataSetService, ChartService chartService) {
         super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE);
         this.applicationService = applicationService;
         this.dataSetService = dataSetService;
+        this.chartService = chartService;
     }
 
     @Override
@@ -65,7 +68,7 @@ public class ApplicationDialect extends AbstractProcessorDialect {
         protected void doProcess(ITemplateContext context, IProcessableElementTag tag, IElementTagStructureHandler structureHandler) {
             WebContainerRequest containerRequest = WebContainerRequest.get();
             LinkTool linkTool = new LinkTool(context);
-            DataSetTool dataSetTool = new DataSetTool(context, dataSetService);
+            DataSetTool dataSetTool = new DataSetTool(context, dataSetService, chartService);
             StringBuilder builder = new StringBuilder();
             builder.append(SCRIPT_START_TAG);
             builder.append("\nconst APP_REQUEST_PATH=\"").append(linkTool.getSelf()).append("\";");

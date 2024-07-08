@@ -43,9 +43,9 @@ public class TemplateService {
     @PostConstruct
     private void initialize() {
         templateEngine.addDialect(new SpringDataDialect());
-        templateEngine.addDialect(new ApplicationDialect(applicationService, dataSetService));
+        templateEngine.addDialect(new ApplicationDialect(applicationService, dataSetService, chartService));
         templateEngine.addDialect(new AssetDialect(applicationService));
-        templateEngine.addDialect(new ExpressionsDialect(applicationService, metadataService, dataSetService, helpService, contentService));
+        templateEngine.addDialect(new ExpressionsDialect(applicationService, metadataService, dataSetService, helpService, contentService, chartService));
         templateEngine.addDialect(new ComponentDialect());
         templateEngine.addDialect(new ChartDialect(chartService));
     }

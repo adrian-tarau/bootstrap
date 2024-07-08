@@ -89,7 +89,7 @@ public @interface Formattable {
     Class<? extends Formatter> formatter() default Formatter.class;
 
     /**
-     * Returns the provide for the alert.
+     * Returns the provider for the alert.
      *
      * @return the provider
      */

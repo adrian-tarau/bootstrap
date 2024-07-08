@@ -20,6 +20,8 @@ import org.unbescape.html.HtmlEscape;
 import java.util.HashSet;
 import java.util.Set;
 
+import static net.microfalx.lang.StringUtils.isNotEmpty;
+
 /**
  * Processors for {@link net.microfalx.bootstrap.web.chart.Chart}.
  */
@@ -58,25 +60,57 @@ public class ChartDialect extends AbstractProcessorDialect {
             super("render");
         }
 
-        private String getHtml(Chart chart) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("<div class='card' id='").append(chart.getId()).append("_card").append("'>\n");
-            if (StringUtils.isNotEmpty(chart.getName())) {
-                builder.append("  <div class='card-header'");
-                if (StringUtils.isNotEmpty(chart.getDescription())) {
-                    builder.append(" data-tippy-content='").append(HtmlEscape.escapeHtml4Xml(chart.getDescription())).append("'");
+        private void updateStyles(StringBuilder builder, Chart chart) {
+            String width = chart.getOptions().getWidth();
+            String height = chart.getOptions().getHeight();
+            if (width != null || height != null) {
+                builder.append(" style='");
+                StringBuilder styleBuilder = new StringBuilder();
+                if (width != null) styleBuilder.append("min-width: ").append(width);
+                if (height != null) {
+                    StringUtils.append(styleBuilder, "min-height: ", ';');
+                    styleBuilder.append(height);
                 }
-                builder.append(">").append(chart.getName())
-                        .append("</div>\n");
+                builder.append(styleBuilder);
+                builder.append('\'');
             }
-            builder.append("<div id='").append(chart.getId()).append("' class='card-body chart-container'");
-            if (chart.getOptions().getHeight() != null) {
-                builder.append("style='min-height: ").append(chart.getOptions().getHeight()).append("'");
+        }
+
+        private void updateTooltip(StringBuilder builder, Chart chart) {
+            if (isNotEmpty(chart.getDescription())) {
+                builder.append(" data-tippy-content='").append(HtmlEscape.escapeHtml4Xml(chart.getDescription())).append("'");
             }
-            builder.append("></div>\n");
-            builder.append("<script>Chart.load('").append(chart.getId()).append("')").append("</script>\n");
-            builder.append("</div>");
+        }
+
+        private String getHtml(Chart chart, boolean inline) {
+            StringBuilder builder = new StringBuilder();
+            if (inline) {
+                builder.append("<span id='").append(chart.getId()).append("' class='chart-container'");
+                updateStyles(builder, chart);
+                builder.append("></span>\n");
+            } else {
+                builder.append("<div class='card' id='").append(chart.getId()).append("_card").append("'>\n");
+                if (isNotEmpty(chart.getName())) {
+                    builder.append("  <div class='card-header'");
+                    updateTooltip(builder, chart);
+                    builder.append(">").append(chart.getName()).append("</div>\n");
+                }
+                builder.append("<div id='").append(chart.getId()).append("' class='card-body chart-container'");
+                updateStyles(builder, chart);
+                builder.append("></div>\n");
+                builder.append("</div>");
+            }
             return builder.toString();
+        }
+
+        private boolean isInline(ITemplateContext context, IProcessableElementTag tag) {
+            boolean inline = false;
+            IAttribute inlineAttr = tag.getAttribute("inline");
+            if (inlineAttr != null) {
+                Object value = Expressions.evaluate(context, inlineAttr.getValue());
+                inline = StringUtils.asBoolean(value, false);
+            }
+            return inline;
         }
 
         @Override
@@ -97,7 +131,8 @@ public class ChartDialect extends AbstractProcessorDialect {
                 }
             }
             chartService.register(chart);
-            structureHandler.replaceWith(getHtml(chart), false);
+            boolean inline = isInline(context, tag);
+            structureHandler.replaceWith(getHtml(chart, inline), false);
         }
     }
 }

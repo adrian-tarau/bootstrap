@@ -445,6 +445,13 @@ Application.initialize = function () {
     this.initTimeZone();
 }
 
+/**
+ * Starts the application.
+ */
+Application.start = function () {
+    Logger.debug("Start application");
+    this.fire("start");
+}
 
 // initialize application
 Application.initialize();

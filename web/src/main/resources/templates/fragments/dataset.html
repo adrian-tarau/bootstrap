@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component" xmlns:chart="https://net.microfalx/chart">
 <body>
 
 <thead class="table-light" th:fragment="grid-header">
@@ -37,6 +37,7 @@
         <span th:if="${alert != null and alert.message != null}" th:class="text-sm-end"><i class="fa-solid fa-bell" component:tooltip="${alert.message}"></i></span>
         <a th:if="${field.isName()}" href="#" th:attr="onclick=|Application.action('dataset.view', '${#dataset.getId(model)}')|"
            th:utext="${#dataset.getDisplayValue(model, field)}"></a>
+        <span th:if="${#dataset.hasChart(field)}" th:remove="tag"><chart:render inline="true" value="${#dataset.getChart(model, field)}"></chart:render></span>
     </td>
     <td class="text-center" th:if="${#dataset.hasActions}">
         <a class="icon-link" href="#" th:attr="onclick=|DataSet.showActions(event, '${#dataset.getId(model)}')|"><i

@@ -1,3 +1,4 @@
+const CHART_RENDERED_ATTR = "chart_rendered";
 /*
 * The Chart Global Variables
  */
@@ -8,17 +9,26 @@ window.Chart.Tooltip = window.Chart.Tooltip || {};
  * Loads a chart.
  *
  * @param {String} id the chart identifier
- * @param {Object} options the chart options
+ * @param {Object} [options] the chart options
  */
-Chart.load = function (id) {
+Chart.load = function (id, options) {
     let selector = "#" + id;
-    Logger.debug("Load chart '" + id + "'");
-    $(selector).LoadingOverlay("show");
-    Application.get("/chart/render/" + id, {}, function (data) {
-        Chart.render("#" + id, data);
-    }, {
-        self: false, dataType: "json", mask: selector
-    });
+    let graphElement = $(selector);
+    if (graphElement.length > 0) {
+        let renderedAttr = graphElement.attr(CHART_RENDERED_ATTR);
+        if (!Utils.isDefined(renderedAttr)) {
+            graphElement.attr(CHART_RENDERED_ATTR, true);
+            Logger.debug("Load chart '" + id + "'");
+            graphElement.LoadingOverlay("show");
+            Application.get("/chart/render/" + id, {}, function (data) {
+                Chart.render("#" + id, data);
+            }, {
+                self: false, dataType: "json", mask: selector
+            });
+        }
+    } else {
+        Logger.error("A chart with identifier '" + id + "' does not exist");
+    }
 }
 
 /**
@@ -52,7 +62,7 @@ Chart.Tooltip.formatNoTitle = function (seriesName) {
 /**
  * Formats the tooltip to have no
  * @param {object} value the value to format
- * @return {string}
+ * @return {string} the timestamp as a string
  */
 Chart.Tooltip.formatTimestamp = function (value) {
     if (Utils.isNumber(value)) {
@@ -61,3 +71,20 @@ Chart.Tooltip.formatTimestamp = function (value) {
         return value;
     }
 }
+
+/**
+ * Process any unprocessed chart elements and render them.
+ *
+ * If there is no parent passed to the function, the whole page will be searched for charts.
+ *
+ * @param {String|Element} [parent] the element where to search for charts.
+ */
+Chart.process = function (parent) {
+    Logger.info("Process charts in " + parent);
+    $(".chart-container").each(function (index, element) {
+        let renderedAttr = $(element).attr(CHART_RENDERED_ATTR);
+        if (!Utils.isDefined(renderedAttr)) Chart.load(element.id);
+    });
+}
+
+Application.bind("start", Chart.process);

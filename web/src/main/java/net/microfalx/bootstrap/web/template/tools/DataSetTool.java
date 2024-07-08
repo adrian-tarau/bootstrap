@@ -3,9 +3,18 @@ package net.microfalx.bootstrap.web.template.tools;
 import net.microfalx.bootstrap.dataset.*;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.model.Attribute;
+import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.web.chart.Chart;
+import net.microfalx.bootstrap.web.chart.ChartService;
+import net.microfalx.bootstrap.web.chart.Options;
+import net.microfalx.bootstrap.web.chart.annotation.Chartable;
+import net.microfalx.bootstrap.web.chart.datalabels.DataLabels;
+import net.microfalx.bootstrap.web.chart.tooltip.Tooltip;
 import net.microfalx.bootstrap.web.component.Menu;
+import net.microfalx.bootstrap.web.dataset.DataSetChartProvider;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
+import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
@@ -45,6 +54,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public static final String BOOLEAN_UNCHECKED = "<i class=\"far fa-square\"></i>";
 
     private final DataSetService dataSetService;
+    private final ChartService chartService;
 
     private final static AtomicBoolean attributeClassesInitialized = new AtomicBoolean();
     private final static Queue<String> attributeClassesQueue = new LinkedBlockingQueue<>();
@@ -53,10 +63,12 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     private ColumnGroups<M, F, ID> columnGroups;
     private Boolean hasColumnGroups;
 
-    public DataSetTool(IContext context, DataSetService dataSetService) {
+    public DataSetTool(IContext context, DataSetService dataSetService, ChartService chartService) {
         super(context);
         requireNotEmpty(dataSetService);
+        requireNotEmpty(chartService);
         this.dataSetService = dataSetService;
+        this.chartService = chartService;
     }
 
     /**
@@ -461,6 +473,63 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns whether the field has markups (renderers, charts, etc) and the content should be rendered without wrapping.
+     *
+     * @param field the field
+     * @return {@code true} if it has a markups, {@code false} otherwise
+     */
+    public boolean hasMarkup(Field<M> field) {
+        return hasChart(field);
+    }
+
+    /**
+     * Returns whether a field is supposed to be rendered as a chart.
+     *
+     * @param field the field
+     * @return {@code true} if it has a chart, {@code false} otherwise
+     */
+    public boolean hasChart(Field<M> field) {
+        return field.findAnnotation(Chartable.class) != null;
+    }
+
+    /**
+     * Returns whether the field asks to display the summary of the field in addition to the chart.
+     *
+     * @param field the field
+     * @return {@code true} if it has a summary, {@code false} otherwise
+     */
+    public boolean hasChartSummary(Field<M> field) {
+        Chartable chartableAnnot = field.findAnnotation(Chartable.class);
+        return chartableAnnot != null && chartableAnnot.displaySummary();
+    }
+
+    /**
+     * Returns the chart supporting the field.
+     * <p>
+     * The method will fail if {@link #hasChart(Field)} return false.
+     *
+     * @param model the model
+     * @param field the field
+     * @return the chart instance
+     */
+    public Chart getChart(M model, Field<M> field) {
+        Chartable chartableAnnot = field.findAnnotation(Chartable.class);
+        if (chartableAnnot == null) throw new DataSetException("Field '" + field.getName() + "' does not have a chart");
+        Options options = Options.create(chartableAnnot.type()).sparkline();
+        if (chartableAnnot.width() > 0) options.setWidth(chartableAnnot.width());
+        if (chartableAnnot.height() > 0) options.setHeight(chartableAnnot.height());
+        Chart chart = Chart.create(options).setTooltip(Tooltip.valueWithTimestamp())
+                .setDataLabels(DataLabels.disabled());
+        Attributes<?> attributes = chart.getAttributes();
+        attributes.add(DataSetChartProvider.DATASET_ATTR, getDataSet());
+        attributes.add(DataSetChartProvider.FIELD_ATTR, field);
+        attributes.add(DataSetChartProvider.MODEL_ATTR, model);
+        chart.setProvider(ClassUtils.create(chartableAnnot.provider()));
+        chartService.register(chart);
+        return chart;
+    }
+
+    /**
      * Retutrns whether the field should use a text or a password field.
      *
      * @param field the field
@@ -675,7 +744,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         } else if (field.getDataType().isNumeric() && !header) {
             classes += " text-end";
         }
-        if (field.getDataType().isTemporal()) classes += " text-nowrap";
+        if (field.getDataType().isTemporal() || hasMarkup(field)) classes += " text-nowrap";
         if (dataSet.isFilterable(field)) classes += " filterable";
         classes = classes.trim();
         return isNotEmpty(classes) ? classes : null;

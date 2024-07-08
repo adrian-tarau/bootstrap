@@ -5,6 +5,7 @@ import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.help.HelpService;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.web.application.ApplicationService;
+import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.template.tools.*;
 import org.thymeleaf.context.IExpressionContext;
 import org.thymeleaf.dialect.AbstractDialect;
@@ -26,15 +27,17 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
     private final DataSetService dataSetService;
     private final HelpService helpService;
     private final ContentService contentService;
+    private final ChartService chartService;
 
     public ExpressionsDialect(ApplicationService applicationService, MetadataService metadataService, DataSetService dataSetService,
-                              HelpService helpService, ContentService contentService) {
+                              HelpService helpService, ContentService contentService, ChartService chartService) {
         super("application");
         this.applicationService = applicationService;
         this.metadataService = metadataService;
         this.dataSetService = dataSetService;
         this.helpService = helpService;
         this.contentService = contentService;
+        this.chartService = chartService;
     }
 
     @Override
@@ -75,7 +78,7 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
             } else if (COMPONENT_OBJECT_NAME.equals(expressionObjectName)) {
                 return new ComponentTool(context, applicationService);
             } else if (DATASET_OBJECT_NAME.equals(expressionObjectName)) {
-                return new DataSetTool<>(context, dataSetService);
+                return new DataSetTool<>(context, dataSetService, chartService);
             } else if (LINK_OBJECT_NAME.equals(expressionObjectName)) {
                 return new LinkTool(context);
             } else if (RESOURCE_OBJECT_NAME.equals(expressionObjectName)) {
