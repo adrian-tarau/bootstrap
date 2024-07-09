@@ -14,6 +14,7 @@ import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.IContext;
 
 import java.util.ArrayList;
@@ -35,11 +36,11 @@ public class ComponentTool extends AbstractTool {
     private final LinkTool linkTool;
     private final String action;
 
-    public ComponentTool(IContext context, ApplicationService applicationService) {
-        super(context);
-        this.linkTool = new LinkTool(context);
+    public ComponentTool(IContext templateContext, ApplicationContext applicationContext) {
+        super(templateContext, applicationContext);
+        this.linkTool = new LinkTool(templateContext, applicationContext);
         this.action = StringUtils.removeEndSlash(linkTool.getSelf());
-        this.applicationService = applicationService;
+        this.applicationService = applicationContext.getBean(ApplicationService.class);
     }
 
     /**

@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.template.tools;
 
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.IContext;
 
 import java.util.HashMap;
@@ -11,8 +12,8 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class LinkTool extends AbstractTool {
 
-    public LinkTool(IContext context) {
-        super(context);
+    public LinkTool(IContext templateContext, ApplicationContext applicationContext) {
+        super(templateContext, applicationContext);
     }
 
     /**

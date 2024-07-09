@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.web.chart.annotation;
 
-import net.microfalx.bootstrap.web.chart.ChartProvider;
 import net.microfalx.bootstrap.web.chart.Type;
+import net.microfalx.bootstrap.web.chart.provider.ChartProvider;
 
 import java.lang.annotation.*;
 

@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.chart;
 import net.microfalx.bootstrap.web.chart.plot.Bar;
 import net.microfalx.bootstrap.web.chart.plot.PlotOptions;
 import net.microfalx.bootstrap.web.chart.series.Series;
+import net.microfalx.bootstrap.web.chart.style.Stroke;
 import net.microfalx.bootstrap.web.chart.tooltip.Tooltip;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,35 @@ class ChartTest {
                 {
                   "chart" : {
                     "type" : "bar"
+                  }
+                }""");
+    }
+
+    @Test
+    void pieSparkLine() {
+        Options options = Options.create(Type.PIE).sparkline().setHeight("120px");
+        Chart chart = Chart.create(options).setName("Records");
+        chart.addSeries(net.microfalx.bootstrap.web.chart.series.Series.create(3, 10, 7));
+        chart.setLabels("L7/OK", "L4/CON", "L4/TOUT");
+        chart.setStroke(Stroke.width(1)).setTooltip(Tooltip.fixed(false));
+        assertThat(chart.toJson()).isEqualToNormalizingNewlines("""
+                {
+                  "stroke" : {
+                    "width" : 1.0
+                  },
+                  "series" : [ 3, 10, 7 ],
+                  "labels" : [ "L7/OK", "L4/CON", "L4/TOUT" ],
+                  "tooltip" : {
+                    "fixed" : {
+                      "enabled" : false
+                    }
+                  },
+                  "chart" : {
+                    "type" : "pie",
+                    "height" : "120px",
+                    "sparkline" : {
+                      "enabled" : true
+                    }
                   }
                 }""");
     }

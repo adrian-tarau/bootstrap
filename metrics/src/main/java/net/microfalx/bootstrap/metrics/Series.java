@@ -4,10 +4,7 @@ import lombok.ToString;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.OptionalDouble;
+import java.util.*;
 
 import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -48,6 +45,17 @@ public final class Series implements Identifiable<String>, Nameable {
      */
     public static Series create(String name, Iterable<Value> values) {
         return new Series(name, values);
+    }
+
+    /**
+     * Creates a series from a list of values.
+     *
+     * @param name   the name of the series
+     * @param values the values
+     * @return a non-null instance
+     */
+    public static Series create(String name, Value... values) {
+        return new Series(name, Arrays.asList(values));
     }
 
     Series(String name, Iterable<Value> values) {

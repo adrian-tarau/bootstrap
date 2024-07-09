@@ -8,13 +8,14 @@ import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.chart.Chart;
 import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.chart.Options;
+import net.microfalx.bootstrap.web.chart.Type;
 import net.microfalx.bootstrap.web.chart.annotation.Chartable;
 import net.microfalx.bootstrap.web.chart.datalabels.DataLabels;
+import net.microfalx.bootstrap.web.chart.style.Stroke;
 import net.microfalx.bootstrap.web.chart.tooltip.Tooltip;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.dataset.DataSetChartProvider;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
-import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.mutable.MutableLong;
 import org.joor.Reflect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -63,12 +65,10 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     private ColumnGroups<M, F, ID> columnGroups;
     private Boolean hasColumnGroups;
 
-    public DataSetTool(IContext context, DataSetService dataSetService, ChartService chartService) {
-        super(context);
-        requireNotEmpty(dataSetService);
-        requireNotEmpty(chartService);
-        this.dataSetService = dataSetService;
-        this.chartService = chartService;
+    public DataSetTool(IContext templateContext, ApplicationContext applicationContext) {
+        super(templateContext, applicationContext);
+        this.dataSetService = applicationContext.getBean(DataSetService.class);
+        this.chartService = applicationContext.getBean(ChartService.class);
     }
 
     /**
@@ -89,7 +89,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public DataSet<M, F, ID> getDataSet(boolean required) {
-        DataSet dataset = getModelAttribute(context, "dataset");
+        DataSet dataset = getModelAttribute(templateContext, "dataset");
         if (dataset == null && required) throw new DataSetException("A data set is not available in the context");
         return dataset;
     }
@@ -112,7 +112,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public DataSetController<M, ID> getDataSetController(boolean required) {
-        DataSetController controller = getModelAttribute(context, "controller");
+        DataSetController controller = getModelAttribute(templateContext, "controller");
         if (controller == null && required) {
             throw new DataSetException("A data set controller is not available in the context");
         }
@@ -126,7 +126,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return a non-null instance
      */
     public net.microfalx.bootstrap.dataset.annotation.DataSet getDataSetAnnotation(boolean required) {
-        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = getModelAttribute(context, "dataset-annotation");
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = getModelAttribute(templateContext, "dataset-annotation");
         if (dataSetAnnot == null && required) {
             throw new DataSetException("A @DataSet annotation is not available in the context");
         }
@@ -139,7 +139,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return a non-null instance
      */
     public Sort getSort() {
-        Sort sort = getModelAttribute(context, "sort");
+        Sort sort = getModelAttribute(templateContext, "sort");
         if (sort == null) sort = Sort.unsorted();
         return sort;
     }
@@ -187,7 +187,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return the index
      */
     public long getCurrentIndex() {
-        MutableLong index = getModelAttribute(context, "index");
+        MutableLong index = getModelAttribute(templateContext, "index");
         return index.getAndIncrement();
     }
 
@@ -226,7 +226,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return a non-null instance
      */
     public Page<M> getPage() {
-        Page<M> page = getModelAttribute(context, "page");
+        Page<M> page = getModelAttribute(templateContext, "page");
         if (page == null) page = Page.empty();
         return page;
     }
@@ -313,7 +313,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if a list one action, {@code false} otherwise
      */
     public boolean hasActions() {
-        Menu menu = getModelAttribute(context, "actions");
+        Menu menu = getModelAttribute(templateContext, "actions");
         return menu != null ? menu.hasChildren() : false;
     }
 
@@ -323,7 +323,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if has details, {@code false} otherwise
      */
     public boolean hasDetails() {
-        return getModelAttribute(context, "detailTemplate") != null;
+        return getModelAttribute(templateContext, "detailTemplate") != null;
     }
 
     /**
@@ -518,13 +518,18 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         Options options = Options.create(chartableAnnot.type()).sparkline();
         if (chartableAnnot.width() > 0) options.setWidth(chartableAnnot.width());
         if (chartableAnnot.height() > 0) options.setHeight(chartableAnnot.height());
-        Chart chart = Chart.create(options).setTooltip(Tooltip.valueWithTimestamp())
-                .setDataLabels(DataLabels.disabled());
+        Chart chart = Chart.create(options);
+        if (chart.getOptions().getType() == Type.BAR) {
+            chart.setTooltip(Tooltip.valueWithTimestamp()).setDataLabels(DataLabels.disabled());
+        } else {
+            chart.setStroke(Stroke.width(1));
+            chart.setTooltip(Tooltip.fixed(false));
+        }
         Attributes<?> attributes = chart.getAttributes();
         attributes.add(DataSetChartProvider.DATASET_ATTR, getDataSet());
         attributes.add(DataSetChartProvider.FIELD_ATTR, field);
         attributes.add(DataSetChartProvider.MODEL_ATTR, model);
-        chart.setProvider(ClassUtils.create(chartableAnnot.provider()));
+        chart.setProvider(createInstance(chartableAnnot.provider()));
         chartService.register(chart);
         return chart;
     }

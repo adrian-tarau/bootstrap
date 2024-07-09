@@ -3,9 +3,9 @@ package net.microfalx.bootstrap.web.template;
 import net.microfalx.bootstrap.web.chart.Chart;
 import net.microfalx.bootstrap.web.chart.ChartException;
 import net.microfalx.bootstrap.web.chart.ChartService;
-import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.StringUtils;
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.dialect.springdata.util.Expressions;
@@ -20,6 +20,7 @@ import org.unbescape.html.HtmlEscape;
 import java.util.HashSet;
 import java.util.Set;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -31,12 +32,14 @@ public class ChartDialect extends AbstractProcessorDialect {
     private static final String DIALECT_NAME = "Bootstrap Chart";
     private static final int PRECEDENCE = 1000;
 
+    private final ApplicationContext applicationContext;
     private final ChartService chartService;
 
-    public ChartDialect(ChartService chartService) {
+    public ChartDialect(ApplicationContext applicationContext) {
         super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE);
-        ArgumentUtils.requireNonNull(chartService);
-        this.chartService = chartService;
+        requireNonNull(applicationContext);
+        this.applicationContext = applicationContext;
+        this.chartService = applicationContext.getBean(ChartService.class);
     }
 
     @Override

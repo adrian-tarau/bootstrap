@@ -4,6 +4,7 @@ import net.microfalx.bootstrap.content.Content;
 import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.resource.MimeType;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.IContext;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -16,10 +17,10 @@ public class ContentTool extends AbstractTool {
     private final ContentService contentService;
     private final LinkTool linkTool;
 
-    public ContentTool(IContext context, ContentService contentService) {
-        super(context);
-        this.contentService = contentService;
-        this.linkTool = new LinkTool(context);
+    public ContentTool(IContext templateContext, ApplicationContext applicationContext) {
+        super(templateContext, applicationContext);
+        this.contentService = applicationContext.getBean(ContentService.class);
+        this.linkTool = new LinkTool(templateContext, applicationContext);
     }
 
     /**

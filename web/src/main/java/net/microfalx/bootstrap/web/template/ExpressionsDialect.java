@@ -7,6 +7,7 @@ import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.template.tools.*;
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.IExpressionContext;
 import org.thymeleaf.dialect.AbstractDialect;
 import org.thymeleaf.dialect.IExpressionObjectDialect;
@@ -17,11 +18,13 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 public class ExpressionsDialect extends AbstractDialect implements IExpressionObjectDialect {
 
     private final IExpressionObjectFactory EXPRESSION_OBJECTS_FACTORY = new ExpressionsObjectFactory();
 
+    private final ApplicationContext applicationContext;
     private final ApplicationService applicationService;
     private final MetadataService metadataService;
     private final DataSetService dataSetService;
@@ -29,15 +32,16 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
     private final ContentService contentService;
     private final ChartService chartService;
 
-    public ExpressionsDialect(ApplicationService applicationService, MetadataService metadataService, DataSetService dataSetService,
-                              HelpService helpService, ContentService contentService, ChartService chartService) {
+    public ExpressionsDialect(ApplicationContext applicationContext) {
         super("application");
-        this.applicationService = applicationService;
-        this.metadataService = metadataService;
-        this.dataSetService = dataSetService;
-        this.helpService = helpService;
-        this.contentService = contentService;
-        this.chartService = chartService;
+        requireNonNull(applicationContext);
+        this.applicationContext = applicationContext;
+        this.applicationService = applicationContext.getBean(ApplicationService.class);
+        this.metadataService = applicationContext.getBean(MetadataService.class);
+        this.dataSetService = applicationContext.getBean(DataSetService.class);
+        this.helpService = applicationContext.getBean(HelpService.class);
+        this.contentService = applicationContext.getBean(ContentService.class);
+        this.chartService = applicationContext.getBean(ChartService.class);
     }
 
     @Override
@@ -74,23 +78,23 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
             if (APPLICATION_OBJECT_NAME.equals(expressionObjectName)) {
                 return applicationService.getApplication();
             } else if (NAVIGATION_OBJECT_NAME.equals(expressionObjectName)) {
-                return new NavigationTool(context, applicationService);
+                return new NavigationTool(context, applicationContext);
             } else if (COMPONENT_OBJECT_NAME.equals(expressionObjectName)) {
-                return new ComponentTool(context, applicationService);
+                return new ComponentTool(context, applicationContext);
             } else if (DATASET_OBJECT_NAME.equals(expressionObjectName)) {
-                return new DataSetTool<>(context, dataSetService, chartService);
+                return new DataSetTool<>(context, applicationContext);
             } else if (LINK_OBJECT_NAME.equals(expressionObjectName)) {
-                return new LinkTool(context);
+                return new LinkTool(context, applicationContext);
             } else if (RESOURCE_OBJECT_NAME.equals(expressionObjectName)) {
-                return new ResourceTool(context);
+                return new ResourceTool(context, applicationContext);
             } else if (MODEL_TOOL_NAME.equals(expressionObjectName)) {
-                return new ModelTool(context, metadataService);
+                return new ModelTool(context, applicationContext);
             } else if (CONTENT_TOOL_NAME.equals(expressionObjectName)) {
-                return new ContentTool(context, contentService);
+                return new ContentTool(context, applicationContext);
             } else if (FORMAT_TOOL_NAME.equals(expressionObjectName)) {
-                return new FormatTool(context);
+                return new FormatTool(context, applicationContext);
             } else if (HELP_OBJECT_NAME.equals(expressionObjectName)) {
-                return new HelpTool(context, helpService);
+                return new HelpTool(context, applicationContext);
             } else if (USER_OBJECT_NAME.equals(expressionObjectName)) {
                 return TemplateSecurityContext.get(context);
             } else {

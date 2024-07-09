@@ -48,7 +48,7 @@ public class Tooltip {
     }
 
     public static Tooltip onlyValue() {
-        Tooltip tooltip = new Tooltip();
+        Tooltip tooltip = fixed(false);
         tooltip.setFixed(new Fixed(false));
         tooltip.setX(X.hide());
         tooltip.setY(Y.noTitle());
@@ -56,10 +56,15 @@ public class Tooltip {
     }
 
     public static Tooltip valueWithTimestamp() {
-        Tooltip tooltip = new Tooltip();
-        tooltip.setFixed(new Fixed(false));
+        Tooltip tooltip = fixed(false);
         tooltip.setX(X.timestamp());
         tooltip.setY(Y.noTitle());
+        return tooltip;
+    }
+
+    public static Tooltip fixed(boolean fixed) {
+        Tooltip tooltip = new Tooltip();
+        tooltip.setFixed(new Fixed(false));
         return tooltip;
     }
 

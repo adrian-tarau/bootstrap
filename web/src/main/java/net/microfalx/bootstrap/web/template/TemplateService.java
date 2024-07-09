@@ -10,6 +10,7 @@ import net.microfalx.bootstrap.web.chart.ChartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.dialect.springdata.SpringDataDialect;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -40,14 +41,17 @@ public class TemplateService {
     @Autowired
     private SpringTemplateEngine templateEngine;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
     @PostConstruct
     private void initialize() {
         templateEngine.addDialect(new SpringDataDialect());
-        templateEngine.addDialect(new ApplicationDialect(applicationService, dataSetService, chartService));
-        templateEngine.addDialect(new AssetDialect(applicationService));
-        templateEngine.addDialect(new ExpressionsDialect(applicationService, metadataService, dataSetService, helpService, contentService, chartService));
-        templateEngine.addDialect(new ComponentDialect());
-        templateEngine.addDialect(new ChartDialect(chartService));
+        templateEngine.addDialect(new ApplicationDialect(applicationContext));
+        templateEngine.addDialect(new AssetDialect(applicationContext));
+        templateEngine.addDialect(new ExpressionsDialect(applicationContext));
+        templateEngine.addDialect(new ComponentDialect(applicationContext));
+        templateEngine.addDialect(new ChartDialect(applicationContext));
     }
 
 }

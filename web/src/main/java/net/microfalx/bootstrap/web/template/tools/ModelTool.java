@@ -4,12 +4,11 @@ import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.MetadataService;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.IContext;
 
 import java.util.Collections;
 import java.util.List;
-
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Template utilities around models ({@link net.microfalx.bootstrap.model.Metadata}.
@@ -19,10 +18,9 @@ public class ModelTool extends AbstractTool {
 
     private final MetadataService metadataService;
 
-    public ModelTool(IContext context, MetadataService metadataService) {
-        super(context);
-        requireNonNull(metadataService);
-        this.metadataService = metadataService;
+    public ModelTool(IContext templateContext, ApplicationContext applicationContext) {
+        super(templateContext, applicationContext);
+        this.metadataService = applicationContext.getBean(MetadataService.class);
     }
 
     /**

@@ -36,6 +36,7 @@ import java.util.*;
 import static net.microfalx.bootstrap.dataset.DataSetUtils.METRICS;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 
 /**
@@ -208,6 +209,8 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
             Formattable formattableAnnot = field.findAnnotation(Formattable.class);
             if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
                 displayValue = createFormatter(field, formattableAnnot).format(value, (F) field, model);
+            } else if (formattableAnnot != null && formattableAnnot.discard()) {
+                displayValue = EMPTY_STRING;
             } else {
                 Lookup lookupAnnot = field.findAnnotation(Lookup.class);
                 if (lookupAnnot != null) {

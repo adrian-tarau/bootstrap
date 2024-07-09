@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.template.tools;
 
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.IContext;
 
 /**
@@ -8,8 +9,8 @@ import org.thymeleaf.context.IContext;
  */
 public class FormatTool extends AbstractTool {
 
-    public FormatTool(IContext context) {
-        super(context);
+    public FormatTool(IContext templateContext, ApplicationContext applicationContext) {
+        super(templateContext, applicationContext);
     }
 
     /**

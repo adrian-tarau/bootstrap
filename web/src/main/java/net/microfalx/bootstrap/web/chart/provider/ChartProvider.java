@@ -1,4 +1,6 @@
-package net.microfalx.bootstrap.web.chart;
+package net.microfalx.bootstrap.web.chart.provider;
+
+import net.microfalx.bootstrap.web.chart.Chart;
 
 /**
  * An interface invoked during {@link Chart#toJson()}} to update the chart's series or other attributes.

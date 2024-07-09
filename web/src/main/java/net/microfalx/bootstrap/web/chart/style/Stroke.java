@@ -26,6 +26,10 @@ public class Stroke {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<Double> dashArray;
 
+    public static Stroke width(double width) {
+        return new Stroke().setWidth(width);
+    }
+
     @JsonGetter("width")
     public Object serializeWidth() {
         if (width != null) {

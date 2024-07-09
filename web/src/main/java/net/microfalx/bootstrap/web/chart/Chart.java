@@ -18,6 +18,7 @@ import net.microfalx.bootstrap.web.chart.legend.Legend;
 import net.microfalx.bootstrap.web.chart.markers.Markers;
 import net.microfalx.bootstrap.web.chart.nodata.NoData;
 import net.microfalx.bootstrap.web.chart.plot.PlotOptions;
+import net.microfalx.bootstrap.web.chart.provider.ChartProvider;
 import net.microfalx.bootstrap.web.chart.series.Series;
 import net.microfalx.bootstrap.web.chart.series.Value;
 import net.microfalx.bootstrap.web.chart.states.States;
@@ -28,16 +29,11 @@ import net.microfalx.bootstrap.web.chart.title.Title;
 import net.microfalx.bootstrap.web.chart.tooltip.Tooltip;
 import net.microfalx.bootstrap.web.chart.xaxis.XAxis;
 import net.microfalx.bootstrap.web.chart.yaxis.YAxis;
-import net.microfalx.lang.Descriptable;
-import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.Nameable;
-import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.*;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -69,8 +65,6 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Grid grid;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String[] labels;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Legend legend;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Markers markers;
@@ -91,15 +85,15 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Theme theme;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Tooltip tooltip;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private XAxis xaxis;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private YAxis[] yaxis;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Series<?>[] series;
+    private Object series;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Double[] doubleSeries;
+    private String[] labels;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Tooltip tooltip;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean debug;
 
@@ -143,7 +137,7 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
     public <T> Chart addSeries(Series<T> series) {
         requireNonNull(series);
         if (this.series == null) this.series = new Series[0];
-        this.series = ArrayUtils.add(this.series, series);
+        this.series = ArrayUtils.add((Series[]) this.series, series);
         validateSeries();
         return this;
     }
@@ -166,7 +160,7 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
     public Chart addDefaultLabels() {
         if (labels == null && ObjectUtils.isNotEmpty(series)) {
             Collection<String> newLabels = new ArrayList<>();
-            int elementCount = ObjectUtils.getArrayLength(series[0].getData());
+            int elementCount = ObjectUtils.getArrayLength(((Series[]) series)[0].getData());
             for (int i = 1; i <= elementCount; i++) {
                 newLabels.add(Integer.toString(i));
             }
@@ -177,11 +171,23 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
 
     /**
      * Sets a list of colors to be used to plot the chart.
+     *
      * @param colors an array of colors.
      * @return self
      */
-    public Chart setColors(String...colors) {
+    public Chart setColors(String... colors) {
         this.colors = colors;
+        return this;
+    }
+
+    /**
+     * Sets a list of labels to be used to with values in the series.
+     *
+     * @param labels the labels
+     * @return a non-null instance
+     */
+    public Chart setLabels(String... labels) {
+        this.labels = labels;
         return this;
     }
 
@@ -195,10 +201,14 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        Map<String, ?> state = saveState();
         try {
+            updateProperties();
             return mapper.writeValueAsString(this);
         } catch (JsonProcessingException e) {
             throw new ChartException("Failed to create the JSON for chart " + this, e);
+        } finally {
+            restoreState(state);
         }
     }
 
@@ -225,10 +235,27 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
         if (provider != null) provider.onUpdate(this);
     }
 
+    private Map<String, ?> saveState() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("series", this.series);
+        return map;
+    }
+
+    private void updateProperties() {
+        Series<?>[] series = (Series<?>[]) this.series;
+        if (series.length == 1 && StringUtils.isEmpty(series[0].getName())) {
+            this.series = series[0].getData().toArray();
+        }
+    }
+
+    private void restoreState(Map<String, ?> state) {
+        this.series = state.get("series");
+    }
+
     private void validateSeries() {
         int prevElementCount = -1;
         Series<?> prevSeries;
-        for (Series<?> currentSeries : series) {
+        for (Series<?> currentSeries : (Series[]) series) {
             prevSeries = currentSeries;
             int currentElementCount = ObjectUtils.getArrayLength(currentSeries.getData());
             if (prevElementCount == -1) {

@@ -72,6 +72,16 @@ public @interface Formattable {
     boolean prettyPrint() default true;
 
     /**
+     * Returns whether the display value of the field should be discarded.
+     * <p>
+     * This property is usually used when the display value is not needed since the field will be rendered using
+     * additional plug'n'play features.
+     *
+     * @return {@code true} to disable the display value, {@code false} otherwise
+     */
+    boolean discard() default false;
+
+    /**
      * Returns the unit of measure for this formatter.
      * <p>
      * Based on the unit of measure, a different formatter will be used. When a throughput is requested, the created or modified

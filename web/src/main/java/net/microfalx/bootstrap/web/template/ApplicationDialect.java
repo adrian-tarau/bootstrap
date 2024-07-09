@@ -8,6 +8,7 @@ import net.microfalx.bootstrap.web.container.WebContainerRequest;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.template.tools.LinkTool;
 import net.microfalx.lang.TextUtils;
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.model.IProcessableElementTag;
@@ -19,6 +20,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 import java.util.HashSet;
 import java.util.Set;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeEcmaScript;
@@ -32,15 +34,18 @@ public class ApplicationDialect extends AbstractProcessorDialect {
     private static final String DIALECT_NAME = "Bootstrap Application";
     private static final int PRECEDENCE = 1000;
 
-    private ApplicationService applicationService;
-    private DataSetService dataSetService;
-    private ChartService chartService;
+    private final ApplicationContext applicationContext;
+    private final ApplicationService applicationService;
+    private final DataSetService dataSetService;
+    private final ChartService chartService;
 
-    public ApplicationDialect(ApplicationService applicationService, DataSetService dataSetService, ChartService chartService) {
+    public ApplicationDialect(ApplicationContext applicationContext) {
         super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE);
-        this.applicationService = applicationService;
-        this.dataSetService = dataSetService;
-        this.chartService = chartService;
+        requireNonNull(applicationContext);
+        this.applicationContext = applicationContext;
+        this.applicationService = applicationContext.getBean(ApplicationService.class);
+        this.dataSetService = applicationContext.getBean(DataSetService.class);
+        this.chartService = applicationContext.getBean(ChartService.class);
     }
 
     @Override
@@ -67,8 +72,8 @@ public class ApplicationDialect extends AbstractProcessorDialect {
         @Override
         protected void doProcess(ITemplateContext context, IProcessableElementTag tag, IElementTagStructureHandler structureHandler) {
             WebContainerRequest containerRequest = WebContainerRequest.get();
-            LinkTool linkTool = new LinkTool(context);
-            DataSetTool dataSetTool = new DataSetTool(context, dataSetService, chartService);
+            LinkTool linkTool = new LinkTool(context, applicationContext);
+            DataSetTool dataSetTool = new DataSetTool(context, applicationContext);
             StringBuilder builder = new StringBuilder();
             builder.append(SCRIPT_START_TAG);
             builder.append("\nconst APP_REQUEST_PATH=\"").append(linkTool.getSelf()).append("\";");

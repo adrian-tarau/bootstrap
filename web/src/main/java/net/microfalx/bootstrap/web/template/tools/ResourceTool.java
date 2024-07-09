@@ -4,6 +4,7 @@ import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.IContext;
 
 import java.io.IOException;
@@ -19,8 +20,8 @@ public class ResourceTool extends AbstractTool {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceTool.class);
 
-    public ResourceTool(IContext context) {
-        super(context);
+    public ResourceTool(IContext templateContext, ApplicationContext applicationContext) {
+        super(templateContext, applicationContext);
     }
 
     /**

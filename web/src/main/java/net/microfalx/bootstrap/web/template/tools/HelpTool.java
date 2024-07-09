@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.template.tools;
 
 import net.microfalx.bootstrap.help.HelpService;
+import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.IContext;
 
 import static net.microfalx.bootstrap.web.template.TemplateUtils.getModelAttribute;
@@ -12,9 +13,9 @@ public class HelpTool extends AbstractTool {
 
     private HelpService helpService;
 
-    public HelpTool(IContext context, HelpService helpService) {
-        super(context);
-        this.helpService = helpService;
+    public HelpTool(IContext templateContext, ApplicationContext applicationContext) {
+        super(templateContext, applicationContext);
+        this.helpService = applicationContext.getBean(HelpService.class);
     }
 
     /**
@@ -23,7 +24,7 @@ public class HelpTool extends AbstractTool {
      * @return {@code true} if a help reference is available, <code>false</code> otherwise
      */
     public boolean hasHelp() {
-        return getModelAttribute(context, "help") != null;
+        return getModelAttribute(templateContext, "help") != null;
     }
 
     /**
@@ -32,6 +33,6 @@ public class HelpTool extends AbstractTool {
      * @return the reference, null if not available
      */
     public String getHelp() {
-        return getModelAttribute(context, "help");
+        return getModelAttribute(templateContext, "help");
     }
 }
