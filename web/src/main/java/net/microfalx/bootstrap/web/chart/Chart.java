@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.collect.Iterables;
 import lombok.Data;
 import lombok.ToString;
 import net.microfalx.bootstrap.core.utils.IdGenerator;
@@ -188,6 +189,17 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
      */
     public Chart setLabels(String... labels) {
         this.labels = labels;
+        return this;
+    }
+
+    /**
+     * Sets a list of labels to be used to with values in the series.
+     *
+     * @param labels the labels
+     * @return a non-null instance
+     */
+    public Chart setLabels(Iterable<String> labels) {
+        this.labels = Iterables.toArray(labels, String.class);
         return this;
     }
 
