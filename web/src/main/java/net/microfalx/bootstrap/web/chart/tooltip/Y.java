@@ -10,13 +10,25 @@ import net.microfalx.bootstrap.web.chart.Function;
 public class Y {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String formatter;
+    private Function formatter;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Title title;
 
     public static Y noTitle() {
         Y y = new Y();
-        y.setTitle(new Title(Function.name("Chart.Tooltip.formatNoTitle")));
+        y.setTitle(Title.noTitle());
+        return y;
+    }
+
+    public static Y duration() {
+        Y y = new Y();
+        y.setFormatter(Function.Tooltip.formatDuration());
+        return y;
+    }
+
+    public static Y durationNoTitle() {
+        Y y = noTitle();
+        y.setFormatter(Function.Tooltip.formatDuration());
         return y;
     }
 

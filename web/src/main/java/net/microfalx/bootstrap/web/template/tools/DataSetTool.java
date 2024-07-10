@@ -9,6 +9,7 @@ import net.microfalx.bootstrap.web.chart.Chart;
 import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.chart.Options;
 import net.microfalx.bootstrap.web.chart.Type;
+import net.microfalx.bootstrap.web.chart.animation.Animations;
 import net.microfalx.bootstrap.web.chart.annotation.Chartable;
 import net.microfalx.bootstrap.web.chart.datalabels.DataLabels;
 import net.microfalx.bootstrap.web.chart.style.Stroke;
@@ -515,7 +516,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public Chart getChart(M model, Field<M> field) {
         Chartable chartableAnnot = field.findAnnotation(Chartable.class);
         if (chartableAnnot == null) throw new DataSetException("Field '" + field.getName() + "' does not have a chart");
-        Options options = Options.create(chartableAnnot.type()).sparkline();
+        Options options = Options.create(chartableAnnot.type()).sparkline().setAnimations(Animations.disable());
         if (chartableAnnot.width() > 0) options.setWidth(chartableAnnot.width());
         if (chartableAnnot.height() > 0) options.setHeight(chartableAnnot.height());
         Chart chart = Chart.create(options);

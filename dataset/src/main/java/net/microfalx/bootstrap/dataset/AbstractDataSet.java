@@ -2,10 +2,9 @@ package net.microfalx.bootstrap.dataset;
 
 import com.google.common.collect.Lists;
 import net.microfalx.bootstrap.core.i18n.I18nService;
-import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.Lookup;
-import net.microfalx.bootstrap.dataset.annotation.Searchable;
+import net.microfalx.bootstrap.dataset.annotation.*;
 import net.microfalx.bootstrap.dataset.formatter.EnumFormatter;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
@@ -207,9 +206,10 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         return METRICS.time("Get Display Value", () -> {
             String displayValue = null;
             Formattable formattableAnnot = field.findAnnotation(Formattable.class);
+            Renderable renderableAnnot = field.findAnnotation(Renderable.class);
             if (formattableAnnot != null && formattableAnnot.formatter() != Formatter.class) {
                 displayValue = createFormatter(field, formattableAnnot).format(value, (F) field, model);
-            } else if (formattableAnnot != null && formattableAnnot.discard()) {
+            } else if (renderableAnnot != null && renderableAnnot.discard()) {
                 displayValue = EMPTY_STRING;
             } else {
                 Lookup lookupAnnot = field.findAnnotation(Lookup.class);

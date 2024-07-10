@@ -8,7 +8,6 @@ import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
 import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.ITemplateContext;
-import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.model.IAttribute;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.IProcessor;
@@ -22,7 +21,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.TextUtils.MEDIUM_INDENT;
 import static net.microfalx.lang.TextUtils.insertSpaces;
@@ -36,13 +34,10 @@ public class AssetDialect extends AbstractProcessorDialect {
     private static final String DIALECT_NAME = "Bootstrap Asset";
     private static final int PRECEDENCE = 1000;
 
-    private final ApplicationContext applicationContext;
     private ApplicationService applicationService;
 
     public AssetDialect(ApplicationContext applicationContext) {
-        super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE);
-        requireNonNull(applicationContext);
-        this.applicationContext = applicationContext;
+        super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE, applicationContext);
         this.applicationService = applicationContext.getBean(ApplicationService.class);
     }
 

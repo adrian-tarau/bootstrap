@@ -6,8 +6,8 @@ import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Async;
 import org.thymeleaf.context.ITemplateContext;
-import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.dialect.springdata.util.Expressions;
 import org.thymeleaf.model.IAttribute;
 import org.thymeleaf.model.IProcessableElementTag;
@@ -17,10 +17,11 @@ import org.thymeleaf.processor.element.IElementTagStructureHandler;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.unbescape.html.HtmlEscape;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -32,17 +33,15 @@ public class ChartDialect extends AbstractProcessorDialect {
     private static final String DIALECT_NAME = "Bootstrap Chart";
     private static final int PRECEDENCE = 1000;
 
-    private final ApplicationContext applicationContext;
     private final ChartService chartService;
 
     public ChartDialect(ApplicationContext applicationContext) {
-        super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE);
-        requireNonNull(applicationContext);
-        this.applicationContext = applicationContext;
+        super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE, applicationContext);
         this.chartService = applicationContext.getBean(ChartService.class);
     }
 
     @Override
+    @Async
     public Set<IProcessor> getProcessors(String dialectPrefix) {
         Set<IProcessor> processors = new HashSet<>();
         processors.add(new RenderTagProcessor());
@@ -85,11 +84,19 @@ public class ChartDialect extends AbstractProcessorDialect {
             }
         }
 
+        private void updateChartData(StringBuilder builder, Chart chart) {
+            if (chart.getProvider().isAsynchronous()) return;
+            String chartData = chart.toJson();
+            chartData = Base64.getEncoder().encodeToString(chartData.getBytes(StandardCharsets.UTF_8));
+            builder.append("chart-data='").append(chartData).append('\'');
+        }
+
         private String getHtml(Chart chart, boolean inline) {
             StringBuilder builder = new StringBuilder();
             if (inline) {
                 builder.append("<span id='").append(chart.getId()).append("' class='chart-container'");
                 updateStyles(builder, chart);
+                updateChartData(builder, chart);
                 builder.append("></span>\n");
             } else {
                 builder.append("<div class='card' id='").append(chart.getId()).append("_card").append("'>\n");
@@ -100,6 +107,7 @@ public class ChartDialect extends AbstractProcessorDialect {
                 }
                 builder.append("<div id='").append(chart.getId()).append("' class='card-body chart-container'");
                 updateStyles(builder, chart);
+                updateChartData(builder, chart);
                 builder.append("></div>\n");
                 builder.append("</div>");
             }

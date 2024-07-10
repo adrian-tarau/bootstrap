@@ -107,6 +107,7 @@ DataSet.loadPage = function (page) {
         $("#more_results").attr("data-page", page + 1);
         $("#page_info").text(xhr.getResponseHeader('X-DATASET-PAGE-INFO'));
         $("#page_info_and_records").text(xhr.getResponseHeader('X-DATASET-PAGE-INFO-EXTENDED'));
+        Chart.process("#dataset-grid tbody");
     });
 }
 

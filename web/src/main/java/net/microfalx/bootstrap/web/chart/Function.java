@@ -39,6 +39,28 @@ public class Function {
         return new Function().setBody(body).setArguments(Arrays.asList(argumentNames));
     }
 
+    public static class Tooltip {
+
+        public static Function formatTimestamp() {
+            return Function.name("Chart.Tooltip.formatTimestamp");
+        }
+
+        public static Function formatDuration() {
+            return Function.name("Chart.Tooltip.formatDuration");
+        }
+
+        public static Function formatNoTitle() {
+            return Function.name("Chart.Tooltip.formatNoTitle");
+        }
+    }
+
+    public static class Color {
+
+        public static Function negativeValue() {
+            return Function.name("Chart.Color.negativeValues");
+        }
+    }
+
     public static class FunctionSerializer extends JsonSerializer<Function> {
 
         @Override

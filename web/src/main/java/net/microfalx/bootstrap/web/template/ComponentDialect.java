@@ -3,7 +3,6 @@ package net.microfalx.bootstrap.web.template;
 import net.microfalx.lang.Descriptable;
 import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.ITemplateContext;
-import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.dialect.springdata.util.Expressions;
 import org.thymeleaf.engine.AttributeName;
 import org.thymeleaf.model.IProcessableElementTag;
@@ -17,7 +16,6 @@ import org.unbescape.html.HtmlEscape;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -30,12 +28,8 @@ public class ComponentDialect extends AbstractProcessorDialect {
     private static final int PRECEDENCE = 1000;
     private static final int TOOLTIP_SHOW_DELAY = 2000;
 
-    private final ApplicationContext applicationContext;
-
     public ComponentDialect(ApplicationContext applicationContext) {
-        super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE);
-        requireNonNull(applicationContext);
-        this.applicationContext = applicationContext;
+        super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE, applicationContext);
     }
 
     @Override

@@ -27,7 +27,7 @@ public class X {
     public static X timestamp() {
         X x = new X();
         x.setShow(true);
-        x.setFormatter(Function.name("Chart.Tooltip.formatTimestamp"));
+        x.setFormatter(Function.Tooltip.formatTimestamp());
         return x;
     }
 

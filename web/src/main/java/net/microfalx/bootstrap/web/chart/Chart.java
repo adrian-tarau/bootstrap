@@ -57,7 +57,7 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Annotations annotations;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String[] colors;
+    private Object[] colors;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private DataLabels dataLabels;
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -175,7 +175,7 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
      * @param colors an array of colors.
      * @return self
      */
-    public Chart setColors(String... colors) {
+    public Chart setColors(Object... colors) {
         this.colors = colors;
         return this;
     }

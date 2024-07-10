@@ -164,11 +164,67 @@ Utils.requireNonNull = function (reference) {
  * Defers the execution of the callback by a number of milliseconds.
  *
  * @param {Function} callback the callback
- * @param {Number} delay the delay in milliseconds
+ * @param {Number} [delay] the delay in milliseconds
  * @param {Object} [self] the self
  */
 Utils.defer = function (callback, delay, self) {
+    if (!this.isDefined(delay)) delay = 0;
     setTimeout(callback, delay);
+}
+
+/**
+ * Formats millis as hh:mm:ss.millis.
+ *
+ * @param {int} value the value in millis
+ * @param {boolean} [units] true to be displayed with units, false to be displayed as clock time
+ * @return {string} the formatted value
+ */
+Utils.formatMillis = function (value, units) {
+    if (!Utils.isDefined(units)) units = true;
+
+    // Pad to 2 or 3 digits, default is 2
+    function pad(n, z) {
+        z = z || 2;
+        return ('00' + n).slice(-z);
+    }
+
+    value = Math.abs(value);
+    let ms = value % 1000;
+    let msp = pad(ms, 3);
+    value = (value - ms) / 1000;
+    let secs = value % 60;
+    let secsp = pad(secs);
+    value = (value - secs) / 60;
+    let mins = value % 60;
+    let minsp = pad(mins);
+    let hrs = (value - mins) / 60;
+    let displayValue;
+    if (units) {
+        if (hrs === 0) {
+            if (mins === 0) {
+                if (secs === 0) {
+                    displayValue = ms + "ms";
+                } else {
+                    displayValue = secs + 's ' + ms + "ms";
+                }
+            } else {
+                displayValue = mins + 'm ' + secs + 's ' + ms + "ms";
+            }
+        } else {
+            displayValue = hrs + 'h ' + mins + 'm ' + secs + 's ' + msp+ "ms";
+        }
+    } else {
+        if (hrs === 0) {
+            if (mins === 0) {
+                displayValue = secsp + '.' + msp;
+            } else {
+                displayValue = minsp + ':' + secsp + '.' + msp;
+            }
+        } else {
+            displayValue = pad(hrs) + ':' + minsp + ':' + secsp + '.' + msp;
+        }
+    }
+    return displayValue;
 }
 
 /**

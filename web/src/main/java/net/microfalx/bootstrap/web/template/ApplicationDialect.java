@@ -10,7 +10,6 @@ import net.microfalx.bootstrap.web.template.tools.LinkTool;
 import net.microfalx.lang.TextUtils;
 import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.ITemplateContext;
-import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.IProcessor;
 import org.thymeleaf.processor.element.AbstractElementTagProcessor;
@@ -20,7 +19,6 @@ import org.thymeleaf.templatemode.TemplateMode;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeEcmaScript;
@@ -34,15 +32,12 @@ public class ApplicationDialect extends AbstractProcessorDialect {
     private static final String DIALECT_NAME = "Bootstrap Application";
     private static final int PRECEDENCE = 1000;
 
-    private final ApplicationContext applicationContext;
     private final ApplicationService applicationService;
     private final DataSetService dataSetService;
     private final ChartService chartService;
 
     public ApplicationDialect(ApplicationContext applicationContext) {
-        super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE);
-        requireNonNull(applicationContext);
-        this.applicationContext = applicationContext;
+        super(DIALECT_NAME, DIALECT_PREFIX, PRECEDENCE, applicationContext);
         this.applicationService = applicationContext.getBean(ApplicationService.class);
         this.dataSetService = applicationContext.getBean(DataSetService.class);
         this.chartService = applicationContext.getBean(ChartService.class);

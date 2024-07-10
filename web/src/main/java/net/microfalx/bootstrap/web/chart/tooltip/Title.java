@@ -14,4 +14,8 @@ public class Title {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Function formatter;
 
+    public static Title noTitle() {
+        return new Title(Function.Tooltip.formatNoTitle());
+    }
+
 }

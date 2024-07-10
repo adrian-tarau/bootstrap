@@ -19,4 +19,8 @@ public class Animations {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private DynamicAnimation dynamicAnimation;
 
+    public static Animations disable() {
+        return new Animations().setEnabled(false);
+    }
+
 }

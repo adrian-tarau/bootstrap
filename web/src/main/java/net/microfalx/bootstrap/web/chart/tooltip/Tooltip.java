@@ -62,6 +62,20 @@ public class Tooltip {
         return tooltip;
     }
 
+    public static Tooltip durationWithTimestamp() {
+        Tooltip tooltip = fixed(false);
+        tooltip.setX(X.timestamp());
+        tooltip.setY(Y.duration());
+        return tooltip;
+    }
+
+    public static Tooltip durationNoTitleWithTimestamp() {
+        Tooltip tooltip = fixed(false);
+        tooltip.setX(X.timestamp());
+        tooltip.setY(Y.durationNoTitle());
+        return tooltip;
+    }
+
     public static Tooltip fixed(boolean fixed) {
         Tooltip tooltip = new Tooltip();
         tooltip.setFixed(new Fixed(false));

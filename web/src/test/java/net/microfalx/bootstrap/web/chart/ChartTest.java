@@ -67,6 +67,26 @@ class ChartTest {
     }
 
     @Test
+    void barSparkLineWithColors() {
+        Options options = Options.create(Type.BAR).sparkline().setHeight("120px");
+        Chart chart = Chart.create(options).setName("Records");
+        chart.addSeries(net.microfalx.bootstrap.web.chart.series.Series.create(3, 10, 7));
+        chart.setColors(Function.name("Chart.Color.negativeValues"));
+        assertThat(chart.toJson()).isEqualToNormalizingNewlines("""
+                {
+                  "colors" : [ "Chart.Color.negativeValues" ],
+                  "series" : [ 3, 10, 7 ],
+                  "chart" : {
+                    "type" : "bar",
+                    "height" : "120px",
+                    "sparkline" : {
+                      "enabled" : true
+                    }
+                  }
+                }""");
+    }
+
+    @Test
     void barSparkLine() {
         Options options = Options.create(Type.BAR).sparkline().setHeight("120px");
         Chart chart = Chart.create(options).setName("Records");
