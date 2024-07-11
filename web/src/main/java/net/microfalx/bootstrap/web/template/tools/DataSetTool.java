@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.template.tools;
 
 import net.microfalx.bootstrap.dataset.*;
+import net.microfalx.bootstrap.dataset.annotation.Align;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Attributes;
@@ -32,6 +33,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 import org.thymeleaf.context.IContext;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -470,7 +472,25 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public String getAlertClass(Alert alert) {
         if (alert == null) return null;
-        return "alert alert-" + alert.getType().name().toLowerCase();
+        return "alert alert-" + alert.getType().name().toLowerCase() + " text-center";
+    }
+
+    /**
+     * Returns the alert CSS classes.
+     *
+     * @param alert the alert
+     * @return the classes, null if there is no alert
+     */
+    public String getAlertStyle(Alert alert) {
+        if (alert == null || !alert.hasProperties()) return null;
+        StringBuilder builder = new StringBuilder();
+        if (alert.getMinWidth() != null) {
+            builder.append("min-width: ").append(alert.getMinWidth()).append("px");
+        } else if (alert.getWidth() != null) {
+            builder.append("width: ").append(alert.getWidth()).append("px");
+        }
+        String style = builder.toString().trim();
+        return isNotEmpty(style) ? style : null;
     }
 
     /**
@@ -745,15 +765,37 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public String getCellClass(Field<M> field, boolean group, boolean header) {
         DataSet<M, F, ID> dataSet = getDataSet();
         String classes = "";
-        if (field.getDataType() == Field.DataType.BOOLEAN || group) {
+        Align.Type align = getFieldAlign(field, group, header);
+        if (align == Align.Type.CENTER) {
             classes += " text-center";
-        } else if (field.getDataType().isNumeric() && !header) {
+        } else if (align == Align.Type.RIGHT) {
             classes += " text-end";
         }
         if (field.getDataType().isTemporal() || hasMarkup(field)) classes += " text-nowrap";
         if (dataSet.isFilterable(field)) classes += " filterable";
         classes = classes.trim();
         return isNotEmpty(classes) ? classes : null;
+    }
+
+    public Align.Type getFieldAlign(Field<M> field, boolean group, boolean header) {
+        Align.Type type = Align.Type.AUTO;
+        if (field.getDataType() == Field.DataType.BOOLEAN || group) {
+            type = Align.Type.CENTER;
+        } else if (isDataTypeNumericLike(field)) {
+            type = header ? Align.Type.CENTER : Align.Type.RIGHT;
+        }
+        Align alignAnnot = field.findAnnotation(Align.class);
+        if (alignAnnot != null) {
+            type = alignAnnot.value();
+        } else {
+            net.microfalx.bootstrap.dataset.annotation.Formattable formattableAnnot = field.findAnnotation(net.microfalx.bootstrap.dataset.annotation.Formattable.class);
+            if (formattableAnnot != null && formattableAnnot.alert() != net.microfalx.bootstrap.dataset.annotation.Formattable.AlertProvider.class) {
+                type = Align.Type.CENTER;
+            }
+            Chartable chartableAnnot = field.findAnnotation(Chartable.class);
+            if (chartableAnnot != null) type = Align.Type.CENTER;
+        }
+        return type;
     }
 
     /**
@@ -947,6 +989,18 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     private boolean isLookupField(Field<M> field) {
         return field.getDataType() == Field.DataType.MODEL || field.getDataType() == Field.DataType.ENUM
                 || field.hasAnnotation(net.microfalx.bootstrap.dataset.annotation.Lookup.class);
+    }
+
+    /**
+     * Returns whether the field holds a number of any type that would result in a number when formatted/rendered.
+     *
+     * @param field the field
+     * @return {@code true} if number like type, {@code false} otherwise
+     */
+    private boolean isDataTypeNumericLike(Field<M> field) {
+        if (field.getDataType().isNumeric()) return true;
+        Class<?> dataClass = field.getDataClass();
+        return dataClass == Duration.class;
     }
 
     private static void initializeColors() {

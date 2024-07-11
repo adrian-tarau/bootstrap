@@ -49,7 +49,6 @@ public class Tooltip {
 
     public static Tooltip onlyValue() {
         Tooltip tooltip = fixed(false);
-        tooltip.setFixed(new Fixed(false));
         tooltip.setX(X.hide());
         tooltip.setY(Y.noTitle());
         return tooltip;
@@ -78,7 +77,7 @@ public class Tooltip {
 
     public static Tooltip fixed(boolean fixed) {
         Tooltip tooltip = new Tooltip();
-        tooltip.setFixed(new Fixed(false));
+        tooltip.setFixed(new Fixed(fixed));
         return tooltip;
     }
 

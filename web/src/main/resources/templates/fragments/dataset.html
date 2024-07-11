@@ -32,7 +32,7 @@
     <td class="text-right" th:text="${#dataset.getCurrentIndex()}"></td>
     <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}" th:with="alert=${#dataset.getAlert(model, field)}">
         <span th:unless="${field.isName()}" th:utext="${#dataset.getDisplayValue(model, field)}"
-              th:class="${#dataset.getAlertClass(alert)}">
+              th:class="${#dataset.getAlertClass(alert)}" th:style="${#dataset.getAlertStyle(alert)}">
         </span>
         <span th:if="${alert != null and alert.message != null}" th:class="text-sm-end"><i class="fa-solid fa-bell" component:tooltip="${alert.message}"></i></span>
         <a th:if="${field.isName()}" href="#" th:attr="onclick=|Application.action('dataset.view', '${#dataset.getId(model)}')|"

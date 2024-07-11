@@ -255,7 +255,7 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
 
     private void updateProperties() {
         Series<?>[] series = (Series<?>[]) this.series;
-        if (series.length == 1 && StringUtils.isEmpty(series[0].getName())) {
+        if (series != null && series.length == 1 && StringUtils.isEmpty(series[0].getName())) {
             this.series = series[0].getData().toArray();
         }
     }

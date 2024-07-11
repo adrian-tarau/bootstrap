@@ -9,7 +9,6 @@ import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseName;
 import static net.microfalx.lang.FormatterUtils.formatDateTime;
 
 /**
@@ -218,8 +218,9 @@ public final class DataSetService extends ApplicationContextSupport implements I
         requireNonNull(model);
         requireNonNull(field);
         Formattable formattableAnnot = field.findAnnotation(Formattable.class);
-        if (formattableAnnot == null || formattableAnnot.alert() == Formattable.AlertProvider.class)
+        if (formattableAnnot == null || formattableAnnot.alert() == Formattable.AlertProvider.class) {
             return Optional.empty();
+        }
         Object value = field.get(model);
         Formattable.AlertProvider<M, F, Object> alertProvider = ClassUtils.create(formattableAnnot.alert());
         if (alertProvider instanceof ApplicationContextAware) {
@@ -228,7 +229,7 @@ public final class DataSetService extends ApplicationContextSupport implements I
         try {
             return Optional.of(alertProvider.provide(value, field, model));
         } catch (Exception e) {
-            return Optional.of(new Alert(Alert.Type.DARK, "#ERROR: " + ExceptionUtils.getRootCauseName(e)));
+            return Optional.of(Alert.builder().type(Alert.Type.DARK).message("#ERROR: " + getRootCauseName(e)).build());
         }
     }
 
