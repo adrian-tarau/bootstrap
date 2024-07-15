@@ -14,6 +14,14 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  */
 public abstract class DataSetChartProvider<M, F extends Field<M>, ID> extends ContextAwareChartProvider {
 
+    public static final int HEIGHT = 20;
+    public static final int PIE_WIDTH = 20;
+    public static final int PIE_HEIGHT = HEIGHT;
+    public static final int BAR_WIDTH = 150;
+    public static final int BAR_HEIGHT = HEIGHT;
+
+    public static final String ZERO_FILL_COLOR = "#404040";
+
     public static final String FIELD_ATTR = "field";
     public static final String MODEL_ATTR = "model";
     public static final String DATASET_ATTR = "dataSet";

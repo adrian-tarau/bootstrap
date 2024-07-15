@@ -4,7 +4,10 @@ import lombok.ToString;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -56,6 +59,28 @@ public final class Series implements Identifiable<String>, Nameable {
      */
     public static Series create(String name, Value... values) {
         return new Series(name, Arrays.asList(values));
+    }
+
+    /**
+     * Creates a series with random values.
+     *
+     * @param name     the name of the series.
+     * @param start    the start time
+     * @param interval the interval
+     * @param count    the number of values to add
+     * @param min      the minimum value
+     * @param max      the maximum value
+     * @return the series
+     */
+    public static Series random(String name, LocalDateTime start, Duration interval, int count, double min, double max) {
+        Random random = ThreadLocalRandom.current();
+        List<Value> values = new ArrayList<>();
+        double range = max - min;
+        for (int i = 0; i < count; i++) {
+            values.add(Value.create(start, min + random.nextDouble(range)));
+            start = start.plus(interval);
+        }
+        return Series.create(name, values);
     }
 
     Series(String name, Iterable<Value> values) {

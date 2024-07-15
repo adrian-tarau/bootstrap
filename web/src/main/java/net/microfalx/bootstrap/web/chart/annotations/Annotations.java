@@ -1,10 +1,14 @@
 package net.microfalx.bootstrap.web.chart.annotations;
 
-
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
+import lombok.ToString;
 
+import java.util.Arrays;
 import java.util.List;
 
+@Data
+@ToString
 public class Annotations {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -16,35 +20,12 @@ public class Annotations {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<PointAnnotations> points;
 
-    public String getPosition() {
-        return position;
+    public static Annotations zeroY() {
+        return new Annotations().setYaxis(Arrays.asList(YAxisAnnotations.zero()));
     }
 
-    public void setPosition(String position) {
-        this.position = position;
+    public static Annotations zeroY(String fillColor) {
+        return new Annotations().setYaxis(Arrays.asList(YAxisAnnotations.zero(fillColor)));
     }
 
-    public List<YAxisAnnotations> getYaxis() {
-        return yaxis;
-    }
-
-    public void setYaxis(List<YAxisAnnotations> yaxis) {
-        this.yaxis = yaxis;
-    }
-
-    public List<XAxisAnnotations> getXaxis() {
-        return xaxis;
-    }
-
-    public void setXaxis(List<XAxisAnnotations> xaxis) {
-        this.xaxis = xaxis;
-    }
-
-    public List<PointAnnotations> getPoints() {
-        return points;
-    }
-
-    public void setPoints(List<PointAnnotations> points) {
-        this.points = points;
-    }
 }

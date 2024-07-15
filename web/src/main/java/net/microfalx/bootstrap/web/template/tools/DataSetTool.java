@@ -500,7 +500,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if it has a markups, {@code false} otherwise
      */
     public boolean hasMarkup(Field<M> field) {
-        return hasChart(field);
+        return hasChart(field) || hasFormattableMarkup(field);
     }
 
     /**
@@ -511,6 +511,17 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public boolean hasChart(Field<M> field) {
         return field.findAnnotation(Chartable.class) != null;
+    }
+
+    /**
+     * Returns whether a field is supposed to be rendered as a chart.
+     *
+     * @param field the field
+     * @return {@code true} if it has a chart, {@code false} otherwise
+     */
+    public boolean hasFormattableMarkup(Field<M> field) {
+        net.microfalx.bootstrap.dataset.annotation.Formattable formattableAnnot = field.findAnnotation(net.microfalx.bootstrap.dataset.annotation.Formattable.class);
+        return formattableAnnot != null && formattableAnnot.alert() != net.microfalx.bootstrap.dataset.annotation.Formattable.AlertProvider.class;
     }
 
     /**

@@ -35,6 +35,7 @@
               th:class="${#dataset.getAlertClass(alert)}" th:style="${#dataset.getAlertStyle(alert)}">
         </span>
         <span th:if="${alert != null and alert.message != null}" th:class="text-sm-end"><i class="fa-solid fa-bell" component:tooltip="${alert.message}"></i></span>
+        <span th:if="${alert != null and alert.message == null}" th:class="text-sm-end"><i class="fa-solid fa-circle fa-blank"></i></span>
         <a th:if="${field.isName()}" href="#" th:attr="onclick=|Application.action('dataset.view', '${#dataset.getId(model)}')|"
            th:utext="${#dataset.getDisplayValue(model, field)}"></a>
         <span th:if="${#dataset.hasChart(field)}" th:remove="tag"><chart:render inline="true" value="${#dataset.getChart(model, field)}"></chart:render></span>

@@ -29,4 +29,12 @@ public class YAxisAnnotations {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AnnotationLabel label;
 
+    public static YAxisAnnotations zero() {
+        return new YAxisAnnotations().setY(0d);
+    }
+
+    public static YAxisAnnotations zero(String fillColor) {
+        return new YAxisAnnotations().setY(0d).setFillColor(fillColor);
+    }
+
 }

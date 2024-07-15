@@ -19,3 +19,7 @@
     --bs-alert-padding-y: 0rem !important;
     --bs-alert-margin-bottom: 0rem !important;
 }
+
+.dataset-table .fa-blank {
+    visibility: hidden !important;
+}

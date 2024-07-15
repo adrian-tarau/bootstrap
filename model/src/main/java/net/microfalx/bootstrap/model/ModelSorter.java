@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.model;
 
 import com.google.common.collect.Streams;
+import net.microfalx.lang.Prioritizable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -103,6 +104,8 @@ public class ModelSorter<M> {
                 result = order.getNullHandling() == Sort.NullHandling.NULLS_LAST ? -1 : 1;
             } else if (value1 == null) {
                 result = order.getNullHandling() == Sort.NullHandling.NULLS_LAST ? 1 : -1;
+            } else if (value1 instanceof Prioritizable && value2 instanceof Prioritizable) {
+                return Integer.compare(((Prioritizable) value1).getPriority(), ((Prioritizable) value2).getPriority());
             } else if (value1 instanceof Comparable) {
                 result = ((Comparable) value1).compareTo(value2);
             } else {
