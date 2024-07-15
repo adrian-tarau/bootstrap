@@ -15,7 +15,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  */
 public class I18nMessageSource implements MessageSource {
 
-    private Collection<MessageSource> sources = new ArrayList<>();
+    private final Collection<MessageSource> sources = new ArrayList<>();
 
     public void registerMessageSource(MessageSource source) {
         requireNonNull(source);

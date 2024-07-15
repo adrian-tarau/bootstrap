@@ -156,7 +156,7 @@ public class I18nService implements InitializingBean, I18n {
         baseNames.add("i18n");
         baseNames.addAll(i18nProperties.getBaseNames());
         baseNames.addAll(this.baseNames);
-        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        ResourceBundleMessageSource messageSource = new I18MultiModuleMessageSource();
         messageSource.setBasenames(baseNames.toArray(new String[0]));
         return messageSource;
     }
