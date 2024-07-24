@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.template.tools;
 
+import com.google.common.collect.Iterables;
 import net.microfalx.bootstrap.dataset.*;
 import net.microfalx.bootstrap.dataset.annotation.Align;
 import net.microfalx.bootstrap.dataset.annotation.Component;
@@ -947,7 +948,13 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
             model = lookupAnnot.model();
         }
         LookupProvider<Lookup<Object>, Object> lookupProvider = dataSetService.getLookupProvider(model);
-        return lookupProvider.findAll(Pageable.ofSize(5000));
+        Iterable<Lookup<Object>> providerData = lookupProvider.findAll(Pageable.ofSize(5000));
+        if (!field.isRequired()) {
+            Collection<Lookup<Object>> empty = List.of(new DefaultLookup<>(EMPTY_STRING, EMPTY_STRING));
+            return Iterables.concat(empty, providerData);
+        } else {
+            return providerData;
+        }
     }
 
     /**

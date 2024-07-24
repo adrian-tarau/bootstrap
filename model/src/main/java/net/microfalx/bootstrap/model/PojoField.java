@@ -1,5 +1,8 @@
 package net.microfalx.bootstrap.model;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.annotation.*;
 
@@ -70,18 +73,29 @@ public abstract class PojoField<M> extends AbstractField<M> {
     void update(MethodHandle getter, MethodHandle setter) {
         this.getter = getter;
         this.setter = setter;
-        setReadOnly(setter == null || (hasAnnotation(ReadOnly.class) && findAnnotation(ReadOnly.class).value()));
     }
 
     protected boolean update(Member member) {
         requireNonNull(member);
-        if (((AnnotatedElement) member).isAnnotationPresent(Ignore.class)) return false;
         annotations = Arrays.asList(((AnnotatedElement) member).getAnnotations());
+        if (((AnnotatedElement) member).isAnnotationPresent(Ignore.class)) return false;
+        updateFromInternalAnnotations();
+        updateFromBeanValidation();
+        return true;
+    }
+
+    private void updateFromInternalAnnotations() {
+        setReadOnly(setter == null || (hasAnnotation(ReadOnly.class) && findAnnotation(ReadOnly.class).value()));
         Position positionAnnot = findAnnotation(Position.class);
         setPosition(positionAnnot != null ? positionAnnot.value() : 1 + getIndex() * 10);
-        setIsId(hasAnnotation(Id.class));
+        setId(hasAnnotation(Id.class));
         setNaturalId(hasAnnotation(NaturalId.class));
         setIsName(hasAnnotation(Name.class));
-        return true;
+    }
+
+    private void updateFromBeanValidation() {
+        setRequired(getDataClass().isPrimitive() || hasAnnotation(NotNull.class) || hasAnnotation(NotEmpty.class));
+        Size sizeAnnot = findAnnotation(Size.class);
+        if (sizeAnnot != null && sizeAnnot.min() > 0) setRequired(true);
     }
 }

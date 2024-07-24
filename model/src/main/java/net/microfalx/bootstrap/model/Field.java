@@ -117,6 +117,13 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
     boolean isName();
 
     /**
+     * Returns whether the field is required (to have a value different than null).
+     *
+     * @return {@code true} if the field is required, {@code false} otherwise
+     */
+    boolean isRequired();
+
+    /**
      * Returns whether the field is read-only.
      *
      * @return {@code true} if read-only, {@code false} otherwise

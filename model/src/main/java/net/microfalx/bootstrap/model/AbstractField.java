@@ -38,6 +38,7 @@ public abstract class AbstractField<M> implements Field<M> {
     private Class<?> dataClass = Object.class;
     private DataType dataType = DataType.MODEL;
     private boolean readOnly;
+    private boolean required;
     private boolean _transient;
     private String label;
     private boolean labelCalculated;
@@ -139,7 +140,7 @@ public abstract class AbstractField<M> implements Field<M> {
         return isId;
     }
 
-    protected final void setIsId(boolean isId) {
+    protected final void setId(boolean isId) {
         this.isId = isId;
     }
 
@@ -177,6 +178,15 @@ public abstract class AbstractField<M> implements Field<M> {
 
     protected void setPosition(int position) {
         this.position = position;
+    }
+
+    @Override
+    public final boolean isRequired() {
+        return required;
+    }
+
+    protected final void setRequired(boolean required) {
+        this.required = required;
     }
 
     public final boolean isReadOnly() {
