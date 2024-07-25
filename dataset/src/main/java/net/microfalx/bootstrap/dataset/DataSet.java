@@ -203,9 +203,18 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
     Map<F, String> validate(M model);
 
     /**
+     * Prepares a model for offline access.
+     * <p>
+     * Some data set requires additional context (for example an open session for JPAs) to detach the model.
+     *
+     * @param model the model
+     */
+    void detach(M model);
+
+    /**
      * Validates whether the filter is valid for the data set.
      * <p>
-     * This validation includes whether the fields exists or if the values of the filter are acceptble for the data set.
+     * This validation includes whether the fields exist or if the values of the filter are acceptable for the data set.
      *
      * @param filter the filter
      * @throws DataSetException if the filter is not valid

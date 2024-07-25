@@ -6,6 +6,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.ExceptionUtils;
+import org.hibernate.Hibernate;
+import org.hibernate.collection.spi.LazyInitializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -174,6 +176,18 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
             repository.deleteAll();
         } catch (Exception e) {
             handleException("delete all", e);
+        }
+    }
+
+    @Override
+    public void detach(M model) {
+        super.detach(model);
+        Hibernate.initialize(model);
+        for (JpaField<M> field : getMetadata().getFields()) {
+            Object value = field.get(model);
+            if (value instanceof LazyInitializable) {
+                Hibernate.initialize(value);
+            }
         }
     }
 

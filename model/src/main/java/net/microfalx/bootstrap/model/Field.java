@@ -145,6 +145,17 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
     Class<?> getDataClass();
 
     /**
+     * Returns the data type of the collection or map supporting this field.
+     * <p>
+     * This method will fail if the data type is not {@link DataType#COLLECTION} or a {@link DataType#MAP}.
+     * <p>
+     * For maps, the type is representing the type of the value.
+     *
+     * @return a non-null instance
+     */
+    Class<?> getGenericDataClass();
+
+    /**
      * Returns an enum for the data type.
      *
      * @return a non-null instance
@@ -249,9 +260,14 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
         ENUM(false, false),
 
         /**
-         * A collection class (Collection or Map)
+         * A collection type
          */
         COLLECTION(false, false),
+
+        /**
+         * A map type
+         */
+        MAP(false, false),
 
         /**
          * Another model
@@ -280,6 +296,10 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
 
         public boolean isTemporal() {
             return temporal;
+        }
+
+        public boolean isStructure() {
+            return this == COLLECTION || this == MAP;
         }
     }
 }

@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.model;
 
-import org.apache.commons.lang3.ClassUtils;
+import net.microfalx.lang.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -11,6 +11,12 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Map;
+
+import static net.microfalx.lang.ClassUtils.isSubClassOf;
 
 /**
  * Base class for all POJO metadata.
@@ -63,6 +69,8 @@ public abstract class PojoMetadata<M, F extends PojoField<M>, ID> extends Abstra
             try {
                 PojoField<M> field = createField(metadata, propertyDescriptor.getName(), propertyDescriptor.getName());
                 field.setDataClass(propertyDescriptor.getPropertyType());
+                Class<?> genericDataClass = getGenericDataClass(propertyDescriptor);
+                if (genericDataClass != null) field.setGenericDataClass(genericDataClass);
                 field.setIndex(index++);
                 field.update(getGetter(propertyDescriptor), getSetter(propertyDescriptor));
                 Field jvmField = ReflectionUtils.findField(modelClass, propertyDescriptor.getName());
@@ -95,6 +103,21 @@ public abstract class PojoMetadata<M, F extends PojoField<M>, ID> extends Abstra
             return method != null ? MethodHandles.lookup().unreflect(method) : null;
         } catch (IllegalAccessException e) {
             throw new ModelException("Failed to extract setter for " + propertyDescriptor, e);
+        }
+    }
+
+    private Class<?> getGenericDataClass(PropertyDescriptor propertyDescriptor) {
+        Method method = propertyDescriptor.getReadMethod();
+        Class<?> propertyType = propertyDescriptor.getPropertyType();
+        boolean isCollection = isSubClassOf(propertyType, Collection.class);
+        boolean isMap = isSubClassOf(propertyType, Map.class);
+        if (method == null || !(isCollection || isMap)) return null;
+        Type returnType = method.getGenericReturnType();
+        if (returnType instanceof ParameterizedType parameterizedType) {
+            Type type = parameterizedType.getActualTypeArguments()[isCollection ? 0 : 1];
+            return type instanceof Class ? (Class<?>) type : null;
+        } else {
+            return null;
         }
     }
 }

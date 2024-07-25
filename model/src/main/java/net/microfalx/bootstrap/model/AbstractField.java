@@ -36,6 +36,7 @@ public abstract class AbstractField<M> implements Field<M> {
     private int index;
     private int position;
     private Class<?> dataClass = Object.class;
+    private Class<?> genericDataClass = Object.class;
     private DataType dataType = DataType.MODEL;
     private boolean readOnly;
     private boolean required;
@@ -217,6 +218,19 @@ public abstract class AbstractField<M> implements Field<M> {
     }
 
     @Override
+    public Class<?> getGenericDataClass() {
+        if (!(getDataType() == DataType.COLLECTION || getDataType() == DataType.MAP)) {
+            throw new ModelException("A generic type is available only for collections and maps, field " + getName());
+        }
+        return genericDataClass;
+    }
+
+    void setGenericDataClass(Class<?> genericDataClass) {
+        requireNonNull(genericDataClass);
+        this.genericDataClass = genericDataClass;
+    }
+
+    @Override
     public final DataType getDataType() {
         return dataType;
     }
@@ -254,8 +268,10 @@ public abstract class AbstractField<M> implements Field<M> {
             this.dataType = dataType;
         } else if (isAssignable(dataClass, Enum.class)) {
             this.dataType = DataType.ENUM;
-        } else if (isAssignable(dataClass, Collection.class) || isAssignable(dataClass, Map.class)) {
+        } else if (isAssignable(dataClass, Collection.class)) {
             this.dataType = DataType.COLLECTION;
+        } else if (isAssignable(dataClass, Map.class)) {
+            this.dataType = DataType.MAP;
         } else {
             this.dataType = DataType.MODEL;
         }

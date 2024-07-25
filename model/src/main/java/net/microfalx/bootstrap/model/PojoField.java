@@ -95,6 +95,7 @@ public abstract class PojoField<M> extends AbstractField<M> {
 
     private void updateFromBeanValidation() {
         setRequired(getDataClass().isPrimitive() || hasAnnotation(NotNull.class) || hasAnnotation(NotEmpty.class));
+        if (getDataType().isStructure()) setRequired(false);
         Size sizeAnnot = findAnnotation(Size.class);
         if (sizeAnnot != null && sizeAnnot.min() > 0) setRequired(true);
     }

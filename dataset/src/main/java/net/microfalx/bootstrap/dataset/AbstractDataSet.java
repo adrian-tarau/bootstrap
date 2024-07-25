@@ -299,6 +299,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         return metadata.validate(model);
     }
 
+    @Override
+    public void detach(M model) {
+        // expected empty
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void validate(Filter filter) {

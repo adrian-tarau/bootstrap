@@ -18,18 +18,25 @@ public @interface Component {
     Type value() default Type.TEXT_FIELD;
 
     /**
-     * The number of columns (characters) for the component.
+     * Returns the number of columns (characters) for the component.
      *
      * @return a positive integer, -1 for auto
      */
     int columns() default -1;
 
     /**
-     * The number of rows (characters) for the component.
+     * Returns the number of rows (characters) for the component.
      *
      * @return a positive integer, -1 for auto
      */
     int rows() default -1;
+
+    /**
+     * Returns the separator used between items for {@link Type#TAG}.
+     *
+     * @return the separator
+     */
+    char separator() default ',';
 
     /**
      * An enum for the component type.
@@ -37,6 +44,7 @@ public @interface Component {
     enum Type {
         TEXT_FIELD,
         TEXT_AREA,
+        TAG,
         PASSWORD
     }
 }
