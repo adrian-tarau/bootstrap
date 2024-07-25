@@ -196,6 +196,12 @@ DataSet.download = function () {
  */
 DataSet.loadModal = function (html) {
     Application.loadModal("dataset-modal", html);
+    Chart.process("#dataset-modal");
+    $("#dataset-modal .form-select-sm").select2({
+        theme: "bootstrap-5",
+        containerCssClass: "select2--small",
+        dropdownCssClass: "select2--small",
+    });
 }
 
 /**
@@ -279,7 +285,6 @@ DataSet.save = function () {
 DataSet.trend = function () {
     DataSet.get("trend", {}, function (data) {
         DataSet.loadModal(data);
-        Chart.process("#dataset-modal");
     });
 }
 

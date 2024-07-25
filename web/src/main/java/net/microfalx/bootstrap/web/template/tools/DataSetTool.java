@@ -689,6 +689,17 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns whether the field is supported by a collection, which means the dropdown has to be with multi-select.
+     *
+     * @param field the field
+     * @return {@code true} if multi-select is required, {@code false} otherwise
+     */
+    public boolean isMultiSelect(Field<M> field) {
+        requireNonNull(field);
+        return field.getDataType() == Field.DataType.COLLECTION;
+    }
+
+    /**
      * Returns the column span for a field.
      *
      * @param field the field
@@ -943,10 +954,9 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public Iterable<Lookup<Object>> getDropDownValues(Field<M> field) {
         Class<?> model = field.getDataClass();
+        if (field.getDataType() == Field.DataType.COLLECTION) model = field.getGenericDataClass();
         net.microfalx.bootstrap.dataset.annotation.Lookup lookupAnnot = field.findAnnotation(net.microfalx.bootstrap.dataset.annotation.Lookup.class);
-        if (lookupAnnot != null) {
-            model = lookupAnnot.model();
-        }
+        if (lookupAnnot != null) model = lookupAnnot.model();
         LookupProvider<Lookup<Object>, Object> lookupProvider = dataSetService.getLookupProvider(model);
         Iterable<Lookup<Object>> providerData = lookupProvider.findAll(Pageable.ofSize(5000));
         if (!field.isRequired()) {
@@ -972,8 +982,19 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         if (value == null) {
             return false;
         } else {
-            value = dataSetService.getId(value);
-            return ObjectUtils.equals(value, lookup.getId());
+            if (field.getDataType() == Field.DataType.MODEL) {
+                value = dataSetService.getId(value);
+                return ObjectUtils.equals(value, lookup.getId());
+            } else if (field.getDataType() == Field.DataType.COLLECTION) {
+                Collection<?> entries = (Collection<?>) value;
+                for (Object entry : entries) {
+                    value = dataSetService.getId(entry);
+                    return ObjectUtils.equals(value, lookup.getId());
+                }
+                return false;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -1006,6 +1027,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     private boolean isLookupField(Field<M> field) {
         return field.getDataType() == Field.DataType.MODEL || field.getDataType() == Field.DataType.ENUM
+                || field.getDataType() == Field.DataType.COLLECTION
                 || field.hasAnnotation(net.microfalx.bootstrap.dataset.annotation.Lookup.class);
     }
 

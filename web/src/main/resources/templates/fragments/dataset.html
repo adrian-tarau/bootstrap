@@ -179,7 +179,7 @@
                   th:attr="rows=${#dataset.getInputRows(field)}"
                   th:text="${#dataset.getValue(model, field)}" component:tooltip="${field}"></textarea>
         <select th:if="${#dataset.isDropDownField(field)}" th:name="${field.name}"
-                th:readonly="${#dataset.isReadOnly(field)}" th:disabled="${#dataset.isDisabled(field)}" th:class="${#dataset.getInputFieldClass(field)}" component:tooltip="${field}">
+                th:readonly="${#dataset.isReadOnly(field)}" th:disabled="${#dataset.isDisabled(field)}" th:class="${#dataset.getInputFieldClass(field)}" th:multiple="${#dataset.isMultiSelect(field)}" component:tooltip="${field}">
             <option th:each="lookup : ${#dataset.getDropDownValues(field)}" th:selected="${#dataset.isSelected(model, field, lookup)}" th:value="${lookup.id}" th:text="${lookup.name}"></option>
         </select>
     </div>

@@ -5,7 +5,6 @@ import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Position;
@@ -24,7 +23,7 @@ public abstract class NamedAndTaggedAndTimestampedIdentityAware<T extends Serial
 
     @Column(name = "tags")
     @Position(400)
-    @Component(Component.Type.TEXT_AREA)
+    //@Component(Component.Type.TAG)
     @Description("A collection of tags associated with a {name}")
     @Width("150px")
     @Filterable()

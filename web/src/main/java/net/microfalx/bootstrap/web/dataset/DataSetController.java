@@ -616,6 +616,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Optional<M> result = dataSet.findById(compositeId.toId());
         if (result.isPresent()) {
             M dataSetModel = result.get();
+            dataSet.detach(dataSetModel);
             updateModel(dataSet, model, dataSetModel, state);
             model.addAttribute("model", dataSetModel);
             return dataSetModel;
@@ -662,10 +663,16 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Object convert(DataSet<M, Field<M>, ID> dataSet, M model, Field<M> field, String value) {
         if (field.getDataType() == Field.DataType.MODEL) {
-            DataSet<?, ? extends Field<?>, Object> fieldDataSet = dataSetService.getDataSet(field.getDataClass());
-            CompositeIdentifier<?, ? extends Field<?>, Object> compositeIdentifier = new CompositeIdentifier<>(fieldDataSet.getMetadata(), value);
-            Object id = compositeIdentifier.toId();
-            return fieldDataSet.findById(id).orElse(null);
+            if (StringUtils.isEmpty(value)) {
+                return null;
+            } else {
+                DataSet<?, ? extends Field<?>, Object> fieldDataSet = dataSetService.getDataSet(field.getDataClass());
+                CompositeIdentifier<?, ? extends Field<?>, Object> compositeIdentifier = new CompositeIdentifier<>(fieldDataSet.getMetadata(), value);
+                Object id = compositeIdentifier.toId();
+                return fieldDataSet.findById(id).orElse(null);
+            }
+        } else if (field.getDataType() == Field.DataType.COLLECTION) {
+            return null;
         } else {
             try {
                 return Field.from(value, field.getDataClass());

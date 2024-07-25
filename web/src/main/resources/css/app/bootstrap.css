@@ -4,6 +4,7 @@
 
 .dropdown-menu {
     --bs-dropdown-font-size: 1rem !important;
+    --bs-dropdown-zindex: 2000 !important;
 }
 
 @media (min-width: 992px) {
