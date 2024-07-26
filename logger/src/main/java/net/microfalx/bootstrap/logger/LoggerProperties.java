@@ -17,6 +17,8 @@ public class LoggerProperties {
 
     private boolean debug;
     private boolean trace;
+    private String application;
+    private String process;
     private Syslog syslog = new Syslog();
     private Gelf gelf = new Gelf();
 

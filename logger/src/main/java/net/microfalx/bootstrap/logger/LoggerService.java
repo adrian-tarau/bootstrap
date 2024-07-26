@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static net.microfalx.bootstrap.logger.LoggerUtils.METRICS_COUNTS_EXCEPTION;
 import static net.microfalx.bootstrap.logger.LoggerUtils.METRICS_COUNTS_SEVERITY;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.defaultIfNull;
 
 @Service
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -184,6 +185,8 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
         appender.setExtractStackTrace("true");
         appender.setOriginHost(hostname);
         appender.setFacility(gelf.getFacility());
+        appender.setAdditionalFields("Application=" + defaultIfNull(properties.getApplication(), "Bootstrap"));
+        appender.setAdditionalFields("Process=" + defaultIfNull(properties.getProcess(), "Web"));
         appender.setContext(logCtx);
         appender.setName("gelf");
         appender.start();
