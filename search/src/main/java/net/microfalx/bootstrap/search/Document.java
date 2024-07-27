@@ -35,25 +35,28 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
     public static final String ID_FIELD = "id";
     public static final String TYPE_FIELD = "type";
     public static final String NAME_FIELD = "name";
-    public static final String DESCRIPTION_FIELD = "desc";
+    public static final String DESCRIPTION_FIELD = "description";
     public static final String BODY_FIELD = "body";
     public static final String BODY_URI_FIELD = "body_uri";
     public static final String MIME_TYPE_FIELD = "mime_type";
     public static final String REFERENCE_FIELD = "reference";
     public static final String TAG_FIELD = "tag";
     public static final String OWNER_FIELD = "owner";
-    public static final String SOURCE_FIELD = "source";
-    public static final String TARGET_FIELD = "target";
     static final String STORED_SUFFIX_FIELD = "$stored";
     static final String SORTED_SUFFIX_FIELD = "$sorted";
-    public static final String CREATED_AT_FIELD = "created";
-    public static final String MODIFIED_AT_FIELD = "modified";
-    public static final String RECEIVED_AT_FIELD = "received";
-    public static final String SENT_AT_FIELD = "sent";
+    public static final String CREATED_AT_FIELD = "created_at";
+    public static final String MODIFIED_AT_FIELD = "modified_at";
+    public static final String RECEIVED_AT_FIELD = "received_at";
+    public static final String SENT_AT_FIELD = "sent_at";
     public static final String LENGTH_FIELD = "length";
     public static final String USER_DATA_FIELD = "data";
-    public static final String SEVERITY_FIELD = "severity";
+
     public static final String LABEL_FIELD = "label";
+
+    public static final String SOURCE_FIELD = "Source";
+    public static final String TARGET_FIELD = "Target";
+    public static final String SEVERITY_FIELD = "Severity";
+
     public static final float NO_RELEVANCE = -1;
 
     public static final String SYSTEM = "system";
