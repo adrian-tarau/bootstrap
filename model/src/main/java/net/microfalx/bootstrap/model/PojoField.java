@@ -79,24 +79,25 @@ public abstract class PojoField<M> extends AbstractField<M> {
         requireNonNull(member);
         annotations = Arrays.asList(((AnnotatedElement) member).getAnnotations());
         if (((AnnotatedElement) member).isAnnotationPresent(Ignore.class)) return false;
-        updateFromInternalAnnotations();
-        updateFromBeanValidation();
+        updateFromBaseAnnotations();
         return true;
     }
 
-    private void updateFromInternalAnnotations() {
+    protected final boolean isRequiredByBaseRules() {
+        if (getDataClass().isPrimitive() || hasAnnotation(NotNull.class) || hasAnnotation(NotEmpty.class)) return true;
+        if (getDataType().isStructure()) return false;
+        Size sizeAnnot = findAnnotation(Size.class);
+        if (sizeAnnot != null && sizeAnnot.min() > 0) return true;
+        return false;
+    }
+
+    private void updateFromBaseAnnotations() {
         setReadOnly(setter == null || (hasAnnotation(ReadOnly.class) && findAnnotation(ReadOnly.class).value()));
         Position positionAnnot = findAnnotation(Position.class);
         setPosition(positionAnnot != null ? positionAnnot.value() : 1 + getIndex() * 10);
         setId(hasAnnotation(Id.class));
         setNaturalId(hasAnnotation(NaturalId.class));
         setIsName(hasAnnotation(Name.class));
-    }
-
-    private void updateFromBeanValidation() {
-        setRequired(getDataClass().isPrimitive() || hasAnnotation(NotNull.class) || hasAnnotation(NotEmpty.class));
-        if (getDataType().isStructure()) setRequired(false);
-        Size sizeAnnot = findAnnotation(Size.class);
-        if (sizeAnnot != null && sizeAnnot.min() > 0) setRequired(true);
+        setRequired(isRequiredByBaseRules());
     }
 }

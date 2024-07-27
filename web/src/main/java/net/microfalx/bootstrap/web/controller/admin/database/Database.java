@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.web.controller.admin.database;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -22,14 +24,17 @@ public class Database extends NamedIdentityAware<String> {
 
     @Position(6)
     @Description("The type of the database (cluster)")
+    @NotNull
     private net.microfalx.bootstrap.jdbc.support.Database.Type type;
 
     @Position(10)
     @Description("The JDBC URL")
+    @NotEmpty
     private String uri;
 
     @Position(11)
     @Description("The JDBC user name")
+    @NotEmpty
     private String userName;
 
     @Position(20)

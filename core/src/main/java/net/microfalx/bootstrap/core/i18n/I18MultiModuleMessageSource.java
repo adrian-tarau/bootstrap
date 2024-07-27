@@ -6,12 +6,15 @@ import net.microfalx.resource.CompositeResource;
 import net.microfalx.resource.Resource;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.*;
 
 class I18MultiModuleMessageSource extends ResourceBundleMessageSource {
+
+    private static final byte[] NEW_LINE = "\n".getBytes();
 
     @Override
     protected ResourceBundle doGetBundle(String basename, Locale locale) {
@@ -27,6 +30,7 @@ class I18MultiModuleMessageSource extends ResourceBundleMessageSource {
         if (resource instanceof CompositeResource) {
             for (Resource childResource : ((CompositeResource) resource).getResources()) {
                 inputStreams.add(childResource.getInputStream());
+                inputStreams.add(new ByteArrayInputStream(NEW_LINE));
             }
         } else {
             inputStreams.add(resource.getInputStream());

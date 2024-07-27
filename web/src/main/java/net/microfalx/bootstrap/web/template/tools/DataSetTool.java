@@ -959,11 +959,11 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         if (lookupAnnot != null) model = lookupAnnot.model();
         LookupProvider<Lookup<Object>, Object> lookupProvider = dataSetService.getLookupProvider(model);
         Iterable<Lookup<Object>> providerData = lookupProvider.findAll(Pageable.ofSize(5000));
-        if (!field.isRequired()) {
+        if (field.isRequired()) {
+            return providerData;
+        } else {
             Collection<Lookup<Object>> empty = List.of(new DefaultLookup<>(EMPTY_STRING, EMPTY_STRING));
             return Iterables.concat(empty, providerData);
-        } else {
-            return providerData;
         }
     }
 
@@ -982,7 +982,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         if (value == null) {
             return false;
         } else {
-            if (field.getDataType() == Field.DataType.MODEL) {
+            if (isLookupField(field)) {
                 value = dataSetService.getId(value);
                 return ObjectUtils.equals(value, lookup.getId());
             } else if (field.getDataType() == Field.DataType.COLLECTION) {
@@ -1026,7 +1026,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if a model behind the field, {@code false} otherwise
      */
     private boolean isLookupField(Field<M> field) {
-        return field.getDataType() == Field.DataType.MODEL || field.getDataType() == Field.DataType.ENUM
+        return isModelOrEnum(field)
                 || field.getDataType() == Field.DataType.COLLECTION
                 || field.hasAnnotation(net.microfalx.bootstrap.dataset.annotation.Lookup.class);
     }
@@ -1068,6 +1068,10 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     private Component.Type getComponentType(Field<M> field) {
         Component componentAnnot = field.findAnnotation(Component.class);
         return componentAnnot != null ? componentAnnot.value() : Component.Type.TEXT_FIELD;
+    }
+
+    public boolean isModelOrEnum(Field<M> field) {
+        return field.getDataType() == Field.DataType.MODEL || field.getDataType() == Field.DataType.ENUM;
     }
 
     public static class ColumnGroup<M, F extends Field<M>, ID> {

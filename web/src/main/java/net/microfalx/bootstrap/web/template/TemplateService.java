@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.web.template;
 
 import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.content.ContentService;
+import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.help.HelpService;
 import net.microfalx.bootstrap.model.MetadataService;
@@ -39,6 +40,9 @@ public class TemplateService {
     private ChartService chartService;
 
     @Autowired
+    private I18nService i18nService;
+
+    @Autowired
     private SpringTemplateEngine templateEngine;
 
     @Autowired
@@ -46,6 +50,7 @@ public class TemplateService {
 
     @PostConstruct
     private void initialize() {
+        templateEngine.setMessageSource(i18nService.getMessageSource());
         templateEngine.addDialect(new SpringDataDialect());
         templateEngine.addDialect(new ApplicationDialect(applicationContext));
         templateEngine.addDialect(new AssetDialect(applicationContext));

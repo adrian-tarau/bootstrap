@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Transient;
 
 import java.lang.reflect.Member;
@@ -25,7 +26,12 @@ public final class JpaField<M> extends PojoField<M> {
         Column columnAnnot = findAnnotation(Column.class);
         if (columnAnnot != null) {
             columnName = columnAnnot.name();
-            setRequired(!columnAnnot.nullable());
+            setRequired(!columnAnnot.nullable() || isRequiredByBaseRules());
+        }
+        JoinColumn joinColumnAnnot = findAnnotation(JoinColumn.class);
+        if (joinColumnAnnot != null) {
+            columnName = joinColumnAnnot.name();
+            setRequired(!joinColumnAnnot.nullable() || isRequiredByBaseRules());
         }
         setTransient(hasAnnotation(Transient.class));
         return accepted;

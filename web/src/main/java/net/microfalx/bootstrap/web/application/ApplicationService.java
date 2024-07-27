@@ -306,6 +306,8 @@ public final class ApplicationService implements InitializingBean {
     private void initApplication() {
         application.name = applicationProperties.getName();
         application.description = applicationProperties.getDescription();
+        application.owner = applicationProperties.getOwner();
+        application.url = applicationProperties.getUrl();
         application.logo = applicationProperties.getLogo();
         application.version = defaultIfNull(applicationProperties.getVersion(), "1.0.0");
     }

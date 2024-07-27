@@ -7,6 +7,8 @@ public final class Application implements Nameable, Descriptable {
 
     String name;
     String description;
+    String owner;
+    String url;
     String version;
     String logo;
 
@@ -20,6 +22,14 @@ public final class Application implements Nameable, Descriptable {
     @Override
     public String getDescription() {
         return description;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public String getUrl() {
+        return url;
     }
 
     public String getLogo() {
