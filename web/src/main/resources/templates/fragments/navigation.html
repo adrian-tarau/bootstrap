@@ -1,101 +1,56 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
+<html xmlns:th="http://www.thymeleaf.org">
 
 <li class="nav-item" th:fragment="menu-item">
-    <a class="sidebar-link" th:href="@{${item.action}}" th:classappend="${#component.getActiveClass(item)}">
-        <span class="icon-holder"><i th:class="${item.icon}"></i></span>
-        <span class="title" th:text="${item.text}">Text</span>
+    <a th:href="@{${item.action}}" class="nav-link" th:classappend="${#component.getActiveClass(item)}">
+        <i class="nav-icon" th:classappend="${item.icon}"></i>
+        <p th:text="${item.text}"></p>
     </a>
 </li>
 
-<li class="nav-item dropdown" th:fragment="menu">
-    <a class="dropdown-toggle" role="button" href="javascript:void(0);">
-                <span class="icon-holder">
-                  <i th:class="${item.icon}"></i>
-                </span>
-        <span class="title" th:text="${item.text}">Menu</span>
-        <span class="arrow"><i class="ti-angle-right"></i></span>
+<li class="nav-item" th:fragment="menu">
+    <a href="#" class="nav-link"> <i class="nav-icon" th:classappend="${item.icon}"></i>
+        <p><span th:text="${item.text}"></span><i class="nav-arrow bi bi-chevron-right"></i></p>
     </a>
-    <ul class="dropdown-menu" th:style="${#component.getActiveStyle(item)}">
+    <ul class="nav nav-treeview" th:style="${#component.getActiveStyle(item)}">
         <div th:each="item : ${#component.getChildren(item)}" th:remove="tag">
             <div th:replace="~{ this :: (${#component.isContainer(item)} ? 'menu' : 'menu-item') }"></div>
         </div>
     </ul>
 </li>
 
-<div class="sidebar" th:fragment="left">
-    <div class="sidebar-inner">
-        <div class="sidebar-logo">
-            <div class="peers ai-c fxw-nw">
-                <div class="peer peer-greed">
-                    <a class="sidebar-link td-n" th:href="@{/}">
-                        <div class="peers ai-c fxw-nw">
-                            <div class="peer">
-                                <div class="logo">
-                                    <img th:src="@{/asset/image/boar.png}">
-                                </div>
-                            </div>
-                            <div class="peer peer-greed">
-                                <h5 class="lh-1 mB-0 logo-text" th:text="${#application.name}"></h5>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="peer">
-                    <div class="mobile-toggle sidebar-toggle">
-                        <a href="" class="td-n">
-                            <i class="ti-arrow-circle-left"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <ul class="sidebar-menu scrollable pos-r" th:with="menu = ${#navigation.get('left')}">
-            <div th:each="item : ${#component.getChildren(menu)}" th:remove="tag">
-                <div th:replace="~{ this :: (${#component.isContainer(item)} ? 'menu' : 'menu-item') }"></div>
-            </div>
-        </ul>
+<aside class="app-sidebar bg-body-secondary shadow nav-indent nav-compact" data-bs-theme="dark" th:fragment="left">
+    <div class="sidebar-brand">
+        <a th:href="@{/}" class="brand-link">
+            <img th:src="@{/asset/image/boar.png}" class="brand-image opacity-75 shadow">
+            <span th:text="${#application.name}" class="brand-text fw-light"></span>
+        </a>
     </div>
-</div>
+    <div class="sidebar-wrapper">
+        <nav class="mt-2">
+            <ul th:with="menu = ${#navigation.get('left')}" class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
+                <div th:each="item : ${#component.getChildren(menu)}" th:remove="tag">
+                    <div th:replace="~{ this :: (${#component.isContainer(item)} ? 'menu' : 'menu-item') }"></div>
+                </div>
+            </ul>
+        </nav>
+    </div>
+</aside>
 
-<div class="header navbar" th:fragment="top">
-    <div class="header-container">
-        <ul class="nav-left">
-            <li>
-                <a id='sidebar-toggle' class="sidebar-toggle" href="javascript:void(0);">
-                    <i class="fa-solid fa-bars"></i>
-                </a>
-            </li>
-            <li class="search-input active">
-                <form role="search" th:attr="onsubmit='Application.Search.query(); return false'">
-                    <div class="input-group mb-3">
-                        <div class="dropdown" th:unless="${#lists.isEmpty(queryHistory)}">
-                            <a class="search-history mr-3" data-bs-toggle="dropdown" component:tooltip-text="A search history for the last 10 searches">
-                                <i class="fa-regular fa-square-caret-down"></i>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><h6 class="dropdown-header">Search History</h6></li>
-                                <li th:each="queryItem : ${queryHistory}">
-                                    <a class="dropdown-item" href="#" th:text="${queryItem}" th:attr="onclick='Application.Search.click(this); return false'">Action</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <input id="search" class="form-control" autocomplete="off" type="search" size="80"
-                               placeholder="Search..." th:value="${query}" component:tooltip="${#dataset.getSearchTooltip()}"
-                               component:tooltip-placement="right" component:tooltip-delay="[2000, 2000]">
-
-                    </div>
-                </form>
-            </li>
+<nav class="app-header navbar navbar-expand bg-body" th:fragment="top">
+    <div class="container-fluid">
+        <ul class="navbar-nav">
+            <li th:replace="~{ fragments/header :: sidebar-button}"></li>
+            <li th:replace="~{ fragments/header :: search}"></li>
         </ul>
-        <ul class="nav-right">
+        <ul class="navbar-nav ms-auto">
             <li th:replace="~{ fragments/header :: ajax}"></li>
             <!--li th:replace="~{ fragments/header :: notifications}"></li-->
             <li th:replace="~{ fragments/header :: user}"></li>
             <li th:replace="~{ fragments/header :: help}"></li>
         </ul>
     </div>
-</div>
+</nav>
 
 </body>
 </html>

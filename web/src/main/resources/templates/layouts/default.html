@@ -1,18 +1,24 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head th:replace="~{fragments/header :: header}">
-<body class="app">
-<div>
+<body class="layout-fixed-complete sidebar-mini sidebar-expand-sm bg-body-tertiary">
+<div class="app-wrapper">
     <div th:replace="~{fragments/navigation :: left}"/>
-    <div class="page-container">
+    <div class="app-main-wrapper">
         <div th:replace="~{fragments/navigation :: top}"/>
-        <main class='main-content bgc-grey-100'>
-            <div id='mainContent' layout:fragment="content">
-                    <p>Page content goes here</p>
+        <main class="app-main">
+            <div class="app-content-header">
+                <div class="container-fluid">
+                </div>
+            </div>
+            <div class="app-content">
+                <div class="container-fluid" layout:fragment="content">
+                </div>
             </div>
         </main>
         <div th:replace="~{fragments/footer :: footer-full}"/>
     </div>
+    <div th:replace="~{fragments/footer :: footer-js}"/>
 </div>
 </body>
 </html>

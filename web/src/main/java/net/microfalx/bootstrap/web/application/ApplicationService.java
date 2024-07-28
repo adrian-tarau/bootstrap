@@ -159,7 +159,11 @@ public final class ApplicationService implements InitializingBean {
     public Collection<AssetBundle> getAssetBundles(String... ids) {
         Collection<AssetBundle> finalBundles = new ArrayList<>();
         if (ObjectUtils.isEmpty(ids)) {
-            finalBundles.addAll(getAssetBundles().stream().filter(assetBundle -> !assetBundle.isInline()).toList());
+            finalBundles.addAll(getAssetBundles().stream().filter(assetBundle -> {
+                String assetBundleTheme = assetBundle.getTheme();
+                boolean matchedByTheme = assetBundleTheme == null || assetBundleTheme.equalsIgnoreCase(application.getTheme().getId());
+                return matchedByTheme && !assetBundle.isInline();
+            }).toList());
         } else {
             for (String id : ids) {
                 finalBundles.add(getAssetBundle(id));

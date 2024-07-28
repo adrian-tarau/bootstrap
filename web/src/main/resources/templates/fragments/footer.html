@@ -2,24 +2,22 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset">
 <body>
 
-<footer class="bdT ta-c p-30 lh-0 fsz-sm c-grey-600" th:fragment="footer-full">
+<footer class="app-footer text-center" th:fragment="footer-full">
     <button type="button" class="btn btn-secondary btn-floating btn-lg" id="btn-back-to-top"><i class="fas fa-arrow-up"></i></button>
     <span>Copyright © 2024 <a th:href="${#application.url}" target='_blank' th:text="${#application.owner}"></a>. All rights reserved.</span>
-    <asset:js></asset:js>
-    <asset:js inline="true" bundles="loader"></asset:js>
-    <script>
-        Application.start();
-    </script>
 </footer>
 
-<footer class="ta-c p-30 lh-0 fsz-sm" th:fragment="footer-no-message">
+<footer class="app-footer text-center" th:fragment="footer-no-message">
     <button type="button" class="btn btn-secondary btn-floating btn-lg" id="btn-back-to-top"><i class="fas fa-arrow-up"></i></button>
+</footer>
+
+<div th:fragment="footer-js" th:remove="tag">
     <asset:js></asset:js>
     <asset:js inline="true" bundles="loader"></asset:js>
     <script>
         Application.start();
     </script>
-</footer>
+</div>
 
 </body>
 </html>

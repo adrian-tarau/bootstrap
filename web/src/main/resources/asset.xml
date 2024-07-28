@@ -7,6 +7,7 @@
 
         <asset path="bootstrap.css" type="stylesheet"/>
         <asset path="adminator.css" type="stylesheet"/>
+        <asset path="adminlte.css" type="stylesheet"/>
         <asset path="scroll_top.css" type="stylesheet"/>
         <asset path="component.css" type="stylesheet"/>
         <asset path="dropzone.css" type="stylesheet"/>

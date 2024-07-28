@@ -22,6 +22,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     private String name;
     private String description;
     private String path;
+    private String theme;
     private boolean inline;
     private int order = Integer.MIN_VALUE;
     boolean requiresAuthentication;
@@ -95,6 +96,17 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
      */
     public boolean isInline() {
         return inline;
+    }
+
+    /**
+     * Returns the theme identifier.
+     * <p>
+     * An asset bundle which carries CSS & JS for a theme has the theme identifier associated with it.
+     *
+     * @return the theme identifier if the bundle supports a theme, null otherwise
+     */
+    public String getTheme() {
+        return theme;
     }
 
     /**
@@ -176,6 +188,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
         private String name;
         private String description;
         private String path;
+        private String theme;
         private boolean inline;
         private int order;
         private boolean requiresAuthentication;
@@ -218,6 +231,11 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
             return this;
         }
 
+        public Builder theme(String theme) {
+            this.theme = theme;
+            return this;
+        }
+
         public Builder asset(Asset asset) {
             requireNonNull(asset);
 
@@ -240,6 +258,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
             assetBundle.version = version;
             assetBundle.path = path;
             assetBundle.inline = inline;
+            assetBundle.theme = theme;
             assetBundle.requiresAuthentication = requiresAuthentication;
             assetBundle.order = order;
             for (Asset asset : assets) {

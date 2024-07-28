@@ -1,5 +1,16 @@
+:root {
+    --bs-body-font-size: 0.9rem !important;
+    --bs-font-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+    --bs-body-font-family: var(--bs-font-sans-serif);
+    --bs-modal-padding: 0.5rem !important;
+}
+
 .modal {
     --bs-modal-width: 600px !important;
+}
+
+.icon-link {
+    text-decoration: none !important;
 }
 
 .dropdown-menu {

@@ -10,7 +10,7 @@
                         th:each="button : ${#component.getChildren(toolbar)}"
                         data-bs-toggle="tooltip" title="${button.description}"
                         th:attr="onclick=|Application.action('${button.action}')|"
-                        th:class="${#component.getCssClass(button,'btn btn-primary btn-color mR-5')}">
+                        th:class="${#component.getCssClass(button,'btn btn-primary btn-color me-5')}">
                     <i th:class="${button.icon}"></i><span class="mL-5" th:text="${button.text}"></span>
                 </button>
             </ul>

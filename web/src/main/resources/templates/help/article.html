@@ -4,29 +4,31 @@
 <div id="help-article" th:class="|modal fade modal-lg modal-help|" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">
-                    <span th:text="${title}"></span>
-                </h3>
-                <h4 class="float-end p-2">
-                    <a href="#" component:tooltip-text="Navigates back one page within the current window"
-                       class="text-secondary" th:attr="onclick=|Help.back()|">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </a>
-                    <a href="#" component:tooltip-text="Navigates forward one page within the current window"
-                       class="text-secondary" th:attr="onclick=|Help.forward()|">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                    <a href="#" component:tooltip-text="Navigates to the home page of the current window"
-                       class="text-secondary" th:attr="onclick=|Help.reload()|">
-                        <i class="fa-solid fa-house"></i>
-                    </a>
-                    <span class="mx-2"></span>
-                    <a href="#" component:tooltip-text="Closes the current window" data-bs-dismiss="modal"
-                       class="text-secondary">
-                        <i class="fa-regular fa-circle-xmark"></i>
-                    </a>
-                </h4>
+            <div class="modal-header pb-0">
+                <div class="d-flex w-100">
+                    <h3 class="modal-title flex-grow-1">
+                        <span th:text="${title}"></span>
+                    </h3>
+                    <h4 class="p-2">
+                        <a href="#" component:tooltip-text="Navigates back one page within the current window"
+                           class="text-secondary icon-link" th:attr="onclick=|Help.back()|">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </a>
+                        <a href="#" component:tooltip-text="Navigates forward one page within the current window"
+                           class="text-secondary icon-link" th:attr="onclick=|Help.forward()|">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                        <a href="#" component:tooltip-text="Navigates to the home page of the current window"
+                           class="text-secondary icon-link" th:attr="onclick=|Help.reload()|">
+                            <i class="fa-solid fa-house"></i>
+                        </a>
+                        <span class="mx-2"></span>
+                        <a href="#" component:tooltip-text="Closes the current window" data-bs-dismiss="modal"
+                           class="text-secondary icon-link">
+                            <i class="fa-regular fa-circle-xmark"></i>
+                        </a>
+                    </h4>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="ratio ratio-16x9">

@@ -76,20 +76,20 @@
         <i th:class="${action.icon}"></i><span th:text="${action.text}" class="ms-2"></span></a>
 </div>
 
-<nav class="navbar navbar-expand-lg bg-body-tertiary mB-5" th:fragment="toolbar">
+<nav class="navbar navbar-expand-lg bg-body-tertiary mb-2" th:fragment="toolbar">
     <div class="container-fluid">
         <div class="collapse navbar-collapse">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <ul class="navbar-nav me-auto mb-2">
                 <button th:each="button : ${#component.getChildren(toolbar)}" type="button"
                         component:tooltip="${button}"
                         th:attr="onclick=|Application.action('${button.action}')|"
-                        th:class="${#component.getCssClass(button,'btn btn-primary btn-color mR-5 btn-sm')}">
-                    <i th:class="${button.icon}"></i><span class="mL-5" th:text="${button.text}"></span>
+                        th:class="${#component.getCssClass(button,'btn btn-primary btn-color me-2 btn-sm')}">
+                    <i th:class="${button.icon}"></i><span class="ms-2" th:text="${button.text}"></span>
                 </button>
             </ul>
             <div class="dataset-drop-zone"></div>
-            <div class="mR-10">
-                <span id="page_info" class="badge rounded-pill bg-success p-10" th:text="${#dataset.getPageInfo()}"
+            <div class="me-2">
+                <span id="page_info" class="badge rounded-pill bg-success p-2" th:text="${#dataset.getPageInfo()}"
                     component:tooltip-text="Displays the number of pages and number of records available using the current filter"></span>
                 <button class="btn btn-primary btn-sm" type="button" th:attr="onclick=|DataSet.trend()|" th:if="${hasTrend}"><i class="fa-solid fa-arrow-trend-up"></i></button>
             </div>
@@ -108,12 +108,12 @@
     <p id="dataset-message" class="d-none" th:if="${message}" th:utext="${message}"></p>
 </nav>
 
-<div class="ta-c bdT w-100 p-20" th:fragment="grid-next-page" th:if="${#dataset.hasNext()}">
-    <span id="page_info_and_records" class="badge rounded-pill bg-success p-10"
+<div class="text-center w-100 p-2 pt-5" th:fragment="grid-next-page" th:if="${#dataset.hasNext()}">
+    <span id="page_info_and_records" class="badge rounded-pill bg-success text-white p-2"
           th:text="${#dataset.getPageAndRecordInfo()}" component:tooltip-text="Displays the number of pages and number of records available using the current filter"></span>
     <a id="more_results" href="#" th:data-page="${#dataset.getNextPage()}"
        th:onclick="DataSet.loadPage(this.getAttribute('data-page')); return false">
-    <span class="badge bgc-green-50 c-green-700 p-10 tt-c rounded-pill" component:tooltip-text="Loads next page with results">
+    <span class="badge rounded-pill bg-success-subtle text-success-emphasis p-2" component:tooltip-text="Loads next page with results">
         More results
     </span>
     </a>
@@ -121,20 +121,25 @@
 
 <div th:fragment="render">
     <div class="col-md-12">
-        <div class="bgc-white bd bdrs-3 p-20 mB-20">
-            <div>
-                <h3 class="c-grey-900">
-                    <span th:text="${dataset.name}"></span>
-                    <span th:if="${#help.hasHelp()}" class="float-end p-2">
-                        <a href="#" th:attr="onclick=|Help.open('${dataset.name}','${#help.getHelp()}')|" component:tooltip-text="Opens the documentation for the current dashboard">
-                            <i class="fa-solid fa-circle-question text-primary"></i>
-                        </a>
-                    </span>
-                </h3>
-                <nav th:replace="~{ fragments/dataset :: toolbar}"></nav>
+        <div class="card mb-4">
+            <div class="card-header border-0 pb-0">
+                <div class="d-flex justify-content-between">
+                    <h3 class="card-title fs-3" th:text="${dataset.name}"></h3>
+                    <div>
+                        <span th:if="${#help.hasHelp()}" class="fs-3">
+                            <a href="#" th:attr="onclick=|Help.open('${dataset.name}','${#help.getHelp()}')|"
+                               component:tooltip-text="Opens the documentation for the current dashboard">
+                                <i class="fa-solid fa-circle-question text-primary"></i>
+                            </a>
+                        </span>
+                    </div>
+                </div>
             </div>
-            <table th:replace="~{ fragments/dataset :: grid}"></table>
-            <div th:replace="~{ fragments/dataset :: grid-next-page}"></div>
+            <div class="card-body">
+                <nav th:replace="~{ fragments/dataset :: toolbar}"></nav>
+                <table th:replace="~{ fragments/dataset :: grid}"></table>
+                <div th:replace="~{ fragments/dataset :: grid-next-page}"></div>
+            </div>
         </div>
     </div>
 </div>

@@ -62,6 +62,7 @@ public final class Theme implements Identifiable<String>, Nameable {
     }
 
     public static class Builder {
+
         private String id;
         private final String name;
         private final Collection<AssetBundle> assetBundles = new ArrayList<>();
