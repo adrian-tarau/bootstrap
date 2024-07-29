@@ -8,30 +8,36 @@
     </div>
 </div>
 
-<div th:fragment="render-row (component)" class="row gap-20 masonry pos-r">
-    <div class="masonry-item col-md-12" th:if="${#component.hasTitle(component)}">
-        <div class="bgc-white p-10 bd">
-            <h4 class="c-grey-900" th:text="${component.title}"></h4>
-            <div class="row gap-20 masonry pos-r mT-15">
-                <div th:replace="~{ :: render-container-children (${component})}"></div>
+<div th:fragment="render-row (component)" class="row">
+    <div class="card mb-4" th:if="${#component.hasTitle(component)}">
+        <div class="card-header border-0 pb-0">
+            <div class="d-flex justify-content-between">
+                <h3 class="card-title fs-3" th:text="${component.title}"></h3>
+                <div>
+                </div>
             </div>
+        </div>
+        <div class="card-body row" th:style="${#component.getCssStyle(component)}">
+            <div th:replace="~{ :: render-container-children (${component})}"></div>
         </div>
     </div>
     <div th:replace="~{ :: render-titleless (${component})}"></div>
 </div>
 
 <div th:fragment="render-column (component)" th:remove="tag">
-    <div th:class="${#component.getCssClass(component, 'masonry-item')}">
-        <div class="bgc-white p-20 bd">
-            <div th:if="${#component.hasTitle(component)}" th:remove="tag">
-                <h6 class="c-grey-900" th:text="${component.title}"></h6>
-                <div class="mT-5" th:style="${#component.getCssStyle(component)}">
-                    <div th:replace="~{ :: render-container-children (${component})}"></div>
+    <div class="card mb-2 me-2" th:classappend="${#component.getCssClass(component)}" th:if="${#component.hasTitle(component)}">
+        <div class="card-subtitle m-2 text-body-secondary">
+            <div class="d-flex justify-content-between">
+                <h6 class="card-title fs-5" th:text="${component.title}"></h6>
+                <div>
                 </div>
             </div>
-            <div th:replace="~{ :: render-titleless (${component})}"></div>
+        </div>
+        <div class="card-body" th:style="${#component.getCssStyle(component)}">
+            <div th:replace="~{ :: render-container-children (${component})}"></div>
         </div>
     </div>
+    <div th:replace="~{ :: render-titleless (${component})}"></div>
 </div>
 
 <div th:fragment="render-table (component)" th:remove="tag">
