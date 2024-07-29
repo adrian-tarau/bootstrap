@@ -13,6 +13,14 @@ Application.Search.click = function (element) {
 }
 
 /**
+ * Clears the search field and executes the query again.
+ */
+Application.Search.clear = function () {
+    $('#search').val('');
+    Application.Search.query('');
+}
+
+/**
  * Executes a search with a given query.
  *
  * If the current page is a data set, the expression is processed by a data set, otherwise it goes to the
@@ -23,6 +31,7 @@ Application.Search.click = function (element) {
  * @param {Boolean} [newWindow=false] an optional flag, true to control if the URI is opened in a new window, false otherwise
  */
 Application.Search.query = function (text, global, newWindow) {
+    this.grow();
     global = Utils.defaultIfNotDefinedOrNull(global, false);
     if (DataSet.exists() && !global) {
         DataSet.search(text);
@@ -91,5 +100,21 @@ Application.Search.joinField = function (field, text, global, newWindow) {
     Application.Search.join(query, global, newWindow);
 }
 
+/**
+ * Grows the search field as needed.
+ */
+Application.Search.grow = function () {
+    $('#search').trigger('autogrow');
+}
+
+/**
+ * Initializes search related functions.
+ */
+Application.Search.init = function () {
+    $('#search').inputAutogrow({maxWidth: 800, minWidth: 400, trailingSpace: 10});
+    this.grow();
+}
+
 // Bind events
 Application.bind("search", Application.Search.query);
+Application.Search.init();

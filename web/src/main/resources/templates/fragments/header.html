@@ -20,21 +20,16 @@
 <li class="search-input active" th:fragment="search">
     <form role="search" th:attr="onsubmit='Application.Search.query(); return false'">
         <div class="input-group">
-            <div class="dropdown" th:unless="${#lists.isEmpty(queryHistory)}">
-                <a class="search-history mr-3" data-bs-toggle="dropdown" component:tooltip-text="A search history for the last 10 searches">
-                    <i class="fa-regular fa-square-caret-down"></i>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><h6 class="dropdown-header">Search History</h6></li>
-                    <li th:each="queryItem : ${queryHistory}">
-                        <a class="dropdown-item" href="#" th:text="${queryItem}" th:attr="onclick='Application.Search.click(this); return false'">Action</a>
-                    </li>
-                </ul>
-            </div>
-            <input id="search" class="form-control" autocomplete="off" type="search" size="80"
+            <button th:unless="${#lists.isEmpty(queryHistory)}" class="btn btn-sm btn-outline-secondary dropdown-toggle btn-search" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-regular fa-clock"></i></button>
+            <ul class="dropdown-menu">
+                <li th:each="queryItem : ${queryHistory}">
+                    <a class="dropdown-item" href="#" th:text="${queryItem}" th:attr="onclick='Application.Search.click(this); return false'">Action</a>
+                </li>
+            </ul>
+            <input id="search" class="form-control" autocomplete="off" style="width:400px"
                    placeholder="Search..." th:value="${query}" component:tooltip="${#dataset.getSearchTooltip()}"
                    component:tooltip-placement="right" component:tooltip-delay="[2000, 2000]">
-
+            <button class="btn btn-sm btn-outline-secondary btn-search" type="button" th:onclick="Application.Search.clear()"><i class="fa-solid fa-xmark"></i></button>
         </div>
     </form>
 </li>
