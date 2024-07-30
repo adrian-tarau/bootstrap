@@ -496,7 +496,12 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Page<M> extractModels(Filter filter, Pageable pageable) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        return dataSet.findAll(pageable, filter);
+        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
+        if (transactionTemplate != null) {
+            return transactionTemplate.execute(status -> dataSet.findAll(pageable, filter));
+        } else {
+            return dataSet.findAll(pageable, filter);
+        }
     }
 
     private Sort getSort(String value) {
@@ -653,7 +658,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             if (values.size() == 1) {
                 value = convert(dataSet, model, field, values.get(0));
             } else {
-                // what to do here?
+                value = convert(dataSet, model, field, values);
             }
             value = bind(dataSet, field, value);
             field.set(model, value);
@@ -666,13 +671,10 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             if (StringUtils.isEmpty(value)) {
                 return null;
             } else {
-                DataSet<?, ? extends Field<?>, Object> fieldDataSet = dataSetService.getDataSet(field.getDataClass());
-                CompositeIdentifier<?, ? extends Field<?>, Object> compositeIdentifier = new CompositeIdentifier<>(fieldDataSet.getMetadata(), value);
-                Object id = compositeIdentifier.toId();
-                return fieldDataSet.findById(id).orElse(null);
+                return findModel(dataSet, model, field, field.getDataClass(), value);
             }
         } else if (field.getDataType() == Field.DataType.COLLECTION) {
-            return null;
+            return convert(dataSet, model, field, Arrays.asList(value));
         } else {
             try {
                 return Field.from(value, field.getDataClass());
@@ -680,6 +682,21 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                 throw new DataSetException("Failed to bind field '" + field.getName() + "', value '" + value + "'", e);
             }
         }
+    }
+
+    private Object findModel(DataSet<M, Field<M>, ID> dataSet, M model, Field<M> field, Class<?> dataClass, String value) {
+        DataSet<?, ? extends Field<?>, Object> fieldDataSet = dataSetService.getDataSet(dataClass);
+        CompositeIdentifier<?, ? extends Field<?>, Object> compositeIdentifier = new CompositeIdentifier<>(fieldDataSet.getMetadata(), value);
+        Object id = compositeIdentifier.toId();
+        return fieldDataSet.findById(id).orElse(null);
+    }
+
+    private Collection<Object> convert(DataSet<M, Field<M>, ID> dataSet, M model, Field<M> field, Collection<String> values) {
+        Collection<Object> models = new ArrayList<>();
+        for (String value : values) {
+            models.add(findModel(dataSet, model, field, field.getGenericDataClass(), value));
+        }
+        return models;
     }
 
     private TransactionTemplate getTransactionTemplate(DataSet<M, Field<M>, ID> dataSet) {

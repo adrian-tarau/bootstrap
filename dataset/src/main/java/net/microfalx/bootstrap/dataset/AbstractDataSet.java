@@ -35,8 +35,7 @@ import java.util.*;
 import static net.microfalx.bootstrap.dataset.DataSetUtils.METRICS;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.StringUtils.EMPTY_STRING;
-import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * Base class for all data sets.
@@ -224,6 +223,16 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                     displayValue = ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
                 } else if (value instanceof Number) {
                     displayValue = ((Formatter<M, Field<M>, Object>) NUMBER_FORMATTER).format(value, field, model);
+                } else if (field.getDataType().isStructure()) {
+                    MetadataService metadataService = dataSetService.getBean(MetadataService.class);
+                    Metadata modelMetadata = metadataService.getMetadata(field.getGenericDataClass());
+                    StringBuilder builder = new StringBuilder();
+                    Collection<Object> values = (Collection<Object>) value;
+                    for (Object cvalue : values) {
+                        displayValue = modelMetadata.getName(cvalue);
+                        StringUtils.append(builder, displayValue, COMMA_WITH_SPACE);
+                    }
+                    displayValue = builder.toString();
                 } else if (isJdkType(value)) {
                     displayValue = FormatterUtils.basicFormatting(value, formattableAnnot);
                 } else {

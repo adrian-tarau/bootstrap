@@ -585,7 +585,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if of type INPUT, {@code false} otherwise
      */
     public boolean isDropDownField(Field<M> field) {
-        return isVisible(field) && isLookupField(field);
+        return isVisible(field) && isLookupFieldOrCollection(field);
     }
 
     /**
@@ -595,7 +595,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if of type INPUT, {@code false} otherwise
      */
     public boolean isInputField(Field<M> field) {
-        return isVisible(field) && !isLookupField(field) && isTextField(field) && !field.getDataType().isBoolean();
+        return isVisible(field) && !isLookupFieldOrCollection(field) && isTextField(field) && !field.getDataType().isBoolean();
     }
 
     /**
@@ -615,7 +615,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if of type INPUT, {@code false} otherwise
      */
     public boolean isTextAreaField(Field<M> field) {
-        return isVisible(field) && !isLookupField(field) && getComponentType(field) == Component.Type.TEXT_AREA;
+        return isVisible(field) && !isLookupFieldOrCollection(field) && getComponentType(field) == Component.Type.TEXT_AREA;
     }
 
     /**
@@ -680,7 +680,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         String classes = field.getDataType().isBoolean() ? EMPTY_STRING : "form-control-sm";
         if (field.getDataType().isBoolean()) {
             classes += " form-check-input";
-        } else if (isLookupField(field)) {
+        } else if (isLookupFieldOrCollection(field)) {
             classes = "form-select form-select-sm";
         } else {
             classes += " form-control";
@@ -989,7 +989,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
                 Collection<?> entries = (Collection<?>) value;
                 for (Object entry : entries) {
                     value = dataSetService.getId(entry);
-                    return ObjectUtils.equals(value, lookup.getId());
+                    if (ObjectUtils.equals(value, lookup.getId())) return true;
                 }
                 return false;
             } else {
@@ -1027,8 +1027,18 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     private boolean isLookupField(Field<M> field) {
         return isModelOrEnum(field)
-                || field.getDataType() == Field.DataType.COLLECTION
                 || field.hasAnnotation(net.microfalx.bootstrap.dataset.annotation.Lookup.class);
+    }
+
+    /**
+     * Returns whether the field is supported by a lookup (complex or simple, like an ENUM).
+     *
+     * @param field the field
+     * @return {@code true} if a model behind the field, {@code false} otherwise
+     */
+    private boolean isLookupFieldOrCollection(Field<M> field) {
+        return isLookupField(field)
+                || field.getDataType() == Field.DataType.COLLECTION;
     }
 
     /**
