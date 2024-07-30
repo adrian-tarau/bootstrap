@@ -3,14 +3,17 @@ package net.microfalx.bootstrap.security.user;
 import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.jdbc.entity.TimestampAware;
+import net.microfalx.bootstrap.security.group.Group;
 import net.microfalx.lang.annotation.*;
 
+import java.util.Collection;
 import java.util.Objects;
 
 @Entity
@@ -57,6 +60,12 @@ public class User extends TimestampAware {
     @Position(20)
     @Description("The email associated with a {name}")
     private String email;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name="security_group_members", joinColumns = @JoinColumn(name = "username"), inverseJoinColumns = @JoinColumn(name = "group_id"))
+    @Position(30)
+    @NotNull
+    private Collection<Group> groups;
 
     @Column(name = "description")
     @Position(1000)
