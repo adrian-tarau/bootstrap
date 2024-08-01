@@ -3,7 +3,7 @@
     <menu id="left">
         <item id="home" text="Home" action="/" position="1" icon="fa-solid fa-house-chimney"/>
         <item id="search" text="Search" action="/search" position="2" icon="fa-solid fa-magnifying-glass"/>
-        <menu id="system" text="System" position="1000" icon="fa-solid fa-gears">
+        <menu id="system" text="System" position="1000" roles="admin" icon="fa-solid fa-gears">
             <menu id="database" text="Databases" position="900" action="/system/database" icon="fa-solid fa-database">
                 <item id="manage" text="Manage" action="/system/database/manage" icon="fa-solid fa-database"/>
                 <item id="node" text="Nodes" action="/system/database/node" icon="fa-solid fa-server"/>
@@ -19,16 +19,16 @@
         </menu>
         <menu id="support" text="Support" position="2000" icon="fa-solid fa-life-ring">
             <item id="alert" text="Alerts" action="/support/alert" position="500" icon="fa-solid fa-bell"/>
-            <item id="executor" text="Executors" action="/support/executor" position="510" icon="fa-solid fa-cubes"/>
-            <item id="store" text="Stores" action="/support/store" position="520" icon="fa-solid fa-box"/>
-            <menu id="metric" text="Metrics" position="550" icon="fa-solid fa-ruler-combined">
+            <item id="executor" text="Executors" action="/support/executor" position="510" roles="admin" icon="fa-solid fa-cubes"/>
+            <item id="store" text="Stores" action="/support/store" position="520" roles="admin" icon="fa-solid fa-box"/>
+            <menu id="metric" text="Metrics" position="550" roles="admin" icon="fa-solid fa-ruler-combined">
                 <item id="timer" text="Timers" action="/support/metric/timer" icon="fa-solid fa-stopwatch"/>
                 <item id="counter" text="Counters" action="/support/metric/counter" icon="fa-solid fa-cubes-stacked"/>
                 <item id="gauge" text="Gauges" action="/support/metric/gauge" icon="fa-solid fa-gauge"/>
             </menu>
-            <item id="search_engine" text="Search Engine" action="/support/search" position="1000" icon="fa-solid fa-book"/>
+            <item id="search_engine" text="Search Engine" action="/support/search" position="1000" roles="admin" icon="fa-solid fa-book"/>
             <item id="status" text="Status" action="/support/status" position="5000" icon="fa-solid fa-temperature-quarter"/>
-            <item id="logging" text="Logging" action="/support/logging" position="5020" icon="fa-solid fa-bars"/>
+            <item id="logging" text="Logging" action="/support/logging" position="5020" roles="admin" icon="fa-solid fa-bars"/>
             <item id="sys_info" text="System Information" action="/support/info" position="10000" icon="fa-solid fa-circle-info"/>
         </menu>
     </menu>

@@ -69,9 +69,10 @@ public class AuditContext {
      *
      * @param module the module, null if not known
      */
-    public void setModule(String module) {
+    public AuditContext setModule(String module) {
         requireNotEmpty(module);
         this.module = module;
+        return this;
     }
 
     /**

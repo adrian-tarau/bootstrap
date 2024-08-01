@@ -50,7 +50,9 @@ public class UserService extends ApplicationContextSupport implements Initializi
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
     private static final int DEFAULT_USER_COUNT = 2;
-    private static final String AUTHENTICATION_ACTION = "Authentication";
+    private static final String LOGIN_ACTION = "Login";
+    private static final String LOGOUT_ACTION = "Logout";
+    private static final String SECURITY_MODULE = "Security";
 
     @Autowired
     private UserRepository userRepository;
@@ -244,17 +246,19 @@ public class UserService extends ApplicationContextSupport implements Initializi
 
     @EventListener
     public void onSuccess(AuthenticationSuccessEvent success) {
-        AuditContext context = AuditContext.get().setAction(AUTHENTICATION_ACTION)
-                .setErrorCode("200")
+        AuditContext context = AuditContext.get().setAction(LOGIN_ACTION)
+                .setModule(SECURITY_MODULE).setErrorCode("200")
                 .setDescription("User '" + success.getAuthentication().getName() + "' was authenticated successfully");
+        context = updateAuditContext(context, success.getAuthentication());
         audit(context);
     }
 
     @EventListener
     public void onFailure(AbstractAuthenticationFailureEvent failures) {
-        AuditContext context = AuditContext.get().setAction(AUTHENTICATION_ACTION)
-                .setErrorCode("403")
+        AuditContext context = AuditContext.get().setAction(LOGIN_ACTION)
+                .setModule(SECURITY_MODULE).setErrorCode("403")
                 .setDescription("User '" + failures.getAuthentication().getName() + "' failed to authenticate, root cause: " + getRootCauseMessage(failures.getException()));
+        context = updateAuditContext(context, failures.getAuthentication());
         audit(context);
     }
 
@@ -295,8 +299,7 @@ public class UserService extends ApplicationContextSupport implements Initializi
         return ANONYMOUS_USER;
     }
 
-    private UserDetails getUserDetails() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    private UserDetails getUserDetails(Authentication authentication) {
         if (authentication != null) {
             Object principal = authentication.getPrincipal();
             if (principal instanceof UserDetails) {
@@ -322,6 +325,12 @@ public class UserService extends ApplicationContextSupport implements Initializi
 
     private void updateRoles(User user, GrantedAuthority... authorities) {
 
+    }
+
+    private AuditContext updateAuditContext(AuditContext context, Authentication authentication) {
+        UserDetails userDetails = getUserDetails(authentication);
+        context.setReference(userDetails.getUsername());
+        return context;
     }
 
     private void createDefaultUsers() {
