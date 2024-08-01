@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
+<head th:replace="~{fragments/header :: header}">
+<body class="login-page bg-body-secondary">
+<div class="login-box">
+    <div class="login-logo"><h1 th:text="${#application.name}"></h1></div>
+    <div class="card">
+        <div class="card-body login-card-body">
+            <p class="login-box-msg" th:text="${settings.loginMessage}">Sign in to start your session</p>
+            <form th:action="@{/login/auth}" method="post">
+                <div  class="alert alert-danger p-2" th:if="${message}">
+                    <span th:text="${message}"></span>
+                </div>
+                <div class="input-group mb-3">
+                    <input name="username" type="text" class="form-control" placeholder="Email" component:tooltip-text="The user name or the email address" autocomplete="username">
+                    <div class="input-group-text"> <span class="bi bi-envelope"></span></div>
+                </div>
+                <div class="input-group mb-3">
+                    <input name="password" type="password" class="form-control" placeholder="Password" component:tooltip-text="The user's password" autocomplete="current-password">
+                    <div class="input-group-text"><span class="bi bi-lock-fill"></span></div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <div class="form-check">
+                            <input name="remember-me" class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">Remember Me</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="d-grid gap-2"> <button type="submit" class="btn btn-primary">Sign In</button> </div>
+                    </div>
+                </div>
+            </form>
+            <div th:if="${settings.social}" class="social-auth-links text-center mb-3 d-grid gap-2">
+                <p>- OR -</p>
+                <a href="#" class="btn btn-danger"> <i class="bi bi-google me-2"></i> Sign in using Google</a>
+                <a href="#" class="btn btn-primary"> <i class="bi bi-microsoft me-2"></i> Sign in using Microsoft</a>
+            </div>
+            <p class="mb-1"> <a th:href="@{/login/forgot-password}">I forgot my password</a> </p>
+            <p th:if="${settings.register}" class="mb-0"> <a th:href="@{/login/register}" class="text-center">
+                Register a new account
+            </a> </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

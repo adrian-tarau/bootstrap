@@ -7,7 +7,10 @@ import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.lang.Nameable;
-import net.microfalx.lang.annotation.*;
+import net.microfalx.lang.annotation.Description;
+import net.microfalx.lang.annotation.Name;
+import net.microfalx.lang.annotation.Position;
+import net.microfalx.lang.annotation.Width;
 
 import java.io.Serial;
 
@@ -21,12 +24,6 @@ public abstract class NamedIdentityAware<T> extends IdentityAware<T> implements 
 
     @Serial
     private static final long serialVersionUID = -720697127573911840L;
-
-    @Id
-    @Position(1)
-    @Visible(value = false)
-    @NotBlank
-    private T id;
 
     @Name
     @Position(5)

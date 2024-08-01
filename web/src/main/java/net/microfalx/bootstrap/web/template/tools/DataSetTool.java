@@ -959,7 +959,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         if (lookupAnnot != null) model = lookupAnnot.model();
         LookupProvider<Lookup<Object>, Object> lookupProvider = dataSetService.getLookupProvider(model);
         Iterable<Lookup<Object>> providerData = lookupProvider.findAll(Pageable.ofSize(5000));
-        if (field.isRequired()) {
+        if (field.isRequired() || field.getDataType().isStructure()) {
             return providerData;
         } else {
             Collection<Lookup<Object>> empty = List.of(new DefaultLookup<>(EMPTY_STRING, EMPTY_STRING));

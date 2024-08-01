@@ -3,7 +3,6 @@ package net.microfalx.bootstrap.security.user;
 import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -20,7 +19,7 @@ import java.util.Objects;
 @Table(name = "security_users")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = "groups")
 public class User extends TimestampAware {
 
     @Id
@@ -64,7 +63,6 @@ public class User extends TimestampAware {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name="security_group_members", joinColumns = @JoinColumn(name = "username"), inverseJoinColumns = @JoinColumn(name = "group_id"))
     @Position(30)
-    @NotNull
     private Collection<Group> groups;
 
     @Column(name = "description")

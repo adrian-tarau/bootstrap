@@ -50,25 +50,27 @@
 
 <li class="nav-item dropdown user-menu" th:fragment="user">
     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-        <img src="https://randomuser.me/api/portraits/men/10.jpg" class="user-image rounded-circle shadow" alt="User Image">
-        <span class="d-none d-md-inline">John Doe</span>
+        <img th:src="${#security.imageUrl}" class="user-image rounded-circle shadow" alt="User Image">
+        <span class="d-none d-md-inline" th:text="${#security.getName()}"></span>
     </a>
     <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-        <li class="user-header text-bg-primary"> <img src="https://randomuser.me/api/portraits/men/10.jpg" class="rounded-circle shadow" alt="User Image">
+        <li class="user-header text-bg-primary"> <img th:src="${#security.imageUrl}" class="rounded-circle shadow" alt="User Image">
             <p>
-                John Doe
-                <small>Member since Nov. 2023</small>
+                <span th:text="${#security.getName()}"></span>
+            </p>
+            <p>
+                <small th:text="${#security.getEmail()}"></small>
             </p>
         </li>
         <li class="user-body">
             <div class="row">
                 <div class="col-4 text-center"> <a href="/user/settings">Settings</a> </div>
                 <div class="col-4 text-center"> <a href="/user/messages">Messages</a> </div>
+                <div class="col-4 text-center"> <a href="/user/profile">Profile</a> </div>
             </div>
         </li>
         <li class="user-footer">
-            <a href="/user/profile" class="btn btn-default btn-flat">Profile</a>
-            <a th:if="${#authentication.isAuthenticated()}" th:remove="tag" href="/logout" class="btn btn-default btn-flat float-end">Sign out</a>
+            <a th:if="${#security.isAuthenticated()}" href="/logout" class="btn btn-default btn-flat float-end">Sign out</a>
         </li>
     </ul>
 </li>
@@ -123,10 +125,9 @@
             <div class="navbar-nav ms-auto">
                 <!--a href="#" class="nav-item nav-link" th:href="@{/login}">Login</a>
                 <a href="#" class="nav-item nav-link" th:href="@{/register}">Register</a-->
-                <th:block th:if="${#authorization.expression('isAuthenticated()')}">
+                <th:block th:if="${#security.isAuthenticated()}">
                     <div class="nav-item navbar-text">
-                        <span>Welcome </span><span class="bg-primary"
-                                                   th:text="${#authentication.getPrincipal().getUsername()}"></span>
+                        <span>Welcome </span><span class="bg-primary" D></span>
                     </div>
                 </th:block>
                 <a href="#" class="nav-item nav-link" th:href="@{#}" onclick="$('#form').submit();">Logout</a>

@@ -198,7 +198,10 @@ DataSet.loadModal = function (html) {
     Application.loadModal("dataset-modal", html);
     Chart.process("#dataset-modal");
     $("#dataset-modal .form-select-sm").select2({
-        theme: "bootstrap-5"
+        theme: "bootstrap-5",
+        dropdownParent: $('#dataset-modal'),
+        /*selectionCssClass: "small",
+        dropdownCssClass: "small",*/
     });
 }
 

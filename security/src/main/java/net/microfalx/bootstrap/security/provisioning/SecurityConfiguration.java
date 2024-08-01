@@ -8,33 +8,48 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
 
 import javax.sql.DataSource;
+
+import static net.microfalx.lang.StringUtils.addEndSlash;
+import static net.microfalx.lang.StringUtils.addStartSlash;
+import static org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices.RememberMeTokenAlgorithm.SHA256;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
 
+    private static final String REMEMBER_ME_KEY = "rememberme";
+
     @Autowired
     private DataSource dataSource;
 
     @Autowired
-    private SecuritySettings settings;
+    private SecurityProperties settings;
 
     @Bean
     public UserDetailsManager createUserDetailsManager() {
-        JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
+        SecurityUserDetailsManager manager = new SecurityUserDetailsManager(dataSource);
         manager.setUserCache(new SpringCacheBasedUserCache(new ConcurrentMapCache("security_user")));
-        manager.setEnableAuthorities(true);
+        manager.setEnableAuthorities(false);
         manager.setEnableGroups(true);
-        updateUserInfoManager(manager);
         return manager;
+    }
+
+    @Bean
+    public RememberMeServices createRememberMeServices(UserDetailsService userDetailsService) {
+        TokenBasedRememberMeServices.RememberMeTokenAlgorithm encodingAlgorithm = SHA256;
+        TokenBasedRememberMeServices rememberMe = new TokenBasedRememberMeServices(REMEMBER_ME_KEY, userDetailsService, encodingAlgorithm);
+        rememberMe.setMatchingAlgorithm(encodingAlgorithm);
+        return rememberMe;
     }
 
     @Bean
@@ -43,16 +58,15 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, RememberMeServices rememberMeServices) throws Exception {
         if (settings.isEnabled()) {
-            http.authorizeHttpRequests(auth -> auth.requestMatchers("/asset/**").permitAll());
-            http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
-            http.formLogin(login -> login.loginPage("/auth").loginProcessingUrl("/auth/login")
-                    .usernameParameter("username").passwordParameter("password").permitAll());
-            http.logout(logout -> logout.clearAuthentication(true).invalidateHttpSession(true).logoutUrl("/auth/logout").permitAll());
+            allowStandardPaths(http);
+            configureLogin(http);
+            updateRememberMe(http, rememberMeServices);
             updateCsrv(http);
             updateHeaders(http);
             updateAnonymous(http);
+
             return http.build();
         } else {
             http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
@@ -61,6 +75,10 @@ public class SecurityConfiguration {
             updateAnonymous(http);
             return http.build();
         }
+    }
+
+    private void updateRememberMe(HttpSecurity http, RememberMeServices rememberMeServices) throws Exception {
+        http.rememberMe(rememberMe -> rememberMe.rememberMeServices(rememberMeServices));
     }
 
     private void updateCsrv(HttpSecurity http) throws Exception {
@@ -75,6 +93,28 @@ public class SecurityConfiguration {
         http.anonymous(a -> a.principal("guest"));
     }
 
-    private void updateUserInfoManager(JdbcUserDetailsManager manager) {
+    private void allowStandardPaths(HttpSecurity http) throws Exception {
+        allowPath(http, "asset");
+        allowPath(http, "css");
+        allowPath(http, "js");
+        allowPath(http, "image");
+        allowPath(http, "font");
+        allowPath(http, "login");
+        http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
     }
+
+    private void configureLogin(HttpSecurity http) throws Exception {
+        http.formLogin(login -> login.loginPage("/login").loginProcessingUrl("/login/auth")
+                //.successForwardUrl("/").failureForwardUrl("/login?error")
+                .usernameParameter("username").passwordParameter("password").permitAll());
+        http.logout(logout -> logout.clearAuthentication(true).invalidateHttpSession(true).logoutUrl("/logout").permitAll());
+
+
+    }
+
+    private void allowPath(HttpSecurity http, String path) throws Exception {
+        http.authorizeHttpRequests(auth -> auth.requestMatchers(addEndSlash(addStartSlash(path)) + "**").permitAll());
+    }
+
+
 }

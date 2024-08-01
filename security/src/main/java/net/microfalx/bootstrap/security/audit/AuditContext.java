@@ -1,17 +1,20 @@
 package net.microfalx.bootstrap.security.audit;
 
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
  * Provides metadata to the audit.
  */
 public class AuditContext {
 
-    private static ThreadLocal<AuditContext> CONTEXT = ThreadLocal.withInitial(AuditContext::new);
+    private static final ThreadLocal<AuditContext> CONTEXT = ThreadLocal.withInitial(AuditContext::new);
+
+    private static final String NA = "-";
 
     private String action;
     private String module = "Core";
-    private String category = "Web";
+    private String category = "System";
     private String clientInfo;
     private String errorCode;
     private String reference;
@@ -97,7 +100,7 @@ public class AuditContext {
      * @return the client info, null if not available
      */
     public String getClientInfo() {
-        return clientInfo;
+        return isNotEmpty(clientInfo) ? clientInfo : NA;
     }
 
     /**
@@ -135,7 +138,7 @@ public class AuditContext {
      * @return the reference, null if not available
      */
     public String getReference() {
-        return reference;
+        return isNotEmpty(reference) ? reference : NA;
     }
 
     /**

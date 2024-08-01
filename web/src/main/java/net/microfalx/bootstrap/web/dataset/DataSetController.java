@@ -246,9 +246,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         updateFields(dataSet, dataSetModel, State.ADD);
         doValidate(dataSetModel, State.ADD, response);
         if (response.isSuccess()) {
-            beforePersist(dataSet, dataSetModel, State.ADD);
-            dataSet.save(dataSetModel);
-            afterPersist(dataSet, dataSetModel, State.ADD);
+            doBeforePersistUnderTransaction(dataSet, dataSetModel, State.ADD);
         }
         return response;
     }
@@ -265,9 +263,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         updateFields(dataSet, dataSetModel, State.EDIT);
         doValidate(dataSetModel, State.EDIT, response);
         if (response.isSuccess()) {
-            beforePersist(dataSet, dataSetModel, State.EDIT);
-            dataSet.save(dataSetModel);
-            afterPersist(dataSet, dataSetModel, State.EDIT);
+            doBeforePersistUnderTransaction(dataSet, dataSetModel, State.EDIT);
         }
         return response;
     }
@@ -417,6 +413,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     /**
      * Invoked before the model is persisted.
+     * <p>
+     * If the model is supported by a database, the event is called under a transaction.
      *
      * @param dataSet the data set
      * @param model   the model
@@ -429,6 +427,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     /**
      * Invoked after the model is persisted.
+     *
+     * If the model is supported by a database, the event is called under a transaction after the model is saved.
      *
      * @param dataSet the data set
      * @param model   the model
@@ -933,6 +933,24 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private void throwIdentifierRequired(String id) {
         if (isEmpty(id)) throw new ModelException("The model identifier is required");
+    }
+
+    private void doBeforePersistUnderTransaction(DataSet<M, Field<M>, ID> dataSet, M dataSetModel, State state) {
+        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
+        if (transactionTemplate != null) {
+            transactionTemplate.execute(status -> {
+                doBeforePersist(dataSet, dataSetModel, state);
+                return null;
+            });
+        } else {
+            doBeforePersist(dataSet, dataSetModel, state);
+        }
+    }
+
+    private void doBeforePersist(DataSet<M, Field<M>, ID> dataSet, M dataSetModel, State state) {
+        beforePersist(dataSet, dataSetModel, state);
+        dataSet.save(dataSetModel);
+        afterPersist(dataSet, dataSetModel, state);
     }
 
     private void log(DataSet<M, Field<M>, ID> dataSet, String action, int page,
