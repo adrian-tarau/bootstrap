@@ -154,7 +154,7 @@ public class SecurityTool extends AbstractTool implements Authentication {
             Object principal = authentication.getPrincipal();
             if (principal instanceof UserDetails) return (UserDetails) principal;
         }
-        org.springframework.security.core.userdetails.User user = new org.springframework.security.core.userdetails.User(ANONYMOUS_USER, null, Collections.emptyList());
+        org.springframework.security.core.userdetails.User user = new org.springframework.security.core.userdetails.User(ANONYMOUS_USER, ANONYMOUS_USER, Collections.emptyList());
         return user;
     }
 

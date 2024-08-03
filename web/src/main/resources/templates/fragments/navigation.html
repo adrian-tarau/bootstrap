@@ -22,7 +22,7 @@
 <aside class="app-sidebar bg-body-secondary shadow nav-indent nav-compact" data-bs-theme="dark" th:fragment="left">
     <div class="sidebar-brand">
         <a th:href="@{/}" class="brand-link">
-            <img th:src="@{/asset/image/boar.png}" class="brand-image opacity-75 shadow">
+            <img th:src="@{|/asset/image/${#application.logo}|}" class="brand-image opacity-75 shadow">
             <span th:text="${#application.name}" class="brand-text fw-light"></span>
         </a>
     </div>
