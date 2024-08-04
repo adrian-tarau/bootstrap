@@ -306,7 +306,7 @@ public class UserService extends ApplicationContextSupport implements Initializi
                 return (UserDetails) principal;
             }
         }
-        org.springframework.security.core.userdetails.User user = new org.springframework.security.core.userdetails.User(ANONYMOUS_USER, null, Collections.emptyList());
+        org.springframework.security.core.userdetails.User user = new org.springframework.security.core.userdetails.User(ANONYMOUS_USER, ANONYMOUS_USER, Collections.emptyList());
         return user;
     }
 
