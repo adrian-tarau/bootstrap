@@ -81,7 +81,8 @@
     <properties>
         <spring.app.profiles>local,dev</spring.app.profiles>
         <!-- Runtime -->
-        <spring.boot.version>3.2.2</spring.boot.version>
+        <spring.boot.version>3.3.2</spring.boot.version>
+        <selenium.version>4.23.0</selenium.version>
         <flyaway.version>10.6.0</flyaway.version>
         <mysql.version>8.3.0</mysql.version>
         <postgres.version>42.7.2</postgres.version>
@@ -92,7 +93,7 @@
         <apache.commons.math.version>3.6.1</apache.commons.math.version>
         <lombok.version>1.18.30</lombok.version>
         <jodd.version>5.1.6</jodd.version>
-        <lucene.version>9.9.1</lucene.version>
+        <lucene.version>9.11.1</lucene.version>
         <confluent.version>7.6.0</confluent.version>
         <flexmark.version>0.64.8</flexmark.version>
         <awaitility.version>4.2.0</awaitility.version>
@@ -112,10 +113,10 @@
         <!-- Tests -->
         <junit.version>5.10.1</junit.version>
         <assertj.version>3.25.1</assertj.version>
-        <mockito.version>5.9.0</mockito.version>
+        <mockito.version>5.12.0</mockito.version>
         <jmh.version>1.37</jmh.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <testcontainers.version>1.19.3</testcontainers.version>
+        <testcontainers.version>1.20.1</testcontainers.version>
         <joor.version>0.9.14</joor.version>
         <ulidj.version>1.0.4</ulidj.version>
     </properties>
@@ -135,14 +136,6 @@
         <dependencies>
 
             <!-- Runtime -->
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring.boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
 
             <dependency>
                 <groupId>io.github.jpenren</groupId>
@@ -451,7 +444,7 @@
                 <version>${logback.version}</version>
             </dependency>
 
-            <!-- Tests -->
+            <!-- BOMs -->
 
             <dependency>
                 <groupId>org.junit</groupId>
@@ -460,6 +453,24 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Tests -->
 
             <dependency>
                 <groupId>org.assertj</groupId>
@@ -479,13 +490,6 @@
                 <groupId>org.openjdk.jmh</groupId>
                 <artifactId>jmh-generator-annprocess</artifactId>
                 <version>${jmh.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers</artifactId>
-                <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
 
