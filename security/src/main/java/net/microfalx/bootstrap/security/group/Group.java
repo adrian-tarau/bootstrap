@@ -18,7 +18,7 @@ import java.util.Set;
 @Table(name = "security_groups")
 @Getter
 @Setter
-@ToString(exclude = "users")
+@ToString(exclude = "users", callSuper = true)
 public class Group extends NamedAndTimestampedIdentityAware<Integer> {
 
     @Column(name = "enabled", nullable = false)

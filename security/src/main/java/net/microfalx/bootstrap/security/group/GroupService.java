@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.security.group;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import net.microfalx.bootstrap.security.SecurityConstants;
 import net.microfalx.bootstrap.security.user.Role;
 import net.microfalx.lang.Identifiable;
 import org.slf4j.Logger;
@@ -20,6 +19,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static java.time.Duration.ofSeconds;
+import static net.microfalx.bootstrap.security.SecurityConstants.ADMINISTRATORS_GROUP;
+import static net.microfalx.bootstrap.security.SecurityConstants.USERS_GROUP;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 @Service
@@ -40,6 +41,17 @@ public class GroupService implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         createDefaultGroups();
+    }
+
+    /**
+     * Finds a security group by its name.
+     *
+     * @param name the name of the group.
+     * @return the group, null if it does not exist
+     */
+    public Group findByName(String name) {
+        requireNonNull(name);
+        return groupRepository.findByName(name);
     }
 
     /**
@@ -80,13 +92,14 @@ public class GroupService implements InitializingBean {
 
     private void createDefaultGroups() {
         if (groupRepository.count() >= DEFAULT_GROUP_COUNT) return;
-        createGroup("Administrators", "The administrators group", Set.of(SecurityConstants.ADMIN_ROLE));
-        createGroup("Users", "Default group for all users without permissions (or minimal permissions)", Collections.emptySet());
+        createGroup(ADMINISTRATORS_GROUP, "The administrators group", Set.of(Role.ADMIN));
+        createGroup(USERS_GROUP, "Default group for all registered users (minimal permissions)", Collections.emptySet());
     }
 
-    private void createGroup(String name, String description, Set<String> roles) {
+    private void createGroup(String name, String description, Set<Role> roles) {
         try {
             Group group = persistGroup(name, description);
+            setRoles(group, roles);
         } catch (Exception e) {
             LOGGER.error("Failed to register default group for " + name, e);
         }

@@ -5,6 +5,7 @@ import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.security.audit.Audit;
 import net.microfalx.bootstrap.security.audit.AuditContext;
 import net.microfalx.bootstrap.security.audit.AuditRepository;
+import net.microfalx.bootstrap.security.group.Group;
 import net.microfalx.bootstrap.security.group.GroupService;
 import net.microfalx.bootstrap.security.provisioning.SecurityProperties;
 import net.microfalx.bootstrap.web.preference.PreferenceService;
@@ -19,7 +20,6 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,13 +27,10 @@ import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static net.microfalx.bootstrap.security.SecurityConstants.ANONYMOUS_USER;
+import static net.microfalx.bootstrap.security.SecurityConstants.*;
 import static net.microfalx.bootstrap.security.SecurityUtils.getRandomPassword;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -229,7 +226,7 @@ public class UserService extends ApplicationContextSupport implements Initializi
     public void register(String name, String userName, String password, String email) {
         requireNotEmpty(name);
         requireNotEmpty(userName);
-        createUser(userName, password, name, email, null);
+        createUser(userName, password, name, email, null, USERS_GROUP);
     }
 
     @Override
@@ -285,7 +282,7 @@ public class UserService extends ApplicationContextSupport implements Initializi
         User user = userRepository.findByUserName(userName.toLowerCase());
         if (user == null && create) {
             user = createUser(userName, getRandomPassword(), capitalizeWords(userName),
-                    null, "A generated user with no permissions for auditing purposes");
+                    null, "A generated user with no permissions for auditing purposes", null);
         }
         return user;
     }
@@ -310,7 +307,7 @@ public class UserService extends ApplicationContextSupport implements Initializi
         return user;
     }
 
-    private User createUser(String userName, String password, String name, String email, String description) {
+    private User createUser(String userName, String password, String name, String email, String description, String groupName) {
         User user = new User();
         user.setUserName(userName.toLowerCase());
         user.setName(name);
@@ -319,12 +316,12 @@ public class UserService extends ApplicationContextSupport implements Initializi
         user.setDescription(description);
         user.setCreatedAt(LocalDateTime.now());
         user.setEnabled(true);
+        if (groupName != null) {
+            Group group = groupService.findByName(groupName);
+            if (group != null) user.setGroups(List.of(group));
+        }
         userRepository.saveAndFlush(user);
         return user;
-    }
-
-    private void updateRoles(User user, GrantedAuthority... authorities) {
-
     }
 
     private AuditContext updateAuditContext(AuditContext context, Authentication authentication) {
@@ -337,9 +334,9 @@ public class UserService extends ApplicationContextSupport implements Initializi
         try {
             if (userRepository.count() >= DEFAULT_USER_COUNT) return;
             createUser(settings.getAdminUserName(), settings.getAdminPassword(), capitalizeWords(settings.getAdminUserName()),
-                    null, "A default administrator");
+                    null, "A default administrator", ADMINISTRATORS_GROUP);
             createUser(settings.getGuestUserName(), settings.getGuestPassword(), capitalizeWords(settings.getGuestUserName()),
-                    null, "A user with no permissions to access public resources");
+                    null, "A user with no permissions to access public resources", null);
         } catch (Exception e) {
             LOGGER.error("Failed to create default users", e);
         }

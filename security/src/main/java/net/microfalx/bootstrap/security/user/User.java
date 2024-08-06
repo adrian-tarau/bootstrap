@@ -19,7 +19,7 @@ import java.util.Objects;
 @Table(name = "security_users")
 @Getter
 @Setter
-@ToString(exclude = "groups")
+@ToString(exclude = "groups", callSuper = true)
 public class User extends TimestampAware {
 
     @Id
