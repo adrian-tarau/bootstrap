@@ -69,6 +69,7 @@
         <module>security</module>
         <module>demo</module>
         <module>deploy</module>
+        <module>bom</module>
     </modules>
 
     <issueManagement>
@@ -79,47 +80,17 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <spring.app.profiles>local,dev</spring.app.profiles>
-        <!-- Runtime -->
-        <spring.boot.version>3.3.2</spring.boot.version>
-        <slf4j.version>2.0.13</slf4j.version>
-        <selenium.version>4.23.0</selenium.version>
-        <flyaway.version>10.17.0</flyaway.version>
-        <mysql.version>8.3.0</mysql.version>
-        <postgres.version>42.7.2</postgres.version>
-        <vertica.version>24.1.0-0</vertica.version>
-        <apache.httpclient.version>4.5.13</apache.httpclient.version>
-        <apache.tika.version>2.9.2</apache.tika.version>
-        <apache.commons.io.version>2.15.1</apache.commons.io.version>
-        <apache.commons.math.version>3.6.1</apache.commons.math.version>
-        <lombok.version>1.18.34</lombok.version>
-        <jodd.version>5.1.6</jodd.version>
-        <lucene.version>9.11.1</lucene.version>
-        <confluent.version>7.6.0</confluent.version>
-        <flexmark.version>0.64.8</flexmark.version>
-        <awaitility.version>4.2.0</awaitility.version>
-        <kryo.version>5.6.0</kryo.version>
-        <mvel.version>2.5.2.Final</mvel.version>
-        <jsqlparser.version>4.6</jsqlparser.version>
-        <logstash-gelf.version>1.15.1</logstash-gelf.version>
-        <datafaker.version>2.1.0</datafaker.version>
-        <logback.version>1.5.6</logback.version>
-        <ipaddress.version>5.4.0</ipaddress.version>
-        <h2.version>2.1.214</h2.version>
-        <bootstrap-js.version>1.0.0-SNAPSHOT</bootstrap-js.version>
+        <bom.version>1.0.0</bom.version>
+
+        <lang.version>1.0.0-SNAPSHOT</lang.version>
         <resource.version>1.0.0-SNAPSHOT</resource.version>
         <jdbcpool.version>1.0.0-SNAPSHOT</jdbcpool.version>
         <threadpool.version>1.0.0-SNAPSHOT</threadpool.version>
         <metrics.version>1.0.0-SNAPSHOT</metrics.version>
-        <!-- Tests -->
-        <junit.version>5.10.3</junit.version>
-        <assertj.version>3.26.3</assertj.version>
-        <mockito.version>5.12.0</mockito.version>
-        <jmh.version>1.37</jmh.version>
-        <awaitility.version>4.2.1</awaitility.version>
-        <testcontainers.version>1.20.1</testcontainers.version>
-        <joor.version>0.9.15</joor.version>
-        <ulidj.version>1.0.4</ulidj.version>
+
+        <bootstrap-js.version>1.0.0-SNAPSHOT</bootstrap-js.version>
+        <spring.boot.version>3.3.2</spring.boot.version>
+
     </properties>
 
     <developers>
@@ -136,199 +107,18 @@
     <dependencyManagement>
         <dependencies>
 
-            <!-- Runtime -->
-
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
+                <groupId>net.microfalx.bom</groupId>
+                <artifactId>bom-spring</artifactId>
+                <version>1.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <dependency>
-                <groupId>com.mysql</groupId>
-                <artifactId>mysql-connector-j</artifactId>
-                <version>${mysql.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.postgresql</groupId>
-                <artifactId>postgresql</artifactId>
-                <version>${postgres.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.vertica.jdbc</groupId>
-                <artifactId>vertica-jdbc</artifactId>
-                <version>${vertica.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-core</artifactId>
-                <version>${apache.tika.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-parser-code-module</artifactId>
-                <version>${apache.tika.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-parser-digest-commons</artifactId>
-                <version>${apache.tika.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-parser-pdf-module</artifactId>
-                <version>${apache.tika.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-parser-xml-module</artifactId>
-                <version>${apache.tika.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-parser-xmp-commons</artifactId>
-                <version>${apache.tika.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-parser-html-module</artifactId>
-                <version>${apache.tika.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-parser-text-module</artifactId>
-                <version>${apache.tika.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-langdetect-optimaize</artifactId>
-                <version>${apache.tika.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${apache.commons.io.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-math3</artifactId>
-                <version>${apache.commons.math.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.github.seancfoley</groupId>
-                <artifactId>ipaddress</artifactId>
-                <version>${ipaddress.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.mvel</groupId>
-                <artifactId>mvel2</artifactId>
-                <version>${mvel.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-core</artifactId>
-                <version>${flyaway.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-mysql</artifactId>
-                <version>${flyaway.version}</version>
-                <optional>true</optional>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jodd</groupId>
-                <artifactId>jodd-bean</artifactId>
-                <version>${jodd.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-core</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-queries</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-codecs</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-queryparser</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-suggest</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-facet</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-highlighter</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-misc</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-backward-codecs</artifactId>
-                <version>${lucene.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.confluent</groupId>
-                <artifactId>kafka-avro-serializer</artifactId>
-                <version>${confluent.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-js</artifactId>
-                <version>${bootstrap-js.version}</version>
+                <groupId>net.microfalx.lang</groupId>
+                <artifactId>lang</artifactId>
+                <version>${lang.version}</version>
             </dependency>
 
             <dependency>
@@ -351,175 +141,16 @@
 
             <dependency>
                 <groupId>net.microfalx.resource</groupId>
-                <artifactId>resource-core</artifactId>
+                <artifactId>resource-bom</artifactId>
                 <version>${resource.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.microfalx.resource</groupId>
-                <artifactId>resource-archive</artifactId>
-                <version>${resource.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.microfalx.resource</groupId>
-                <artifactId>resource-sftp</artifactId>
-                <version>${resource.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.microfalx.resource</groupId>
-                <artifactId>resource-s3</artifactId>
-                <version>${resource.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.microfalx.resource</groupId>
-                <artifactId>resource-rocksdb</artifactId>
-                <version>${resource.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.awaitility</groupId>
-                <artifactId>awaitility</artifactId>
-                <version>${awaitility.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.datafaker</groupId>
-                <artifactId>datafaker</artifactId>
-                <version>${datafaker.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jooq</groupId>
-                <artifactId>joor</artifactId>
-                <version>${joor.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.azam.ulidj</groupId>
-                <artifactId>ulidj</artifactId>
-                <version>${ulidj.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.vladsch.flexmark</groupId>
-                <artifactId>flexmark-all</artifactId>
-                <version>${flexmark.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.esotericsoftware</groupId>
-                <artifactId>kryo</artifactId>
-                <version>${kryo.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.github.jsqlparser</groupId>
-                <artifactId>jsqlparser</artifactId>
-                <version>${jsqlparser.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>biz.paluch.logging</groupId>
-                <artifactId>logstash-gelf</artifactId>
-                <version>${logstash-gelf.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>${logback.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
-            </dependency>
-
-            <!-- BOMs -->
-
-            <dependency>
-                <groupId>org.junit</groupId>
-                <artifactId>junit-bom</artifactId>
-                <version>${junit.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
 
             <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>${testcontainers.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Spring Boot -->
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring.boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.seleniumhq.selenium</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>io.github.jpenren</groupId>
-                <artifactId>thymeleaf-spring-data-dialect</artifactId>
-                <version>3.6.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>nz.net.ultraq.thymeleaf</groupId>
-                <artifactId>thymeleaf-layout-dialect</artifactId>
-                <version>3.2.1</version>
-            </dependency>
-
-            <!-- Tests -->
-
-            <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-core</artifactId>
-                <version>${assertj.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.openjdk.jmh</groupId>
-                <artifactId>jmh-core</artifactId>
-                <version>${jmh.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.openjdk.jmh</groupId>
-                <artifactId>jmh-generator-annprocess</artifactId>
-                <version>${jmh.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>${testcontainers.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${h2.version}</version>
-                <scope>test</scope>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-js</artifactId>
+                <version>${bootstrap-js.version}</version>
             </dependency>
 
         </dependencies>
@@ -566,18 +197,6 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-generator-annprocess</artifactId>
             <scope>test</scope>
         </dependency>
 
