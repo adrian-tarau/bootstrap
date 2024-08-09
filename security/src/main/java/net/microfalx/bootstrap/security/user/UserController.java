@@ -5,7 +5,7 @@ import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.MetadataService;
-import net.microfalx.bootstrap.web.dataset.DataSetController;
+import net.microfalx.bootstrap.security.SecurityDataSetController;
 import net.microfalx.bootstrap.web.util.JsonFormResponse;
 import net.microfalx.lang.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("security/users")
 @DataSet(model = User.class, timeFilter = false)
 @Help("admin/security/user")
-public class UserController extends DataSetController<User, Integer> {
+public class UserController extends SecurityDataSetController<User, Integer> {
 
     @Autowired
     private UserRepository userRepository;

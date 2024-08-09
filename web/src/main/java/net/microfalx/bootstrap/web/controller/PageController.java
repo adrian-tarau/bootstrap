@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.controller;
 
+import jakarta.annotation.security.PermitAll;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.annotation.Name;
@@ -9,6 +10,7 @@ import org.springframework.ui.Model;
 /**
  * A controller for an application page.
  */
+@PermitAll
 public abstract class PageController {
 
     public static final String HOME = "index";
