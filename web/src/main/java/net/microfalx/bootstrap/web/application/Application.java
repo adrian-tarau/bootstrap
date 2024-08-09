@@ -1,8 +1,15 @@
 package net.microfalx.bootstrap.web.application;
 
+import lombok.Getter;
+import lombok.ToString;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Nameable;
 
+/**
+ * A class which holds information about current (web) application.
+ */
+@Getter
+@ToString
 public final class Application implements Nameable, Descriptable {
 
     String name;
@@ -13,45 +20,6 @@ public final class Application implements Nameable, Descriptable {
     String logo;
 
     Theme theme;
+    Theme systemTheme;
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String getDescription() {
-        return description;
-    }
-
-    public String getOwner() {
-        return owner;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public String getLogo() {
-        return logo;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public Theme getTheme() {
-        return theme;
-    }
-
-    @Override
-    public String toString() {
-        return "Application{" +
-                "name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", logo='" + logo + '\'' +
-                ", version='" + version + '\'' +
-                ", theme=" + theme +
-                '}';
-    }
 }

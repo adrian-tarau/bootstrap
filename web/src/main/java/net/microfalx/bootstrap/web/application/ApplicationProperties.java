@@ -14,8 +14,6 @@ import org.springframework.context.annotation.Configuration;
 @ToString
 public class ApplicationProperties {
 
-    public static final String DEFAULT_THEME = "adminator";
-
     @NotBlank
     private String name = "Default";
 
@@ -32,7 +30,10 @@ public class ApplicationProperties {
     private String url = "#";
 
     @NotBlank
-    private String theme = "adminator";
+    private String theme = Theme.DEFAULT;
+
+    @NotBlank
+    private String systemTheme;
 
     @NotBlank
     private String version = "1.0.0";

@@ -53,8 +53,9 @@ final class AssetBundleManager {
     Theme getTheme(String idOrName) {
         requireNotEmpty(idOrName);
         Theme theme = themes.get(StringUtils.toIdentifier(idOrName));
-        if (theme == null)
+        if (theme == null) {
             throw new ApplicationException("A theme with identifier or name '" + idOrName + "' is not registered");
+        }
         return theme;
     }
 

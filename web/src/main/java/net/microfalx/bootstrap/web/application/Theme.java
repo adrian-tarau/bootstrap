@@ -16,6 +16,9 @@ import static net.microfalx.lang.StringUtils.toIdentifier;
  */
 public final class Theme implements Identifiable<String>, Nameable {
 
+    public static final String SYSTEM = "adminlte";
+    public static final String DEFAULT = "adminlte";
+
     private final String id;
     private final String name;
     private final Collection<AssetBundle> assetBundles = new ArrayList<>();

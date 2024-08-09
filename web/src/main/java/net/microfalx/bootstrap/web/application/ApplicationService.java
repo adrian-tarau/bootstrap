@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.application;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.container.WebContainerService;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TextUtils;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
@@ -43,6 +44,19 @@ public final class ApplicationService implements InitializingBean {
     private final Map<String, Menu> navigations = new ConcurrentHashMap<>();
 
     private final Application application = new Application();
+
+    static ThreadLocal<Theme> THEME = new ThreadLocal<>();
+
+    /**
+     * Returns the theme associated with this thread.
+     *
+     * @return a non-null in instance
+     */
+    public Theme getCurrentTheme() {
+        Theme theme = THEME.get();
+        if (theme == null) theme = application.getTheme();
+        return theme;
+    }
 
     /**
      * Returns the application description.
@@ -304,7 +318,12 @@ public final class ApplicationService implements InitializingBean {
     }
 
     private void initTheme() {
-        application.theme = getTheme(defaultIfNull(applicationProperties.getTheme(), ApplicationProperties.DEFAULT_THEME));
+        application.theme = getTheme(defaultIfNull(applicationProperties.getTheme(), Theme.DEFAULT));
+        if (StringUtils.isNotEmpty(applicationProperties.getSystemTheme())) {
+            application.theme = getTheme(defaultIfNull(applicationProperties.getSystemTheme(), Theme.SYSTEM));
+        } else {
+            application.systemTheme = application.theme;
+        }
     }
 
     private void initApplication() {
