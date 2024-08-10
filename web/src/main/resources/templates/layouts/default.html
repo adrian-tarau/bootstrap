@@ -2,10 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/page :: header}">
 <body>
-<div th:replace="~{fragments/header :: navigation}"/>
+<div th:replace="~{fragments/navigation :: primary}"/>
 <div class="container-fluid">
     <!-- Your Title -->
-    <div th:replace="~{fragments/header :: section(title='Users')}"/>
+    <div th:replace="~{fragments/page :: section(title='Users')}"/>
     <!-- Your Content For the Page Here-->
     <div th:replace="~{fragments/footer :: footer-full}"/>
 </div>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- The primary navigation, most of the time on the left side of the page -->
+
+<aside class="bg-body-secondary shadow nav-indent nav-compact" data-bs-theme="dark" th:fragment="primary">
+    <p>Render "primary" navigation</p>
+</aside>
+
+<!-- The secondary navigation, most of the time on the top of the page -->
+
+<nav class="app-header navbar navbar-expand bg-body" th:fragment="secondary">
+    <p>Render "secondary" navigation</p>
+</nav>
+
+<!-- The tertiary navigation, most of the time is not present but if exists is somewhere near the secondary navigation -->
+
+<nav class="app-header navbar navbar-expand bg-body" th:fragment="tertiary">
+    <p>Render "tertiary" navigation</p>
+</nav>
+
+</html>
