@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <navigations xmlns="https://net.microfalx/xsd/navigation-1.0.xsd">
-    <menu id="left">
+    <menu id="primary">
         <item id="home" text="Home" action="/" position="1" icon="fa-solid fa-house-chimney"/>
         <item id="search" text="Search" action="/search" position="2" icon="fa-solid fa-magnifying-glass"/>
         <menu id="system" text="System" position="1000" roles="admin" icon="fa-solid fa-gears">
@@ -32,7 +32,7 @@
             <item id="sys_info" text="System Information" action="/support/info" position="10000" icon="fa-solid fa-circle-info"/>
         </menu>
     </menu>
-    <menu id="top">
+    <menu id="secondary">
         <spacer position="1000"/>
         <item id="user" text="Guest" position="2000" icon="fa-solid fa-user-crown"/>
     </menu>

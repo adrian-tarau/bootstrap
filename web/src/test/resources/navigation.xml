@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <navigations xmlns="https://net.microfalx/xsd/navigation-1.0.xsd">
-    <menu id="left">
+    <menu id="primary">
         <item id="top1" text="Top 1" action="/top1" roles="ADMIN" icon="c-blue-500 fa-solid fa-house"/>
         <item id="top2" text="Top 2" action="/top2" roles="ADMIN" icon="c-brown-500 fa-solid fa-envelope"/>
         <menu id="parent1" text="Parent 1" action="/module1" position="100" icon="c-red-500 fa-solid fa-calendar" >

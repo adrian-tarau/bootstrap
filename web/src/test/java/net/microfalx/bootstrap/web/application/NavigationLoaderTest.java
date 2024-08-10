@@ -34,8 +34,8 @@ class NavigationLoaderTest {
     @Test
     void loadLeft() {
         loader.load();
-        Menu menu = applicationService.getNavigation("left");
-        assertEquals("left", menu.getId());
+        Menu menu = applicationService.getNavigation("primary");
+        assertEquals("primary", menu.getId());
         assertEquals(2, menu.getChildren().size());
 
         Iterator<Component<?>> iterator = menu.getChildren().iterator();

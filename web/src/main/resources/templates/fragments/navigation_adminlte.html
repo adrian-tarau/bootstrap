@@ -157,7 +157,7 @@
     </div>
     <div class="sidebar-wrapper">
         <nav class="mt-2">
-            <ul th:with="menu = ${#navigation.get('left')}" class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
+            <ul th:with="menu = ${#navigation.get('primary')}" class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
                 <div th:each="item : ${#component.getChildren(menu)}" th:remove="tag">
                     <div th:replace="~{ this :: (${#component.isContainer(item)} ? 'menu' : 'menu-item') }"></div>
                 </div>
