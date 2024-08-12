@@ -88,7 +88,7 @@
         <threadpool.version>1.0.0-SNAPSHOT</threadpool.version>
         <metrics.version>1.0.0-SNAPSHOT</metrics.version>
 
-        <bootstrap-js.version>1.0.0-SNAPSHOT</bootstrap-js.version>
+        <webjar.version>1.0.0-SNAPSHOT</webjar.version>
         <spring.boot.version>3.3.2</spring.boot.version>
 
     </properties>
@@ -111,6 +111,14 @@
                 <groupId>net.microfalx.bom</groupId>
                 <artifactId>bom-spring</artifactId>
                 <version>1.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.webjar</groupId>
+                <artifactId>webjar-bom</artifactId>
+                <version>${webjar.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

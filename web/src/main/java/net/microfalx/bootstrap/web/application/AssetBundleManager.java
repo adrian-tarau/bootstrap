@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.zip.GZIPOutputStream;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -31,6 +32,7 @@ final class AssetBundleManager {
     private final Map<String, Theme> themes = new ConcurrentHashMap<>();
     private final Map<String, Resource> bundlesContent = new ConcurrentHashMap<>();
     private final Map<String, Collection<String>> assetBundleDependencies = new ConcurrentHashMap<>();
+    private final Set<String> missingAssets = new CopyOnWriteArraySet<>();
 
     AssetProperties assetProperties = new AssetProperties();
 
@@ -74,8 +76,9 @@ final class AssetBundleManager {
 
     AssetBundle getAssetBundle(String id) {
         AssetBundle assetBundle = bundles.get(id);
-        if (assetBundle == null)
+        if (assetBundle == null) {
             throw new ApplicationException("An asset bundle with identifier '" + id + "' is not registered");
+        }
         return assetBundle;
     }
 
@@ -96,6 +99,9 @@ final class AssetBundleManager {
                     if (header) {
                         writer.append("\n\n/*\nAsset: ").append(asset.getName()).append(", path ")
                                 .append(asset.getPath()).append("\n*/\n\n");
+                    }
+                    if (!asset.getResource().exists() && missingAssets.add(asset.getResource().toURI().toASCIIString())) {
+                        LOGGER.error("Asset " + asset.getName() + " (" + asset.getPath() + ") in bundle " + assetBundle.getName()+" could not be located in class path");
                     }
                     writer.append(asset.getResource().loadAsString());
                     if (counter < ids.length - 1) {
