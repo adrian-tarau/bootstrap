@@ -171,12 +171,16 @@
         <dependency>
             <groupId>net.microfalx.webjar</groupId>
             <artifactId>webjar-font-themify</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>net.microfalx.webjar</groupId>
             <artifactId>webjar-bootstrap-theme-adminlte</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.webjar</groupId>
+            <artifactId>webjar-bootstrap-theme-ceres</artifactId>
         </dependency>
 
         <dependency>

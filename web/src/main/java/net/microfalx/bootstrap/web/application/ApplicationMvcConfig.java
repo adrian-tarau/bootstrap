@@ -41,6 +41,7 @@ public class ApplicationMvcConfig implements WebMvcConfigurer {
         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
             Class<?> handlerClass = null;
             if (handler instanceof HandlerMethod) handlerClass = ((HandlerMethod) handler).getBeanType();
+            if (handlerClass == null) return true;
             String themeId = null;
             boolean system = false;
             Theme themeAnnot = AnnotationUtils.getAnnotation(handlerClass, Theme.class);

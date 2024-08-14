@@ -75,7 +75,8 @@ final class AssetBundleManager {
     }
 
     AssetBundle getAssetBundle(String id) {
-        AssetBundle assetBundle = bundles.get(id);
+        requireNonNull(id);
+        AssetBundle assetBundle = bundles.get(StringUtils.toIdentifier(id));
         if (assetBundle == null) {
             throw new ApplicationException("An asset bundle with identifier '" + id + "' is not registered");
         }

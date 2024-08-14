@@ -2,8 +2,11 @@
 <assets xmlns="https://net.microfalx/xsd/asset-1.0.xsd">
 
     <!-- Application  -->
-    <asset-bundle id="app" path="app" name="Application">
+    <asset-bundle id="app" path="app" name="Application" order="500">
         <depends-on-asset-bundle>bootstrap</depends-on-asset-bundle>
+        <depends-on-asset-bundle>jquery-widget</depends-on-asset-bundle>
+        <depends-on-asset-bundle>fa</depends-on-asset-bundle>
+        <depends-on-asset-bundle>themify</depends-on-asset-bundle>
 
         <asset path="bootstrap.css" type="stylesheet"/>
         <asset path="adminator.css" type="stylesheet"/>
@@ -26,7 +29,7 @@
     </asset-bundle>
 
     <!-- Application  -->
-    <asset-bundle id="help" path="help" name="Help">
+    <asset-bundle id="help" path="help" name="Help" order="505">
         <depends-on-asset-bundle>app</depends-on-asset-bundle>
 
         <asset path="help.css" type="stylesheet"/>
@@ -37,7 +40,7 @@
 
 
     <!-- DataSet  -->
-    <asset-bundle id="dataset" path="dataset" name="DataSet">
+    <asset-bundle id="dataset" path="dataset" name="DataSet" order="505">
         <depends-on-asset-bundle>app</depends-on-asset-bundle>
 
         <asset path="sort.css" type="stylesheet"/>
@@ -49,8 +52,8 @@
         <asset path="sort.js" type="script"/>
     </asset-bundle>
 
-    <!-- DataSet  -->
-    <asset-bundle id="controller" path="controller" name="Controllers">
+    <!-- Custom Controllers  -->
+    <asset-bundle id="controller" path="controller" name="Controllers" order="510">
         <depends-on-asset-bundle>dataset</depends-on-asset-bundle>
 
         <asset path="alert.js" type="script"/>

@@ -80,7 +80,7 @@ final class AssetBundleLoader {
             AssetBundle.Builder assetBundleBuilder = new AssetBundle.Builder(getRequiredAttribute(assetBundleElement, "id"));
             assetBundleBuilder.name(getRequiredAttribute(assetBundleElement, "name"));
             assetBundleBuilder.path(getAttribute(assetBundleElement, "path"));
-            assetBundleBuilder.order(getAttribute(assetBundleElement, "order", 0));
+            assetBundleBuilder.order(getAttribute(assetBundleElement, "order", 1000));
             assetBundleBuilder.inline(getAttribute(assetBundleElement, "inline", false));
             assetBundleBuilder.theme(getAttribute(assetBundleElement, "theme", (String) null));
             assetBundleBuilder.description(getAttribute(assetBundleElement, "description"));

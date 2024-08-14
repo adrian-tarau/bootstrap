@@ -495,6 +495,8 @@ DataSet.initTables = function () {
  * Initializes the JS library which handles the file upload.
  */
 DataSet.initUpload = function () {
+    let dropZoneEl = $("div." + DATASET_DROP_ZONE_CLASS);
+    if (dropZoneEl.length === 0) return;
     let dropZone = new Dropzone("div." + DATASET_DROP_ZONE_CLASS, {
         //autoProcessQueue: false,
         createImageThumbnails: false,

@@ -12,11 +12,13 @@ th.sortable::after {
 }
 
 th.sortable.asc::after {
+    font-family: "Font Awesome 6 Free";
     content: "\f0d8";
     color: #333;
 }
 
 th.sortable.desc::after {
+    font-family: "Font Awesome 6 Free";
     content: "\f0d7";
     color: #333;
 }
