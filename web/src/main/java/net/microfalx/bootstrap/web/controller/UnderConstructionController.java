@@ -7,7 +7,7 @@ public abstract class UnderConstructionController extends PageController {
 
     @GetMapping()
     public final String view(Model model) {
-        model.addAttribute("title", getName());
+        model.addAttribute("title", getTitle());
         return "under_construction";
     }
 }

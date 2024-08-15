@@ -53,6 +53,7 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
 
         public static final String APPLICATION_OBJECT_NAME = "application";
         public static final String NAVIGATION_OBJECT_NAME = "navigation";
+        public static final String PAGE_OBJECT_NAME = "page";
         public static final String SECURITY_OBJECT_NAME = "security";
         public static final String COMPONENT_OBJECT_NAME = "component";
         public static final String HELP_OBJECT_NAME = "help";
@@ -65,7 +66,7 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
         public static final String FORMAT_TOOL_NAME = "formats";
 
         protected static final Set<String> ALL_EXPRESSION_OBJECT_NAMES = unmodifiableSet(
-                new LinkedHashSet<>(asList(APPLICATION_OBJECT_NAME, NAVIGATION_OBJECT_NAME, SECURITY_OBJECT_NAME, COMPONENT_OBJECT_NAME,
+                new LinkedHashSet<>(asList(APPLICATION_OBJECT_NAME, NAVIGATION_OBJECT_NAME, PAGE_OBJECT_NAME, SECURITY_OBJECT_NAME, COMPONENT_OBJECT_NAME,
                         USER_OBJECT_NAME, DATASET_OBJECT_NAME, LINK_OBJECT_NAME, HELP_OBJECT_NAME,
                         RESOURCE_OBJECT_NAME, MODEL_TOOL_NAME, CONTENT_TOOL_NAME, FORMAT_TOOL_NAME)));
 
@@ -100,6 +101,8 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
                 return TemplateSecurityContext.get(context);
             } else if (SECURITY_OBJECT_NAME.equals(expressionObjectName)) {
                 return new SecurityTool(context, applicationContext);
+            } else if (PAGE_OBJECT_NAME.equals(expressionObjectName)) {
+                return new PageTool(context, applicationContext);
             } else {
                 return null;
             }

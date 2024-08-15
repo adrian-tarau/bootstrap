@@ -108,6 +108,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "browse", pageParameter, rangeParameter, queryParameter, sortParameter);
         updateHelp(model);
+        updateTitle(model);
         updateModel(dataSet, model, State.BROWSE);
         updateModel(dataSet, model, null, State.BROWSE);
         processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
@@ -447,6 +448,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     protected final DataSet<M, Field<M>, ID> getDataSet() {
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = getDataSetAnnotation();
         return dataSetService.getDataSet((Class<M>) dataSetAnnot.model(), this);
+    }
+
+    @Override
+    protected String getTitle() {
+        return getDataSet().getName();
     }
 
     /**

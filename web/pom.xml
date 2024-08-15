@@ -165,7 +165,6 @@
         <dependency>
             <groupId>net.microfalx.webjar</groupId>
             <artifactId>webjar-font-awesome</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>

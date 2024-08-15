@@ -6,6 +6,7 @@ import net.microfalx.bootstrap.web.application.annotation.SystemTheme;
 import net.microfalx.bootstrap.web.application.annotation.Theme;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 public class ApplicationMvcConfig implements WebMvcConfigurer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationMvcConfig.class);
+
+    private static final String THEME_QUERY_PARAMETER = "_theme";
 
     @Autowired
     private Application application;
@@ -41,15 +44,16 @@ public class ApplicationMvcConfig implements WebMvcConfigurer {
         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
             Class<?> handlerClass = null;
             if (handler instanceof HandlerMethod) handlerClass = ((HandlerMethod) handler).getBeanType();
-            if (handlerClass == null) return true;
-            String themeId = null;
+            String themeId = request.getParameter(THEME_QUERY_PARAMETER);
             boolean system = false;
-            Theme themeAnnot = AnnotationUtils.getAnnotation(handlerClass, Theme.class);
-            if (themeAnnot == null) {
-                SystemTheme systemThemeAnnot = AnnotationUtils.getAnnotation(handlerClass, SystemTheme.class);
-                if (systemThemeAnnot != null) system = true;
-            } else {
-                themeId = themeAnnot.value();
+            if (StringUtils.isEmpty(themeId)) {
+                Theme themeAnnot = handlerClass != null ? AnnotationUtils.getAnnotation(handlerClass, Theme.class) : null;
+                if (themeAnnot == null) {
+                    SystemTheme systemThemeAnnot = handlerClass != null ? AnnotationUtils.getAnnotation(handlerClass, SystemTheme.class) : null;
+                    if (systemThemeAnnot != null) system = true;
+                } else {
+                    themeId = themeAnnot.value();
+                }
             }
             if (isNotEmpty(themeId) || system) {
                 try {

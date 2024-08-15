@@ -24,7 +24,7 @@ public abstract class PageController {
      *
      * @return the name of the page
      */
-    protected String getName() {
+    protected String getTitle() {
         Name nameAnnot = AnnotationUtils.getAnnotation(this, Name.class);
         if (nameAnnot != null) {
             return nameAnnot.value();
@@ -46,5 +46,15 @@ public abstract class PageController {
         if (helpAnnot != null) {
             model.addAttribute("help", helpAnnot.value());
         }
+    }
+
+    /**
+     * Update the title of the page.
+     *
+     * @param model the controller model
+     * @see #getTitle()
+     */
+    protected final void updateTitle(Model model) {
+        model.addAttribute("title", getTitle());
     }
 }

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset"
-      xmlns:application="https://net.microfalx/application">
+      xmlns:application="https://net.microfalx/application" xmlns:component="https://net.microfalx/component">
 
 <head th:fragment="header">
     <title th:text="${#application.name}"></title>
@@ -10,6 +10,13 @@
     <asset:css></asset:css>
     <application:context></application:context>
 </head>
+
+<span th:fragment="help" th:if="${#help.hasHelp()}" class="fs-3">
+    <a href="#" th:attr="onclick=|Help.open('${dataset.name}','${#help.getHelp()}')|"
+       component:tooltip-text="Opens the documentation for the current dashboard">
+        <i class="fa-solid fa-circle-question text-primary"></i>
+    </a>
+</span>
 
 <div th:fragment="section(title)" class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2" th:text="${title}"></h1>

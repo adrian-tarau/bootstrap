@@ -122,16 +122,11 @@
 <div th:fragment="render">
     <div class="col-md-12">
         <div class="card mb-4">
-            <div class="card-header border-0 pb-0">
+            <div class="card-header border-0 pb-0" th:if="${#page.hasTitle()}">
                 <div class="d-flex justify-content-between">
-                    <h3 class="card-title fs-3" th:text="${dataset.name}"></h3>
+                    <h3 class="card-title fs-3" th:text="${#page.getTitle()}"></h3>
                     <div>
-                        <span th:if="${#help.hasHelp()}" class="fs-3">
-                            <a href="#" th:attr="onclick=|Help.open('${dataset.name}','${#help.getHelp()}')|"
-                               component:tooltip-text="Opens the documentation for the current dashboard">
-                                <i class="fa-solid fa-circle-question text-primary"></i>
-                            </a>
-                        </span>
+                        <span th:replace="~{ fragments/page :: help}"></span>
                     </div>
                 </div>
             </div>

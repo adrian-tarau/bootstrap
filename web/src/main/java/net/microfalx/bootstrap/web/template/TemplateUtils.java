@@ -23,4 +23,33 @@ public class TemplateUtils {
             return null;
         }
     }
+
+    /**
+     * Returns whether an attribute exists in  the model.
+     *
+     * @param context the template context
+     * @param name    the attribute name
+     * @return {@code true} if exists, {@code false} otherwise
+     */
+    public static boolean containsModelAttribute(IContext context, String name) {
+        if (context instanceof IWebContext) {
+            return ((IWebContext) context).getExchange().containsAttribute(name);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Changes an attribute in the model
+     *
+     * @param context the template context
+     * @param name    the attribute name
+     * @param value   the attribute value
+     * @param <T>     the type of the attribute value
+     */
+    public static <T> void setModelAttribute(IContext context, String name, T value) {
+        if (context instanceof IWebContext) {
+            ((IWebContext) context).getExchange().setAttributeValue(name, value);
+        }
+    }
 }
