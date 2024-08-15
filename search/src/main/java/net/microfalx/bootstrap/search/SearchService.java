@@ -11,6 +11,7 @@ import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -188,6 +189,8 @@ public class SearchService implements InitializingBean {
             Query parsedQuery = createQuery(query, "Searching");
             RetryTemplate retryTemplate = createTemplate(query);
             return retryTemplate.execute((RetryCallback<SearchResult, Exception>) context -> doSearch(parsedQuery, query));
+        } catch (IndexNotFoundException e) {
+            return new SearchResult(query);
         } catch (SearchException e) {
             throw e;
         } catch (Exception e) {

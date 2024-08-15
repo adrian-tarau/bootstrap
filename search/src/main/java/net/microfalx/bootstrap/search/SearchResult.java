@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
@@ -60,17 +61,15 @@ public class SearchResult implements Serializable {
 
     public Document getDocument(String id) {
         requireNonNull(id);
-
         if (itemsById == null) {
             itemsById = new HashMap<>();
             documents.forEach(document -> itemsById.put(document.getId(), document));
         }
-
         return itemsById.get(id);
     }
 
     public List<Document> getDocuments() {
-        return Collections.unmodifiableList(documents);
+        return unmodifiableList(documents);
     }
 
     protected void setDocuments(List<Document> documents) {
