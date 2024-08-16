@@ -11,10 +11,10 @@
     <application:context></application:context>
 </head>
 
-<span th:fragment="help" th:if="${#help.hasHelp()}" class="fs-3">
+<span th:fragment="help" th:if="${#help.hasHelp()}">
     <a href="#" th:attr="onclick=|Help.open('${dataset.name}','${#help.getHelp()}')|"
        component:tooltip-text="Opens the documentation for the current dashboard">
-        <i class="fa-solid fa-circle-question text-primary"></i>
+        <i class="fa-solid fa-circle-question text-primary help-icon"></i>
     </a>
 </span>
 

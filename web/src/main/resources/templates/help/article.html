@@ -9,25 +9,25 @@
                     <h3 class="modal-title flex-grow-1">
                         <span th:text="${title}"></span>
                     </h3>
-                    <h4 class="p-2">
+                    <div class="p-2">
                         <a href="#" component:tooltip-text="Navigates back one page within the current window"
                            class="text-secondary icon-link" th:attr="onclick=|Help.back()|">
-                            <i class="fa-solid fa-arrow-left"></i>
+                            <i class="fa-solid fa-arrow-left help-button"></i>
                         </a>
                         <a href="#" component:tooltip-text="Navigates forward one page within the current window"
                            class="text-secondary icon-link" th:attr="onclick=|Help.forward()|">
-                            <i class="fa-solid fa-arrow-right"></i>
+                            <i class="fa-solid fa-arrow-right help-button"></i>
                         </a>
                         <a href="#" component:tooltip-text="Navigates to the home page of the current window"
                            class="text-secondary icon-link" th:attr="onclick=|Help.reload()|">
-                            <i class="fa-solid fa-house"></i>
+                            <i class="fa-solid fa-house help-button"></i>
                         </a>
                         <span class="mx-2"></span>
                         <a href="#" component:tooltip-text="Closes the current window" data-bs-dismiss="modal"
-                           class="text-secondary icon-link">
+                           class="text-secondary icon-link help-button">
                             <i class="fa-regular fa-circle-xmark"></i>
                         </a>
-                    </h4>
+                    </div>
                 </div>
             </div>
             <div class="modal-body">

@@ -1,6 +1,22 @@
 .help {
 }
 
+.help-icon {
+    font-size: 2rem !important;
+}
+
+.help-icon-main {
+
+}
+
+.help-icon-page {
+
+}
+
+.help-button {
+    font-size: 1.5rem !important;
+}
+
 .help h1, .help h2, .help h3, .help h4, .help h5, .help h6 {
     /*font-size: smaller;*/
 }
