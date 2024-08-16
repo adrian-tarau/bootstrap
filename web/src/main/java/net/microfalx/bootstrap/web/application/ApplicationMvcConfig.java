@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -44,7 +45,7 @@ public class ApplicationMvcConfig implements WebMvcConfigurer {
         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
             Class<?> handlerClass = null;
             if (handler instanceof HandlerMethod) handlerClass = ((HandlerMethod) handler).getBeanType();
-            String themeId = request.getParameter(THEME_QUERY_PARAMETER);
+            String themeId = HttpMethod.valueOf(request.getMethod()) == HttpMethod.GET ? request.getParameter(THEME_QUERY_PARAMETER) : null;
             boolean system = false;
             if (StringUtils.isEmpty(themeId)) {
                 Theme themeAnnot = handlerClass != null ? AnnotationUtils.getAnnotation(handlerClass, Theme.class) : null;
