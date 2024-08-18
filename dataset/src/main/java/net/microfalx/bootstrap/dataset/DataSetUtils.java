@@ -197,10 +197,31 @@ public class DataSetUtils {
         return net.microfalx.bootstrap.model.Sort.create(orders);
     }
 
+    /**
+     * Creates a data set sort form a Spring Data sort.
+     *
+     * @param sort the initial sort
+     * @return a non-null instanace
+     */
+    static Sort from(net.microfalx.bootstrap.model.Sort sort) {
+        List<Sort.Order> orders = new ArrayList<>();
+        for (net.microfalx.bootstrap.model.Sort.Order order : sort) {
+            orders.add(new Sort.Order(from(order.getDirection()), order.getField(), from(order.getNullHandling())));
+        }
+        return Sort.by(orders);
+    }
+
     private static net.microfalx.bootstrap.model.Sort.Direction from(Sort.Direction direction) {
         return switch (direction) {
             case ASC -> net.microfalx.bootstrap.model.Sort.Direction.ASC;
             case DESC -> net.microfalx.bootstrap.model.Sort.Direction.DESC;
+        };
+    }
+
+    private static Sort.Direction from(net.microfalx.bootstrap.model.Sort.Direction direction) {
+        return switch (direction) {
+            case ASC -> Sort.Direction.ASC;
+            case DESC -> Sort.Direction.DESC;
         };
     }
 
@@ -209,6 +230,14 @@ public class DataSetUtils {
             case NATIVE -> net.microfalx.bootstrap.model.Sort.NullHandling.NATIVE;
             case NULLS_FIRST -> net.microfalx.bootstrap.model.Sort.NullHandling.NULLS_FIRST;
             case NULLS_LAST -> net.microfalx.bootstrap.model.Sort.NullHandling.NULLS_LAST;
+        };
+    }
+
+    private static Sort.NullHandling from(net.microfalx.bootstrap.model.Sort.NullHandling nullHandling) {
+        return switch (nullHandling) {
+            case NATIVE -> Sort.NullHandling.NATIVE;
+            case NULLS_FIRST -> Sort.NullHandling.NULLS_FIRST;
+            case NULLS_LAST -> Sort.NullHandling.NULLS_LAST;
         };
     }
 

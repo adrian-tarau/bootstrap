@@ -3,6 +3,8 @@ package net.microfalx.bootstrap.dataset;
 import com.google.common.collect.Iterables;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
+import net.microfalx.bootstrap.model.ModelUtils;
+import net.microfalx.bootstrap.model.Sort;
 import net.microfalx.lang.ArgumentUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,7 +36,8 @@ public class ModelLookupProvider<M, ID> extends AbstractLookupProvider<Lookup<ID
 
     @Override
     public Page<Lookup<ID>> doFindAll(Pageable pageable, Filter filterable) {
-        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), NAME_SORT);
+        Sort sortByName = ModelUtils.getSortByName(dataSet.getMetadata());
+        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), DataSetUtils.from(sortByName));
         Page<M> page = dataSet.findAll(pageable, filterable);
         List<Lookup<ID>> converted = page.getContent().stream().map(this::convert).toList();
         return new DataSetPage<>(pageable, converted);
