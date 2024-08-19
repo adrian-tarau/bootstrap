@@ -6,7 +6,7 @@ import net.microfalx.bootstrap.web.dataset.SystemDataSetController;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Controller
+@Controller("DatabaseSessionController")
 @RequestMapping(value = "/system/database/session")
 @DataSet(model = Session.class, defaultQuery = "state = 'Active'")
 @Help("admin/database/session")

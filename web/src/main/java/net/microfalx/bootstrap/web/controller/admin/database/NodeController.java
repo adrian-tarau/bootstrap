@@ -6,7 +6,7 @@ import net.microfalx.bootstrap.web.dataset.SystemDataSetController;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Controller
+@Controller("DatabaseNodeController")
 @RequestMapping(value = "/system/database/node")
 @DataSet(model = Node.class)
 @Help("admin/database/node")
