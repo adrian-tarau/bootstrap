@@ -177,7 +177,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
                 ", path='" + path + '\'' +
                 ", order=" + order +
                 ", requiresAuthentication=" + requiresAuthentication +
-                ", assets=" + assets +
+                ", assets=" + assets.size() +
                 '}';
     }
 

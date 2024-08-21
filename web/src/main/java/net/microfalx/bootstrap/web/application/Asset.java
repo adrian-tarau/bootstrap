@@ -8,6 +8,7 @@ import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 
 import java.net.URLConnection;
+import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -180,6 +181,21 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
     public int compareTo(Asset asset) {
         if (asset == null) return 0;
         return Integer.compare(order, asset.order);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Asset.class.getSimpleName() + "[", "]")
+                .add("id='" + id + "'")
+                .add("name='" + name + "'")
+                .add("type=" + type)
+                .add("path='" + path + "'")
+                .add("requiresAuthentication=" + requiresAuthentication)
+                .add("resource=" + resource)
+                .add("order=" + order)
+                .add("assetBundle=" + assetBundle.getName())
+                .add("lastModified=" + lastModified)
+                .toString();
     }
 
     private String getPathFromType() {
