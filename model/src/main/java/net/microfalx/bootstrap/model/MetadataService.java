@@ -64,7 +64,6 @@ public class MetadataService implements InitializingBean {
             MetadataProvider<M, Field<M>, ID> provider = find(modelClass);
             metadata = (Metadata<M, F, ID>) provider.getMetadata(modelClass);
             if (metadata instanceof AbstractMetadata<M, F, ID> ametadata) {
-                ametadata.messageSource = i18nService.getMessageSource();
                 ametadata.validator = validator;
                 ametadata.metadataService = this;
                 ametadata.initialize();
@@ -133,6 +132,10 @@ public class MetadataService implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         initialize();
+    }
+
+    protected I18nService getI18nService() {
+        return i18nService;
     }
 
     protected void initialize() {

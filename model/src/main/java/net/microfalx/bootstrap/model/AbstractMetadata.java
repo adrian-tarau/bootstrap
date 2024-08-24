@@ -4,9 +4,6 @@ import net.microfalx.lang.*;
 import net.microfalx.lang.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.MessageSource;
-import org.springframework.context.NoSuchMessageException;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
@@ -47,7 +44,6 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     private Class<ID> idClass;
 
     MetadataService metadataService;
-    MessageSource messageSource;
     Validator validator;
 
     public AbstractMetadata(Class<M> modelClass) {
@@ -312,14 +308,13 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
         fields.add(field);
         fieldsById.put(field.getId(), field);
         fieldsById.put(StringUtils.toIdentifier(field.getName()), field);
-        fieldsById.put(StringUtils.toIdentifier(field.getProperty()), field);
-
+        if (field.getProperty() != null) fieldsById.put(StringUtils.toIdentifier(field.getProperty()), field);
         if (field.isId()) {
             idField = field;
             idFields.add(field);
             idFieldsById.put(field.getId(), field);
             idFieldsById.put(StringUtils.toIdentifier(field.getName()), field);
-            idFieldsById.put(StringUtils.toIdentifier(field.getProperty()), field);
+            if (field.getProperty() != null) idFieldsById.put(StringUtils.toIdentifier(field.getProperty()), field);
         }
         if (idFields.size() > 1) idField = null;
         if (field.hasAnnotation(Timestamp.class)) timestampField = field;
@@ -353,22 +348,12 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     }
 
     /**
-     * Returns the value associated with a key
+     * Returns the I18n reference.
      *
-     * @param key the key
-     * @return the value, null if not defined
+     * @return a non-null instance
      */
-    protected final String getI18n(String key) {
-        if (messageSource != null) {
-            try {
-                return messageSource.getMessage(key, ObjectUtils.EMPTY_ARRAY, LocaleContextHolder.getLocale());
-            } catch (NoSuchMessageException e) {
-                LOGGER.debug("Missing i18n '" + key + "' for model " + getModel().getName());
-                return null;
-            }
-        } else {
-            return null;
-        }
+    protected final net.microfalx.bootstrap.core.i18n.I18n getI18n() {
+        return metadataService.getI18nService();
     }
 
     /**
@@ -422,8 +407,8 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     }
 
     private void initI18n() {
-        this.name = defaultIfEmpty(getI18n(getI18nPrefix() + "name"), this.name);
-        this.description = getI18n(getI18nPrefix() + "description");
+        this.name = defaultIfEmpty(getI18n().getText(getI18nPrefix() + "name", false), this.name);
+        this.description = getI18n().getText(getI18nPrefix() + "description", false);
     }
 
     private void initName() {

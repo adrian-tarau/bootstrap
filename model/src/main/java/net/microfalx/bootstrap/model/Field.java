@@ -76,7 +76,7 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
     /**
      * Returns the property name (class property).
      *
-     * @return the property name
+     * @return the property name, null if the model is not a POJO
      */
     String getProperty();
 

@@ -51,8 +51,6 @@ public abstract class AbstractField<M> implements Field<M> {
     public AbstractField(AbstractMetadata<M, ? extends AbstractField<M>, ?> metadata, String name, String property) {
         requireNotEmpty(metadata);
         requireNotEmpty(name);
-        requireNotEmpty(property);
-
         this.id = toIdentifier(name);
         this.metadata = metadata;
         this.name = name;
@@ -77,7 +75,7 @@ public abstract class AbstractField<M> implements Field<M> {
     @Override
     public final String getLabel() {
         if (labelCalculated) return label;
-        label = metadata.getI18n(getI18nPrefix() + ".label");
+        label = getI18n().getText(getI18nPrefix() + ".label", false);
         if (isEmpty(label)) {
             Label labelAnnot = findAnnotation(Label.class);
             if (getLabelIcon() != null) {
@@ -96,7 +94,7 @@ public abstract class AbstractField<M> implements Field<M> {
 
     public final String getGroup() {
         if (groupCalculated) return group;
-        group = metadata.getI18n(getI18nPrefix() + ".group");
+        group = getI18n().getText(getI18nPrefix() + ".group", false);
         if (isEmpty(group)) {
             Label labelAnnot = findAnnotation(Label.class);
             if (labelAnnot != null) {
@@ -118,7 +116,7 @@ public abstract class AbstractField<M> implements Field<M> {
 
     @Override
     public String getDescription() {
-        String description = metadata.getI18n(getI18nPrefix() + ".description");
+        String description = getI18n().getText(getI18nPrefix() + ".description", false);
         if (isEmpty(description)) {
             Description descriptionAnnot = findAnnotation(Description.class);
             if (descriptionAnnot != null) {
@@ -260,6 +258,15 @@ public abstract class AbstractField<M> implements Field<M> {
             throw new InvalidDataTypeExpression("Data conversion failure for field '" + getName() + "' from object '"
                     + value + "' to type '" + net.microfalx.lang.ClassUtils.getName(target) + "'", e);
         }
+    }
+
+    /**
+     * Returns the I18n reference.
+     *
+     * @return a non-null instance
+     */
+    protected final net.microfalx.bootstrap.core.i18n.I18n getI18n() {
+        return metadata.getI18n();
     }
 
     private void updateDataType(Class<?> dataClass) {

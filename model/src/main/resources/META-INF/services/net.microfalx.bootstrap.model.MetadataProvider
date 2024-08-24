@@ -1,2 +1,3 @@
 net.microfalx.bootstrap.model.JpaMetadataProvider
 net.microfalx.bootstrap.model.PojoMetadataProvider
+net.microfalx.bootstrap.model.EnumMetadataProvider

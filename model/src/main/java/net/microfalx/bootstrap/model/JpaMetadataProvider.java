@@ -5,7 +5,7 @@ import net.microfalx.lang.annotation.Order;
 
 import static net.microfalx.lang.AnnotationUtils.getAnnotation;
 
-@Order
+@Order(Order.AFTER - 10)
 public class JpaMetadataProvider<M, ID> implements MetadataProvider<M, JpaField<M>, ID> {
 
     @Override
