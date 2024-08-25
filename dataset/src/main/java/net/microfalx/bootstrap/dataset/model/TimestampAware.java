@@ -27,7 +27,7 @@ public abstract class TimestampAware implements Timestampable<LocalDateTime>, Se
     private static final long serialVersionUID = 1541768280285586132L;
 
     @Position(500)
-    @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
+    @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was created")
     @OrderBy(OrderBy.Direction.DESC)
     @CreatedDate
@@ -35,7 +35,7 @@ public abstract class TimestampAware implements Timestampable<LocalDateTime>, Se
     private LocalDateTime createdAt;
 
     @Position(501)
-    @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
+    @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was last time modified")
     @Timestamp
     @LastModifiedDate

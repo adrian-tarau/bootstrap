@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public abstract class NamedAndTimestampedIdentityAware<T> extends NamedIdentityAware<T> implements Timestampable<LocalDateTime> {
 
     @Position(500)
-    @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
+    @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was created")
     @OrderBy(OrderBy.Direction.DESC)
     @CreatedDate
@@ -28,7 +28,7 @@ public abstract class NamedAndTimestampedIdentityAware<T> extends NamedIdentityA
     private LocalDateTime createdAt;
 
     @Position(501)
-    @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
+    @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was last time modified")
     @Timestamp
     @LastModifiedDate

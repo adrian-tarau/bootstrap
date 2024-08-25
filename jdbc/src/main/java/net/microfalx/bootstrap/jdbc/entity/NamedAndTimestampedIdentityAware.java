@@ -28,7 +28,7 @@ public abstract class NamedAndTimestampedIdentityAware<T extends Serializable> e
     @Column(name = "created_at", nullable = false, updatable = false)
     @NotNull
     @Position(500)
-    @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
+    @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was created")
     @OrderBy(OrderBy.Direction.DESC)
     @CreatedDate
@@ -37,7 +37,7 @@ public abstract class NamedAndTimestampedIdentityAware<T extends Serializable> e
 
     @Column(name = "modified_at")
     @Position(501)
-    @Visible(modes = {Visible.Mode.BROWSE, Visible.Mode.VIEW})
+    @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was last time modified")
     @LastModifiedDate
     @ModifiedAt
