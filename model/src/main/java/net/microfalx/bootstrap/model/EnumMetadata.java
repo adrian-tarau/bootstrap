@@ -9,12 +9,14 @@ public class EnumMetadata<E extends Enum<E>> extends AbstractMetadata<E, EnumFie
 
     private void initFields() {
         EnumField<E> idField = new EnumField<>(this, "id", null);
+        idField.setDataClass(String.class);
         idField.setReadOnly(true);
         idField.setId(true);
         idField.setNaturalId(true);
         addField(idField);
 
         EnumField<E> nameField = new EnumField<>(this, "name", null);
+        nameField.setDataClass(String.class);
         nameField.setReadOnly(true);
         nameField.setIsName(true);
         addField(nameField);

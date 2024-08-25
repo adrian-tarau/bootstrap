@@ -19,6 +19,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ClassUtils.isBaseClass;
 import static net.microfalx.lang.ObjectUtils.isNull;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
  * Base class for all metadata.
@@ -38,6 +39,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     private F idField;
     private final List<F> idFields = new ArrayList<>();
     private final Map<String, F> idFieldsById = new HashMap<>();
+    private final List<F> nameFields = new ArrayList<>();
     private F timestampField;
     private F createdAtField;
     private F modifiedAtField;
@@ -118,14 +120,13 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
 
     @Override
     public List<F> getNameFields() {
-        List<F> nameFields = fields.stream().filter(f -> f.hasAnnotation(Name.class)).toList();
         if (nameFields.isEmpty()) {
-            Optional<F> firstString = fields.stream().filter(f -> f.getDataType() == Field.DataType.STRING).findFirst();
+            Optional<F> firstString = fields.stream().filter(f -> f.getDataType() == Field.DataType.STRING && !f.isId()).findFirst();
             if (firstString.isEmpty()) {
                 throw new FieldNotFoundException("At least one field must be annotated with @Name " +
                         "or at least one String field for model " + ClassUtils.getName(getModel()));
             }
-            nameFields = Arrays.asList(firstString.get());
+            nameFields.add(firstString.get());
         }
         return Collections.unmodifiableList(nameFields);
     }
@@ -161,7 +162,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     @Override
     public F find(String nameOrProperty) {
         requireNonNull(nameOrProperty);
-        return fieldsById.get(StringUtils.toIdentifier(nameOrProperty));
+        return fieldsById.get(toIdentifier(nameOrProperty));
     }
 
     @Override
@@ -305,16 +306,20 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
      */
     public final void addField(F field) {
         requireNonNull(field);
+        if (field instanceof AbstractField<?> afield && field.getIndex() < 0) afield.setIndex(fields.size());
         fields.add(field);
         fieldsById.put(field.getId(), field);
-        fieldsById.put(StringUtils.toIdentifier(field.getName()), field);
-        if (field.getProperty() != null) fieldsById.put(StringUtils.toIdentifier(field.getProperty()), field);
+        fieldsById.put(toIdentifier(field.getName()), field);
+        if (field.getProperty() != null) fieldsById.put(toIdentifier(field.getProperty()), field);
         if (field.isId()) {
             idField = field;
             idFields.add(field);
             idFieldsById.put(field.getId(), field);
-            idFieldsById.put(StringUtils.toIdentifier(field.getName()), field);
-            if (field.getProperty() != null) idFieldsById.put(StringUtils.toIdentifier(field.getProperty()), field);
+            idFieldsById.put(toIdentifier(field.getName()), field);
+            if (field.getProperty() != null) idFieldsById.put(toIdentifier(field.getProperty()), field);
+        }
+        if (field.isName()) {
+            nameFields.add(field);
         }
         if (idFields.size() > 1) idField = null;
         if (field.hasAnnotation(Timestamp.class)) timestampField = field;
@@ -342,7 +347,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
      */
     protected final String getI18nPrefix() {
         I18n i18nAnnot = AnnotationUtils.getAnnotation(getModel(), I18n.class);
-        String i18nPrefix = "model." + (i18nAnnot != null ? i18nAnnot.value() : StringUtils.toIdentifier(getModel().getSimpleName()));
+        String i18nPrefix = "model." + (i18nAnnot != null ? i18nAnnot.value() : toIdentifier(getModel().getSimpleName()));
         i18nPrefix += ".";
         return i18nPrefix;
     }

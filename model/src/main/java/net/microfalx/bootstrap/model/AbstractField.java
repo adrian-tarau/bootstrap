@@ -33,7 +33,7 @@ public abstract class AbstractField<M> implements Field<M> {
     private boolean isId;
     private boolean isNaturalId;
     private boolean isName;
-    private int index;
+    private int index = -1;
     private int position;
     private Class<?> dataClass = Object.class;
     private Class<?> genericDataClass = Object.class;
