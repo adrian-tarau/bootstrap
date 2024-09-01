@@ -1,9 +1,6 @@
 package net.microfalx.bootstrap.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 
 import java.lang.reflect.Member;
 
@@ -22,7 +19,7 @@ public final class JpaField<M> extends PojoField<M> {
     @Override
     protected boolean update(Member member) {
         boolean accepted = super.update(member);
-        setId(hasAnnotation(Id.class));
+        setId(hasAnnotation(Id.class) || hasAnnotation(EmbeddedId.class));
         Column columnAnnot = findAnnotation(Column.class);
         if (columnAnnot != null) {
             columnName = columnAnnot.name();
