@@ -102,14 +102,16 @@ public class ResourceService implements InitializingBean {
         initializeSharedResource();
         validateResource(getSharedResource(null));
         LOGGER.info("Persisted resources directory {}", persistedDirectory);
+        ResourceFactory.setWorkspace(FileResource.directory(persistedDirectory));
         LOGGER.info("Transient resources directory {}", transientDirectory);
+        ResourceFactory.setTemporary(FileResource.directory(new File(transientDirectory, "tmp")));
         LOGGER.info("Shared resources directory {}", getSharedResource(null).toURI());
     }
 
     private void initializeSharedResource() {
         UserPasswordCredential credential = UserPasswordCredential.create(properties.getSharedUserName(), properties.getSharedPassword());
         sharedResource = ResourceFactory.resolve(toUri(properties.getSharedDirectory()), credential, Resource.Type.DIRECTORY);
-        ResourceFactory.setRoot(sharedResource);
+        ResourceFactory.setShared(sharedResource);
     }
 
     private Resource getSharedResource(String name) {
