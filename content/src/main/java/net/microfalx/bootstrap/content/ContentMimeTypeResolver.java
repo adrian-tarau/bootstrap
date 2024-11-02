@@ -14,6 +14,10 @@ public class ContentMimeTypeResolver implements MimeTypeResolver {
 
     @Override
     public String detect(InputStream inputStream, String fileName) throws IOException {
-        return contentService.detectMimeType(StreamResource.create(inputStream, fileName)).toString();
+        if (contentService == null) {
+            return null;
+        } else {
+            return contentService.detectMimeType(StreamResource.create(inputStream, fileName)).toString();
+        }
     }
 }
