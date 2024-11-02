@@ -28,6 +28,15 @@ public final class Value {
     }
 
     /**
+     * Creates an instance with the current timestamp with a given value.
+     *
+     * @return non-null instance
+     */
+    public static Value create(double value) {
+        return create(currentTimeMillis(), value);
+    }
+
+    /**
      * Creates an instance with a timestamp and a value.
      *
      * @return non-null instance

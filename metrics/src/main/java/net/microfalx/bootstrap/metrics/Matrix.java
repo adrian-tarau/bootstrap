@@ -18,6 +18,15 @@ public final class Matrix {
     private final List<Value> values;
 
     /**
+     * Creates a matrix for a given metrics with no values.
+     * @param metric the metrics
+     * @return a non-null instance
+     */
+    public static Matrix empty(Metric metric) {
+        return create(metric, Collections.emptyList());
+    }
+
+    /**
      * Creates a matrix for a given metric and its values.
      *
      * @param metric the metric

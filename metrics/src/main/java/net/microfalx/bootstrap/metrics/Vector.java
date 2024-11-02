@@ -12,6 +12,16 @@ public final class Vector {
     private final Value value;
 
     /**
+     * Creates an empty instance of a vector.
+     *
+     * @param metric the metric name
+     * @return a non-null instance
+     */
+    public static Vector empty(Metric metric) {
+        return new Vector(metric, Value.zero());
+    }
+
+    /**
      * Creates an instance of a vector.
      *
      * @param metric the metric name
