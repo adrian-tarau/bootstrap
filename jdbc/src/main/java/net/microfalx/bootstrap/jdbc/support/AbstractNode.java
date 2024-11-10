@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.jdbc.support;
 
-import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
 
 import java.net.InetAddress;
@@ -15,6 +14,7 @@ import static java.lang.System.currentTimeMillis;
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.IOUtils.closeQuietly;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.lang.TimeUtils.millisSince;
 
 /**
@@ -64,7 +64,7 @@ public abstract class AbstractNode implements Node {
 
     @Override
     public String getDisplayName() {
-        return StringUtils.defaultIfEmpty(displayName, name);
+        return defaultIfEmpty(displayName, name);
     }
 
     protected final void setDisplayName(String displayName) {

@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.MimeType;
@@ -62,7 +63,9 @@ public class AttributeUtils {
     public static <A extends Attribute> Resource encodeProperties(Attributes<A> attributes) {
         requireNonNull(attributes);
         Properties properties = new Properties();
-        properties.putAll(attributes.toMap());
+        for (A attribute : attributes.toCollection()) {
+            properties.put(attribute.getName(), ObjectUtils.toString(attribute.getValue()));
+        }
         StringWriter writer = new StringWriter();
         try {
             properties.store(writer, null);

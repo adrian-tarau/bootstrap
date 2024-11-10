@@ -21,11 +21,6 @@ public final class DefaultContentResolver implements ContentResolver {
     }
 
     @Override
-    public Content intercept(Content content) throws IOException {
-        return content;
-    }
-
-    @Override
     public boolean supports(ContentLocator locator) {
         return true;
     }
