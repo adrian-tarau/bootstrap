@@ -244,10 +244,10 @@ public class BrokerService implements InitializingBean {
         try {
             BrokerConsumer<K, V> consumer = brokerProvider.createConsumer(topic);
             consumer.initialize();
-            LOGGER.info("Create consumer for '{}'", describe(topic));
+            LOGGER.info("Create consumer for {}", describe(topic));
             return consumer;
         } catch (Exception e) {
-            throw new BrokerException("Failed to create consumer for topic '" + describe(topic) + "'", e);
+            throw new BrokerException("Failed to create consumer for topic " + describe(topic), e);
         }
     }
 
@@ -329,14 +329,15 @@ public class BrokerService implements InitializingBean {
     }
 
     private void loadProviders() {
-        LOGGER.info("Load providers:");
+        LOGGER.debug("Load broker providers:");
         Collection<BrokerProvider> loadedProviders = ClassUtils.resolveProviderInstances(BrokerProvider.class);
         for (BrokerProvider loadedProvider : loadedProviders) {
-            LOGGER.info(" - " + ClassUtils.getName(loadedProvider));
+            LOGGER.debug(" - " + ClassUtils.getName(loadedProvider));
             if (loadedProvider instanceof AbstractBrokerProvider abstractBrokerProvider) {
                 abstractBrokerProvider.brokerService = this;
             }
             providers.add(loadedProvider);
         }
+        LOGGER.debug("Loaded " + providers.size() + " broker providers");
     }
 }

@@ -88,7 +88,7 @@ public class FormatterUtils {
             if (formattable != null && formattable.maximumLines() > 0) {
                 return StringUtils.getMaximumLines(valueAsString, formattable.maximumLines());
             } else if (formattable != null && formattable.maximumLength() > 0) {
-                return org.apache.commons.lang3.StringUtils.abbreviate(valueAsString, formattable.maximumLength());
+                return org.apache.commons.lang3.StringUtils.abbreviateMiddle(valueAsString, "...",formattable.maximumLength());
             } else {
                 return valueAsString;
             }

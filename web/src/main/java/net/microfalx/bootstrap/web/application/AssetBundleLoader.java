@@ -32,7 +32,7 @@ final class AssetBundleLoader {
     }
 
     void load() {
-        LOGGER.info("Discover assets from web descriptors");
+        LOGGER.debug("Discover assets from web descriptors");
         Collection<URL> webDescriptors = null;
         try {
             webDescriptors = ApplicationUtils.getAssetDescriptors();
@@ -54,10 +54,11 @@ final class AssetBundleLoader {
         } catch (IOException e) {
             LOGGER.error("Failed to discover web descriptors", e);
         }
+        LOGGER.info("Discovered {} asset bundles from web descriptors", assetBundleManager.getAssetBundles().size());
     }
 
     private void loadResources(URL webDescriptor) throws IOException {
-        LOGGER.info("Load resources from " + webDescriptor.toExternalForm());
+        LOGGER.debug("Load resources from " + webDescriptor.toExternalForm());
         Document document = loadDocument(webDescriptor.openStream());
         Element rootElement = document.getRootElement();
         loadAssetBundles(rootElement);

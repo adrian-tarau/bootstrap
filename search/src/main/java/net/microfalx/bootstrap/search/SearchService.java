@@ -577,12 +577,13 @@ public class SearchService implements InitializingBean {
     }
 
     private void initListeners() {
-        LOGGER.info("Register listeners");
+        LOGGER.debug("Register search listeners:");
         Collection<SearchListener> discoveredListeners = ClassUtils.resolveProviderInstances(SearchListener.class);
         for (SearchListener discoveredListener : discoveredListeners) {
-            LOGGER.info(" - " + ClassUtils.getName(discoveredListener));
+            LOGGER.debug(" - " + ClassUtils.getName(discoveredListener));
             this.listeners.add(discoveredListener);
         }
+        LOGGER.info("Registered " + listeners.size() + " search listeners");
     }
 
     private void initTaskExecutor() {

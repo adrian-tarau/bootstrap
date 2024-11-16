@@ -375,10 +375,9 @@ public class ContentService implements InitializingBean {
     private void setupTika() {
         tikaConfig = TikaConfig.getDefaultConfig();
         detectors.add(tikaConfig.getDetector());
-        LOGGER.info("Loaded Apache Tika");
-        LOGGER.info(" - mime types " + tikaConfig.getMediaTypeRegistry().getTypes().size());
-        LOGGER.info(" - detector " + ClassUtils.getName(tikaConfig.getDetector()));
-        LOGGER.info(" - parser " + ClassUtils.getName(tikaConfig.getParser()));
+        LOGGER.info("Loaded Apache Tika, mime types {}, detector {}, parser {}",
+                tikaConfig.getMediaTypeRegistry().getTypes().size(), ClassUtils.getName(tikaConfig.getDetector()),
+                ClassUtils.getName(tikaConfig.getParser()));
     }
 
     private void registerTextDetectors() {
@@ -417,24 +416,27 @@ public class ContentService implements InitializingBean {
     }
 
     private void discoverListeners() {
-        LOGGER.info("Discover content resolvers:");
+        LOGGER.debug("Discover content resolvers:");
         Collection<ContentResolver> discoveredContentResolvers = ClassUtils.resolveProviderInstances(ContentResolver.class);
         for (ContentResolver contentListener : discoveredContentResolvers) {
-            LOGGER.info(" - " + ClassUtils.getName(contentListener));
+            LOGGER.debug(" - " + ClassUtils.getName(contentListener));
             resolvers.add(contentListener);
         }
-        LOGGER.info("Discover content persisters:");
+        LOGGER.info("Discovered " + resolvers.size() + " content resolvers");
+        LOGGER.debug("Discover content persisters:");
         Collection<ContentPersister> discoveredContentPersisters = ClassUtils.resolveProviderInstances(ContentPersister.class);
         for (ContentPersister contentPersister : discoveredContentPersisters) {
-            LOGGER.info(" - " + ClassUtils.getName(contentPersister));
+            LOGGER.debug(" - {}", ClassUtils.getName(contentPersister));
             persisters.add(contentPersister);
         }
-        LOGGER.info("Discover content renderers:");
+        LOGGER.info("Discovered {} content persisters", persisters.size());
+        LOGGER.debug("Discover content renderers:");
         Collection<ContentRenderer> discoveredContentRenderers = ClassUtils.resolveProviderInstances(ContentRenderer.class);
         for (ContentRenderer contentRenderer : discoveredContentRenderers) {
-            LOGGER.info(" - " + ClassUtils.getName(contentRenderer));
+            LOGGER.debug(" - {}", ClassUtils.getName(contentRenderer));
             renderers.add(contentRenderer);
         }
+        LOGGER.info("Discovered {} content renderers", renderers.size());
     }
 
 }

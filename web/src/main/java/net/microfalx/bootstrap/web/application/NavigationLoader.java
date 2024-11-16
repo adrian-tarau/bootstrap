@@ -21,8 +21,10 @@ final class NavigationLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NavigationLoader.class);
 
-    private ApplicationService applicationService;
-    private Queue<Pending> pending = new ArrayDeque<>();
+    private final ApplicationService applicationService;
+    private final Queue<Pending> pending = new ArrayDeque<>();
+    private int menuCount;
+    private int menuItemCount;
 
     NavigationLoader(ApplicationService applicationService) {
         requireNonNull(applicationService);
@@ -30,8 +32,8 @@ final class NavigationLoader {
     }
 
     void load() {
-        LOGGER.info("Discover navigation from web descriptors");
-        Collection<URL> webDescriptors = null;
+        LOGGER.debug("Discover navigation from web descriptors");
+        Collection<URL> webDescriptors;
         try {
             webDescriptors = ApplicationUtils.getNavigationDescriptors();
             for (URL webDescriptor : webDescriptors) {
@@ -45,6 +47,7 @@ final class NavigationLoader {
             LOGGER.error("Failed to discover web descriptors", e);
         }
         processPending();
+        LOGGER.info("Discovered {} menus and {} menu items from web descriptors", menuCount, menuItemCount);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -89,7 +92,7 @@ final class NavigationLoader {
     }
 
     private void loadNavigations(URL webDescriptor) throws IOException {
-        LOGGER.info("Load resources from " + webDescriptor.toExternalForm());
+        LOGGER.debug("Load resources from {}", webDescriptor.toExternalForm());
         Document document = loadDocument(webDescriptor.openStream());
         Element rootElement = document.getRootElement();
         List<Element> menuElements = rootElement.elements("menu");
@@ -131,6 +134,7 @@ final class NavigationLoader {
         String id = getRequiredAttribute(element, "id");
         Menu menu = parent.find(id);
         if (menu == null) menu = new Menu().setId(id);
+        menuCount++;
         updateActionable(element, menu);
         return menu;
     }
@@ -138,6 +142,7 @@ final class NavigationLoader {
     private Component<?> loadItem(Element element, Container<?> parent) {
         String id = getRequiredAttribute(element, "id");
         Item item = new Item().setId(id);
+        menuItemCount++;
         updateActionable(element, item);
         return item;
     }

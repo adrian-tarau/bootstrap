@@ -56,14 +56,15 @@ public class MetricsService extends ApplicationContextSupport implements Initial
     }
 
     private void initializeRepositories() {
-        LOGGER.info("Loads repositories:");
+        LOGGER.debug("Loads metrics repositories:");
         Collection<Repository> loadedRepositories = ClassUtils.resolveProviderInstances(Repository.class);
         for (Repository loadedRepository : loadedRepositories) {
-            LOGGER.info(" - " + ClassUtils.getName(loadedRepository));
+            LOGGER.debug(" - {}", ClassUtils.getName(loadedRepository));
             if (loadedRepository instanceof ApplicationContextSupport applicationContextSupport) {
                 applicationContextSupport.update(this);
             }
             repositories.add(loadedRepository);
         }
+        LOGGER.info("Loaded {} metric repositories", repositories.size());
     }
 }

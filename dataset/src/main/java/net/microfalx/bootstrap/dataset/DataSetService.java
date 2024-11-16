@@ -338,36 +338,40 @@ public final class DataSetService extends ApplicationContextSupport implements I
 
     @SuppressWarnings("rawtypes")
     private void discoverStaticFactories() {
-        LOGGER.info("Discover static data set factories:");
+        LOGGER.debug("Discover static data set factories:");
         ServiceLoader<DataSetFactory> scannedFactories = ServiceLoader.load(DataSetFactory.class);
         for (DataSetFactory<?, ?, ?> scannedFactory : scannedFactories) {
-            LOGGER.info(" - " + ClassUtils.getName(scannedFactory));
+            LOGGER.debug(" - " + ClassUtils.getName(scannedFactory));
             if (scannedFactory instanceof AbstractDataSetFactory abstractfactory) {
                 abstractfactory.dataSetService = this;
             }
             factories.add(scannedFactory);
         }
+        LOGGER.debug("Discovered " + factories.size() + " static data set factories");
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private void discoverDynamicFactories() {
-        LOGGER.info("Discover dynamic data set factories:");
+        int staticFactoryCount = factories.size();
+        LOGGER.debug("Discover dynamic data set factories:");
         Collection<Class<DataSet>> dataSetClasses = ClassUtils.resolveProviders(DataSet.class);
         for (Class<DataSet> dataSetClass : dataSetClasses) {
-            LOGGER.info(" - " + ClassUtils.getName(dataSetClass));
+            LOGGER.debug(" - " + ClassUtils.getName(dataSetClass));
             factories.add(new ProviderDataSetFactory(dataSetClass));
         }
+        LOGGER.info("Discovered " + (factories.size() - staticFactoryCount) + " dynamic data set factories");
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private void discoverDynamicLookups() {
-        LOGGER.info("Discover dynamic lookups:");
+        LOGGER.debug("Discover dynamic lookups:");
         Collection<Class<LookupProvider>> lookupProviderClasses = ClassUtils.resolveProviders(LookupProvider.class);
         for (Class<LookupProvider> lookupProviderClass : lookupProviderClasses) {
-            LOGGER.info(" - " + ClassUtils.getName(lookupProviderClass));
+            LOGGER.debug(" - {}", ClassUtils.getName(lookupProviderClass));
             LookupProvider lookupProvider = ClassUtils.create(lookupProviderClass);
             lookupProviders.put(lookupProvider.getModel(), lookupProvider);
         }
+        LOGGER.info("Discovered {} dynamic lookups", lookupProviders.size());
     }
 
     static class CachedModelsByDisplayValue<M> {

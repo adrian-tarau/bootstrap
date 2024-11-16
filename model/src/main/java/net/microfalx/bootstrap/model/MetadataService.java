@@ -156,12 +156,13 @@ public class MetadataService implements InitializingBean {
 
     @SuppressWarnings("rawtypes")
     private void discoverProviders() {
-        LOGGER.info("Discover metadata providers:");
+        LOGGER.debug("Discover metadata providers:");
         ServiceLoader<MetadataProvider> scannedProviders = ServiceLoader.load(MetadataProvider.class);
         for (MetadataProvider<?, ?, ?> scannedProvider : scannedProviders) {
-            LOGGER.info(" - " + ClassUtils.getName(scannedProvider));
+            LOGGER.debug(" - {}", ClassUtils.getName(scannedProvider));
             providers.add(scannedProvider);
         }
         sort(providers);
+        LOGGER.info("Discovered {} metadata providers", providers.size());
     }
 }

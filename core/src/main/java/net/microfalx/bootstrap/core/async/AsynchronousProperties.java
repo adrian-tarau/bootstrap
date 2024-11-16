@@ -1,14 +1,19 @@
 package net.microfalx.bootstrap.core.async;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 
-import static net.microfalx.lang.ArgumentUtils.requireBounded;
+import static java.time.Duration.ofSeconds;
+import static net.microfalx.lang.ArgumentUtils.*;
 
 @Configuration
 @ConfigurationProperties("bootstrap.async")
+@Setter
+@Getter
 public class AsynchronousProperties {
 
     private int coreThreads = 5;
@@ -18,80 +23,43 @@ public class AsynchronousProperties {
     private String suffix;
     private boolean waitForTasks = true;
     private boolean removeOnCancel = true;
-    private Duration keepAlive = Duration.ofSeconds(5);
-    private Duration awaitTermination = Duration.ofSeconds(30);
+    private Duration keepAlive = ofSeconds(5);
+    private Duration awaitTermination = ofSeconds(30);
 
-    public int getCoreThreads() {
-        return coreThreads;
-    }
-
-    public void setCoreThreads(int coreThreads) {
+    public AsynchronousProperties setCoreThreads(int coreThreads) {
+        requireBounded(maximumThreads, 1, 500);
         this.coreThreads = coreThreads;
-        if (maximumThreads < coreThreads) maximumThreads = coreThreads;
+        if (maximumThreads < coreThreads) maximumThreads = (int) (coreThreads + coreThreads * 0.2f);
+        return this;
     }
 
-    public int getMaximumThreads() {
-        return maximumThreads;
-    }
-
-    public void setMaximumThreads(int maximumThreads) {
+    public AsynchronousProperties setMaximumThreads(int maximumThreads) {
+        requireBounded(maximumThreads, 1, 1000);
         this.maximumThreads = maximumThreads;
+        return this;
     }
 
-    public int getQueueCapacity() {
-        return queueCapacity;
-    }
-
-    public void setQueueCapacity(int queueCapacity) {
+    public AsynchronousProperties setQueueCapacity(int queueCapacity) {
         requireBounded(queueCapacity, 10, 5000);
         this.queueCapacity = queueCapacity;
+        return this;
     }
 
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
+    public AsynchronousProperties setPrefix(String prefix) {
+        requireNotEmpty(prefix);
         this.prefix = prefix;
+        return this;
     }
 
-    public String getSuffix() {
-        return suffix;
-    }
-
-    public void setSuffix(String suffix) {
-        this.suffix = suffix;
-    }
-
-    public boolean isWaitForTasks() {
-        return waitForTasks;
-    }
-
-    public void setWaitForTasks(boolean waitForTasks) {
-        this.waitForTasks = waitForTasks;
-    }
-
-    public Duration getKeepAlive() {
-        return keepAlive;
-    }
-
-    public void setKeepAlive(Duration keepAlive) {
+    public AsynchronousProperties setKeepAlive(Duration keepAlive) {
+        requireNonNull(keepAlive);
         this.keepAlive = keepAlive;
+        return this;
     }
 
-    public boolean isRemoveOnCancel() {
-        return removeOnCancel;
-    }
-
-    public void setRemoveOnCancel(boolean removeOnCancel) {
-        this.removeOnCancel = removeOnCancel;
-    }
-
-    public Duration getAwaitTermination() {
-        return awaitTermination;
-    }
-
-    public void setAwaitTermination(Duration awaitTermination) {
+    public AsynchronousProperties setAwaitTermination(Duration awaitTermination) {
+        requireNonNull(awaitTermination);
         this.awaitTermination = awaitTermination;
+        return this;
     }
 }
