@@ -1,4 +1,7 @@
 package net.microfalx.bootstrap.web.component;
 
-public final class Separator extends Component<Separator> {
+/**
+ * A separator inside a menu
+ */
+public final class Separator extends ActionableComponent<Separator> {
 }

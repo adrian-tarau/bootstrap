@@ -2,10 +2,7 @@ package net.microfalx.bootstrap.web.template.tools;
 
 import net.microfalx.bootstrap.model.Parameters;
 import net.microfalx.bootstrap.web.application.ApplicationService;
-import net.microfalx.bootstrap.web.component.Actionable;
-import net.microfalx.bootstrap.web.component.Component;
-import net.microfalx.bootstrap.web.component.Container;
-import net.microfalx.bootstrap.web.component.Itemable;
+import net.microfalx.bootstrap.web.component.*;
 import net.microfalx.bootstrap.web.component.panel.BasePanel;
 import net.microfalx.bootstrap.web.component.renderer.ComponentRenderer;
 import net.microfalx.bootstrap.web.component.renderer.EmptyComponentRenderer;
@@ -87,6 +84,16 @@ public class ComponentTool extends AbstractTool {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns whether the component is a separator (menu, toolbar, etc).
+     *
+     * @param component the component
+     * @return {@code true} if separator, @{code false} otherwise
+     */
+    public boolean isSeparator(net.microfalx.bootstrap.web.component.Component<?> component) {
+        return component instanceof Separator;
     }
 
     /**

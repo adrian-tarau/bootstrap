@@ -87,6 +87,21 @@ DataSet.get = function (path, params, callback, options) {
 }
 
 /**
+ * Executes a POST request, which includes the parameters of the current requests
+ *
+ * @param {String} path the path
+ * @param {Object} params the parameter overrides
+ * @param {Function} callback the callback to be called with the response
+ * @param {Object} [options] the callback to be called with the response
+ */
+DataSet.post = function (path, params, callback, options) {
+    params = this.getParams(params, {params: false});
+    options = options || {};
+    options.params = true;
+    Application.post(path, params, callback, options)
+}
+
+/**
  * Triggers a query in the data set.
  * @param {String } query the query to execute, if empty
  */
@@ -114,9 +129,8 @@ DataSet.loadPage = function (page) {
 /**
  * Views the current model.
  */
-DataSet.view = function (id) {
-    Logger.info("View record '" + id + "'");
-    DataSet.updateId(id);
+DataSet.view = function () {
+    Logger.info("View record '" + DataSet.getId() + "'");
     Application.get(DataSet.getId() + "/view", {}, function (data) {
         DataSet.loadModal(data);
     });
@@ -135,9 +149,8 @@ DataSet.add = function () {
 /**
  * Edit the current model.
  */
-DataSet.edit = function (id) {
-    Logger.info("Edit record '" + id + "'");
-    DataSet.updateId(id);
+DataSet.edit = function () {
+    Logger.info("Edit record '" + DataSet.getId() + "'");
     Application.get(DataSet.getId() + "/edit", {}, function (data) {
         DataSet.loadModal(data);
     });
@@ -146,9 +159,8 @@ DataSet.edit = function (id) {
 /**
  * Delete the current model.
  */
-DataSet.delete = function (id) {
-    Logger.info("Delete record '" + id + "'");
-    DataSet.updateId(id);
+DataSet.delete = function () {
+    Logger.info("Delete record '" + DataSet.getId() + "'");
     Application.delete(DataSet.getId() + "/delete", {}, function (json) {
         if (json.success) {
             DataSet.refresh();
@@ -161,8 +173,7 @@ DataSet.delete = function (id) {
 /**
  * Prints the current model.
  */
-DataSet.print = function (id) {
-    DataSet.updateId(id);
+DataSet.print = function () {
     $.get(APP_REQUEST_PATH + "/" + DataSet.getId() + "/add", function (data) {
         DataSet.loadModal(data);
     });
@@ -214,7 +225,7 @@ DataSet.loadModal = function (html) {
 DataSet.showActions = function (event, id) {
     event.stopPropagation();
     Application.closePopups();
-    this.id = id;
+    this.updateId(id);
     let actions = $('#dataset-actions');
     let element = $(event.target);
     if (this.popper) this.popper.destroy();

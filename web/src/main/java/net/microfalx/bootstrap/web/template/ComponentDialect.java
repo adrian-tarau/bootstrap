@@ -36,6 +36,7 @@ public class ComponentDialect extends AbstractProcessorDialect {
     public Set<IProcessor> getProcessors(String dialectPrefix) {
         Set<IProcessor> processors = new HashSet<>();
         processors.add(new RenderTagProcessor());
+        processors.add(new ActionableRenderTagProcessor());
         processors.add(new TooltipAttributeProcessor());
         processors.add(new TooltipTextAttributeProcessor());
         processors.add(new TooltipPlacementAttributeProcessor());
