@@ -615,7 +615,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         }
         model.addAttribute("detailTemplate", detailTemplate);
         model.addAttribute("detailFragment", detailFragment);
-        if (ObjectUtils.isNotEmpty(dataSetAnnotation.viewClasses())) {
+        if (ObjectUtils.isNotEmpty(dataSetAnnotation.viewClasses()) && dataSet.getState() == State.VIEW) {
             model.addAttribute("viewClasses", StringUtils.join(" ", dataSetAnnotation.viewClasses()));
         } else {
             model.addAttribute("viewClasses", EMPTY_STRING);
