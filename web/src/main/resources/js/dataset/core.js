@@ -128,8 +128,13 @@ DataSet.loadPage = function (page) {
 
 /**
  * Views the current model.
+ *
+ * If no identifier is provided, the identifier if the currently selected row is used.
+ *
+ * @param {String} [id] an optional record identifier
  */
-DataSet.view = function () {
+DataSet.view = function (id) {
+    DataSet.updateId(id);
     Logger.info("View record '" + DataSet.getId() + "'");
     Application.get(DataSet.getId() + "/view", {}, function (data) {
         DataSet.loadModal(data);
@@ -138,8 +143,13 @@ DataSet.view = function () {
 
 /**
  * Adds the current model.
+ *
+ * If no identifier is provided, the identifier if the currently selected row is used.
+ *
+ * @param {String} [id] an optional record identifier
  */
-DataSet.add = function () {
+DataSet.add = function (id) {
+    DataSet.updateId(id);
     Logger.info("Add a new record");
     Application.get("add", {}, function (data) {
         DataSet.loadModal(data);
@@ -148,8 +158,13 @@ DataSet.add = function () {
 
 /**
  * Edit the current model.
+ *
+ * If no identifier is provided, the identifier if the currently selected row is used.
+ *
+ * @param {String} [id] an optional record identifier
  */
-DataSet.edit = function () {
+DataSet.edit = function (id) {
+    DataSet.updateId(id);
     Logger.info("Edit record '" + DataSet.getId() + "'");
     Application.get(DataSet.getId() + "/edit", {}, function (data) {
         DataSet.loadModal(data);
@@ -158,8 +173,13 @@ DataSet.edit = function () {
 
 /**
  * Delete the current model.
+ *
+ * If no identifier is provided, the identifier if the currently selected row is used.
+ *
+ * @param {String} [id] an optional record identifier
  */
-DataSet.delete = function () {
+DataSet.delete = function (id) {
+    DataSet.updateId(id);
     Logger.info("Delete record '" + DataSet.getId() + "'");
     Application.delete(DataSet.getId() + "/delete", {}, function (json) {
         if (json.success) {
