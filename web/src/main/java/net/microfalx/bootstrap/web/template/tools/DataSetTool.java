@@ -16,6 +16,8 @@ import net.microfalx.bootstrap.web.chart.annotation.Chartable;
 import net.microfalx.bootstrap.web.chart.datalabels.DataLabels;
 import net.microfalx.bootstrap.web.chart.style.Stroke;
 import net.microfalx.bootstrap.web.chart.tooltip.Tooltip;
+import net.microfalx.bootstrap.web.component.Actionable;
+import net.microfalx.bootstrap.web.component.Button;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.dataset.DataSetChartProvider;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
@@ -455,7 +457,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
-     * Returns the alert associated with the field for a given model
+     * Returns the alert associated with the field for a given model.
      *
      * @param model the model
      * @param field the field
@@ -463,6 +465,24 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public Alert getAlert(M model, Field<M> field) {
         return dataSetService.getAlert(model, field).orElse(null);
+    }
+
+    /**
+     * Returns the actionable associated with the field for a given model.
+     *
+     * @param model the model
+     * @param field the field
+     * @return the alert, null if not present
+     */
+    public Actionable<?> getActionable(M model, Field<M> field) {
+        Object value = field.get(model);
+        if (value == null) return null;
+        if (hasRenderableMarkup(field)) {
+            net.microfalx.bootstrap.dataset.annotation.Renderable renderableAnnot = field.findAnnotation(net.microfalx.bootstrap.dataset.annotation.Renderable.class);
+            return new Button().setAction(renderableAnnot.action()).setIcon(renderableAnnot.icon());
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -501,7 +521,17 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if it has a markups, {@code false} otherwise
      */
     public boolean hasMarkup(Field<M> field) {
-        return hasChart(field) || hasFormattableMarkup(field);
+        return hasChart(field) || hasFormattableMarkup(field) || hasRenderableMarkup(field);
+    }
+
+    /**
+     * Returns whether the field has a display value.
+     *
+     * @param field the field
+     * @return {@code true} if it has value, {@code false} otherwise
+     */
+    public boolean hasDisplayValue(Field<M> field) {
+        return !(hasChart(field) || hasRenderableMarkup(field) || field.isName());
     }
 
     /**
@@ -515,7 +545,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
-     * Returns whether a field is supposed to be rendered as a chart.
+     * Returns whether a field is supposed to be rendered with an alert.
      *
      * @param field the field
      * @return {@code true} if it has a chart, {@code false} otherwise
@@ -523,6 +553,17 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public boolean hasFormattableMarkup(Field<M> field) {
         net.microfalx.bootstrap.dataset.annotation.Formattable formattableAnnot = field.findAnnotation(net.microfalx.bootstrap.dataset.annotation.Formattable.class);
         return formattableAnnot != null && formattableAnnot.alert() != net.microfalx.bootstrap.dataset.annotation.Formattable.AlertProvider.class;
+    }
+
+    /**
+     * Returns whether a field is supposed to be rendered with an action or template.
+     *
+     * @param field the field
+     * @return {@code true} if it has a chart, {@code false} otherwise
+     */
+    public boolean hasRenderableMarkup(Field<M> field) {
+        net.microfalx.bootstrap.dataset.annotation.Renderable renderableAnnot = field.findAnnotation(net.microfalx.bootstrap.dataset.annotation.Renderable.class);
+        return renderableAnnot != null && (isNotEmpty(renderableAnnot.action()) || isNotEmpty(renderableAnnot.template()));
     }
 
     /**
@@ -795,7 +836,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
             classes += " text-end";
         }
         if (field.getDataType().isTemporal() || hasMarkup(field)) classes += " text-nowrap";
-        if (dataSet.isFilterable(field)) classes += " filterable";
+        if (dataSet.isFilterable(field) && !hasMarkup(field)) classes += " filterable";
         classes = classes.trim();
         return isNotEmpty(classes) ? classes : null;
     }

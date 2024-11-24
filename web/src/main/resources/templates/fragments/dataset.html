@@ -30,12 +30,15 @@
 <tr th:fragment="grid-row" th:class="${#dataset.getPrimaryRowClass(model)}">
     <div th:text="${#dataset.beforeBrowse(model)}" th:remove="tag"></div>
     <td class="text-right" th:text="${#dataset.getCurrentIndex()}"></td>
-    <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}" th:with="alert=${#dataset.getAlert(model, field)}">
-        <span th:unless="${field.isName()}" th:utext="${#dataset.getDisplayValue(model, field)}"
+    <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}" th:with="alert=${#dataset.getAlert(model, field)},actionable=${#dataset.getActionable(model, field)}">
+        <span th:if="${#dataset.hasDisplayValue(field)}" th:utext="${#dataset.getDisplayValue(model, field)}"
               th:class="${#dataset.getAlertClass(alert)}" th:style="${#dataset.getAlertStyle(alert)}">
         </span>
         <span th:if="${alert != null and alert.message != null}" th:class="text-sm-end"><i class="fa-solid fa-bell" component:tooltip="${alert.message}"></i></span>
         <span th:if="${alert != null and alert.message == null}" th:class="text-sm-end"><i class="fa-solid fa-circle fa-blank"></i></span>
+        <a th:if="${actionable}" href="#" th:attr="onclick=|Application.action('${actionable.action}', '${#dataset.getId(model)}')|">
+            <i th:if="${actionable.icon}" th:class="${actionable.icon}"></i>
+        </a>
         <a th:if="${field.isName()}" href="#" th:attr="onclick=|Application.action('dataset.view', '${#dataset.getId(model)}')|"
            th:utext="${#dataset.getDisplayValue(model, field)}"></a>
         <span th:if="${#dataset.hasChart(field)}" th:remove="tag"><chart:render inline="true" value="${#dataset.getChart(model, field)}"></chart:render></span>

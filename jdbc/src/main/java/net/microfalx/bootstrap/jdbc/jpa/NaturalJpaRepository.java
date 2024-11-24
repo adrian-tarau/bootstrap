@@ -8,6 +8,8 @@ import java.util.Optional;
 /**
  * An interface for a JPA repository which knows how to find an entity by its natural identifier.
  *
+ * The entity needs to have one column marked with {@link net.microfalx.lang.annotation.NaturalId} annotation.
+ *
  * @param <T>  the entity type
  * @param <ID> the identifier type
  */

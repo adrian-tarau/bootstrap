@@ -84,7 +84,6 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private static final String INVALID_FILTER_PREFIX = "Invalid filter: ";
     private static final String DATE_RANGE_SEPARATOR = "|";
     private static final String BROWSE_VIEW = "dataset/browse";
-    private static final String FRAGMENT_SEPARATOR = "::";
     private static final int TREND_MAX_LANES = 20;
 
     @Autowired

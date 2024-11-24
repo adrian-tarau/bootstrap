@@ -21,6 +21,22 @@ public @interface Renderable {
     boolean discard() default false;
 
     /**
+     * The field is rendered as an action (link) with using the text of the field or a custom icon.
+     * <p>
+     * The action is translated into an event.
+     *
+     * @return the action (event), empty if there is no action
+     */
+    String action() default "";
+
+    /**
+     * Returns the icon (class) associated with the action.
+     *
+     * @return the icon or null if there is no icon
+     */
+    String icon() default "";
+
+    /**
      * Returns the template which will be used to render the markup around the field value.
      *
      * @return the template, em
