@@ -427,7 +427,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     /**
      * Invoked after the model is persisted.
-     *
+     * <p>
      * If the model is supported by a database, the event is called under a transaction after the model is saved.
      *
      * @param dataSet the data set
@@ -659,14 +659,18 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             if (edit && field.isId()) continue;
             List<String> values = fields.get(field.getName());
             if (values == null) continue;
-            Object value = null;
-            if (values.size() == 1) {
-                value = convert(dataSet, model, field, values.get(0));
-            } else {
-                value = convert(dataSet, model, field, values);
+            try {
+                Object value = null;
+                if (values.size() == 1) {
+                    value = convert(dataSet, model, field, values.get(0));
+                } else {
+                    value = convert(dataSet, model, field, values);
+                }
+                value = bind(dataSet, field, value);
+                field.set(model, value);
+            } catch (Exception e) {
+                throw new DataSetException("Failed to bind value '" + values + "' for field '" + field.getName() + "'", e);
             }
-            value = bind(dataSet, field, value);
-            field.set(model, value);
         }
         return model;
     }
