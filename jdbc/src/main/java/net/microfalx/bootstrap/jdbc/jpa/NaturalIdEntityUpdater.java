@@ -6,12 +6,15 @@ import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.model.ModelComparator;
+import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ClassUtils;
 import org.hibernate.annotations.NaturalId;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.retry.support.RetryTemplate;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -28,12 +31,14 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
 
     private RetryTemplate retryTemplate;
     private Metadata<M, Field<M>, ID> metadata;
+    private final Map<String, UpdateStrategy> updateStrategies = new HashMap<>();
 
     public NaturalIdEntityUpdater(MetadataService metadataService, NaturalJpaRepository<M, ID> repository) {
         requireNonNull(metadataService);
         requireNonNull(repository);
         this.metadataService = metadataService;
         this.repository = repository;
+        updateStrategies();
     }
 
     /**
@@ -144,8 +149,29 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
         for (Field<M> idField : getMetadata().getIdFields()) {
             idField.set(currentEntity, idField.get(previousEntity));
         }
+        for (Field<M> field : getMetadata().getFields()) {
+            if (!shouldUpdate(field)) field.set(currentEntity, field.get(previousEntity));
+        }
         Field<M> createdAtField = getMetadata().findCreatedAtField();
         if (createdAtField != null) createdAtField.set(currentEntity, createdAtField.get(previousEntity));
+    }
+
+    private boolean shouldUpdate(Field<M> field) {
+        UpdateStrategy updateStrategyAnnot = updateStrategies.get(field.getName());
+        return updateStrategyAnnot == null || updateStrategyAnnot.updatable();
+    }
+
+    private void updateStrategies() {
+        UpdateStrategy updateStrategyAnnot = AnnotationUtils.getAnnotation(getMetadata().getModel(), UpdateStrategy.class);
+        if (updateStrategyAnnot != null) {
+            for (String fieldName : updateStrategyAnnot.fieldNames()) {
+                updateStrategies.put(fieldName, updateStrategyAnnot);
+            }
+        }
+        for (Field<M> field : getMetadata().getFields()) {
+            updateStrategyAnnot = field.findAnnotation(UpdateStrategy.class);
+            if (updateStrategyAnnot != null) updateStrategies.put(field.getName(), updateStrategyAnnot);
+        }
     }
 
     private Metadata<M, Field<M>, ID> getMetadata() {
