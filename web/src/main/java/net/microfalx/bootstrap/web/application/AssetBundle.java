@@ -13,7 +13,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 
 /**
- * Represents a group of  web resources.
+ * Represents a group of web resources.
  */
 public final class AssetBundle implements Identifiable<String>, Nameable, Descriptable {
 
@@ -27,6 +27,8 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     private int order = Integer.MIN_VALUE;
     boolean requiresAuthentication;
 
+    private final List<Asset> assets = new CopyOnWriteArrayList<>();
+
     /**
      * Creates an asset bundle builder.
      *
@@ -36,8 +38,6 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     public static Builder builder(String id) {
         return new Builder(id);
     }
-
-    private final List<Asset> assets = new CopyOnWriteArrayList<>();
 
     /**
      * Returns the group identifier.
@@ -110,9 +110,9 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     }
 
     /**
-     * Returns the resources part of this group.
+     * Returns the resource part of this group.
      * <p>
-     * The assest are order based on their {@link Asset#getOrder()}.
+     * The assets are order based on their {@link Asset#getOrder()}.
      *
      * @return a non-null collection
      */

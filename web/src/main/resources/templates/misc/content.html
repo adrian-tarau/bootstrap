@@ -13,7 +13,7 @@
         }
     </style>
     <asset:css inline="true" bundles="loader"></asset:css>
-    <!--asset:css bundles="code"></asset:css-->
+    <asset:css bundles="code"></asset:css>
 </head>
 <body>
 <div id="editor" th:text="${content}"></div>
@@ -21,14 +21,17 @@
 <asset:js inline="true" bundles="loader"></asset:js>
 <script th:inline="javascript">
     let editor = ace.edit("editor");
-    editor.setTheme("ace/theme/google");
+    editor.setTheme("ace/theme/chrome");
     editor.setOptions({
         autoScrollEditorIntoView: true,
         copyWithEmptySelection: true,
         customScrollbar : true,
         readOnly : /*[[${view}]]*/true,
         highlightActiveLine : /*[[${edit}]]*/false,
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
         enableAutoIndent : true,
+        enableSnippets : false,
         fontSize: "14px",
         tabSize: 4,
         printMarginColumn : 160,

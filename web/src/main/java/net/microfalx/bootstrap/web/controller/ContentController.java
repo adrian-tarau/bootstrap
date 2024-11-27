@@ -78,7 +78,10 @@ public class ContentController {
 
     static {
         registerMode("text/html", "html");
+        registerMode("text/xml", "xml");
         registerMode("text/java", "java");
+        registerMode("text/json", "json");
+        registerMode("text/sql", "sql");
         registerMode("text/javascript", "javascript");
         registerMode("application/yaml", "yaml");
         registerMode("application/json", "json");
