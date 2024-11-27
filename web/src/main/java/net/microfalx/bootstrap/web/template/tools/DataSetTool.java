@@ -140,6 +140,16 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the fields which are read-only
+     *
+     * @return a non-null instance
+     */
+    public Map<String, Boolean> getReadOnlyFields() {
+        Map<String, Boolean> readOnlyFields = getModelAttribute(templateContext, "readOnlyFields");
+        return ObjectUtils.defaultIfNull(readOnlyFields, Collections.emptyMap());
+    }
+
+    /**
      * Returns the data set sort.
      *
      * @return a non-null instance
@@ -377,7 +387,11 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public boolean isReadOnly(Field<M> field) {
         DataSet<M, F, ID> dataSet = getDataSet();
         if (dataSet.isReadOnly() || dataSet.getState() == State.VIEW) return true;
-        return dataSet.isReadOnly(field);
+        boolean readOnly = dataSet.isReadOnly(field);
+        if (readOnly) return true;
+        Boolean customReadOnly = getReadOnlyFields().get(field.getName());
+        if (customReadOnly != null) return customReadOnly;
+        return false;
     }
 
     /**

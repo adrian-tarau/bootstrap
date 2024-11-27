@@ -98,6 +98,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @Autowired(required = false)
     private PlatformTransactionManager transactionManager;
 
+    private static ThreadLocal<Map<String, Boolean>> READ_ONLY_FIELDS = new ThreadLocal<>();
+
     @GetMapping()
     public final String browse(Model model,
                                @RequestParam(value = "page", defaultValue = "0") int pageParameter,
@@ -163,18 +165,24 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @GetMapping("{id}/edit")
     public final String edit(Model model, @PathVariable("id") String id) {
         throwIdentifierRequired(id);
-        DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        log(dataSet, "edit", 0, null, null, null);
-        updateModel(dataSet, model, State.EDIT);
-        M dataSetModel = findModel(dataSet, model, id, State.EDIT);
-        if (dataSetModel != null) {
-            if (beforeEdit(dataSet, model, dataSetModel)) {
-                return "dataset/view::#dataset-modal";
+        prepareRequest();
+        try {
+            DataSet<M, Field<M>, ID> dataSet = getDataSet();
+            log(dataSet, "edit", 0, null, null, null);
+            updateModel(dataSet, model, State.EDIT);
+            M dataSetModel = findModel(dataSet, model, id, State.EDIT);
+            if (dataSetModel != null) {
+                if (beforeEdit(dataSet, model, dataSetModel)) {
+                    model.addAttribute("readOnlyFields", READ_ONLY_FIELDS.get());
+                    return "dataset/view::#dataset-modal";
+                } else {
+                    return BROWSE_VIEW;
+                }
             } else {
-                return BROWSE_VIEW;
+                return throwModelNotFound(id);
             }
-        } else {
-            return throwModelNotFound(id);
+        } finally {
+            cleanupRequest();
         }
     }
 
@@ -452,6 +460,32 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @Override
     protected String getTitle() {
         return getDataSet().getName();
+    }
+
+    /**
+     * Changes the read-only attribute for a collection of fields.
+     *
+     * @param readOnly   {@code true} if read-only, {@code false} otherwise
+     * @param fieldNames the field names
+     */
+    protected final void setReadOnly(boolean readOnly, String... fieldNames) {
+        Map<String, Boolean> readOnlyFields = READ_ONLY_FIELDS.get();
+        for (String fieldName : fieldNames) {
+            readOnlyFields.put(fieldName, readOnly);
+        }
+    }
+
+    /**
+     * Sets the read-only attribute for all fields except a few.
+     *
+     * @param fieldNames the field names
+     */
+    protected final void setReadOnlyExcept(String... fieldNames) {
+        Map<String, Boolean> readOnlyFields = READ_ONLY_FIELDS.get();
+        Set<String> fieldNamesSet = new HashSet<>(Arrays.asList(fieldNames));
+        for (Field<M> field : getDataSet().getMetadata().getFields()) {
+            readOnlyFields.put(field.getName(), !fieldNamesSet.contains(field.getName()));
+        }
     }
 
     /**
@@ -930,6 +964,14 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             charts.add(chart);
         }
         return charts;
+    }
+
+    private void prepareRequest() {
+        READ_ONLY_FIELDS.set(new HashMap<>());
+    }
+
+    private void cleanupRequest() {
+        READ_ONLY_FIELDS.remove();
     }
 
     private ZonedDateTime atEndOfDay(ZonedDateTime dateTime) {
