@@ -152,6 +152,7 @@ Application.delete = function (path, params, callback, options) {
  * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
  * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
  * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.data=text] the body of a POST
  * @param {Boolean} [options.mask] an optional DOM selector, which will be masked while the request is running
  * @param {Boolean} [options.error] an optional function, to be called if the request fails
  * @param {Boolean} [options.complete] an optional function, to be called when the request ends (successful or not)
@@ -169,12 +170,13 @@ Application.ajax = function (type, path, params, callback, options) {
     options.params = false;
     type = Utils.defaultIfNotDefinedOrNull(type, "GET");
     let uri = this.getUri(path, {}, options);
+    let data = type === 'POST' && Utils.isNotEmpty(options.data) ? options.data : params;
     Logger.info("Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);
     if (options.mask) me.mask(options.mask);
     $.ajax({
         url: uri,
         type: type,
-        data: params,
+        data: data,
         dataType: options.dataType,
         timeout: APP_AJAX_DEFAULT_TIMEOUT,
         headers: {"X-TimeZone": Application.getTimezoneOffset()},
@@ -276,6 +278,7 @@ Application.closeModal = function () {
  *
  * @param {String} id the identifier of the modal (DOM element)
  * @param {String} html the modal
+ * @return {bootstrap.Modal} the modal
  */
 Application.loadModal = function (id, html) {
     //Logger.debug(html);
@@ -285,6 +288,7 @@ Application.loadModal = function (id, html) {
     modal.show();
     this.registerModal(modal);
     tippy('[data-tippy-content]');
+    return modal;
 }
 
 /**

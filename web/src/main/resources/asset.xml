@@ -28,7 +28,7 @@
         <asset path="search.js" type="script"/>
     </asset-bundle>
 
-    <!-- Application  -->
+    <!-- Help  -->
     <asset-bundle id="help" path="help" name="Help" order="505">
         <depends-on-asset-bundle>app</depends-on-asset-bundle>
 
@@ -50,6 +50,14 @@
 
         <asset path="core.js" type="script"/>
         <asset path="sort.js" type="script"/>
+    </asset-bundle>
+
+    <!-- Help  -->
+    <asset-bundle id="util" path="util" name="Utils" order="506">
+        <depends-on-asset-bundle>app</depends-on-asset-bundle>
+        <depends-on-asset-bundle>dataset</depends-on-asset-bundle>
+
+        <asset path="code-editor.js" type="script"/>
     </asset-bundle>
 
     <!-- Custom Controllers  -->

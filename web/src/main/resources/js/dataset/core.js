@@ -77,7 +77,8 @@ DataSet.reload = function () {
  * @param {String} path the path
  * @param {Object} params the parameter overrides
  * @param {Function} callback the callback to be called with the response
- * @param {Object} [options] the callback to be called with the response
+ * @param {Object} [options] an optional object, to control how parameters are calculated
+ * @see Application.get
  */
 DataSet.get = function (path, params, callback, options) {
     params = this.getParams(params, {params: false});
@@ -92,7 +93,8 @@ DataSet.get = function (path, params, callback, options) {
  * @param {String} path the path
  * @param {Object} params the parameter overrides
  * @param {Function} callback the callback to be called with the response
- * @param {Object} [options] the callback to be called with the response
+ * @param {Object} [options] an optional object, to control how parameters are calculated
+ * @see Application.post
  */
 DataSet.post = function (path, params, callback, options) {
     params = this.getParams(params, {params: false});

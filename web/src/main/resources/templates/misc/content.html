@@ -17,6 +17,7 @@
 </head>
 <body>
 <div id="editor" th:text="${content}"></div>
+<div id="statusBar"></div>
 <asset:js bundles="code"></asset:js>
 <asset:js inline="true" bundles="loader"></asset:js>
 <script th:inline="javascript">
@@ -40,6 +41,8 @@
         wrap: true
     });
     editor.session.setMode(/*[[${mode}]]*/);
+    //let statusBar = new StatusBar(editor, document.getElementById("statusBar"));
+    if (window.parent.CodeEditor) window.parent.CodeEditor.init(editor);
 </script>
 </body>
 </html>

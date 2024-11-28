@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
+<body>
+
+<div th:fragment="editor" id="editor-modal" tabindex="-1"
+     class="modal fade modal-xl" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="${resource.name}"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0" th:attr="contentId=${id}">
+                <nav class="navbar navbar-expand-sm bg-body-tertiary" th:fragment="toolbar">
+                    <div class="container-fluid">
+                        <div class="collapse navbar-collapse">
+                            <ul class="navbar-nav me-auto mb-2">
+                                <button type="button" class="btn btn-primary btn-sm" th:attr="onclick=|CodeEditor.save()|" component:tooltip-text="Saves the content"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+                            </ul>
+                        </div>
+                    </div>
+                    <iframe id="dataset-download" class="d-none"></iframe>
+                    <p id="dataset-message" class="d-none" th:if="${message}" th:utext="${message}"></p>
+                </nav>
+                <iframe class="w-100 p-0" style="height:650px" loading="lazy" th:src="${#content.getEditUri(content)}"></iframe>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" th:attr="onclick=|CodeEditor.close()|">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
