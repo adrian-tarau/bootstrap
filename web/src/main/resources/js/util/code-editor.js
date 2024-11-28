@@ -35,6 +35,7 @@ CodeEditor.save = function () {
     let options =  me.source.options;
     options.data = me.editor.getValue()
     DataSet.post(me.source.path, me.source.params, function (data) {
+        me.changed = false;
         Application.showInfoAlert("Editor", "Content was saved");
     }, options);
 }
@@ -52,7 +53,11 @@ CodeEditor.close = function () {
  * Initializes the code editor from the loaded content.
  */
 CodeEditor.init = function (editor) {
+    let me = CodeEditor;
     this.editor = editor;
+    editor.on("change", function () {
+        me.changed = true;
+    });
 }
 
 /**

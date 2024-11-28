@@ -32,6 +32,7 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
     private RetryTemplate retryTemplate;
     private Metadata<M, Field<M>, ID> metadata;
     private final Map<String, UpdateStrategy> updateStrategies = new HashMap<>();
+    private Map<String, Boolean> updateable = new HashMap<>();
 
     public NaturalIdEntityUpdater(MetadataService metadataService, NaturalJpaRepository<M, ID> repository) {
         requireNonNull(metadataService);
@@ -76,6 +77,20 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
     public NaturalIdEntityUpdater<M, ID> setRetryTemplate(RetryTemplate retryTemplate) {
         requireNonNull(retryTemplate);
         this.retryTemplate = retryTemplate;
+        return this;
+    }
+
+    /**
+     * Overrides the updatable flag for a field name.
+     *
+     * @param fieldName  the field name
+     * @param updateable {@code true} to allow a field to be updated, {@code false} otheriwse
+     * @return self
+     * @see UpdateStrategy
+     */
+    public NaturalIdEntityUpdater<M, ID> setUpdatable(String fieldName, boolean updateable) {
+        requireNonNull(fieldName);
+        this.updateable.put(fieldName.toLowerCase(), updateable);
         return this;
     }
 
@@ -157,6 +172,8 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
     }
 
     private boolean shouldUpdate(Field<M> field) {
+        Boolean updatable = this.updateable.get(field.getName().toLowerCase());
+        if (updatable != null) return updatable;
         UpdateStrategy updateStrategyAnnot = updateStrategies.get(field.getName());
         return updateStrategyAnnot == null || updateStrategyAnnot.updatable();
     }
