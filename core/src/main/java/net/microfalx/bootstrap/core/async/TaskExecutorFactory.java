@@ -30,7 +30,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  */
 public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, ErrorHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TaskExecutorFactory.class);
+     static final Logger LOGGER = LoggerFactory.getLogger(TaskExecutorFactory.class);
 
     private static final AtomicInteger ID_GENERATOR = new AtomicInteger(1);
     private static final Collection<WeakReference<TaskExecutor>> TASK_EXECUTORS = new CopyOnWriteArrayList<>();
@@ -57,12 +57,12 @@ public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, Err
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        LOGGER.error("Unhandled exception in thread '" + t.getName() + "'", e);
+        LOGGER.atError().setCause(e).log("Unhandled exception in thread '{}'", t.getName());
     }
 
     @Override
     public void handleError(Throwable t) {
-        LOGGER.error("Unhandled exception in task scheduler", t);
+        LOGGER.atError().setCause(t).log("Unhandled exception in thread '{}'", Thread.currentThread().getName());
     }
 
     public AsynchronousProperties getProperties() {
