@@ -11,21 +11,23 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0" th:attr="contentId=${id}">
-                <nav class="navbar navbar-expand-sm bg-body-tertiary" th:fragment="toolbar">
-                    <div class="container-fluid">
+                <nav class="navbar navbar-expand-sm">
+                    <div class="container-fluid ps-1">
                         <div class="collapse navbar-collapse">
-                            <ul class="navbar-nav me-auto mb-2">
-                                <button type="button" class="btn btn-primary btn-sm" th:attr="onclick=|CodeEditor.save()|" component:tooltip-text="Saves the content"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+                            <ul class="navbar-nav me-auto">
+                                <button type="button" class="nav-item btn btn-primary btn-color me-2 btn-sm dataset-btn-sm" th:attr="onclick=|CodeEditor.save()|" component:tooltip-text="Saves the content"><i class="fa-solid fa-floppy-disk"></i><span class="ms-2">Save</span></button>
+                                <li class="nav-item"><hr class="d-lg-none" /><span class="nav-item d-none d-lg-block me-2">|</span></li>
+                                <button type="button" class="btn btn-secondary btn-color btn-sm dataset-btn-sm me-2" th:attr="onclick=|CodeEditor.copy()|" component:tooltip-text="Copies the content of the editor in the clipboard"><i class="fa-solid fa-copy"></i><span class="ms-2">Copy</span></button>
+                                <button type="button" class="btn btn-secondary btn-color btn-sm dataset-btn-sm me-2" th:attr="onclick=|CodeEditor.paste()|" component:tooltip-text="Copies the content of the clipboard in the editor"><i class="fa-regular fa-paste"></i><span class="ms-2">Paste</span></button>
                             </ul>
                         </div>
                     </div>
                     <iframe id="dataset-download" class="d-none"></iframe>
-                    <p id="dataset-message" class="d-none" th:if="${message}" th:utext="${message}"></p>
                 </nav>
                 <iframe class="w-100 p-0" style="height:650px" loading="lazy" th:src="${#content.getEditUri(content)}"></iframe>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" th:attr="onclick=|CodeEditor.close()|">Close</button>
+                <button type="button" class="btn btn-secondary btn-sm dataset-btn-sm" th:attr="onclick=|CodeEditor.close()|">Close</button>
             </div>
         </div>
     </div>

@@ -1,0 +1,11 @@
+.dataset-btn-sm {
+    min-width: 90px;
+}
+
+.dataset-btn-mid {
+    min-width: 150px;
+}
+
+.dataset-btn-large {
+    min-width: 200px;
+}

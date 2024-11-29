@@ -36,8 +36,26 @@ CodeEditor.save = function () {
     options.data = me.editor.getValue()
     DataSet.post(me.source.path, me.source.params, function (data) {
         me.changed = false;
-        Application.showInfoAlert("Editor", "Content was saved");
+        Application.showInfoAlert("Editor", "The content was saved successfully");
     }, options);
+}
+
+/**
+ * Copies the editor content to clipboard.
+ */
+CodeEditor.copy = function () {
+    let me = CodeEditor;
+    me.editor.copy();
+    Application.showInfoAlert("Editor", "Content was copied into clipboard");
+}
+
+/**
+ * Copies the clipboard content to the editor.
+ */
+CodeEditor.paste = function () {
+    let me = CodeEditor;
+    me.editor.paste();
+    Application.showInfoAlert("Editor", "Content was copied into editor");
 }
 
 /**
@@ -45,8 +63,16 @@ CodeEditor.save = function () {
  */
 CodeEditor.close = function () {
     let me = CodeEditor;
-    if (me.editor) me.editor.destroy();
-    if (me.modal) Application.closeModal();
+    let closeFn = function () {
+        if (me.editor) me.editor.destroy();
+        if (me.modal) Application.closeModal();
+    };
+    if (me.changed) {
+        Application.question("Editor", "The content of the editor was changed. Are you sure you want to close the editor?", closeFn);
+    } else {
+        closeFn();
+    }
+
 }
 
 /**
@@ -55,7 +81,7 @@ CodeEditor.close = function () {
 CodeEditor.init = function (editor) {
     let me = CodeEditor;
     this.editor = editor;
-    editor.on("change", function () {
+    editor.session.on('change', function (delta) {
         me.changed = true;
     });
 }

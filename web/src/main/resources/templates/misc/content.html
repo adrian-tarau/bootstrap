@@ -16,11 +16,16 @@
     <asset:css bundles="code"></asset:css>
 </head>
 <body>
-<div id="editor" th:text="${content}"></div>
+<div id="content" th:text="${content}" style="display: none"></div>
+<div id="editor"></div>
 <div id="statusBar"></div>
 <asset:js bundles="code"></asset:js>
+<asset:js bundles="jquery"></asset:js>
 <asset:js inline="true" bundles="loader"></asset:js>
 <script th:inline="javascript">
+    ace.require("ace/ext/language_tools");
+    ace.require("ace/ext/code_lens");
+    ace.require("ace/ext/searchbox");
     let editor = ace.edit("editor");
     editor.setTheme("ace/theme/chrome");
     editor.setOptions({
@@ -30,9 +35,10 @@
         readOnly : /*[[${view}]]*/true,
         highlightActiveLine : /*[[${edit}]]*/false,
         enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true,
+        enableLiveAutocompletion: false,
         enableAutoIndent : true,
-        enableSnippets : false,
+        enableSnippets : true,
+        useWorker : false,
         fontSize: "14px",
         tabSize: 4,
         printMarginColumn : 160,
@@ -41,6 +47,11 @@
         wrap: true
     });
     editor.session.setMode(/*[[${mode}]]*/);
+    let contentElement = $("#content");
+    if (contentElement.length > 0) {
+        editor.setValue(contentElement.text(), -1);
+        contentElement.remove();
+    }
     //let statusBar = new StatusBar(editor, document.getElementById("statusBar"));
     if (window.parent.CodeEditor) window.parent.CodeEditor.init(editor);
 </script>
