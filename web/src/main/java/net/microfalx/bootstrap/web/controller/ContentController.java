@@ -38,7 +38,8 @@ public class ContentController {
     private ContentService contentService;
 
     @GetMapping("/get/{id}")
-    public ResponseEntity<Object> get(Model model, @PathVariable("id") String id, @RequestParam("download") Boolean download) {
+    public ResponseEntity<Object> get(Model model, @PathVariable("id") String id,
+                                      @RequestParam(value = "download", required = false) Boolean download) {
         download = ObjectUtils.defaultIfNull(download, Boolean.FALSE);
         try {
             Content content = contentService.getContent(id);
