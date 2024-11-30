@@ -11,6 +11,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 public class ContentTool extends AbstractTool {
 
+    private static final String DOWNLOAD_ACTION = "download";
     private static final String VIEW_ACTION = "view";
     private static final String EDIT_ACTION = "edit";
 
@@ -21,6 +22,16 @@ public class ContentTool extends AbstractTool {
         super(templateContext, applicationContext);
         this.contentService = applicationContext.getBean(ContentService.class);
         this.linkTool = new LinkTool(templateContext, applicationContext);
+    }
+
+    /**
+     * Registers the content and creates a link to a document to download the content.
+     *
+     * @param content the content
+     * @return the link
+     */
+    public String getDownloadUri(Content content) {
+        return getSrc(DOWNLOAD_ACTION, content);
     }
 
     /**
@@ -74,7 +85,9 @@ public class ContentTool extends AbstractTool {
     private String getSrc(String action, Content content) {
         requireNonNull(content);
         String id = contentService.registerContent(content);
-        if (VIEW_ACTION.equals(action) && !needsEditor(content)) {
+        if (DOWNLOAD_ACTION.equals(action)) {
+            return "/content/get/" + id + "?download=true";
+        } else if (VIEW_ACTION.equals(action) && !needsEditor(content)) {
             return "/content/get/" + id;
         } else {
             return "/content/" + action + "/" + id;

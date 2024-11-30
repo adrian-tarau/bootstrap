@@ -2,25 +2,30 @@ package net.microfalx.bootstrap.web.controller;
 
 import net.microfalx.bootstrap.content.Content;
 import net.microfalx.bootstrap.content.ContentService;
+import net.microfalx.lang.ObjectUtils;
+import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.resource.Resource.FILE_NAME_ATTR;
+import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
+import static org.springframework.http.MediaType.parseMediaType;
 
 @RequestMapping("/content")
 @Controller
@@ -33,13 +38,20 @@ public class ContentController {
     private ContentService contentService;
 
     @GetMapping("/get/{id}")
-    public ResponseEntity<Object> get(Model model, @PathVariable("id") String id) {
+    public ResponseEntity<Object> get(Model model, @PathVariable("id") String id, @RequestParam("download") Boolean download) {
+        download = ObjectUtils.defaultIfNull(download, Boolean.FALSE);
         try {
             Content content = contentService.getContent(id);
             if (!content.exists()) return ResponseEntity.notFound().build();
             Resource resource = contentService.view(content);
-            return ResponseEntity.ok().contentType(MediaType.parseMediaType(resource.getMimeType()))
-                    .body(new InputStreamResource(resource.getInputStream()));
+            ResponseEntity.BodyBuilder bodyBuilder = ResponseEntity.ok().contentType(parseMediaType(resource.getMimeType()));
+            if (!MimeType.get(resource.getMimeType()).isText() || download) {
+                String fileName = content.getResource().getAttribute(FILE_NAME_ATTR);
+                fileName = ObjectUtils.defaultIfNull(fileName, content.getResource().getFileName());
+                String headerValue = "attachment; filename=" + fileName;
+                bodyBuilder = bodyBuilder.header(CONTENT_DISPOSITION, headerValue);
+            }
+            return bodyBuilder.body(new InputStreamResource(resource.getInputStream()));
         } catch (IOException e) {
             String message = "Failed to retrieve content with identifier " + id;
             LOGGER.error(message, e);
