@@ -18,6 +18,8 @@ import java.util.*;
 import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING_ARRAY;
+import static net.microfalx.lang.StringUtils.replaceFirst;
+import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 
 /**
  * A class which can generate an HTML table.
@@ -27,6 +29,8 @@ public class TableGenerator {
 
     private Type type = Type.BOOTSTRAP;
     private boolean small;
+    private boolean links;
+    private boolean strict = true;
     private final Set<String> classes = new HashSet<>();
     private final List<Column> columns = new ArrayList<>();
     private final List<Object[]> rows = new ArrayList<>();
@@ -38,6 +42,7 @@ public class TableGenerator {
 
     private static final String CHECKBOX_CHECKED = "<i class='fa-regular fa-square-check'></i>";
     private static final String CHECKBOX_UNCHECKED = "<i class='fa-regular fa-square'></i>";
+    private static final String LINK = "<i class='fa-solid fa-link' title='${title}'></i>";
 
     public TableGenerator addClass(final String className) {
         if (StringUtil.isNotBlank(className)) classes.add(className);
@@ -55,6 +60,24 @@ public class TableGenerator {
 
     public TableGenerator setSmall(boolean small) {
         this.small = small;
+        return this;
+    }
+
+    public boolean isLinks() {
+        return links;
+    }
+
+    public TableGenerator setLinks(boolean links) {
+        this.links = links;
+        return this;
+    }
+
+    public boolean isStrict() {
+        return strict;
+    }
+
+    public TableGenerator setStrict(boolean strict) {
+        this.strict = strict;
         return this;
     }
 
@@ -88,7 +111,13 @@ public class TableGenerator {
     public TableGenerator addRow(Object... values) {
         requireNonNull(values);
         if (values.length != columns.size()) {
-            throw new IllegalArgumentException("Number of values (" + values.length + " is different from number of columns (" + columns.size() + ")");
+            if (strict) {
+                throw new IllegalArgumentException("Number of values (" + values.length + " is different from number of columns (" + columns.size() + ")");
+            } else {
+                Object[] newValues = new Object[columns.size()];
+                System.arraycopy(values, 0, newValues, 0, Math.min(newValues.length, values.length));
+                values = newValues;
+            }
         }
         for (int i = 0; i < values.length; i++) {
             Object value = values[i];
@@ -107,7 +136,8 @@ public class TableGenerator {
 
     public TableGenerator addRows(Resource resource) throws IOException {
         ArgumentUtils.requireNonNull(resource);
-        CSVFormat format = CSVFormat.Builder.create(CSVFormat.RFC4180).build();
+        CSVFormat format = CSVFormat.Builder.create(CSVFormat.RFC4180)
+                .setIgnoreHeaderCase(true).setLenientEof(!strict).build();
         Iterator<CSVRecord> records = format.parse(resource.getReader()).iterator();
         if (!records.hasNext()) return this;
         CSVRecord record = records.next();
@@ -205,15 +235,30 @@ public class TableGenerator {
             case BOOLEAN -> toString(StringUtils.asBoolean(value, false));
             case INTEGER -> FormatterUtils.formatNumber(value);
             case NUMBER -> FormatterUtils.formatNumber(value, 2);
-            default -> ObjectUtils.toString(value);
+            default -> toStringDefault(column, value);
         };
     }
 
+    private String toStringDefault(Column column, Object value) {
+        String valueAsString = ObjectUtils.toString(value);
+        if (type == Type.BOOTSTRAP) {
+            if (isLink(valueAsString)) {
+                return replaceFirst(LINK, "${title}", escapeHtml4(valueAsString));
+            }
+        }
+        return valueAsString;
+    }
+
     private String toString(boolean value) {
-        return switch (type) {
-            case BOOTSTRAP -> value ? CHECKBOX_CHECKED : CHECKBOX_UNCHECKED;
-            default -> Boolean.toString(value);
-        };
+        if (type == Type.BOOTSTRAP) {
+            return value ? CHECKBOX_CHECKED : CHECKBOX_UNCHECKED;
+        } else {
+            return Boolean.toString(value);
+        }
+    }
+
+    private boolean isLink(String value) {
+        return links && value != null && (value.startsWith("http://") || value.startsWith("https://"));
     }
 
     private String getCellClasses(boolean forHeader, Column column, String... extraClasses) {

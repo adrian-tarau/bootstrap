@@ -28,4 +28,33 @@ class TableGeneratorTest {
                 .contains("table table-striped table-bordered table-hover");
     }
 
+    @Test
+    void links() throws IOException {
+        TableGenerator generator = new TableGenerator().setLinks(true).addColumns("Name", "WebSite")
+                .addRow("John", "https://google.com")
+                .addRow("John2", "https://google.com");
+        Assertions.assertThat(generator.generate())
+                .contains("<table").contains("</table>")
+                .contains("<tr>").contains("</tr>")
+                .contains("table table-striped table-bordered table-hover")
+                .contains("fa-link").contains("google.com");
+    }
+
+    @Test
+    void strict() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            new TableGenerator().addColumns("First Name", "Last Name", "Age", "Retired")
+                    .addRow("John", "Doe", 70);
+        });
+    }
+
+    @Test
+    void nonStrict() {
+        TableGenerator generator = new TableGenerator().setStrict(false).addColumns("First Name", "Last Name", "Age", "Retired")
+                .addRow("John", "Doe", 70)
+                .addRow("John2", "Doe2", 24, false, 20);
+        Assertions.assertThat(generator.generate())
+                .contains("<table");
+    }
+
 }
