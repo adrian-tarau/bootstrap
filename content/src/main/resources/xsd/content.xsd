@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="https://net.microfalx/xsd/content-1.0.xsd"
+           targetNamespace="https://net.microfalx/xsd/content-1.0.xsd"
+           elementFormDefault="unqualified"
+           attributeFormDefault="unqualified">
+
+    <xs:element name="content">
+        <xs:annotation>
+            <xs:documentation>
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="editor" minOccurs="0"/>
+            </xs:sequence>
+
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="editor">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="fragment"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="fragment">
+        <xs:complexType>
+            <xs:attribute name="id" use="required"/>
+            <xs:attribute name="name" use="required"/>
+            <xs:attribute name="group" use="required"/>
+            <xs:attribute name="language" use="required">
+                <xs:simpleType>
+                    <xs:restriction base="xs:token">
+                        <xs:enumeration value="javascript"/>
+                        <xs:enumeration value="java"/>
+                        <xs:enumeration value="sql"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="type" use="required">
+                <xs:simpleType>
+                    <xs:restriction base="xs:token">
+                        <xs:enumeration value="snippet"/>
+                        <xs:enumeration value="example"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="resource" use="required"/>
+            <xs:attribute name="abbreviation"/>
+            <xs:attribute name="description"/>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
+

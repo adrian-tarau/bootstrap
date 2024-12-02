@@ -4,6 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.xml.sax.Attributes;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+
 /**
  * Various utilities around content processing.
  */
@@ -54,6 +60,20 @@ public class ContentUtils {
             prevChar = c;
         }
         return builder.toString();
+    }
+
+    /**
+     * Returns a collection of URLs pointing to content descriptors.
+     *
+     * @return a non-null collection;
+     */
+    static Collection<URL> getContentDescriptors() throws IOException {
+        Collection<URL> urls = new ArrayList<>();
+        Enumeration<URL> resources = ContentUtils.class.getClassLoader().getResources("content.xml");
+        while (resources.hasMoreElements()) {
+            urls.add(resources.nextElement());
+        }
+        return urls;
     }
 
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<content xmlns="https://net.microfalx/xsd/content-1.0.xsd">
+
+    <editor>
+        <fragment id="snippet1" name="Snippet 1" group="Group 1" language="javascript" type="snippet" resource="snippet/snippet1.js"/>
+        <fragment id="example1" name="Example 1" group="Group 2" language="java" type="example" resource="example/example1.java"/>
+    </editor>
+
+</content>

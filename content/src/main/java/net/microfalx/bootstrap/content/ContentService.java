@@ -28,13 +28,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static net.microfalx.bootstrap.content.ContentUtils.removeRedundantNewLines;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
  * A service which uses Apache Tika to extract content.
@@ -54,6 +58,7 @@ public class ContentService implements InitializingBean {
             .expireAfterAccess(Duration.ofMinutes(5)).build();
     private volatile Detector detector = new CompositeDetector();
     private final List<Detector> detectors = new CopyOnWriteArrayList<>();
+    private final Map<String, Fragment> fragments = new ConcurrentHashMap<>();
     private TikaConfig tikaConfig;
 
     /**
@@ -363,9 +368,47 @@ public class ContentService implements InitializingBean {
         throw new ContentException("No listener can update content referenced by locator '" + content.getLocator() + "'");
     }
 
+    /**
+     * Returns a fragment by its identifier.
+     *
+     * @param id the identifier
+     * @return the fragment
+     */
+    public Fragment getFragment(String id) {
+        Fragment fragment = fragments.get(toIdentifier(id));
+        if (fragment == null) {
+            throw new ContentNotFoundException("A fragment with identifier '" + id + "' not found");
+        }
+        return fragment;
+    }
+
+    /**
+     * Registers a new fragment.
+     *
+     * @param fragment the fragment
+     */
+    public void registerFragment(Fragment fragment) {
+        requireNonNull(fragment);
+        String id = toIdentifier(fragment.getId());
+        Fragment prevFragment = fragments.putIfAbsent(id, fragment);
+        if (prevFragment != null) {
+            throw new ContentException("A fragment with identifier '" + id + "' already exists");
+        }
+    }
+
+    /**
+     * Returns all registered fragments.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Fragment> getFragments() {
+        return Collections.unmodifiableCollection(fragments.values());
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         discoverListeners();
+        discoverFragments();
         setupTika();
         registerTextDetectors();
         registerSuperTypes();
@@ -437,6 +480,11 @@ public class ContentService implements InitializingBean {
             renderers.add(contentRenderer);
         }
         LOGGER.info("Discovered {} content renderers", renderers.size());
+    }
+
+    private void discoverFragments() {
+        FragmentLoader loader = new FragmentLoader(this);
+        loader.load();
     }
 
 }
