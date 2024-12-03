@@ -187,7 +187,11 @@ DataSet.delete = function (id) {
         if (json.success) {
             DataSet.refresh();
         } else {
-            Application.showErrorAlert("Delete", json.message);
+            if (json.errorCode === 24) {
+                Application.showWarnAlert("Abort", json.message);
+            } else {
+                Application.showErrorAlert("Delete", json.message);
+            }
         }
     }, {dataType: "json"});
 }
@@ -368,7 +372,7 @@ DataSet.updateId = function (id) {
  */
 DataSet.initNotifications = function () {
     let text = $("#dataset-message").text();
-    if (Utils.isNotEmpty(text)) Application.showErrorAlert("Query", text);
+    if (Utils.isNotEmpty(text)) Application.showErrorAlert("", text);
 }
 
 /**

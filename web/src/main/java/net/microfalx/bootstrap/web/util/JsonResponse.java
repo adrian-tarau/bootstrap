@@ -60,6 +60,11 @@ public class JsonResponse<T extends JsonResponse<T>> implements Serializable {
     public static final int CANNOT_PROVIDE_ERROR = 23;
 
     /**
+     * Error code indicating that the request cannot be fulfilled because the request was aborted by the server.
+     */
+    public static final int ABORT_ERROR = 24;
+
+    /**
      * Holds a flag indicating if the request was processed successfully (true) or not (false)
      */
     private volatile boolean success;

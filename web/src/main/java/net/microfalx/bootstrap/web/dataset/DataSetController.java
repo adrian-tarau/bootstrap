@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.dataset;
 
 import jakarta.persistence.Entity;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.dataset.*;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
@@ -71,6 +72,7 @@ import java.util.stream.Collectors;
 
 import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_DEFAULT_POINTS;
 import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_MAXIMUM_POINTS;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.*;
 
 /**
@@ -80,7 +82,6 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetController.class);
 
-    private static final String MESSAGE_ATTR = "message";
     private static final String INVALID_FILTER_PREFIX = "Invalid filter: ";
     private static final String DATE_RANGE_SEPARATOR = "|";
     private static final String BROWSE_VIEW = "dataset/browse";
@@ -176,7 +177,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                     model.addAttribute("readOnlyFields", READ_ONLY_FIELDS.get());
                     return "dataset/view::#dataset-modal";
                 } else {
-                    return BROWSE_VIEW;
+                    String message = (String) model.getAttribute(MESSAGE_ATTR);
+                    if (isEmpty(message)) message = "Changing the entry is not allowed";
+                    throw new DataSetAbortException(message);
                 }
             } else {
                 return throwModelNotFound(id);
@@ -199,14 +202,19 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                     dataSet.delete(dataSetModel);
                 } catch (Exception e) {
                     if (e instanceof DataSetConstraintViolationException) {
-                        return JsonResponse.fail("Cannot removed since it is is in use");
+                        return JsonResponse.fail("Entry cannot be removed since it is is in use");
                     } else {
                         return JsonResponse.fail(e.getMessage());
                     }
                 }
+                afterPersist(dataSet, dataSetModel, State.DELETE);
             }
-            afterPersist(dataSet, dataSetModel, State.DELETE);
-            return JsonResponse.success();
+            String message = (String) model.getAttribute(MESSAGE_ATTR);
+            if (isNotEmpty(message)) {
+                return JsonResponse.fail(message).setErrorCode(JsonResponse.ABORT_ERROR);
+            } else {
+                return JsonResponse.success(message);
+            }
         } else {
             return throwModelNotFound(id);
         }
@@ -229,7 +237,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         log(dataSet, "upload", 0, null, null, null);
         upload(dataSet, model, StreamResource.create(file::getInputStream, file.getOriginalFilename()));
         String message = "File '" + file.getOriginalFilename() + "' was successfully uploaded";
-        model.addAttribute("message", message);
+        model.addAttribute(MESSAGE_ATTR, message);
     }
 
     @GetMapping(value = "{id}/download")
@@ -274,6 +282,12 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             doBeforePersistUnderTransaction(dataSet, dataSetModel, State.EDIT);
         }
         return response;
+    }
+
+    @ExceptionHandler(DataSetAbortException.class)
+    public ResponseEntity<JsonResponse<?>> abort(HttpServletRequest request, Exception exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON)
+                .body(JsonResponse.fail(exception.getMessage()).setErrorCode(JsonResponse.ABORT_ERROR));
     }
 
     /**
@@ -460,6 +474,21 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @Override
     protected String getTitle() {
         return getDataSet().getName();
+    }
+
+    /**
+     * Cancels a before event with a message for the users.
+     * <p>
+     * The method can be called in any <code>beforeXXXX</code> events/callbacks to cancel the operation.
+     *
+     * @param model   the controller model
+     * @param message the message
+     * @return false all the time
+     */
+    protected final boolean cancel(Model model, String message) {
+        requireNotEmpty(message);
+        model.addAttribute(MESSAGE_ATTR, message);
+        return false;
     }
 
     /**
@@ -809,7 +838,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             filter = Filter.create(queryParser.parse());
         } else {
             String reason = queryParser.validate();
-            model.addAttribute("message", INVALID_FILTER_PREFIX + reason);
+            model.addAttribute(MESSAGE_ATTR, INVALID_FILTER_PREFIX + reason);
             LOGGER.warn("Failed to parse query '" + query + "', reason: " + reason);
         }
         try {
@@ -817,7 +846,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         } catch (Exception e) {
             filter = null;
             String reason = e.getMessage();
-            model.addAttribute("message", INVALID_FILTER_PREFIX + reason);
+            model.addAttribute(MESSAGE_ATTR, INVALID_FILTER_PREFIX + reason);
             String message = "Failed to validate query '" + query + "', reason: " + reason;
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(message, e);
@@ -834,7 +863,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         if (rangeParts.length == 0) rangeParts = getDefaultRange(dataSet);
         if (rangeParts.length == 0) return filter;
         if (!(rangeParts.length == 1 || rangeParts.length == 2)) {
-            model.addAttribute("message", INVALID_FILTER_PREFIX + "date/time range requires two components");
+            model.addAttribute(MESSAGE_ATTR, INVALID_FILTER_PREFIX + "date/time range requires two components");
         } else {
             Field<M> timestampField = dataSet.getMetadata().findTimestampField();
             ZonedDateTime startTime;

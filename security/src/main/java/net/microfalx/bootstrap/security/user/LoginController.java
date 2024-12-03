@@ -37,7 +37,7 @@ public class LoginController extends PageController {
         updateModel(model);
         Throwable exception = (Throwable) request.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
         if (error != null || exception != null) {
-            model.addAttribute("message", "Invalid user name (email) or password");
+            model.addAttribute(MESSAGE_ATTR, "Invalid user name (email) or password");
         }
         return "security/login";
     }

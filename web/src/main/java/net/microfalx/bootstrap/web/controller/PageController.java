@@ -17,7 +17,8 @@ public abstract class PageController {
     public static final String REDIRECT_HOME = "redirect:/";
     public static final String REDIRECT_LOGIN = "redirect:/login";
 
-    protected static final String FRAGMENT_SEPARATOR = "::";
+    public static final String FRAGMENT_SEPARATOR = "::";
+    public static final String MESSAGE_ATTR = "message";
 
     /**
      * Returns the name of the page.
