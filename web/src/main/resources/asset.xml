@@ -26,6 +26,7 @@
         <asset path="chart.js" type="script"/>
         <asset path="scroll_top.js" type="script"/>
         <asset path="search.js" type="script"/>
+        <asset path="content.js" type="script"/>
     </asset-bundle>
 
     <!-- Help  -->
