@@ -285,10 +285,18 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     @ExceptionHandler(DataSetAbortException.class)
-    public ResponseEntity<JsonResponse<?>> abort(HttpServletRequest request, Exception exception) {
+    public ResponseEntity<JsonResponse<?>> abortExceptionHandler(HttpServletRequest request, Exception exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON)
                 .body(JsonResponse.fail(exception.getMessage()).setErrorCode(JsonResponse.ABORT_ERROR));
     }
+
+    @ExceptionHandler(DataSetNotFoundException.class)
+    public ResponseEntity<JsonResponse<?>> notFoundExceptionHandler(HttpServletRequest request, Exception exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_JSON)
+                .body(JsonResponse.fail(exception.getMessage()).setErrorCode(JsonResponse.NOT_FOUND_ERROR));
+    }
+
+
 
     /**
      * Updates the toolbar with additional actions.
