@@ -16,6 +16,7 @@ public class Alert {
     private String message;
     private Integer minWidth;
     private Integer width;
+    private Icon icon = Icon.BELL;
 
     /**
      * Returns whether the alert has some properties changed.
@@ -24,6 +25,12 @@ public class Alert {
      */
     public boolean hasProperties() {
         return minWidth != null || width != null;
+    }
+
+    public enum Icon {
+        BELL,
+        EXCLAMATION,
+        INFORMATION,
     }
 
     public enum Type {

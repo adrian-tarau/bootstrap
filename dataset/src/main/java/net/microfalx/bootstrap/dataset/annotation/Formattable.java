@@ -72,6 +72,24 @@ public @interface Formattable {
     boolean prettyPrint() default true;
 
     /**
+     * Returns the minimum number of digits used to format decimals.
+     * <p>
+     * By default, the number is printed as is.
+     *
+     * @return a positive integer if precision is provided, -1 if no precision is enforced
+     */
+    int minimumFractionDigits() default -1;
+
+    /**
+     * Returns the maximum number of digits used to format decimals.
+     * <p>
+     * By default, the number is printed as is.
+     *
+     * @return a positive integer if precision is provided, -1 if no precision is enforced
+     */
+    int maximumFractionDigits() default 2;
+
+    /**
      * Returns the unit of measure for this formatter.
      * <p>
      * Based on the unit of measure, a different formatter will be used. When a throughput is requested, the created or modified

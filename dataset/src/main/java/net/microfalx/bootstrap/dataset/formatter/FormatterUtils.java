@@ -5,6 +5,7 @@ import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.Duration;
 import java.time.ZoneId;
@@ -94,46 +95,58 @@ public class FormatterUtils {
             }
         } else if (value instanceof Number) {
             if (formattable != null) {
+                Formattable.Unit unit = formattable.unit();
                 if (!formattable.prettyPrint()) {
                     return ObjectUtils.toString(value);
-                } else if (formattable.unit().isThroughput()) {
-                    if (formattable.unit() == Formattable.Unit.THROUGHPUT_BYTES) {
+                } else if (unit.isThroughput()) {
+                    if (unit == Formattable.Unit.THROUGHPUT_BYTES) {
                         return net.microfalx.lang.FormatterUtils.formatThroughput(value, "b");
-                    } else if (formattable.unit() == Formattable.Unit.THROUGHPUT_REQUESTS) {
+                    } else if (unit == Formattable.Unit.THROUGHPUT_REQUESTS) {
                         return net.microfalx.lang.FormatterUtils.formatThroughput(value, "r");
-                    } else if (formattable.unit() == Formattable.Unit.THROUGHPUT_TRANSACTIONS) {
+                    } else if (unit == Formattable.Unit.THROUGHPUT_TRANSACTIONS) {
                         return net.microfalx.lang.FormatterUtils.formatThroughput(value, "t");
                     } else {
-                        throw new IllegalArgumentException("Unhandled unit: " + formattable.unit());
+                        throw new IllegalArgumentException("Unhandled unit: " + unit);
                     }
-                } else if (formattable.unit().isTime()) {
-                    if (formattable.unit() == Formattable.Unit.MICRO_SECOND) {
+                } else if (unit.isTime()) {
+                    if (unit == Formattable.Unit.MICRO_SECOND) {
                         float floatValue = ((Number) value).floatValue() / MICROSECONDS_IN_MILLISECONDS;
                         return net.microfalx.lang.FormatterUtils.formatDuration(floatValue);
-                    } else if (formattable.unit() == Formattable.Unit.MILLI_SECOND) {
+                    } else if (unit == Formattable.Unit.MILLI_SECOND) {
                         return net.microfalx.lang.FormatterUtils.formatDuration(value);
-                    } else if (formattable.unit() == Formattable.Unit.SECOND) {
+                    } else if (unit == Formattable.Unit.SECOND) {
                         value = ((Number) value).longValue() * MILLISECONDS_IN_SECOND;
                         return net.microfalx.lang.FormatterUtils.formatDuration(value);
-                    } else if (formattable.unit() == Formattable.Unit.MINUTE) {
+                    } else if (unit == Formattable.Unit.MINUTE) {
                         value = ((Number) value).longValue() * MILLISECONDS_IN_MINUTE;
                         return net.microfalx.lang.FormatterUtils.formatDuration(value);
-                    } else if (formattable.unit() == Formattable.Unit.NANO_SECOND) {
+                    } else if (unit == Formattable.Unit.NANO_SECOND) {
                         float floatValue = ((Number) value).floatValue() / NANOSECONDS_IN_MILLISECONDS;
                         return net.microfalx.lang.FormatterUtils.formatDuration(floatValue);
                     } else {
-                        throw new IllegalArgumentException("Unhandled unit: " + formattable.unit());
+                        throw new IllegalArgumentException("Unhandled unit: " + unit);
                     }
-                } else if (formattable.unit() == Formattable.Unit.COUNT) {
+                } else if (unit == Formattable.Unit.COUNT) {
                     return net.microfalx.lang.FormatterUtils.formatNumber(value);
-                } else if (formattable.unit() == Formattable.Unit.BYTES) {
+                } else if (unit == Formattable.Unit.BYTES) {
                     return net.microfalx.lang.FormatterUtils.formatBytes(value);
                 } else if (!Formattable.AUTO.equals(formattable.negativeValue()) && ((Number) value).doubleValue() < 0) {
                     return formattable.NA;
                 }
             }
+            int minimumFractionDigits = -1;
+            int maximumFractionDigits = -1;
+            if (formattable != null) {
+                minimumFractionDigits = formattable.minimumFractionDigits();
+                maximumFractionDigits = formattable.maximumFractionDigits();
+                minimumFractionDigits = Math.min(minimumFractionDigits, maximumFractionDigits);
+            }
             if (value instanceof Float || value instanceof Double) {
-                return NumberFormat.getNumberInstance().format(((Number) value).doubleValue());
+                NumberFormat numberInstance = NumberFormat.getNumberInstance();
+                numberInstance.setRoundingMode(RoundingMode.HALF_UP);
+                if (minimumFractionDigits >= 0) numberInstance.setMinimumFractionDigits(minimumFractionDigits);
+                if (maximumFractionDigits >= 0) numberInstance.setMaximumFractionDigits(maximumFractionDigits);
+                return numberInstance.format(((Number) value).doubleValue());
             } else {
                 return NumberFormat.getIntegerInstance().format(((Number) value).longValue());
             }
