@@ -34,8 +34,8 @@
         <span th:if="${#dataset.hasDisplayValue(field)}" th:utext="${#dataset.getDisplayValue(model, field)}"
               th:class="${#dataset.getAlertClass(alert)}" th:style="${#dataset.getAlertStyle(alert)}">
         </span>
-        <span th:if="${alert != null and alert.message != null}" th:class="text-sm-end"><i class="fa-solid fa-bell" component:tooltip="${alert.message}"></i></span>
-        <span th:if="${alert != null and alert.message == null}" th:class="text-sm-end"><i class="fa-solid fa-circle fa-blank"></i></span>
+        <span th:if="${alert != null and alert.message != null}" th:class="text-sm-end"><i th:class="${#dataset.getAlertIcon(alert)}" component:tooltip="${alert.message}"></i></span>
+        <span th:if="${alert != null and alert.message == null}" th:class="text-sm-end"><i th:class="${#dataset.getAlertIcon(alert)}"></i></span>
         <a th:if="${actionable}" href="#" th:attr="onclick=|Application.action('${actionable.action}', '${#dataset.getId(model)}')|">
             <i th:if="${actionable.icon}" th:class="${actionable.icon}"></i>
         </a>

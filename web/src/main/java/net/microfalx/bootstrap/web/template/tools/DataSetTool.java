@@ -22,6 +22,7 @@ import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.dataset.DataSetChartProvider;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.apache.commons.lang3.mutable.MutableLong;
@@ -508,6 +509,25 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     public String getAlertClass(Alert alert) {
         if (alert == null) return null;
         return "alert alert-" + alert.getType().name().toLowerCase() + " text-center";
+    }
+
+    /**
+     * Returns the alert icon.
+     *
+     * @param alert the alert
+     * @return the icon classes, null if there is no icon
+     */
+    public String getAlertIcon(Alert alert) {
+        if (alert == null) return null;
+        if (StringUtils.isEmpty(alert.getMessage())) {
+            return "fa-solid fa-circle fa-blank";
+        } else {
+            return switch (alert.getIcon()) {
+                case BELL -> "fa-solid fa-bell";
+                case EXCLAMATION -> "fa-solid fa-triangle-exclamation";
+                case INFORMATION -> "fa-solid fa-circle-info";
+            };
+        }
     }
 
     /**

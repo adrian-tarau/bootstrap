@@ -103,7 +103,7 @@ public final class Matrix {
     /**
      * Returns the average across in the matrix.
      *
-     * @return a optional average
+     * @return an optional average
      */
     public OptionalDouble getAverage() {
         return values.stream().mapToDouble(Value::asDouble).average();
@@ -112,7 +112,7 @@ public final class Matrix {
     /**
      * Returns the minimum across in the matrix.
      *
-     * @return a optional average
+     * @return an optional average
      */
     public OptionalDouble getMinimum() {
         return values.stream().mapToDouble(Value::asDouble).min();
@@ -121,10 +121,19 @@ public final class Matrix {
     /**
      * Returns the maximum across in the matrix.
      *
-     * @return a optional average
+     * @return an optional average
      */
     public OptionalDouble getMaximum() {
         return values.stream().mapToDouble(Value::asDouble).max();
+    }
+
+    /**
+     * Returns the sum across in the matrix.
+     *
+     * @return the sum
+     */
+    public double getSum() {
+        return values.stream().mapToDouble(Value::asDouble).sum();
     }
 
     /**
