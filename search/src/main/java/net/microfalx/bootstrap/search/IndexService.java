@@ -8,6 +8,7 @@ import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.index.*;
+import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.InfoStream;
@@ -16,6 +17,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.RetryListener;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -23,7 +28,9 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static net.microfalx.bootstrap.search.SearchUtils.INDEX_METRICS;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -52,7 +59,9 @@ public class IndexService implements InitializingBean {
 
     private volatile AsyncTaskExecutor taskExecutor;
 
-    private final Object lock = new Object();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Lock rlock = lock.readLock();
+    private final Lock wlock = lock.writeLock();
     private volatile IndexHolder index;
 
     /**
@@ -121,7 +130,7 @@ public class IndexService implements InitializingBean {
      * Forces all documents in memory to be flushed on disk.
      */
     public void flush() {
-        commitIndexWriter();
+        commitIndex();
     }
 
     /**
@@ -173,7 +182,7 @@ public class IndexService implements InitializingBean {
      * Clear the index.
      */
     public synchronized void clear() {
-        commitAndRelease();
+        releaseIndex();
         try {
             FileUtils.deleteDirectory(getIndexDirectory());
         } catch (IOException e) {
@@ -185,7 +194,7 @@ public class IndexService implements InitializingBean {
      * Commits any pending changes.
      */
     public void commit() {
-        commitIndexWriter();
+        commitIndex();
     }
 
     @Override
@@ -196,8 +205,8 @@ public class IndexService implements InitializingBean {
 
     @PreDestroy
     protected void destroy() {
-        commitIndexWriter();
-        commitAndRelease();
+        commitIndex();
+        releaseIndex();
     }
 
     /**
@@ -227,14 +236,19 @@ public class IndexService implements InitializingBean {
      *
      * @return a non-null instance
      */
-    protected synchronized IndexHolder openIndex() {
-        if (index != null) return index;
+    protected IndexHolder openIndex() {
+        wlock.lock();
         try {
-            index = INDEX_METRICS.time("Open", (Supplier<IndexHolder>) () -> createIndex(false));
-            return index;
-        } catch (Exception e) {
-            if (index != null) index.release();
-            return throwException(e);
+            if (index != null) return index;
+            try {
+                index = INDEX_METRICS.time("Open", () -> createIndex(false));
+                return index;
+            } catch (Exception e) {
+                if (index != null) index.release();
+                return throwException(e);
+            }
+        } finally {
+            wlock.unlock();
         }
     }
 
@@ -244,32 +258,49 @@ public class IndexService implements InitializingBean {
      * @param indexCallback the index callback
      */
     protected void doWithIndex(String name, final IndexCallback indexCallback) {
-        IndexHolder index = openIndex();
         try {
-            INDEX_METRICS.getTimer(name).record(() -> {
-                try {
-                    indexCallback.doWithIndex(index.indexWriter);
-                } catch (Exception e) {
-                    throwException(e);
+            RetryTemplate template = new RetryTemplate();
+            template.registerListener(new RetryListener() {
+                @Override
+                public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+                    releaseIndex();
                 }
             });
+            template.execute(context -> {
+                IndexHolder index = openIndex();
+                INDEX_METRICS.getTimer(name).record(() -> {
+                    try {
+                        indexCallback.doWithIndex(index.indexWriter);
+                    } catch (Exception e) {
+                        throwException(e);
+                    }
+                });
+                return null;
+            });
         } catch (Exception throwable) {
-            commitAndRelease();
+            releaseIndex();
             throwException(throwable);
         } finally {
-            index.indexLastUpdated = System.currentTimeMillis();
-            index.indexChanged.set(true);
+            markIndexChanged(false);
         }
+
+
     }
 
     /**
      * Commits any pending documents and closes index structures.
      */
-    private void commitAndRelease() {
-        synchronized (lock) {
+    private void releaseIndex() {
+        wlock.lock();
+        try {
             LOGGER.debug("Rollback and release");
-            if (index != null) index.release();
+            if (index != null && index.indexWriter.isOpen()) {
+                index.commit();
+                index.release();
+            }
             index = null;
+        } finally {
+            wlock.unlock();
         }
     }
 
@@ -281,7 +312,8 @@ public class IndexService implements InitializingBean {
     private void markIndexChanged(boolean commit) {
         IndexHolder indexHolder = openIndex();
         if (commit) {
-            commitIndexWriter();
+            commitIndex();
+            indexHolder.indexChanged.set(false);
         } else {
             indexHolder.indexChanged.set(true);
         }
@@ -291,14 +323,18 @@ public class IndexService implements InitializingBean {
     /**
      * Commits the index.
      */
-    void commitIndexWriter() {
+    void commitIndex() {
         try {
             doWithIndex("Commit", indexWriter -> {
                 LOGGER.debug("Committing index writer");
-                indexWriter.flush();
-                indexWriter.commit();
+                if (indexWriter.isOpen()) {
+                    indexWriter.flush();
+                    indexWriter.commit();
+                }
                 index.indexChangedOptimizationPending.set(true);
             });
+        } catch (AlreadyClosedException e) {
+            LOGGER.error("Index closedFailed to commit changes to index", e);
         } catch (Exception e) {
             LOGGER.error("Failed to commit changes to index", e);
         }
@@ -355,6 +391,7 @@ public class IndexService implements InitializingBean {
     }
 
     static class IndexHolder {
+
         private final IndexWriter indexWriter;
         private final Directory directory;
 
@@ -369,20 +406,24 @@ public class IndexService implements InitializingBean {
             this.directory = directory;
         }
 
-        void release() {
+        void commit() {
             try {
-                indexWriter.flush();
-                indexWriter.commit();
+                if (indexWriter.isOpen()) {
+                    indexWriter.flush();
+                    indexWriter.commit();
+                }
+                indexChangedOptimizationPending.set(true);
             } catch (Exception e) {
                 LOGGER.error("Failed to commit index", e);
             }
+        }
 
+        void release() {
             try {
-                indexWriter.close();
+                if (indexWriter.isOpen()) indexWriter.close();
             } catch (IOException e) {
                 LOGGER.error("Failed to close index", e);
             }
-
             try {
                 directory.close();
             } catch (IOException e) {
