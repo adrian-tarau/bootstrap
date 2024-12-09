@@ -72,7 +72,7 @@ DataSet.reload = function () {
 }
 
 /**
- * Executes a GET request, which includes the parameters of the current requests
+ * Executes a GET request, which includes the parameters of the current requests.
  *
  * @param {String} path the path
  * @param {Object} params the parameter overrides
@@ -88,7 +88,7 @@ DataSet.get = function (path, params, callback, options) {
 }
 
 /**
- * Executes a POST request, which includes the parameters of the current requests
+ * Executes a POST request, which includes the parameters of the current requests.
  *
  * @param {String} path the path
  * @param {Object} params the parameter overrides
@@ -104,7 +104,24 @@ DataSet.post = function (path, params, callback, options) {
 }
 
 /**
+ * Executes a DELETE request, which includes the parameters of the current requests.
+ *
+ * @param {String} path the path
+ * @param {Object} params the parameter overrides
+ * @param {Function} callback the callback to be called with the response
+ * @param {Object} [options] an optional object, to control how parameters are calculated
+ * @see Application.delete
+ */
+DataSet.delete = function (path, params, callback, options) {
+    params = this.getParams(params, {params: false});
+    options = options || {};
+    options.params = true;
+    Application.delete(path, params, callback, options)
+}
+
+/**
  * Triggers a query in the data set.
+ *
  * @param {String } query the query to execute, if empty
  */
 DataSet.search = function (query) {
@@ -114,8 +131,9 @@ DataSet.search = function (query) {
 }
 
 /**
- * Loads using AJAX the next page for a data set
- * @param {Integer|String} page the page number, first one starts at 1
+ * Loads using AJAX the next page for a data set.
+ *
+ * @param {Number|String} page the page number, first one starts at 1
  */
 DataSet.loadPage = function (page) {
     page = parseInt(page);

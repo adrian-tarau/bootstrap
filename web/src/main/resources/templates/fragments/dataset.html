@@ -30,9 +30,9 @@
 <tr th:fragment="grid-row" th:class="${#dataset.getPrimaryRowClass(model)}">
     <div th:text="${#dataset.beforeBrowse(model)}" th:remove="tag"></div>
     <td class="text-right" th:text="${#dataset.getCurrentIndex()}"></td>
-    <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}" th:with="alert=${#dataset.getAlert(model, field)},actionable=${#dataset.getActionable(model, field)}">
+    <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}" th:with="alert=${#dataset.getAlert(model, field)},actionable=${#dataset.getActionable(model, field)},tooltip=${#dataset.getTooltip(model, field)}">
         <span th:if="${#dataset.hasDisplayValue(field)}" th:utext="${#dataset.getDisplayValue(model, field)}"
-              th:class="${#dataset.getAlertClass(alert)}" th:style="${#dataset.getAlertStyle(alert)}">
+              th:class="${#dataset.getAlertClass(alert)}" th:style="${#dataset.getAlertStyle(alert)}" component:fast-tooltip="${tooltip}">
         </span>
         <span th:if="${alert != null and alert.message != null}" th:class="text-sm-end"><i th:class="${#dataset.getAlertIcon(alert)}" component:tooltip="${alert.message}"></i></span>
         <span th:if="${alert != null and alert.message == null}" th:class="text-sm-end"><i th:class="${#dataset.getAlertIcon(alert)}"></i></span>

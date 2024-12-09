@@ -483,6 +483,17 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the tooltip associated with the field for a given model.
+     *
+     * @param model the model
+     * @param field the field
+     * @return the alert, null if not present
+     */
+    public String getTooltip(M model, Field<M> field) {
+        return dataSetService.getTooltip(model, field).orElse(null);
+    }
+
+    /**
      * Returns the actionable associated with the field for a given model.
      *
      * @param model the model

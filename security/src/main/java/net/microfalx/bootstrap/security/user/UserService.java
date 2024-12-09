@@ -20,18 +20,21 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static net.microfalx.bootstrap.security.SecurityConstants.*;
-import static net.microfalx.bootstrap.security.SecurityUtils.getRandomPassword;
+import static net.microfalx.bootstrap.security.SecurityConstants.ADMINISTRATORS_GROUP;
+import static net.microfalx.bootstrap.security.SecurityConstants.USERS_GROUP;
+import static net.microfalx.bootstrap.security.SecurityUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
@@ -103,18 +106,18 @@ public class UserService extends ApplicationContextSupport implements Initializi
     /**
      * Registers a new role.
      *
-     * @param role
+     * @param role the role
      */
     public void registerRole(Role role) {
         requireNonNull(role);
-        LOGGER.info("Register role '" + role.getId() + "', name " + role.getName());
+        LOGGER.info("Register role '{}', name '{}", role.getId(), role.getName());
         this.roles.put(StringUtils.toIdentifier(role.getId()), role);
     }
 
     /**
      * Authenticate a user.
      *
-     * @param userName the user name
+     * @param userName the username
      * @param password the password
      * @return the user information
      * @throws org.springframework.security.core.userdetails.UsernameNotFoundException if the user does not exists
@@ -124,8 +127,7 @@ public class UserService extends ApplicationContextSupport implements Initializi
     public UserDetails authenticate(String userName, String password) {
         requireNotEmpty(userName);
         requireNotEmpty(password);
-        UserDetails userDetails = userDetailsManager.loadUserByUsername(userName);
-        return userDetails;
+        return userDetailsManager.loadUserByUsername(userName);
     }
 
     /**
@@ -140,7 +142,6 @@ public class UserService extends ApplicationContextSupport implements Initializi
                 + "' could not be located");
         return user;
     }
-
 
     /**
      * Returns a setting for the current user.
@@ -284,26 +285,6 @@ public class UserService extends ApplicationContextSupport implements Initializi
             user = createUser(userName, getRandomPassword(), capitalizeWords(userName),
                     null, "A generated user with no permissions for auditing purposes", null);
         }
-        return user;
-    }
-
-    private String getCurrentUserName() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            Object principal = authentication.getPrincipal();
-            if (principal instanceof UserDetails) return ((UserDetails) principal).getUsername();
-        }
-        return ANONYMOUS_USER;
-    }
-
-    private UserDetails getUserDetails(Authentication authentication) {
-        if (authentication != null) {
-            Object principal = authentication.getPrincipal();
-            if (principal instanceof UserDetails) {
-                return (UserDetails) principal;
-            }
-        }
-        org.springframework.security.core.userdetails.User user = new org.springframework.security.core.userdetails.User(ANONYMOUS_USER, ANONYMOUS_USER, Collections.emptyList());
         return user;
     }
 

@@ -24,7 +24,7 @@ $(document).on({
         } else if (jqxhr.status === 403) {
             Application.showErrorAlert("Request", "A request (" + json.path + ") is forbidden");
         } else {
-            Application.showErrorAlert("Request", "A request (" + json.path + "' failed with an error '" + json.error + "'");
+            Application.showErrorAlert("Request", "A request (" + json.path + "') failed with an error '" + json.error + "'");
         }
     }
 });

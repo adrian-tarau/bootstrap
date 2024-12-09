@@ -38,6 +38,7 @@ public class ComponentDialect extends AbstractProcessorDialect {
         processors.add(new RenderTagProcessor());
         processors.add(new ActionableRenderTagProcessor());
         processors.add(new TooltipAttributeProcessor());
+        processors.add(new FastTooltipAttributeProcessor());
         processors.add(new TooltipTextAttributeProcessor());
         processors.add(new TooltipPlacementAttributeProcessor());
         processors.add(new TooltipDelayAttributeProcessor());
@@ -90,6 +91,14 @@ public class ComponentDialect extends AbstractProcessorDialect {
             super("tooltip");
         }
 
+        public TooltipAttributeProcessor(String attributeName) {
+            super(attributeName);
+        }
+
+        protected void writeTooltip(IElementTagStructureHandler structureHandler, String text) {
+            structureHandler.setAttribute("data-tippy-content", HtmlEscape.escapeHtml4Xml(text));
+        }
+
         @Override
         protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName, String attributeValue, IElementTagStructureHandler structureHandler) {
             Object value = null;
@@ -101,8 +110,21 @@ public class ComponentDialect extends AbstractProcessorDialect {
                 title = (String) value;
             }
             if (isNotEmpty(title)) {
-                structureHandler.setAttribute("data-tippy-content", HtmlEscape.escapeHtml4Xml(title));
+                writeTooltip(structureHandler, title);
             }
+        }
+    }
+
+    private class FastTooltipAttributeProcessor extends TooltipAttributeProcessor {
+
+        public FastTooltipAttributeProcessor() {
+            super("fast-tooltip");
+        }
+
+        @Override
+        protected void writeTooltip(IElementTagStructureHandler structureHandler, String text) {
+            super.writeTooltip(structureHandler, text);
+            structureHandler.setAttribute("data-tippy-delay", "200");
         }
     }
 
