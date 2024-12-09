@@ -16,7 +16,7 @@ import java.io.Serializable;
  * A base class for all entities which can be named and tagged and have timestamps.
  */
 @MappedSuperclass
-@ToString
+@ToString(callSuper = true)
 @Getter
 @Setter
 public abstract class NamedAndTaggedAndTimestampedIdentityAware<T extends Serializable> extends NamedAndTimestampedIdentityAware<T> {

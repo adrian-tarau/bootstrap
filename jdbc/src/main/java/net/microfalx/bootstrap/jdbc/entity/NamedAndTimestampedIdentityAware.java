@@ -3,10 +3,12 @@ package net.microfalx.bootstrap.jdbc.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.lang.Timestampable;
 import net.microfalx.lang.annotation.*;
@@ -20,7 +22,7 @@ import java.time.LocalDateTime;
  * A base class for all entities which can be named and have timestamps.
  */
 @MappedSuperclass
-@ToString
+@ToString(callSuper = true)
 @Getter
 @Setter
 public abstract class NamedAndTimestampedIdentityAware<T extends Serializable> extends NamedIdentityAware<T> implements Timestampable<LocalDateTime> {
@@ -30,6 +32,7 @@ public abstract class NamedAndTimestampedIdentityAware<T extends Serializable> e
     @Position(500)
     @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was created")
+    @Formattable(tooltip = EntityFormatters.CreatedAtTooltip.class)
     @OrderBy(OrderBy.Direction.DESC)
     @CreatedDate
     @CreatedAt
@@ -39,13 +42,29 @@ public abstract class NamedAndTimestampedIdentityAware<T extends Serializable> e
     @Position(501)
     @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was last time modified")
+    @Formattable(tooltip = EntityFormatters.ModifiedAtTooltip.class)
     @LastModifiedDate
     @ModifiedAt
     private LocalDateTime modifiedAt;
 
     @PrePersist
-    void beforePersist() {
+    public final void beforePersist() {
+        updateTimestamps();
+        updateOther();
+    }
+
+    @PreUpdate
+    public final void beforeUpdate() {
+        updateTimestamps();
+        updateOther();
+    }
+
+    protected void updateTimestamps() {
         if (createdAt == null) createdAt = LocalDateTime.now();
-        if (modifiedAt == null) modifiedAt = createdAt;
+        modifiedAt = LocalDateTime.now();
+    }
+
+    protected void updateOther() {
+
     }
 }

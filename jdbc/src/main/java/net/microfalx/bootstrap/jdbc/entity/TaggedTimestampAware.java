@@ -15,10 +15,10 @@ import net.microfalx.lang.annotation.Width;
  * A base class for all entities which can be tagged and have timestamps.
  */
 @MappedSuperclass
-@ToString
+@ToString(callSuper = true)
 @Getter
 @Setter
-public class TaggedTimestampAware extends TimestampAware {
+public abstract class TaggedTimestampAware extends TimestampAware {
 
     @Column(name = "tags")
     @Position(400)

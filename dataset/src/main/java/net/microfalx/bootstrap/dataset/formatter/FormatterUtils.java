@@ -155,7 +155,7 @@ public class FormatterUtils {
         } else if (value instanceof Temporal) {
             return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value, getTimeZone());
         } else if (value instanceof Duration) {
-            return net.microfalx.lang.FormatterUtils.formatDuration(value, Formattable.NA);
+            return net.microfalx.lang.FormatterUtils.formatDuration(value, Formattable.NA, false);
         } else {
             return ObjectUtils.toString(value);
         }

@@ -13,11 +13,14 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * A base class for all entities which can be identified (which is all).
+ */
 @MappedSuperclass
 @ToString
 @Getter
 @Setter
-public class IdentityAware<T extends Serializable> implements Identifiable<T>, Serializable {
+public abstract class IdentityAware<T extends Serializable> implements Identifiable<T>, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1023653519669708398L;

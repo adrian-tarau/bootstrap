@@ -43,6 +43,8 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     private F timestampField;
     private F createdAtField;
     private F modifiedAtField;
+    private F createdByField;
+    private F modifiedByField;
     private Class<ID> idClass;
 
     MetadataService metadataService;
@@ -157,6 +159,16 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     @Override
     public F findModifiedAtField() {
         return modifiedAtField;
+    }
+
+    @Override
+    public F findCreatedByField() {
+        return createdByField;
+    }
+
+    @Override
+    public F findModifiedByField() {
+        return modifiedByField;
     }
 
     @Override
@@ -325,6 +337,8 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
         if (field.hasAnnotation(Timestamp.class)) timestampField = field;
         if (field.hasAnnotation(CreatedAt.class)) createdAtField = field;
         if (field.hasAnnotation(ModifiedAt.class)) modifiedAtField = field;
+        if (field.hasAnnotation(CreatedBy.class)) createdByField = field;
+        if (field.hasAnnotation(ModifiedBy.class)) modifiedByField = field;
     }
 
     /**

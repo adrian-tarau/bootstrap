@@ -102,23 +102,48 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
      * Any field annotated with {@link net.microfalx.lang.annotation.Timestamp}, {@link net.microfalx.lang.annotation.CreatedAt}
      * or {@link net.microfalx.lang.annotation.ModifiedAt} will be considered, in this order.
      *
-     * @return the field, null if there is no field which holds the timestamp
+     * @return the field, null if there is no field that holds the timestamp
+     * @see net.microfalx.lang.annotation.Timestamp
+     * @see net.microfalx.lang.annotation.CreatedAt
+     * @see net.microfalx.lang.annotation.ModifiedAt
      */
     F findTimestampField();
 
     /**
      * Returns the field which identifies the timestamp when the record was created.
      *
-     * @return the field, null if there is no field which holds the timestamp
+     * @return the field, null if there is no field that holds the timestamp
+     * @see net.microfalx.lang.annotation.CreatedAt
      */
     F findCreatedAtField();
 
     /**
      * Returns the field which identifies the timestamp when the model was modified.
      *
-     * @return the field, null if there is no field which holds the timestamp
+     * @return the field, null if there is no field that holds the timestamp
+     * @see net.microfalx.lang.annotation.ModifiedAt
      */
     F findModifiedAtField();
+
+    /**
+     * Returns the field which identifies the principal that created the model.
+     * <p>
+     * The value stored represents the username associated with the principal.
+     *
+     * @return the field, null if there is no field that holds the principal
+     * @see net.microfalx.lang.annotation.CreatedBy
+     */
+    F findCreatedByField();
+
+    /**
+     * Returns the field which identifies the principal that modified the model.
+     * <p>
+     * The value stored represents the username associated with the principal.
+     *
+     * @return the field, null if there is no field that holds the principal
+     * @see net.microfalx.lang.annotation.ModifiedBy
+     */
+    F findModifiedByField();
 
     /**
      * Returns a field by its name or property name, if exists.

@@ -114,6 +114,13 @@ public @interface Formattable {
     Class<? extends AlertProvider> alert() default AlertProvider.class;
 
     /**
+     * Returns the provider for the tooltip.
+     *
+     * @return the provider
+     */
+    Class<? extends TooltipProvider> tooltip() default TooltipProvider.class;
+
+    /**
      * A unit of measure for a formatter
      */
     enum Unit {
@@ -202,6 +209,26 @@ public @interface Formattable {
                     .add("time=" + time)
                     .toString();
         }
+    }
+
+    /**
+     * An interface which allows a formatter to attach a tooltip to a field.
+     *
+     * @param <M> the model
+     * @param <F> the field
+     * @param <T> the value
+     */
+    interface TooltipProvider<M, F extends Field<M>, T> {
+
+        /**
+         * Returns the tooltip associated with a value.
+         *
+         * @param value the value of the field
+         * @param field the field
+         * @param model the model
+         * @return the formatted value
+         */
+        String provide(T value, F field, M model);
     }
 
     /**

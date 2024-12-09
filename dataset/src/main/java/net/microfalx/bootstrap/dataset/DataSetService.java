@@ -206,6 +206,34 @@ public final class DataSetService extends ApplicationContextSupport implements I
     }
 
     /**
+     * Returns the tooltip associated with the field.
+     *
+     * @param model the model
+     * @param field the field
+     * @param <M>   the model type
+     * @param <F>   the field type
+     * @return the alert, null
+     */
+    public <M, F extends Field<M>> Optional<String> getTooltip(M model, F field) {
+        requireNonNull(model);
+        requireNonNull(field);
+        Formattable formattableAnnot = field.findAnnotation(Formattable.class);
+        if (formattableAnnot == null || formattableAnnot.tooltip() == Formattable.TooltipProvider.class) {
+            return Optional.empty();
+        }
+        Object value = field.get(model);
+        Formattable.TooltipProvider<M, F, Object> tooltipProvider = ClassUtils.create(formattableAnnot.tooltip());
+        if (tooltipProvider instanceof ApplicationContextAware) {
+            ((ApplicationContextAware) tooltipProvider).setApplicationContext(getApplicationContext());
+        }
+        try {
+            return Optional.of(tooltipProvider.provide(value, field, model));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Returns the alert associated with the field.
      *
      * @param model the model

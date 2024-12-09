@@ -21,7 +21,7 @@ import java.io.Serializable;
  * A base class for all entities which can be named and have an optional description.
  */
 @MappedSuperclass
-@ToString
+@ToString(callSuper = true)
 @Getter
 @Setter
 public abstract class NamedIdentityAware<T extends Serializable> extends IdentityAware<T> implements Nameable {

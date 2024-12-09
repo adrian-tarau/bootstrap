@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import static net.microfalx.bootstrap.jdbc.jpa.JpaUtils.getCurrentUserName;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
@@ -153,11 +154,15 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
     private void updateCreated(M entity) {
         Field<M> createdAtField = getMetadata().findCreatedAtField();
         if (createdAtField != null) createdAtField.set(entity, LocalDateTime.now());
+        Field<M> createdByField = getMetadata().findCreatedByField();
+        if (createdByField != null) createdByField.set(entity, getCurrentUserName());
     }
 
     private void updateModified(M entity) {
         Field<M> modifiedAtField = getMetadata().findModifiedAtField();
         if (modifiedAtField != null) modifiedAtField.set(entity, LocalDateTime.now());
+        Field<M> modifiedByField = getMetadata().findModifiedByField();
+        if (modifiedByField != null) modifiedByField.set(entity, getCurrentUserName());
     }
 
     private void copyFields(M previousEntity, M currentEntity) {
