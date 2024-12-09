@@ -11,6 +11,11 @@ import java.util.Collections;
 public interface Filter extends Nameable, Descriptable, ComparisonExpressionLocator {
 
     /**
+     * An empty filter.
+     */
+    Filter EMPTY = create();
+
+    /**
      * A constant for no limit for pagination.
      */
     int NO_LIMIT = -1;
@@ -56,9 +61,17 @@ public interface Filter extends Nameable, Descriptable, ComparisonExpressionLoca
     /**
      * Returns the attributes associated with a filter.
      *
-     * @return
+     * @return a collection of attributes
      */
     Attributes<Attribute> getAttributes();
+
+    /**
+     * Finds the comparison expression for a given field.
+     *
+     * @param fieldName the field name
+     * @return the expression, null if none could be found
+     */
+    ComparisonExpression find(String fieldName);
 
     /**
      * Returns the index of the first model and it used to paginate
@@ -80,4 +93,11 @@ public interface Filter extends Nameable, Descriptable, ComparisonExpressionLoca
      * @return {@code true} if empty, {@code false} otherwise
      */
     boolean isEmpty();
+
+    /**
+     * Returns a hash which identifies uniquely a filter.
+     *
+     * @return a non-null instance
+     */
+    String getHash();
 }

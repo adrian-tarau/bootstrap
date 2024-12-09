@@ -6,10 +6,13 @@ import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.Hashing;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -41,7 +44,7 @@ public final class DataSetService extends ApplicationContextSupport implements I
     private final Collection<DataSetFactory<?, ?, ?>> factories = new CopyOnWriteArrayList<>();
     private final Map<Class<?>, DataSetFactory<?, ?, ?>> factoriesCache = new ConcurrentHashMap<>();
     private final Map<Class<?>, LookupProvider<?, ?>> lookupProviders = new ConcurrentHashMap<>();
-    private final Map<Class<?>, SoftReference<CachedModelsById<?, ?>>> cachesById = new ConcurrentHashMap<>();
+    private final Map<String, SoftReference<CachedModelsById<?, ?>>> cachesById = new ConcurrentHashMap<>();
     private final Map<Class<?>, SoftReference<CachedModelsByDisplayValue<?>>> cachesByDisplayName = new ConcurrentHashMap<>();
     private final Map<Class<?>, Repository<?, ?>> repositories = new ConcurrentHashMap<>();
 
@@ -281,9 +284,10 @@ public final class DataSetService extends ApplicationContextSupport implements I
      * @param models the models
      * @param <M>    the model type
      */
-    <M, ID> void registerCache(CachedModelsById<M, ID> models) {
+    <M, ID> void registerCache(CachedModelsById<M, ID> models, Filter filterable) {
         requireNonNull(models);
-        cachesById.put(models.modelClass, new SoftReference<>(models));
+        String cacheKey = getCacheKey(models.modelClass, filterable);
+        cachesById.put(cacheKey, new SoftReference<>(models));
     }
 
     /**
@@ -294,9 +298,10 @@ public final class DataSetService extends ApplicationContextSupport implements I
      * @return the cached models, null if there is nothing in the cache
      */
     @SuppressWarnings("unchecked")
-    <M, ID> CachedModelsById<M, ID> getCacheById(Class<M> modelClass) {
+    <M, ID> CachedModelsById<M, ID> getCacheById(Class<M> modelClass, Filter filterable) {
         requireNonNull(modelClass);
-        SoftReference<CachedModelsById<?, ?>> reference = cachesById.get(modelClass);
+        String cacheKey = getCacheKey(modelClass, filterable);
+        SoftReference<CachedModelsById<?, ?>> reference = cachesById.get(cacheKey);
         CachedModelsById<M, ID> holder = reference != null ? (CachedModelsById<M, ID>) reference.get() : null;
         return holder != null && !holder.isExpired() ? holder : null;
     }
@@ -400,6 +405,12 @@ public final class DataSetService extends ApplicationContextSupport implements I
             lookupProviders.put(lookupProvider.getModel(), lookupProvider);
         }
         LOGGER.info("Discovered {} dynamic lookups", lookupProviders.size());
+    }
+
+    <M> String getCacheKey(Class<M> modelClass, Filter filterable) {
+        String id = StringUtils.toIdentifier(ClassUtils.getName(modelClass)) + "_";
+        id += filterable != null ? filterable.getHash() : Hashing.EMPTY;
+        return id;
     }
 
     static class CachedModelsByDisplayValue<M> {

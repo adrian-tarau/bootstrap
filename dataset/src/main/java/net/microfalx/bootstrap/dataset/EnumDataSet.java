@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.dataset;
 
 import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
 
 import java.util.Arrays;
@@ -17,7 +18,7 @@ public class EnumDataSet<E extends Enum<E>> extends MemoryDataSet<E, Field<E>, S
     }
 
     @Override
-    protected Iterable<E> extractModels() {
+    protected Iterable<E> extractModels(Filter filterable) {
         return Arrays.asList(getMetadata().getModel().getEnumConstants());
     }
 

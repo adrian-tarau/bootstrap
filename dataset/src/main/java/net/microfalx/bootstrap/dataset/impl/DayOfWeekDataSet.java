@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.dataset.impl;
 
 import net.microfalx.bootstrap.dataset.DataSetFactory;
 import net.microfalx.bootstrap.dataset.MemoryDataSet;
+import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.PojoField;
 import net.microfalx.lang.annotation.Provider;
@@ -17,7 +18,7 @@ public class DayOfWeekDataSet extends MemoryDataSet<DayOfWeek, PojoField<DayOfWe
     }
 
     @Override
-    protected Iterable<DayOfWeek> extractModels() {
+    protected Iterable<DayOfWeek> extractModels(Filter filterable) {
         return Arrays.asList(DayOfWeek.values());
     }
 }

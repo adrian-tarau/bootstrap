@@ -53,12 +53,12 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
 
     @Override
     protected final List<M> doFindAll() {
-        return getCachedModels().getModels();
+        return getCachedModels(Filter.EMPTY).getModels();
     }
 
     @Override
     protected final List<M> doFindAllById(Iterable<ID> ids) {
-        Map<ID, M> modelsById = getCachedModels().getModelsById();
+        Map<ID, M> modelsById = getCachedModels(Filter.EMPTY).getModelsById();
         List<M> models = new ArrayList<>();
         for (ID id : ids) {
             M model = modelsById.get(id);
@@ -69,41 +69,41 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
 
     @Override
     protected final Optional<M> doFindById(ID id) {
-        return Optional.ofNullable(getCachedModels().getModelsById().get(id));
+        return Optional.ofNullable(getCachedModels(Filter.EMPTY).getModelsById().get(id));
     }
 
     @Override
     protected final boolean doExistsById(ID id) {
-        return getCachedModels().getModelsById().containsKey(id);
+        return getCachedModels(Filter.EMPTY).getModelsById().containsKey(id);
     }
 
     @Override
     protected final long doCount() {
-        return getCachedModels().getModels().size();
+        return getCachedModels(Filter.EMPTY).getModels().size();
     }
 
     @Override
     protected final List<M> doFindAll(Sort sort) {
-        List<M> models = getCachedModels().getModels();
+        List<M> models = getCachedModels(Filter.EMPTY).getModels();
         return sort(models, sort);
     }
 
     @Override
     protected final Page<M> doFindAll(Pageable pageable) {
-        List<M> models = getCachedModels().getModels();
+        List<M> models = getCachedModels(Filter.EMPTY).getModels();
         return getPage(models, pageable);
     }
 
     @Override
     protected final Page<M> doFindAll(Pageable pageable, Filter filterable) {
-        List<M> models = getCachedModels().getModels();
+        List<M> models = getCachedModels(filterable).getModels();
         return getPage(models, pageable, filterable);
     }
 
     @Override
     protected Optional<M> doFindByDisplayValue(String displayValue) {
         Metadata<M, F, ID> metadata = getMetadata();
-        List<M> models = getCachedModels().getModels();
+        List<M> models = getCachedModels(Filter.EMPTY).getModels();
         for (M model : models) {
             String name = metadata.getName(model);
             if (ObjectUtils.equals(name, displayValue)) return Optional.of(model);
@@ -116,16 +116,16 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
      *
      * @return a non-null instance
      */
-    private DataSetService.CachedModelsById<M, ID> getCachedModels() {
+    private DataSetService.CachedModelsById<M, ID> getCachedModels(Filter filterable) {
         DataSetService dataSetService = getDataSetService();
-        DataSetService.CachedModelsById<M, ID> cachedModels = dataSetService.getCacheById(getMetadata().getModel());
+        DataSetService.CachedModelsById<M, ID> cachedModels = dataSetService.getCacheById(getMetadata().getModel(), filterable);
         if (cachedModels == null) {
-            Iterable<M> models = extractModels();
+            Iterable<M> models = extractModels(filterable);
             if (models == null) models = Collections.emptyList();
             Map<ID, M> modelsMap = buildMap(models);
             List<M> modelsList = buildList(models);
             cachedModels = new DataSetService.CachedModelsById<>(getMetadata().getModel(), modelsList, modelsMap, getExpiration());
-            dataSetService.registerCache(cachedModels);
+            dataSetService.registerCache(cachedModels, filterable);
         }
         return cachedModels;
     }
@@ -133,9 +133,13 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
     /**
      * Extracts models to be cached and used with this data set.
      *
-     * @return the models, can be NULL
+     * In most cases, the memory data sets are not filtered. However, in some cases, at least a time
+     * filter is provided to restrict the number of results.
+     *
+     * @param filterable the filter received by the data set
+     * @return the models (can be NULL)
      */
-    protected abstract Iterable<M> extractModels();
+    protected abstract Iterable<M> extractModels(Filter filterable);
 
     private List<M> buildList(Iterable<M> models) {
         if (models instanceof List) {
