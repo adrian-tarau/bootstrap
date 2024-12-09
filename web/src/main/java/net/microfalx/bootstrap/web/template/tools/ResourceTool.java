@@ -10,6 +10,9 @@ import org.thymeleaf.context.IContext;
 import java.io.IOException;
 import java.net.URI;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.UriUtils.parseUri;
+
 /**
  * Template utilities around {@link net.microfalx.resource.Resource}.
  * <p>
@@ -31,14 +34,8 @@ public class ResourceTool extends AbstractTool {
      * @return the text, error message
      */
     public String load(String uri) {
-        URI auri;
-        try {
-            auri = URI.create(uri);
-        } catch (Exception e) {
-            LOGGER.error("Invalid URI '" + uri + "', root cause: " + e.getMessage());
-            return "Invalid URI: " + uri;
-        }
-        return load(auri);
+        requireNonNull(uri);
+        return load(parseUri(uri));
     }
 
     /**
@@ -48,13 +45,8 @@ public class ResourceTool extends AbstractTool {
      * @return the text, error message
      */
     public String load(URI uri) {
-        Resource resource;
-        try {
-            resource = ResourceFactory.resolve(uri);
-        } catch (Exception e) {
-            LOGGER.error("Failed to locate resource '" + uri + "'", e);
-            return "Resource '" + uri + "' is unavailable";
-        }
+        requireNonNull(uri);
+        Resource resource = resolve(uri);
         return load(resource);
     }
 
@@ -70,6 +62,32 @@ public class ResourceTool extends AbstractTool {
         } catch (IOException e) {
             LOGGER.error("Failed to retrieve resource '" + resource.toURI() + "'", e);
             return "Resource '" + resource.toURI() + "' is unavailable";
+        }
+    }
+
+    /**
+     * Returns the resource for a URI.
+     *
+     * @param uri the URI
+     * @return the text, error message
+     */
+    public Resource resolve(String uri) {
+        return resolve(parseUri(uri));
+    }
+
+    /**
+     * Returns the resource for a URI.
+     *
+     * @param uri the URI
+     * @return the text, error message
+     */
+    public Resource resolve(URI uri) {
+        Resource resource;
+        try {
+            return ResourceFactory.resolve(uri);
+        } catch (Exception e) {
+            LOGGER.error("Failed to locate resource '" + uri + "'", e);
+            return Resource.NULL;
         }
     }
 }
