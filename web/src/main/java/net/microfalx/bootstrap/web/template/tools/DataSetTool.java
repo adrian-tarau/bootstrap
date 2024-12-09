@@ -490,7 +490,12 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return the alert, null if not present
      */
     public String getTooltip(M model, Field<M> field) {
-        return dataSetService.getTooltip(model, field).orElse(null);
+        Alert alert = getAlert(model, field);
+        if (alert != null && alert.isTooltip()) {
+            return alert.getMessage();
+        } else {
+            return dataSetService.getTooltip(model, field).orElse(null);
+        }
     }
 
     /**

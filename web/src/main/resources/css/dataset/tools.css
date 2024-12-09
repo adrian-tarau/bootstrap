@@ -9,3 +9,8 @@
 .dataset-btn-large {
     min-width: 200px;
 }
+
+.dataset-alert-icon {
+    vertical-align: text-top;
+    font-size: smaller;
+}

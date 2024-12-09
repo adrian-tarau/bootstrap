@@ -12,11 +12,14 @@ import lombok.ToString;
 @Getter
 public class Alert {
 
+    @Builder.Default
     private Type type = Type.INFO;
     private String message;
     private Integer minWidth;
     private Integer width;
-    private Icon icon = Icon.BELL;
+    @Builder.Default
+    private Icon icon = Icon.EXCLAMATION;
+    private boolean tooltip;
 
     /**
      * Returns whether the alert has some properties changed.
