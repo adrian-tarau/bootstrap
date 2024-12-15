@@ -35,6 +35,18 @@ public class ContentTool extends AbstractTool {
     }
 
     /**
+     * Registers the content and creates a link to a document to load the content in view or edit mode.
+     *
+     * @param content the content
+     * @param readOnly {@code true} to open the content read-only, {@code false} otherwise
+     * @return the link
+     */
+    public String getUri(Content content, boolean readOnly) {
+        return readOnly ? getViewUri(content) : getEditUri(content);
+    }
+
+
+    /**
      * Registers the content and creates a link to a document to load the content in view mode.
      *
      * @param content the content

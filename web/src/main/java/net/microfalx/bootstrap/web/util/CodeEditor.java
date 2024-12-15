@@ -20,6 +20,7 @@ public class CodeEditor<ID> {
     private final Resource resource;
     private final Object controller;
     private final String path;
+    private boolean readOnly;
 
     public CodeEditor(ContentService contentService, Resource resource, Object controller) {
         requireNonNull(contentService);
@@ -32,6 +33,17 @@ public class CodeEditor<ID> {
     }
 
     /**
+     * Changes whether the editor is read-only
+     *
+     * @param readOnly {@code true} if read-only, {@code false} otherwise
+     * @return self
+     */
+    public CodeEditor<ID> setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+        return this;
+    }
+
+    /**
      * Prepares the model with the required context and returns the template which will render
      * the editor.
      *
@@ -39,7 +51,7 @@ public class CodeEditor<ID> {
      * @param model the controller model
      * @return the template fragment
      */
-    public String getEditorDialog(ID id, Model model) {
+    public String getDialog(ID id, Model model) {
         requireNonNull(contentService);
         Content content = Content.create(resource);
         contentService.registerContent(content);
@@ -47,6 +59,7 @@ public class CodeEditor<ID> {
         model.addAttribute("content", content);
         model.addAttribute("path", path);
         model.addAttribute("id", id);
+        model.addAttribute("readOnly", readOnly);
         return "misc/editor::#editor-modal";
     }
 
