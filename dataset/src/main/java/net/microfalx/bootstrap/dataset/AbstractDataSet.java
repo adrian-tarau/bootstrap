@@ -162,6 +162,12 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public boolean isSortable(Field<M> field) {
+        Sortable sortableAnnot = field.findAnnotation(Sortable.class);
+        return sortableAnnot == null || sortableAnnot.value();
+    }
+
+    @Override
     public boolean isFilterable(Field<M> field) {
         Filterable filterableAnnot = field.findAnnotation(Filterable.class);
         boolean canBeSearched = field.getDataType() == Field.DataType.STRING

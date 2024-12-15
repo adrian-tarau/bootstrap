@@ -840,7 +840,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         DataSet<M, F, ID> dataSet = getDataSet();
         String classes = "align-middle";
         if (!group) {
-            if (!field.isTransient()) classes += " sortable";
+            if (!field.isTransient() && dataSet.isSortable(field)) classes += " sortable";
             Sort sort = getSort();
             Sort.Order order = sort.getOrderFor(field.getName());
             if (order != null) {

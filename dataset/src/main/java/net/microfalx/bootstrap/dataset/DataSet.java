@@ -116,6 +116,14 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
     boolean isSearchable(Field<M> field);
 
     /**
+     * Returns whether the field is sortable.
+     *
+     * @param field the field
+     * @return {@code true} if sortable, {@code false} otherwise
+     */
+    boolean isSortable(Field<M> field);
+
+    /**
      * Returns whether the field should be used to add criteria to the filter by clicking on a field value
      * in UI.
      *
