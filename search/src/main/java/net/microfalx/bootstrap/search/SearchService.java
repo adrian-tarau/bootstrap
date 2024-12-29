@@ -10,10 +10,7 @@ import net.microfalx.metrics.Timer;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
 import org.apache.lucene.document.LongPoint;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexNotFoundException;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
@@ -436,7 +433,7 @@ public class SearchService implements InitializingBean {
             DocumentMapper documentMapper = new DocumentMapper(contentService);
             Document mappedDocument = null;
             if (topDocs.scoreDocs.length > 0) {
-                org.apache.lucene.document.Document document = indexSearcher.doc(topDocs.scoreDocs[0].doc);
+                org.apache.lucene.document.Document document = indexSearcher.storedFields().document(topDocs.scoreDocs[0].doc);
                 mappedDocument = documentMapper.read(document);
             }
             return mappedDocument;
@@ -476,6 +473,7 @@ public class SearchService implements InitializingBean {
         final SearchResult result = new SearchResult(searchQuery);
         result.setRewriteQuery(luceneQuery.toString());
         final IndexSearcher indexSearcher = getIndexSearcher();
+        final StoredFields storedFields = indexSearcher.storedFields();
         final List<Document> items = new ArrayList<>();
         final Sort sort = createSort(searchQuery);
         TopDocs topDocs = SEARCH_METRICS.timeCallable("Search", () -> {
@@ -485,7 +483,7 @@ public class SearchService implements InitializingBean {
             DocumentMapper documentMapper = new DocumentMapper(contentService);
             for (ScoreDoc scoreDoc : docs.scoreDocs) {
                 if (startIndex-- > 0) continue;
-                org.apache.lucene.document.Document document = indexSearcher.doc(scoreDoc.doc);
+                org.apache.lucene.document.Document document = storedFields.document(scoreDoc.doc);
                 Document translatedDocument = documentMapper.read(document);
                 translatedDocument.setRelevance(Float.isNaN(scoreDoc.score) ? Document.NO_RELEVANCE : scoreDoc.score);
                 items.add(translatedDocument);
@@ -493,9 +491,9 @@ public class SearchService implements InitializingBean {
             }
             return docs;
         });
-        LOGGER.info("Found " + topDocs.totalHits + " total hit(s), took " + formatDuration(Timer.last().getDuration()));
+        LOGGER.info("Found {} total hit(s), took {}", topDocs.totalHits, formatDuration(Timer.last().getDuration()));
         result.setDocuments(items);
-        result.setTotalHits(topDocs.totalHits.value);
+        result.setTotalHits(topDocs.totalHits.value());
         return result;
     }
 
