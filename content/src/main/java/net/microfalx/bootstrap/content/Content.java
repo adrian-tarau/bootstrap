@@ -22,7 +22,7 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 /**
  * A class which caries information about a content.
  * <p>
- * A content has an identifier and a type and a resource, possible a name, description and mime type.
+ * A content has an identifier and a type and a resource, possibly a name, description, and mime type.
  */
 public final class Content implements Identifiable<String>, Nameable, Descriptable, Cloneable {
 

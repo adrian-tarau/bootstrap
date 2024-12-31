@@ -9,6 +9,7 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.detect.CompositeDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.exception.ZeroByteFileException;
 import org.apache.tika.langdetect.optimaize.OptimaizeLangDetector;
 import org.apache.tika.language.detect.LanguageDetector;
 import org.apache.tika.language.detect.LanguageResult;
@@ -74,7 +75,7 @@ public class ContentService implements InitializingBean {
      */
     public void registerTextDetector(Detector detector) {
         requireNonNull(detector);
-        LOGGER.info("Register text detector '" + ClassUtils.getName(detector));
+        LOGGER.info("Register text detector '{}'", ClassUtils.getName(detector));
         detectors.add(detector);
         this.detector = new CompositeDetector(tikaConfig.getMediaTypeRegistry(), detectors);
     }
@@ -429,6 +430,7 @@ public class ContentService implements InitializingBean {
 
     private void registerSuperTypes() {
         tikaConfig.getMediaTypeRegistry().addSuperType(MediaType.parse(MimeType.APPLICATION_SQL.getValue()), MediaType.TEXT_PLAIN);
+        tikaConfig.getMediaTypeRegistry().addSuperType(MediaType.parse(MimeType.APPLICATION_JSON.getValue()), MediaType.TEXT_PLAIN);
     }
 
     private void registerResourceMimeTypeDetector() {
@@ -444,10 +446,12 @@ public class ContentService implements InitializingBean {
         ParseContext context = new ParseContext();
         try {
             try (InputStream stream = resource.getInputStream()) {
-                parser.parse(stream, contentHandler, updateMetadata(metadata, resource), context);
+                parser.parse(stream, contentHandler, metadata, context);
             }
         } catch (SAXException e) {
             throw new ContentParsingException("Failed to parse document '" + resource.toURI() + "' due to syntax errors", e);
+        } catch (ZeroByteFileException e) {
+            // an empty document should just be ignored
         } catch (TikaException e) {
             throw new ContentParsingException("Failed to parse document '" + resource.toURI() + "'", e);
         }

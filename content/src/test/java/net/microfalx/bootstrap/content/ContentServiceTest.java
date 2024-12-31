@@ -17,6 +17,7 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,8 +50,8 @@ class ContentServiceTest {
     @Test
     void parseHtml() throws IOException {
         contentService.parse(ClassPathResource.file("test1.html"), new CountElementsContentHandler());
-        assertEquals(28, elementCount.get());
-        assertEquals(32, textCount.get());
+        assertEquals(30, elementCount.get());
+        assertEquals(40, textCount.get());
     }
 
     @Test
@@ -62,32 +63,38 @@ class ContentServiceTest {
 
     @Test
     void extractHtml() throws IOException {
-        Assertions.assertThat(contentService.extract(ClassPathResource.file("test1.html")).loadAsString())
+        assertThat(contentService.extract(ClassPathResource.file("test1.html")).loadAsString())
                 .contains("Company A").contains("Contact us").contains("sidebar");
     }
 
     @Test
     void extractJson() throws IOException {
-        Assertions.assertThat(contentService.extract(ClassPathResource.file("test1.json")).loadAsString())
+        assertThat(contentService.extract(ClassPathResource.file("test1.json")).loadAsString())
                 .contains("Click Here").contains("sun1.opacity").contains("Copy Again");
+    }
+
+    @Test
+    void extractEmpty() throws IOException {
+        assertThat(contentService.extract(Resource.text(null)).getResource().length())
+                .isEqualTo(0);
     }
 
     @Test
     void resolveHtml() throws IOException {
         Content content = contentService.resolve(ContentLocator.create(ClassPathResource.file("test1.html")));
         assertNotNull(content);
-        assertEquals("test1.html", content.getName());
+        assertEquals("Test1", content.getName());
         assertEquals("text/html", content.getMimeType());
-        Assertions.assertThat(content.getUri().toASCIIString()).endsWith("test1.html");
+        assertThat(content.getUri().toASCIIString()).endsWith("test1.html");
     }
 
     @Test
     void resolveJson() throws IOException {
         Content content = contentService.resolve(ContentLocator.create(ClassPathResource.file("test1.json")));
         assertNotNull(content);
-        assertEquals("test1.json", content.getName());
+        assertEquals("Test1", content.getName());
         assertEquals("application/json", content.getMimeType());
-        Assertions.assertThat(content.getUri().toASCIIString()).endsWith("test1.json");
+        assertThat(content.getUri().toASCIIString()).endsWith("test1.json");
     }
 
     @Test
