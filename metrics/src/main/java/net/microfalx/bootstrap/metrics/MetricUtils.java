@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.metrics;
 
-import net.microfalx.bootstrap.core.utils.IdGenerator;
+import net.microfalx.lang.IdGenerator;
 
 import java.time.Duration;
 

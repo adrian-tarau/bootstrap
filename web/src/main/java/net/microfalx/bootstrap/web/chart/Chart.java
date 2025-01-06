@@ -10,7 +10,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.Iterables;
 import lombok.Data;
 import lombok.ToString;
-import net.microfalx.bootstrap.core.utils.IdGenerator;
 import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.bootstrap.web.chart.annotations.Annotations;
 import net.microfalx.bootstrap.web.chart.datalabels.DataLabels;

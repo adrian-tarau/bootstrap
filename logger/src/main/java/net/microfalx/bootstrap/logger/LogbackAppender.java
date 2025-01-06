@@ -5,11 +5,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.classic.spi.ThrowableProxy;
-import net.microfalx.bootstrap.core.utils.IdGenerator;
-import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.EnumUtils;
-import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.Hashing;
+import net.microfalx.lang.*;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -42,6 +38,7 @@ class LogbackAppender extends ch.qos.logback.core.AppenderBase<ILoggingEvent> {
 
     /**
      * Resets the state of the appender inside the logger context.
+     *
      * @param loggerContext the logger context
      */
     static void release(LoggerContext loggerContext) {

@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.datafaker.Faker;
 import net.datafaker.providers.base.Shakespeare;
-import net.microfalx.bootstrap.core.utils.IdGenerator;
+import net.microfalx.lang.IdGenerator;
 import net.microfalx.resource.MemoryResource;
 
 import java.time.Duration;
