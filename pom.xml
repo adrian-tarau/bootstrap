@@ -80,13 +80,13 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <bom.version>1.0.3</bom.version>
+        <bom.version>1.0.5</bom.version>
 
-        <lang.version>1.0.0-SNAPSHOT</lang.version>
-        <resource.version>1.0.0-SNAPSHOT</resource.version>
-        <jdbcpool.version>1.0.0-SNAPSHOT</jdbcpool.version>
-        <threadpool.version>1.0.0-SNAPSHOT</threadpool.version>
-        <metrics.version>1.0.0-SNAPSHOT</metrics.version>
+        <lang.version>0.8.0-SNAPSHOT</lang.version>
+        <resource.version>0.8.0-SNAPSHOT</resource.version>
+        <jdbcpool.version>0.8.0-SNAPSHOT</jdbcpool.version>
+        <threadpool.version>0.8.0-SNAPSHOT</threadpool.version>
+        <metrics.version>0.8.0-SNAPSHOT</metrics.version>
 
         <webjar.version>1.0.0-SNAPSHOT</webjar.version>
         <spring.boot.version>3.4.1</spring.boot.version>
@@ -124,13 +124,13 @@
             </dependency>
 
             <dependency>
-                <groupId>net.microfalx.lang</groupId>
+                <groupId>net.microfalx</groupId>
                 <artifactId>lang</artifactId>
                 <version>${lang.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>net.microfalx.metrics</groupId>
+                <groupId>net.microfalx</groupId>
                 <artifactId>metrics</artifactId>
                 <version>${metrics.version}</version>
             </dependency>

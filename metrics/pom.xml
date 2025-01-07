@@ -46,7 +46,7 @@
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.metrics</groupId>
+            <groupId>net.microfalx</groupId>
             <artifactId>metrics</artifactId>
         </dependency>
 
