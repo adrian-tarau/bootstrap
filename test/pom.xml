@@ -25,12 +25,12 @@
 
     <groupId>net.microfalx.bootstrap</groupId>
     <artifactId>bootstrap-test</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
         <artifactId>bootstrap</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.8.5-SNAPSHOT</version>
     </parent>
 
     <name>Bootstrap - Test</name>
