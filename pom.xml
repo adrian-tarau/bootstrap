@@ -81,9 +81,9 @@
 
     <properties>
         <bom.version>1.0.7</bom.version>
-        <lang.version>0.8.1-SNAPSHOT</lang.version>
-        <resource.version>0.8.1-SNAPSHOT</resource.version>
-        <metrics.version>0.8.1-SNAPSHOT</metrics.version>
+        <lang.version>0.8.2-SNAPSHOT</lang.version>
+        <resource.version>0.8.2-SNAPSHOT</resource.version>
+        <metrics.version>0.8.2-SNAPSHOT</metrics.version>
         <jdbcpool.version>0.8.0-SNAPSHOT</jdbcpool.version>
         <threadpool.version>0.8.0-SNAPSHOT</threadpool.version>
         <webjar.version>0.8.0-SNAPSHOT</webjar.version>
