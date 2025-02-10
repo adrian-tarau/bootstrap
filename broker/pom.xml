@@ -33,7 +33,7 @@
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap - Broker</name>
+    <name>Bootstrap :: Broker</name>
 
     <dependencies>
 

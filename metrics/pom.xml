@@ -33,7 +33,7 @@
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap - Metrics</name>
+    <name>Bootstrap :: Metrics</name>
 
     <dependencies>
 

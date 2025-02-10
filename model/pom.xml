@@ -33,7 +33,7 @@
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap - Model</name>
+    <name>Bootstrap :: Model</name>
 
     <dependencies>
 
