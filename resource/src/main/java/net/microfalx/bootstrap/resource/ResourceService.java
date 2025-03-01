@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.resource;
 
+import net.microfalx.lang.JvmUtils;
 import net.microfalx.resource.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +102,8 @@ public class ResourceService implements InitializingBean {
         validateDirectory(transientDirectory = new File(properties.getTransientDirectory()));
         initializeSharedResource();
         validateResource(getSharedResource(null));
+        LOGGER.info("JVM directories: home = {}, var = {}, tmp = {}, cache = {}, ", JvmUtils.getHomeDirectory(),
+                JvmUtils.getVariableDirectory(), JvmUtils.getTemporaryDirectory(), JvmUtils.getCacheDirectory());
         LOGGER.info("Persisted resources directory {}", persistedDirectory);
         ResourceFactory.setWorkspace(FileResource.directory(persistedDirectory));
         LOGGER.info("Transient resources directory {}", transientDirectory);
