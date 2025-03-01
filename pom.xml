@@ -81,13 +81,13 @@
 
     <properties>
         <bom.version>1.0.7</bom.version>
-        <lang.version>0.8.2-SNAPSHOT</lang.version>
-        <resource.version>0.8.2-SNAPSHOT</resource.version>
-        <metrics.version>0.8.2-SNAPSHOT</metrics.version>
+        <lang.version>0.8.3-SNAPSHOT</lang.version>
+        <resource.version>0.8.3-SNAPSHOT</resource.version>
+        <metrics.version>0.8.3-SNAPSHOT</metrics.version>
         <jdbcpool.version>0.8.0-SNAPSHOT</jdbcpool.version>
         <threadpool.version>0.8.0-SNAPSHOT</threadpool.version>
         <webjar.version>0.8.0-SNAPSHOT</webjar.version>
-        <spring.boot.version>3.4.1</spring.boot.version>
+        <spring.boot.version>3.4.3</spring.boot.version>
     </properties>
 
     <developers>

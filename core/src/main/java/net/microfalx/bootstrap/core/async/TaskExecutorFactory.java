@@ -32,6 +32,7 @@ public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, Err
 
      static final Logger LOGGER = LoggerFactory.getLogger(TaskExecutorFactory.class);
 
+     private static final boolean USE_POOLS = Boolean.getBoolean("bootstrap.async.use_pools");
     private static final AtomicInteger ID_GENERATOR = new AtomicInteger(1);
     private static final Collection<WeakReference<TaskExecutor>> TASK_EXECUTORS = new CopyOnWriteArrayList<>();
     private static final Collection<WeakReference<TaskScheduler>> TASK_SCHEDULERS = new CopyOnWriteArrayList<>();
@@ -101,6 +102,7 @@ public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, Err
         taskExecutor.setCorePoolSize((int) (properties.getCoreThreads() * ratio));
         taskExecutor.setMaxPoolSize((int) (properties.getMaximumThreads() * ratio));
         taskExecutor.setQueueCapacity((int) (properties.getQueueCapacity() * ratio));
+        taskExecutor.setVirtualThreads(properties.isVirtual());
         taskExecutor.initialize();
         LOGGER.info("Create task executor, prefix '{}', core threads {}, queue capacity {}", taskExecutor.getThreadNamePrefix(),
                 taskExecutor.getCorePoolSize(), taskExecutor.getQueueCapacity());
@@ -117,6 +119,7 @@ public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, Err
         taskScheduler.setAwaitTerminationSeconds((int) properties.getAwaitTermination().getSeconds());
         taskScheduler.setPoolSize(properties.getCoreThreads());
         taskScheduler.setRemoveOnCancelPolicy(properties.isRemoveOnCancel());
+        taskScheduler.setVirtualThreads(properties.isVirtual());
         taskScheduler.initialize();
         taskScheduler.setErrorHandler(this);
         ScheduledThreadPoolExecutor poolExecutor = taskScheduler.getScheduledThreadPoolExecutor();
