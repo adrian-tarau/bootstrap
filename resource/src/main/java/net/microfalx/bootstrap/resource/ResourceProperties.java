@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.resource;
 
-import net.microfalx.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import static net.microfalx.bootstrap.resource.ResourceLocation.*;
 import static net.microfalx.lang.JvmUtils.replacePlaceholders;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.resource.ResourceUtils.normalizeFileSystemPath;
 import static net.microfalx.resource.ResourceUtils.toDirectory;
 
@@ -43,7 +43,7 @@ public class ResourceProperties {
      * @return a non-null instance
      */
     public String getPersistedDirectory() {
-        return toDirectory(StringUtils.defaultIfEmpty(persistedDirectory, replacePlaceholders(normalizeFileSystemPath(PERSISTED_PATH))));
+        return toDirectory(defaultIfEmpty(persistedDirectory, replacePlaceholders(normalizeFileSystemPath(PERSISTED_PATH))));
     }
 
     /**
@@ -61,7 +61,7 @@ public class ResourceProperties {
      * @return a non-null instance
      */
     public String getTransientDirectory() {
-        return toDirectory(StringUtils.defaultIfEmpty(transientDirectory, replacePlaceholders(normalizeFileSystemPath(TRANSIENT_PATH))));
+        return toDirectory(defaultIfEmpty(transientDirectory, replacePlaceholders(normalizeFileSystemPath(TRANSIENT_PATH))));
     }
 
     /**
@@ -80,7 +80,7 @@ public class ResourceProperties {
      * @return a non-null instance
      */
     public String getSharedDirectory() {
-        return toDirectory(StringUtils.defaultIfEmpty(sharedDirectory, replacePlaceholders(normalizeFileSystemPath(SHARED_PATH))));
+        return toDirectory(defaultIfEmpty(sharedDirectory, replacePlaceholders(normalizeFileSystemPath(SHARED_PATH))));
     }
 
     /**

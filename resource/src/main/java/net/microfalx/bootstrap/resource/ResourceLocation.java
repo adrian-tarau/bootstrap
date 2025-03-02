@@ -11,7 +11,7 @@ public enum ResourceLocation {
     PERSISTED,
 
     /**
-     * A resource which is persisted on local storage but it is not guaranteed to be persisted.
+     * A resource which is persisted on local storage, but it is not guaranteed to be persisted.
      */
     TRANSIENT,
 
@@ -20,7 +20,7 @@ public enum ResourceLocation {
      */
     SHARED;
 
-    public static final String PERSISTED_PATH = "${user.home}/.bootstrap/persisted";
-    public static final String TRANSIENT_PATH = "${user.home}/.bootstrap/transient";
-    public static final String SHARED_PATH = "${user.home}/.bootstrap/shared";
+    public static final String PERSISTED_PATH = "${user.cache}/bootstrap/persisted";
+    public static final String TRANSIENT_PATH = "${user.cache}/bootstrap/transient";
+    public static final String SHARED_PATH = "${user.cache}/bootstrap/shared";
 }

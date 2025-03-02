@@ -1,11 +1,12 @@
 package net.microfalx.bootstrap.resource;
 
+import lombok.CustomLog;
 import net.microfalx.lang.JvmUtils;
 import net.microfalx.resource.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -25,9 +26,9 @@ import static net.microfalx.resource.ResourceUtils.toUri;
  * </ul>
  */
 @Service
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@CustomLog
 public class ResourceService implements InitializingBean {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ResourceService.class);
 
     private File persistedDirectory;
     private File transientDirectory;
@@ -102,13 +103,19 @@ public class ResourceService implements InitializingBean {
         validateDirectory(transientDirectory = new File(properties.getTransientDirectory()));
         initializeSharedResource();
         validateResource(getSharedResource(null));
-        LOGGER.info("JVM directories: home = {}, var = {}, tmp = {}, cache = {}, ", JvmUtils.getHomeDirectory(),
-                JvmUtils.getVariableDirectory(), JvmUtils.getTemporaryDirectory(), JvmUtils.getCacheDirectory());
+        LOGGER.info("JVM directories: home = {}, var = {}, tmp = {}", JvmUtils.getHomeDirectory(),
+                JvmUtils.getVariableDirectory(), JvmUtils.getTemporaryDirectory());
         LOGGER.info("Persisted resources directory {}", persistedDirectory);
         ResourceFactory.setWorkspace(FileResource.directory(persistedDirectory));
         LOGGER.info("Transient resources directory {}", transientDirectory);
-        ResourceFactory.setTemporary(FileResource.directory(new File(transientDirectory, "tmp")));
         LOGGER.info("Shared resources directory {}", getSharedResource(null).toURI());
+        if (JvmUtils.getTemporaryDirectory().getAbsolutePath().startsWith(JvmUtils.getHomeDirectory().getAbsolutePath())
+                && JvmUtils.getVariableDirectory().getAbsolutePath().startsWith(JvmUtils.getHomeDirectory().getAbsolutePath())) {
+            // if both tmp and var are in home, we can relocate
+            LOGGER.info("Change JVM directories to match the service");
+            JvmUtils.setVariableDirectory(persistedDirectory);
+            ResourceFactory.setTemporary(FileResource.directory(transientDirectory));
+        }
     }
 
     private void initializeSharedResource() {
@@ -133,9 +140,7 @@ public class ResourceService implements InitializingBean {
 
     private void validateResource(Resource directory) {
         try {
-            if (!directory.exists()) {
-                directory.create();
-            }
+            if (!directory.exists()) directory.create();
         } catch (IOException e) {
             throw new ResourceException("Directory " + directory + " cannot be created", e);
         }
