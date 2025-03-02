@@ -63,18 +63,19 @@ public class SecurityConfiguration {
             allowStandardPaths(http);
             configureLogin(http);
             updateRememberMe(http, rememberMeServices);
-            updateCsrv(http);
-            updateHeaders(http);
-            updateAnonymous(http);
-
+            updateCommon(http);
             return http.build();
         } else {
             http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-            updateCsrv(http);
-            updateHeaders(http);
-            updateAnonymous(http);
+            updateCommon(http);
             return http.build();
         }
+    }
+
+    private void updateCommon(HttpSecurity http) throws Exception {
+        updateCsrv(http);
+        updateHeaders(http);
+        updateAnonymous(http);
     }
 
     private void updateRememberMe(HttpSecurity http, RememberMeServices rememberMeServices) throws Exception {
@@ -100,6 +101,7 @@ public class SecurityConfiguration {
         allowPath(http, "image");
         allowPath(http, "font");
         allowPath(http, "login");
+        configureMetrics(http);
         http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
     }
 
@@ -108,8 +110,10 @@ public class SecurityConfiguration {
                 //.successForwardUrl("/").failureForwardUrl("/login?error")
                 .usernameParameter("username").passwordParameter("password").permitAll());
         http.logout(logout -> logout.clearAuthentication(true).invalidateHttpSession(true).logoutUrl("/logout").permitAll());
+    }
 
-
+    private void configureMetrics(HttpSecurity http) throws Exception {
+        //http.securityMatcher(EndpointRequest.to(HealthEndpoint.class));
     }
 
     private void allowPath(HttpSecurity http, String path) throws Exception {

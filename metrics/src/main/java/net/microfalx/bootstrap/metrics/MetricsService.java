@@ -2,8 +2,20 @@ package net.microfalx.bootstrap.metrics;
 
 import lombok.CustomLog;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
+import net.microfalx.bootstrap.resource.ResourceService;
+import net.microfalx.jvm.ServerMetrics;
+import net.microfalx.jvm.VirtualMachineMetrics;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.metrics.Query;
+import net.microfalx.metrics.Repository;
+import net.microfalx.metrics.Result;
+import net.microfalx.threadpool.ThreadPool;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -14,9 +26,19 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 @Service
 @CustomLog
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class MetricsService extends ApplicationContextSupport implements InitializingBean {
 
     private final Collection<Repository> repositories = new CopyOnWriteArrayList<>();
+
+    @Autowired(required = false)
+    private ResourceService resourceService;
+
+    @Autowired
+    private AsyncTaskExecutor taskExecutor;
+
+    @Autowired
+    private TaskScheduler taskScheduler;
 
     /**
      * Returns registered repositories.
@@ -30,7 +52,7 @@ public class MetricsService extends ApplicationContextSupport implements Initial
     /**
      * Executes a query with a repository and returns the results.
      * <p>
-     * Each query targets a specific repository using {@link Query#getType()}. If no repository can be located, the
+     * Each query targets a specific repository using {@link net.microfalx.metrics.Query#getType()}. If no repository can be located, the
      * query will fail.
      *
      * @param query the query
@@ -45,6 +67,7 @@ public class MetricsService extends ApplicationContextSupport implements Initial
     @Override
     public void afterPropertiesSet() throws Exception {
         initializeRepositories();
+        initializeMetricsCollectors();
     }
 
     private Repository locateRepository(Query query) {
@@ -66,5 +89,20 @@ public class MetricsService extends ApplicationContextSupport implements Initial
             repositories.add(loadedRepository);
         }
         LOGGER.info("Loaded {} metric repositories", repositories.size());
+    }
+
+    private void initializeMetricsCollectors() {
+        LOGGER.debug("Initialize metrics collectors");
+        ThreadPool threadPool = ThreadPool.builder("Metrics").virtual(true).maximumSize(5).build();
+        try {
+            VirtualMachineMetrics.get().useDisk("jvm").setExecutor(threadPool).start();
+        } catch (Exception e) {
+            LOGGER.error("Failed to start JVM metrics", e);
+        }
+        try {
+            ServerMetrics.get().useDisk("server").setExecutor(threadPool).start();
+        } catch (Exception e) {
+            LOGGER.error("Failed to start server metrics", e);
+        }
     }
 }

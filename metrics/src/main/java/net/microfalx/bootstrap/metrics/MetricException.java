@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.metrics;
 /**
  * Base class for all metric exceptions.
  */
-public class MetricException extends RuntimeException {
+public class MetricException extends net.microfalx.metrics.MetricException {
 
     public MetricException(String message) {
         super(message);

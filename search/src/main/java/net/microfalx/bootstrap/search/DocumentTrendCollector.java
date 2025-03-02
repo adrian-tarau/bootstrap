@@ -1,9 +1,9 @@
 package net.microfalx.bootstrap.search;
 
-import net.microfalx.bootstrap.metrics.Aggregation;
-import net.microfalx.bootstrap.metrics.Matrix;
-import net.microfalx.bootstrap.metrics.Metric;
-import net.microfalx.bootstrap.metrics.Value;
+import net.microfalx.metrics.Aggregation;
+import net.microfalx.metrics.Matrix;
+import net.microfalx.metrics.Metric;
+import net.microfalx.metrics.Value;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.CollectorManager;
 import org.apache.lucene.search.ScoreMode;

@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.dataset;
 
-import net.microfalx.bootstrap.metrics.Matrix;
 import net.microfalx.bootstrap.model.CompositeIdentifier;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
+import net.microfalx.metrics.Matrix;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.ListCrudRepository;

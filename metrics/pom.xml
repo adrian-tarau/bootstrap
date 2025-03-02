@@ -46,8 +46,24 @@
         </dependency>
 
         <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-resource</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>net.microfalx</groupId>
             <artifactId>metrics</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx</groupId>
+            <artifactId>jvm</artifactId>
         </dependency>
 
         <dependency>

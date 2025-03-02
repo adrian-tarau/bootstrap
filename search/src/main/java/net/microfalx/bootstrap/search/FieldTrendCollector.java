@@ -1,10 +1,10 @@
 package net.microfalx.bootstrap.search;
 
-import net.microfalx.bootstrap.metrics.Aggregation;
-import net.microfalx.bootstrap.metrics.Matrix;
-import net.microfalx.bootstrap.metrics.Metric;
-import net.microfalx.bootstrap.metrics.Value;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.metrics.Aggregation;
+import net.microfalx.metrics.Matrix;
+import net.microfalx.metrics.Metric;
+import net.microfalx.metrics.Value;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.LeafReaderContext;

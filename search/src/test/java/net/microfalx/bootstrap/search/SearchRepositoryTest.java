@@ -1,8 +1,8 @@
 package net.microfalx.bootstrap.search;
 
-import net.microfalx.bootstrap.metrics.Matrix;
-import net.microfalx.bootstrap.metrics.Query;
-import net.microfalx.bootstrap.metrics.Result;
+import net.microfalx.metrics.Matrix;
+import net.microfalx.metrics.Query;
+import net.microfalx.metrics.Result;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

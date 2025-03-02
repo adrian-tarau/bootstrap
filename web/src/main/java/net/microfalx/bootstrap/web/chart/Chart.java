@@ -148,9 +148,9 @@ public class Chart implements Identifiable<String>, Nameable, Descriptable {
      * @param series the series
      * @return self
      */
-    public <T> Chart addSeries(net.microfalx.bootstrap.metrics.Series series) {
+    public <T> Chart addSeries(net.microfalx.metrics.Series series) {
         requireNonNull(series);
-        List<Value<Instant, Double>> values = series.getValues().stream().map(value -> Value.create(value.asInstant(), value.getValue())).toList();
+        List<Value<Instant, Float>> values = series.getValues().stream().map(value -> Value.create(value.atInstant(), value.getValue())).toList();
         return addSeries(Series.create(series.getName(), values));
     }
 

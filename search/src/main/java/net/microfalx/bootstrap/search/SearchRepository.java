@@ -1,10 +1,10 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.bootstrap.metrics.AbstractRepository;
-import net.microfalx.bootstrap.metrics.Matrix;
-import net.microfalx.bootstrap.metrics.Query;
-import net.microfalx.bootstrap.metrics.Result;
 import net.microfalx.lang.annotation.Provider;
+import net.microfalx.metrics.Matrix;
+import net.microfalx.metrics.Query;
+import net.microfalx.metrics.Result;
 
 import java.util.Collection;
 

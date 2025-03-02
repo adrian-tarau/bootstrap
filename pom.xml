@@ -84,6 +84,7 @@
         <lang.version>0.8.3-SNAPSHOT</lang.version>
         <resource.version>0.8.3-SNAPSHOT</resource.version>
         <metrics.version>0.8.3-SNAPSHOT</metrics.version>
+        <jvm.version>0.8.3-SNAPSHOT</jvm.version>
         <jdbcpool.version>0.8.0-SNAPSHOT</jdbcpool.version>
         <threadpool.version>0.8.0-SNAPSHOT</threadpool.version>
         <webjar.version>0.8.0-SNAPSHOT</webjar.version>
@@ -130,6 +131,12 @@
                 <groupId>net.microfalx</groupId>
                 <artifactId>metrics</artifactId>
                 <version>${metrics.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx</groupId>
+                <artifactId>jvm</artifactId>
+                <version>${jvm.version}</version>
             </dependency>
 
             <dependency>
