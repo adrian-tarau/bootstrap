@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.core.async;
 
-import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -30,9 +29,9 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  */
 public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, ErrorHandler {
 
-     static final Logger LOGGER = LoggerFactory.getLogger(TaskExecutorFactory.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(TaskExecutorFactory.class);
 
-     private static final boolean USE_POOLS = Boolean.getBoolean("bootstrap.async.use_pools");
+    private static final boolean USE_POOLS = Boolean.getBoolean("bootstrap.async.use_pools");
     private static final AtomicInteger ID_GENERATOR = new AtomicInteger(1);
     private static final Collection<WeakReference<TaskExecutor>> TASK_EXECUTORS = new CopyOnWriteArrayList<>();
     private static final Collection<WeakReference<TaskScheduler>> TASK_SCHEDULERS = new CopyOnWriteArrayList<>();
@@ -94,8 +93,8 @@ public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, Err
 
     public AsyncTaskExecutor createExecutor() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setBeanName(getThreadNamePrefix() + "_" + ID_GENERATOR.getAndIncrement());
-        taskExecutor.setThreadNamePrefix(getThreadNamePrefix());
+        taskExecutor.setBeanName(properties.getThreadNamePrefix() + "_" + ID_GENERATOR.getAndIncrement());
+        taskExecutor.setThreadNamePrefix(properties.getThreadNamePrefix());
         taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
         taskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         taskExecutor.setAwaitTerminationSeconds((int) properties.getAwaitTermination().getSeconds());
@@ -112,8 +111,8 @@ public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, Err
 
     public TaskScheduler createScheduler() {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
-        taskScheduler.setBeanName(getThreadNamePrefix() + "_" + ID_GENERATOR.getAndIncrement());
-        taskScheduler.setThreadNamePrefix(getThreadNamePrefix());
+        taskScheduler.setBeanName(properties.getThreadNamePrefix() + "_" + ID_GENERATOR.getAndIncrement());
+        taskScheduler.setThreadNamePrefix(properties.getThreadNamePrefix());
         taskScheduler.setWaitForTasksToCompleteOnShutdown(true);
         taskScheduler.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         taskScheduler.setAwaitTerminationSeconds((int) properties.getAwaitTermination().getSeconds());
@@ -140,10 +139,4 @@ public class TaskExecutorFactory implements Thread.UncaughtExceptionHandler, Err
         return TASK_EXECUTORS.stream().map(Reference::get).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    private String getThreadNamePrefix() {
-        String name = properties.getPrefix();
-        String suffix = properties.getSuffix();
-        if (StringUtils.isNotEmpty(suffix)) name += "-" + suffix;
-        return name;
-    }
 }

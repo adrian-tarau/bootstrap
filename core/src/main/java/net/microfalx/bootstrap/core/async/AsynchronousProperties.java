@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.core.async;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.microfalx.lang.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,7 +21,7 @@ public class AsynchronousProperties {
     private int maximumThreads = 8;
     private int queueCapacity = 50;
     private boolean virtual = true;
-    private String prefix = "boot";
+    private String prefix = "Boot";
     private String suffix;
     private boolean waitForTasks = true;
     private boolean removeOnCancel = true;
@@ -62,5 +63,11 @@ public class AsynchronousProperties {
         requireNonNull(awaitTermination);
         this.awaitTermination = awaitTermination;
         return this;
+    }
+
+    String getThreadNamePrefix() {
+        String name = prefix;
+        if (StringUtils.isNotEmpty(suffix)) name += "-" + suffix;
+        return name;
     }
 }

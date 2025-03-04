@@ -3,18 +3,18 @@ package net.microfalx.bootstrap.jdbc.support;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.zaxxer.hikari.HikariDataSource;
-import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
+import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.lang.*;
+import net.microfalx.threadpool.Task;
+import net.microfalx.threadpool.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -69,11 +69,8 @@ public class DatabaseService implements InitializingBean {
     @Autowired(required = false)
     private javax.sql.DataSource dataSource;
 
-    @Autowired
-    private TaskScheduler taskScheduler;
-
-    private AsyncTaskExecutor coordinatorTaskExecutor;
-    private AsyncTaskExecutor workerTaskExecutor;
+    private ThreadPool coordinatorTaskExecutor;
+    private ThreadPool workerTaskExecutor;
 
     @Autowired
     private StoreService storeService;
@@ -89,8 +86,8 @@ public class DatabaseService implements InitializingBean {
      *
      * @return a non-null instance
      */
-    public TaskScheduler getTaskScheduler() {
-        return taskScheduler;
+    public ThreadPool getTaskScheduler() {
+        return coordinatorTaskExecutor;
     }
 
     /**
@@ -400,12 +397,12 @@ public class DatabaseService implements InitializingBean {
             registerDataSource(newDataSource);
         }
         statementStore = storeService.registerStore(Store.Options.create("Database Statement"));
-        taskScheduler.scheduleWithFixedDelay(new ValidateDatabases(), AVAILABILITY_INTERVAL.dividedBy(2));
+        coordinatorTaskExecutor.scheduleWithFixedDelay(new ValidateDatabases(), Duration.ZERO, AVAILABILITY_INTERVAL.dividedBy(2));
     }
 
     private void initializeExecutor() {
-        coordinatorTaskExecutor = TaskExecutorFactory.create("dbc").setRatio(2).createExecutor();
-        workerTaskExecutor = TaskExecutorFactory.create("dbw").setRatio(3).createExecutor();
+        coordinatorTaskExecutor = ThreadPoolFactory.create("DbC").setRatio(2).create();
+        workerTaskExecutor = ThreadPoolFactory.create("DbW").setRatio(3).create();
     }
 
     private Database createDatabase(DataSource dataSource) {
@@ -453,12 +450,17 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractSnapshot implements Callable<Snapshot> {
+    class ExtractSnapshot implements Callable<Snapshot>, Task {
 
         private final Snapshot snapshot;
 
         ExtractSnapshot(Snapshot snapshot) {
             this.snapshot = snapshot;
+        }
+
+        @Override
+        public String getName() {
+            return "Extract Snapshot: " + snapshot.getDatabase().getName();
         }
 
         @Override
@@ -510,12 +512,17 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ValidateDatabase implements Runnable {
+    class ValidateDatabase implements Runnable, Task {
 
         private final Database database;
 
         public ValidateDatabase(Database database) {
             this.database = database;
+        }
+
+        @Override
+        public String getName() {
+            return "Validate: " + database.getName();
         }
 
         @Override
@@ -528,7 +535,12 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ValidateDatabases implements Runnable {
+    class ValidateDatabases implements Runnable, Task {
+
+        @Override
+        public String getName() {
+            return "Validate";
+        }
 
         @Override
         public void run() {
@@ -614,12 +626,17 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractSessionsForDatabase implements Callable<Collection<Session>> {
+    class ExtractSessionsForDatabase implements Callable<Collection<Session>>, Task {
 
         private final Database database;
 
         public ExtractSessionsForDatabase(Database database) {
             this.database = database;
+        }
+
+        @Override
+        public String getName() {
+            return "Extract Sessions: " + database.getName();
         }
 
         @Override
@@ -648,7 +665,7 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractTransactionsForDatabase implements Callable<Collection<Transaction>> {
+    class ExtractTransactionsForDatabase implements Callable<Collection<Transaction>>, Task {
 
         private final Database database;
 
@@ -656,6 +673,10 @@ public class DatabaseService implements InitializingBean {
             this.database = database;
         }
 
+        @Override
+        public String getName() {
+            return "Extract Transactions: " + database.getName();
+        }
 
         @Override
         public Collection<Transaction> call() throws Exception {
@@ -684,7 +705,7 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractStatementsForDatabase implements Callable<Collection<Statement>> {
+    class ExtractStatementsForDatabase implements Callable<Collection<Statement>>, Task {
 
         private final LocalDateTime start;
         private final LocalDateTime end;
@@ -694,6 +715,11 @@ public class DatabaseService implements InitializingBean {
             this.database = database;
             this.start = start;
             this.end = end;
+        }
+
+        @Override
+        public String getName() {
+            return "Extract Statements: " + database.getName();
         }
 
         @Override
