@@ -26,6 +26,13 @@
                 <item id="counter" text="Counters" action="/support/metric/counter" icon="fa-solid fa-cubes-stacked"/>
                 <item id="gauge" text="Gauges" action="/support/metric/gauge" icon="fa-solid fa-gauge"/>
             </menu>
+            <menu id="task" text="Tasks" position="560" roles="admin" icon="fa-solid fa-cubes">
+                <item id="task_running" text="Running" action="/support/thread/task/running" icon="fa-solid fa-gear"/>
+                <item id="task_completed" text="Completed" action="/support/thread/task/completed" icon="fa-solid fa-flag-checkered"/>
+                <item id="task_scheduled" text="Scheduled" action="/support/thread/task/scheduled" icon="fa-solid fa-calendar-days"/>
+                <item id="pool" text="Thread Pools" action="/support/thread/pool" icon="fa-solid fa-layer-group"/>
+                <item id="thread" text="Threads" action="/support/thread" icon="fa-solid fa-layer-group"/>
+            </menu>
             <item id="search_engine" text="Search Engine" action="/support/search" position="1000" roles="admin" icon="fa-solid fa-book"/>
             <item id="status" text="Status" action="/support/status" position="5000" icon="fa-solid fa-temperature-quarter"/>
             <item id="logging" text="Logging" action="/support/logging" position="5020" roles="admin" icon="fa-solid fa-bars"/>
