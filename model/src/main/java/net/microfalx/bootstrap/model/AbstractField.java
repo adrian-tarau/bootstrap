@@ -331,6 +331,7 @@ public abstract class AbstractField<M> implements Field<M> {
         dataTypes.put(LocalDateTime.class, DataType.DATE_TIME);
         dataTypes.put(ZonedDateTime.class, DataType.DATE_TIME);
         dataTypes.put(OffsetDateTime.class, DataType.DATE_TIME);
+        dataTypes.put(Duration.class, DataType.DURATION);
 
         // various
         dataTypes.put(boolean.class, DataType.BOOLEAN);

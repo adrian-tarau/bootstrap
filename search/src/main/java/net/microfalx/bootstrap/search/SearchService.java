@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.bootstrap.content.ContentService;
-import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
+import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.lang.*;
@@ -9,6 +9,7 @@ import net.microfalx.metrics.Matrix;
 import net.microfalx.metrics.Timer;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
+import net.microfalx.threadpool.ThreadPool;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -21,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.RetryListener;
@@ -68,8 +68,7 @@ public class SearchService implements InitializingBean {
     @Autowired
     private ContentService contentService;
 
-    private volatile AsyncTaskExecutor taskExecutor;
-    private volatile AsyncTaskExecutor indexReaderExecutor;
+    private volatile ThreadPool threadPool;
 
     private final Object lock = new Object();
     private volatile SearchHolder searchHolder;
@@ -88,21 +87,8 @@ public class SearchService implements InitializingBean {
      *
      * @return a non-null instance
      */
-    public AsyncTaskExecutor getTaskExecutor() {
-        if (taskExecutor == null) taskExecutor = TaskExecutorFactory.create("search").createExecutor();
-        return taskExecutor;
-    }
-
-    /**
-     * Returns the executor used by to process an index.
-     *
-     * @return a non-null instance
-     */
-    private AsyncTaskExecutor getIndexReaderExecutor() {
-        if (indexReaderExecutor == null) {
-            indexReaderExecutor = TaskExecutorFactory.create("searcher").createExecutor();
-        }
-        return indexReaderExecutor;
+    public ThreadPool getThreadPool() {
+        return threadPool;
     }
 
     /**
@@ -113,7 +99,7 @@ public class SearchService implements InitializingBean {
     public Collection<FieldStatistics> getFieldStatistics() {
         if (millisSince(lastFieldLoad) > ONE_HOUR && fieldLoadingFlag.compareAndSet(false, true)) {
             try {
-                getTaskExecutor().submit(new ExtractFieldStatsWorker());
+                getThreadPool().submit(new ExtractFieldStatsWorker());
             } catch (Exception e) {
                 fieldLoadingFlag.set(false);
             }
@@ -585,11 +571,11 @@ public class SearchService implements InitializingBean {
     }
 
     private void initTaskExecutor() {
-        taskExecutor = TaskExecutorFactory.create().setSuffix("search").createExecutor();
+        threadPool = ThreadPoolFactory.create("search").setRatio(0.5f).create();
     }
 
     private void initTasks() {
-        taskExecutor.submit(() -> getFieldStatistics());
+        threadPool.submit(() -> getFieldStatistics());
     }
 
     private String getI18n(String suffix) {
@@ -631,7 +617,7 @@ public class SearchService implements InitializingBean {
             File indexDirectory = getIndexDirectory();
             directory = new NIOFSDirectory(indexDirectory.toPath(), NativeFSLockFactory.getDefault());
             indexReader = SEARCH_METRICS.timeCallable("Open Reader", () -> DirectoryReader.open(directory));
-            indexSearcher = SEARCH_METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(indexReader, getIndexReaderExecutor()));
+            indexSearcher = SEARCH_METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(indexReader, getThreadPool()));
         }
 
         public IndexReader getIndexReader() {

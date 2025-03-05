@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping(value = "/support/thread")
-@DataSet(model = Thread.class)
+@DataSet(model = Thread.class, defaultQuery = "state = 'Runnable'")
 @Help("support/thread")
 public class ThreadController extends SystemDataSetController<Thread, Long> {
 }

@@ -255,6 +255,11 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
         DATE_TIME(false, true),
 
         /**
+         * A date/time.
+         */
+        DURATION(false, false),
+
+        /**
          * An enum
          */
         ENUM(false, false),
@@ -272,7 +277,12 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
         /**
          * Another model
          */
-        MODEL(false, false);
+        MODEL(false, false),
+
+        /**
+         * An unmapped object
+         */
+        OBJECT(false, false);
 
         private final boolean numeric;
         private final boolean temporal;

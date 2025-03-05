@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.controller.support.pool;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.dataset.model.NamedIdentityAware;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.TextUtils;
@@ -28,13 +29,20 @@ public class Thread extends NamedIdentityAware<Long> {
     private java.lang.Thread.State state;
 
     @Position(8)
+    @Label(value = "In Native")
+    @Description("Indicates whether the thread is running native code")
+    private boolean inNative;
+
+    @Position(9)
     @Label(value = "Carrier")
     @Description("The thread which carries a virtual thread")
+    @Filterable
     private String carrier;
 
     @Position(20)
     @Label(value = "Call Stack")
     @Description("The top of the call stack (what is executed right now)")
+    @Filterable
     private String executing;
 
     @Position(50)
@@ -54,6 +62,7 @@ public class Thread extends NamedIdentityAware<Long> {
         model.setName(thread.getName());
         model.setCarrier(getCarrierThreadName(thread));
         model.setVirtual(thread.isVirtual());
+        model.setInNative(ThreadUtils.isInNative(thread));
         model.setState(thread.getState());
         model.setThreadGroup(thread.getThreadGroup() != null ? thread.getThreadGroup().getName() : null);
         model.setClassName(ClassUtils.getCompactName(thread));

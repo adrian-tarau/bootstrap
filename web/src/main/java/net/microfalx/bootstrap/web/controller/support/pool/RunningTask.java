@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.controller.support.pool;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Label;
 import net.microfalx.lang.annotation.Name;
@@ -28,11 +29,13 @@ public class RunningTask extends AbstractTask {
     @Position(32)
     @Label(value = "Name", group = "Thread")
     @Description("The name of the thread executing the task. If a virtual thread and the carrier/native thread is attached, it will be displayed in squared brackets")
+    @Filterable
     private String threadName;
 
     @Position(33)
     @Label(value = "Call Stack", group = "Thread")
     @Description("The top of the call stack (what is executed right now)")
+    @Filterable
     private String executing;
 
     public static RunningTask from(TaskDescriptor taskDescriptor) {

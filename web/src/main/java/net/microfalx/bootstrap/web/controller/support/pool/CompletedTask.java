@@ -47,7 +47,7 @@ public class CompletedTask extends AbstractTask {
         model.setStartedAt(taskDescriptor.getStartedAt());
         model.setDuration(taskDescriptor.getDuration());
         if (taskDescriptor.getThrowable() != null) {
-            model.setThrowableClassName(ClassUtils.getName(taskDescriptor.getThrowable()));
+            model.setThrowableClassName(ClassUtils.getCompactName(taskDescriptor.getThrowable()));
             model.setThrowableStackTrace(ExceptionUtils.getStackTrace(taskDescriptor.getThrowable()));
         }
         return model;

@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.controller.support.pool;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.dataset.model.NamedIdentityAware;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.annotation.*;
@@ -23,6 +24,7 @@ public abstract class AbstractTask extends NamedIdentityAware<Long> {
     @Position(20)
     @Label(value = "Class Name")
     @Description("The name of the class")
+    @Filterable
     private String className;
 
     @Position(20)

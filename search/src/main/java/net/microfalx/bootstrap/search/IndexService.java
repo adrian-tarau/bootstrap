@@ -2,10 +2,11 @@ package net.microfalx.bootstrap.search;
 
 import jakarta.annotation.PreDestroy;
 import net.microfalx.bootstrap.content.ContentService;
-import net.microfalx.bootstrap.core.async.TaskExecutorFactory;
+import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
+import net.microfalx.threadpool.ThreadPool;
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.AlreadyClosedException;
@@ -16,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.RetryListener;
@@ -57,7 +57,7 @@ public class IndexService implements InitializingBean {
     @Autowired
     private ContentService contentService;
 
-    private volatile AsyncTaskExecutor taskExecutor;
+    private volatile ThreadPool threadPool;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Lock rlock = lock.readLock();
@@ -65,13 +65,13 @@ public class IndexService implements InitializingBean {
     private volatile IndexHolder index;
 
     /**
-     * Returns the executor used by the index service.
+     * Returns the thread pool used by the index service.
      *
      * @return a non-null instance
      */
-    public AsyncTaskExecutor getTaskExecutor() {
-        if (taskExecutor == null) initTaskExecutor();
-        return taskExecutor;
+    public ThreadPool getThreadPool() {
+        if (threadPool == null) initTaskExecutor();
+        return threadPool;
     }
 
     /**
@@ -383,7 +383,7 @@ public class IndexService implements InitializingBean {
     }
 
     private void initTaskExecutor() {
-        taskExecutor = TaskExecutorFactory.create().setSuffix("index").createExecutor();
+        threadPool = ThreadPoolFactory.create("Indexer").create();
     }
 
     private boolean isItemValid(Document document) {
