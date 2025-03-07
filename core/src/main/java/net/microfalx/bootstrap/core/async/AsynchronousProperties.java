@@ -20,7 +20,7 @@ public class AsynchronousProperties {
     private int coreThreads = 5;
     private int maximumThreads = 8;
     private int queueCapacity = 50;
-    private boolean virtual = true;
+    private boolean virtual = false;
     private String prefix = "Boot";
     private String suffix;
     private boolean waitForTasks = true;

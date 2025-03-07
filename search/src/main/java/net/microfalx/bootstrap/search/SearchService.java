@@ -571,7 +571,7 @@ public class SearchService implements InitializingBean {
     }
 
     private void initTaskExecutor() {
-        threadPool = ThreadPoolFactory.create("search").setRatio(0.5f).create();
+        threadPool = ThreadPoolFactory.create("Searcher").setRatio(0.5f).create();
     }
 
     private void initTasks() {
