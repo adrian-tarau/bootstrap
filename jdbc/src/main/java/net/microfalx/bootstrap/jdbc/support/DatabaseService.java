@@ -7,7 +7,8 @@ import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.lang.*;
-import net.microfalx.threadpool.Task;
+import net.microfalx.threadpool.AbstractCallable;
+import net.microfalx.threadpool.AbstractRunnable;
 import net.microfalx.threadpool.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +37,7 @@ import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ConcurrencyUtils.*;
-import static net.microfalx.lang.StringUtils.defaultIfEmpty;
-import static net.microfalx.lang.StringUtils.toIdentifier;
+import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.millisSince;
 
 /**
@@ -86,7 +86,7 @@ public class DatabaseService implements InitializingBean {
      *
      * @return a non-null instance
      */
-    public ThreadPool getTaskScheduler() {
+    public ThreadPool getThreadPool() {
         return coordinatorTaskExecutor;
     }
 
@@ -396,8 +396,8 @@ public class DatabaseService implements InitializingBean {
                     .withDescription("The application database"));
             registerDataSource(newDataSource);
         }
-        statementStore = storeService.registerStore(Store.Options.create("Database Statement"));
-        coordinatorTaskExecutor.scheduleWithFixedDelay(new ValidateDatabases(), Duration.ZERO, AVAILABILITY_INTERVAL.dividedBy(2));
+        statementStore = storeService.registerStore(Store.Options.create(joinNames("Database","Statement")));
+        coordinatorTaskExecutor.scheduleWithFixedDelay(new ValidateDatabases(), AVAILABILITY_INTERVAL.dividedBy(2));
     }
 
     private void initializeExecutor() {
@@ -450,17 +450,13 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractSnapshot implements Callable<Snapshot>, Task {
+    class ExtractSnapshot extends AbstractCallable<Snapshot> {
 
         private final Snapshot snapshot;
 
         ExtractSnapshot(Snapshot snapshot) {
             this.snapshot = snapshot;
-        }
-
-        @Override
-        public String getName() {
-            return "Extract Snapshot: " + snapshot.getDatabase().getName();
+            setName(joinNames("Extract Snapshot", snapshot.getDatabase().getName()));
         }
 
         @Override
@@ -476,7 +472,7 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class CloseDataSource implements Runnable {
+    class CloseDataSource extends AbstractRunnable {
 
         private final DataSource dataSource;
 
@@ -494,7 +490,7 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class CloseDatabase implements Runnable {
+    class CloseDatabase extends AbstractRunnable {
 
         private final Database database;
 
@@ -512,17 +508,13 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ValidateDatabase implements Runnable, Task {
+    class ValidateDatabase extends AbstractRunnable {
 
         private final Database database;
 
         public ValidateDatabase(Database database) {
             this.database = database;
-        }
-
-        @Override
-        public String getName() {
-            return "Validate: " + database.getName();
+            setName(joinNames("Validate", database.getName()));
         }
 
         @Override
@@ -535,11 +527,10 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ValidateDatabases implements Runnable, Task {
+    class ValidateDatabases extends AbstractRunnable {
 
-        @Override
-        public String getName() {
-            return "Validate";
+        public ValidateDatabases() {
+            setName(joinNames("Validate", "Databases"));
         }
 
         @Override
@@ -550,7 +541,11 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractSessions implements Callable<Map<String, Session>> {
+    class ExtractSessions extends AbstractCallable<Map<String, Session>> {
+
+        public ExtractSessions() {
+            setName("Extract Sessions");
+        }
 
         @Override
         public Map<String, Session> call() throws Exception {
@@ -573,7 +568,11 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractTransactions implements Callable<Map<String, Transaction>> {
+    class ExtractTransactions extends AbstractCallable<Map<String, Transaction>> {
+
+        public ExtractTransactions() {
+            setName("Extract Transactions");
+        }
 
         @Override
         public Map<String, Transaction> call() throws Exception {
@@ -596,7 +595,7 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractStatements implements Callable<Collection<Statement>> {
+    class ExtractStatements extends AbstractCallable<Collection<Statement>> {
 
         private final LocalDateTime start;
         private final LocalDateTime end;
@@ -604,6 +603,7 @@ public class DatabaseService implements InitializingBean {
         public ExtractStatements(LocalDateTime start, LocalDateTime end) {
             this.start = start;
             this.end = end;
+            setName("Extract Statements");
         }
 
         @Override
@@ -626,17 +626,13 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractSessionsForDatabase implements Callable<Collection<Session>>, Task {
+    class ExtractSessionsForDatabase extends AbstractCallable<Collection<Session>> {
 
         private final Database database;
 
         public ExtractSessionsForDatabase(Database database) {
             this.database = database;
-        }
-
-        @Override
-        public String getName() {
-            return "Extract Sessions: " + database.getName();
+            setName(joinNames("Extract Sessions", database.getName()));
         }
 
         @Override
@@ -665,17 +661,13 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractTransactionsForDatabase implements Callable<Collection<Transaction>>, Task {
+    class ExtractTransactionsForDatabase extends AbstractCallable<Collection<Transaction>> {
 
         private final Database database;
 
         public ExtractTransactionsForDatabase(Database database) {
             this.database = database;
-        }
-
-        @Override
-        public String getName() {
-            return "Extract Transactions: " + database.getName();
+            setName(joinNames("Extract Transactions", database.getName()));
         }
 
         @Override
@@ -705,7 +697,7 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class ExtractStatementsForDatabase implements Callable<Collection<Statement>>, Task {
+    class ExtractStatementsForDatabase extends AbstractCallable<Collection<Statement>> {
 
         private final LocalDateTime start;
         private final LocalDateTime end;
@@ -715,11 +707,7 @@ public class DatabaseService implements InitializingBean {
             this.database = database;
             this.start = start;
             this.end = end;
-        }
-
-        @Override
-        public String getName() {
-            return "Extract Statements: " + database.getName();
+            setName(joinNames("Extract Statements", database.getName()));
         }
 
         @Override

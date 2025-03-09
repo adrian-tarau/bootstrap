@@ -10,11 +10,18 @@ import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.threadpool.TaskDescriptor;
 
+import java.time.Duration;
+
 @Getter
 @Setter
 @ToString(callSuper = true)
 @Name("Running Tasks")
 public class RunningTask extends AbstractTask {
+
+    @Position(21)
+    @Label(value = "Duration")
+    @Description("The execution duration")
+    private Duration duration;
 
     @Position(30)
     @Label(value = "Virtual", group = "Thread")
@@ -41,6 +48,7 @@ public class RunningTask extends AbstractTask {
     public static RunningTask from(TaskDescriptor taskDescriptor) {
         RunningTask model = new RunningTask();
         AbstractTask.update(model, taskDescriptor);
+        model.setDuration(taskDescriptor.getDuration());
         java.lang.Thread thread = taskDescriptor.getThread();
         model.setState(java.lang.Thread.State.WAITING);
         if (thread != null) {

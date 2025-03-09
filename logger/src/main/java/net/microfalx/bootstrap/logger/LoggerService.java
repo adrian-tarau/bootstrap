@@ -12,14 +12,13 @@ import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.threadpool.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.net.InetAddress;
@@ -51,10 +50,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     private LoggerProperties properties;
 
     @Autowired
-    private TaskScheduler taskScheduler;
-
-    @Autowired
-    private AsyncTaskExecutor taskExecutor;
+    private ThreadPool threadPool;
 
     private String hostname;
 
@@ -212,7 +208,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     }
 
     private void initializeWorkers() {
-        taskExecutor.submit(new AcknowledgeAlertsTask());
+        threadPool.submit(new AcknowledgeAlertsTask());
     }
 
     @Override

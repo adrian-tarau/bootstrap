@@ -37,13 +37,13 @@ import net.microfalx.metrics.Matrix;
 import net.microfalx.metrics.Series;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.StreamResource;
+import net.microfalx.threadpool.ThreadPool;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -94,7 +94,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private PreferenceService preferenceService;
 
     @Autowired
-    private AsyncTaskExecutor taskExecutor;
+    private ThreadPool threadPool;
 
     @Autowired(required = false)
     private PlatformTransactionManager transactionManager;
@@ -972,7 +972,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Collection<Chart> getFieldTrends(DataSet<M, Field<M>, ID> dataSet, Filter filter) {
         Set<String> trendFields = dataSet.getTrendFields();
-        Future<Map<String, HeatMap>> future = taskExecutor.submit(new TrendCallable<>(dataSet, filter, trendFields));
+        Future<Map<String, HeatMap>> future = threadPool.submit(new TrendCallable<>(dataSet, filter, trendFields));
         Collection<Chart> charts = new ArrayList<>();
         for (String trendField : trendFields) {
             int trendTermCount = dataSet.getTrendTermCount(trendField);

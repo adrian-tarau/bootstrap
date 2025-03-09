@@ -25,7 +25,7 @@ public class AsynchronousProperties {
     private String suffix;
     private boolean waitForTasks = true;
     private boolean removeOnCancel = true;
-    private Duration keepAlive = ofSeconds(5);
+    private Duration keepAlive = ofSeconds(60);
     private Duration awaitTermination = ofSeconds(30);
 
     public AsynchronousProperties setCoreThreads(int coreThreads) {

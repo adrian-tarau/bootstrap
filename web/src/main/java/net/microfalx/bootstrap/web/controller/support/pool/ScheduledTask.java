@@ -17,6 +17,11 @@ import java.time.Duration;
 @Name("Scheduled Tasks")
 public class ScheduledTask extends AbstractTask {
 
+    @Position(21)
+    @Label(value = "Periodic")
+    @Description("Indicates whether the task is a periodic task (executed on a schedule)")
+    private boolean periodic;
+
     @Position(30)
     @Label(value = "Strategy", group = "Settings")
     @Description("The scheduling strategy")
@@ -35,7 +40,7 @@ public class ScheduledTask extends AbstractTask {
     public static ScheduledTask from(TaskDescriptor taskDescriptor) {
         ScheduledTask model = new ScheduledTask();
         AbstractTask.update(model, taskDescriptor);
-        model.setPeriodic(true);
+        model.setPeriodic(taskDescriptor.isPeriodic());
         if (taskDescriptor instanceof net.microfalx.threadpool.ScheduledTask scheduledTaskTask) {
             model.setStrategy(scheduledTaskTask.getStrategy());
             model.setDelay(scheduledTaskTask.getInitialDelay());

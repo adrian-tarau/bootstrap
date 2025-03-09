@@ -7,25 +7,27 @@ import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.rocksdb.RocksDbManager;
+import net.microfalx.threadpool.AbstractRunnable;
+import net.microfalx.threadpool.ThreadPool;
+import org.apache.commons.lang3.ArrayUtils;
 import org.rocksdb.RocksDB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FormatterUtils.formatDuration;
-import static net.microfalx.lang.StringUtils.toIdentifier;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * A service responsible for managing a collection of {@link Store}.
@@ -39,7 +41,7 @@ public class StoreService implements InitializingBean, DisposableBean {
     private ResourceService resourceService;
 
     @Autowired
-    private TaskScheduler taskScheduler;
+    private ThreadPool threadPool;
 
     @Autowired
     private StoreProperties properties;
@@ -97,14 +99,12 @@ public class StoreService implements InitializingBean, DisposableBean {
      * @return a non-null instance
      */
     public Collection<Store<?, ?>> getStores() {
-        return Collections.unmodifiableCollection(stores.values());
+        return unmodifiableCollection(stores.values());
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        taskScheduler.scheduleAtFixedRate(new MaintenanceTask(), Duration.ofSeconds(5));
-        taskScheduler.scheduleAtFixedRate(new CleanupTask(), Duration.ofHours(1));
-        taskScheduler.scheduleAtFixedRate(new DiscoverTask(), Duration.ofMinutes(1));
+        initTasks();
     }
 
     @Override
@@ -120,14 +120,26 @@ public class StoreService implements InitializingBean, DisposableBean {
         }
     }
 
-    class DiscoverTask implements Runnable {
+    private void initTasks() {
+        threadPool.scheduleAtFixedRate(new MaintenanceTask(), Duration.ofSeconds(5));
+        threadPool.scheduleAtFixedRate(new CleanupTask(), Duration.ofHours(1));
+        threadPool.scheduleAtFixedRate(new DiscoverTask(), Duration.ofMinutes(1));
+    }
+
+    class DiscoverTask extends AbstractRunnable {
+
+        public DiscoverTask() {
+            setName(joinNames("Store", "Discover"));
+        }
 
         private void register(File file, RocksDB rocksDB) {
             String id = "resource_" + Hashing.hash(file.getAbsolutePath());
             synchronized (stores) {
                 if (!stores.containsKey(id)) {
                     LOGGER.info("Register resource store from " + file);
-                    Store.Options options = Store.Options.create(id, "Resource " + StringUtils.capitalizeWords(file.getName()));
+                    String[] names = StringUtils.split(capitalizeWords(file.getName()), " ");
+                    names = ArrayUtils.insert(0, names, "Resource");
+                    Store.Options options = Store.Options.create(id, joinNames(names));
                     stores.put(id, new StoreImpl<>(options, FileResource.directory(file), rocksDB));
                 }
             }
@@ -143,7 +155,11 @@ public class StoreService implements InitializingBean, DisposableBean {
         }
     }
 
-    class MaintenanceTask implements Runnable {
+    class MaintenanceTask extends AbstractRunnable {
+
+        public MaintenanceTask() {
+            setName(joinNames("Store", "Maintenance"));
+        }
 
         @Override
         public void run() {
@@ -159,7 +175,11 @@ public class StoreService implements InitializingBean, DisposableBean {
         }
     }
 
-    class CleanupTask implements Runnable {
+    class CleanupTask extends AbstractRunnable {
+
+        public CleanupTask() {
+            setName(joinNames("Store", "Cleanup"));
+        }
 
         @Override
         public void run() {

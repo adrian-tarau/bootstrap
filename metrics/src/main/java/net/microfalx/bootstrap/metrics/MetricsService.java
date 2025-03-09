@@ -14,8 +14,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -33,12 +31,6 @@ public class MetricsService extends ApplicationContextSupport implements Initial
 
     @Autowired(required = false)
     private ResourceService resourceService;
-
-    @Autowired
-    private AsyncTaskExecutor taskExecutor;
-
-    @Autowired
-    private TaskScheduler taskScheduler;
 
     /**
      * Returns registered repositories.
@@ -93,7 +85,7 @@ public class MetricsService extends ApplicationContextSupport implements Initial
 
     private void initializeMetricsCollectors() {
         LOGGER.debug("Initialize metrics collectors");
-        ThreadPool threadPool = ThreadPool.builder("Metrics").virtual(true).maximumSize(5).build();
+        ThreadPool threadPool = ThreadPool.builder("Metrics").maximumSize(5).build();
         try {
             VirtualMachineMetrics.get().useDisk("jvm").setExecutor(threadPool).start();
         } catch (Exception e) {

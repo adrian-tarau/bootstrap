@@ -1,9 +1,6 @@
 package net.microfalx.bootstrap.broker;
 
-import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.Nameable;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -15,7 +12,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 /**
  * A topic for a broker.
  */
-public final class Topic implements Identifiable<String>, Nameable, Cloneable {
+public final class Topic implements Identifiable<String>, Nameable, Descriptable, Cloneable {
 
     private final String id;
     private final Broker broker;
@@ -57,6 +54,11 @@ public final class Topic implements Identifiable<String>, Nameable, Cloneable {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return getName() + " on " + broker.getName();
     }
 
     /**
