@@ -154,7 +154,7 @@ public final class ApplicationService implements InitializingBean {
     }
 
     /**
-     * Returns all asses bundles.
+     * Returns all asset bundles.
      *
      * @return the resource group with the newest version
      */

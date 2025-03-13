@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.web.application;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import net.microfalx.bootstrap.web.application.annotation.SystemTheme;
 import net.microfalx.bootstrap.web.application.annotation.Theme;
 import net.microfalx.lang.AnnotationUtils;
@@ -26,6 +27,7 @@ public class ApplicationMvcConfig implements WebMvcConfigurer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationMvcConfig.class);
 
     private static final String THEME_QUERY_PARAMETER = "_theme";
+    private static final String THEME_SESSION_ATTR = "_theme";
 
     @Autowired
     private Application application;
@@ -44,8 +46,13 @@ public class ApplicationMvcConfig implements WebMvcConfigurer {
         @Override
         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
             Class<?> handlerClass = null;
+            HttpSession session = request.getSession(false);
             if (handler instanceof HandlerMethod) handlerClass = ((HandlerMethod) handler).getBeanType();
             String themeId = HttpMethod.valueOf(request.getMethod()) == HttpMethod.GET ? request.getParameter(THEME_QUERY_PARAMETER) : null;
+            if (StringUtils.isNotEmpty(themeId)) {
+                if (session != null) session.setAttribute(THEME_SESSION_ATTR, themeId);
+            }
+            if (session != null) themeId = (String) session.getAttribute(THEME_SESSION_ATTR);
             boolean system = false;
             if (StringUtils.isEmpty(themeId)) {
                 Theme themeAnnot = handlerClass != null ? AnnotationUtils.getAnnotation(handlerClass, Theme.class) : null;
