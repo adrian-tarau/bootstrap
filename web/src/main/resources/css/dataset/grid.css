@@ -30,6 +30,12 @@
 /**
     Data Set Attributes
  */
+
+.dataset-attributes .badge {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+}
+
 .dataset-attributes .name-default {
     color: #fff !important;
     background-color: #6c757d !important;

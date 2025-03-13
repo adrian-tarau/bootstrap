@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
+<head th:replace="~{fragments/page :: header}"></head>
+<body class="login-page bg-body-secondary">
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="text-center mb-1">
+            <a href="." class="navbar-brand navbar-brand-autodark">
+                <h1 th:text="${#application.name}" class="navbar-brand-image"></h1>
+            </a>
+        </div>
+        <div class="card card-md">
+            <div class="card-body">
+                <h2 class="h2 text-center mb-4">Login to your account</h2>
+                <form th:action="@{/login/auth}" method="post" novalidate>
+                    <div class="alert alert-important alert-danger" role="alert" th:if="${message}">
+                        <span th:text="${message}"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input name="username" type="email" class="form-control" placeholder=""  autocomplete="username" component:tooltip-text="The user name or the email address"/>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">
+                            Password
+                            <span class="form-label-description">
+                                <a th:href="@{/login/forgot-password}">I forgot password</a>
+                            </span>
+                        </label>
+                        <div class="input-group input-group-flat">
+                            <input  name="password" type="password" class="form-control" placeholder="" autocomplete="current-password" component:tooltip-text="The user's password" />
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-check">
+                            <input name="remember-me" type="checkbox" class="form-check-input" />
+                            <span class="form-check-label">Remember me on this device</span>
+                        </label>
+                    </div>
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary w-100">Sign in</button>
+                    </div>
+                </form>
+            </div>
+            <th:block th:if="${settings.social}">
+                <div class="hr-text">or</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <a href="#" class="btn btn-4 btn-google w-100">
+                                <i class="bi bi-google me-2"></i> Google
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="#" class="btn btn-4 btn-facebook w-100">
+                                <i class="bi bi-microsoft me-2"></i> Microsoft
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+        </div>
+        <div th:if="${settings.register}" class="text-center text-secondary mt-3">Don't have account yet? <a th:href="@{/login/register}" tabindex="-1">Sign up</a></div>
+    </div>
+</div>
+<div th:replace="~{fragments/page :: code}"/>
+</body>
+</html>

@@ -199,6 +199,11 @@
 
         <dependency>
             <groupId>net.microfalx.webjar</groupId>
+            <artifactId>webjar-bootstrap-theme-tabler</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.webjar</groupId>
             <artifactId>webjar-code-ace</artifactId>
         </dependency>
 
