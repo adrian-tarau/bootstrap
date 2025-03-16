@@ -80,13 +80,13 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <bom.version>1.0.12</bom.version>
-        <lang.version>0.8.3-SNAPSHOT</lang.version>
-        <resource.version>0.8.3-SNAPSHOT</resource.version>
-        <metrics.version>0.8.3-SNAPSHOT</metrics.version>
-        <jvm.version>0.8.3-SNAPSHOT</jvm.version>
+        <bom.version>1.0.11</bom.version>
+        <lang.version>1.0.1-SNAPSHOT</lang.version>
+        <resource.version>1.0.0-SNAPSHOT</resource.version>
+        <metrics.version>1.0.1-SNAPSHOT</metrics.version>
+        <jvm.version>1.0.1-SNAPSHOT</jvm.version>
         <jdbcpool.version>0.8.0-SNAPSHOT</jdbcpool.version>
-        <threadpool.version>0.8.0-SNAPSHOT</threadpool.version>
+        <threadpool.version>0.8.1-SNAPSHOT</threadpool.version>
         <webjar.version>0.8.0-SNAPSHOT</webjar.version>
         <spring.boot.version>3.4.2</spring.boot.version>
     </properties>
