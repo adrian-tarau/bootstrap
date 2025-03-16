@@ -96,7 +96,7 @@
             </ul>
             <div class="dataset-drop-zone"></div>
             <div class="me-2">
-                <span id="page_info" class="badge rounded-pill bg-success p-2" th:text="${#dataset.getPageInfo()}"
+                <span id="page_info" class="badge rounded-pill bg-success text-white p-2" th:text="${#dataset.getPageInfo()}"
                     component:tooltip-text="Displays the number of pages and number of records available using the current filter"></span>
                 <button class="btn btn-primary btn-sm" type="button" th:attr="onclick=|DataSet.trend()|" th:if="${hasTrend}"><i class="fa-solid fa-arrow-trend-up"></i></button>
             </div>

@@ -92,7 +92,7 @@
     <form role="search" th:attr="onsubmit='Application.Search.query(); return false'">
         <div class="input-group">
             <button th:unless="${#lists.isEmpty(queryHistory)}"
-                    class="btn btn-sm btn-outline-secondary dropdown-toggle btn-search" type="button"
+                    class="btn btn-sm dropdown-toggle btn-outline-secondary btn-search btn-search-history" type="button"
                     data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-clock-rotate-left"></i>
             </button>
             <ul class="dropdown-menu">
@@ -104,7 +104,7 @@
             <input id="search" class="form-control" autocomplete="off" style="width:400px"
                    placeholder="Search..." th:value="${query}" component:tooltip="${#dataset.getSearchTooltip()}"
                    component:tooltip-placement="right" component:tooltip-delay="[2000, 2000]">
-            <button class="btn btn-sm btn-outline-secondary btn-search" type="button"
+            <button class="btn btn-sm btn-outline-secondary btn-search btn-search-clear" type="button"
                     th:onclick="Application.Search.clear()"><i class="fa-solid fa-xmark"></i></button>
         </div>
     </form>

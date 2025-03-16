@@ -189,6 +189,11 @@
 
         <dependency>
             <groupId>net.microfalx.webjar</groupId>
+            <artifactId>webjar-bootstrap-theme-default</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.webjar</groupId>
             <artifactId>webjar-bootstrap-theme-adminlte</artifactId>
         </dependency>
 

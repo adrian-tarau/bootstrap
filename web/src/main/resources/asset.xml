@@ -69,4 +69,20 @@
         <asset path="alert.js" type="script"/>
     </asset-bundle>
 
+    <!-- Themes -->
+
+    <update-asset-bundle id="bootstrap_default">
+        <asset path="theme/bootstrap.css" type="stylesheet"></asset>
+    </update-asset-bundle>
+
+    <update-asset-bundle id="bootstrap_adminlte">
+        <asset path="theme/bootstrap.css" type="stylesheet"></asset>
+        <asset path="theme/adminlte.css" type="stylesheet"></asset>
+    </update-asset-bundle>
+
+    <update-asset-bundle id="bootstrap_tabler">
+        <asset path="theme/bootstrap.css" type="stylesheet"></asset>
+        <asset path="theme/tabler.css" type="stylesheet"></asset>
+    </update-asset-bundle>
+
 </assets>

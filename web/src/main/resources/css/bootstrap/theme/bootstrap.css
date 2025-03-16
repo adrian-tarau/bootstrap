@@ -18,7 +18,12 @@
     --bs-dropdown-zindex: 2000 !important;
 }
 
-.btn-search {
+.btn-search-history {
+    min-width: 40px;
+}
+
+.btn-search-clear {
+    min-width: 32px;
 }
 
 @media (min-width: 992px) {
