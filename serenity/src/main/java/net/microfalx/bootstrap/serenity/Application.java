@@ -1,11 +1,16 @@
 package net.microfalx.bootstrap.serenity;
 
+import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.lang.ThreadUtils;
+import net.microfalx.lang.UriUtils;
 import net.serenitybdd.annotations.Step;
 import net.serenitybdd.screenplay.*;
 import net.serenitybdd.screenplay.ensure.Ensure;
+import net.serenitybdd.screenplay.waits.WaitUntil;
 import org.hamcrest.core.IsAnything;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +25,37 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class Application {
 
     private static Duration timeout = Duration.ofSeconds(5);
+    private static URI uri = URI.create("http://localhost:8080");
+
+    /**
+     * Returns the home page of the application
+     *
+     * @return a non-null instance
+     */
+    public static URI getUri() {
+        return uri;
+    }
+
+    /**
+     * Changes the home page of the application.
+     *
+     * @param uri the new home page
+     */
+    public static void setUri(URI uri) {
+        requireNonNull(uri);
+        Application.uri = uri;
+    }
+
+    /**
+     * Returns sn URI for an application resource.
+     *
+     * @param path the path
+     * @return a non-null instance
+     */
+    public static URI getUri(String path) {
+        ArgumentUtils.requireNonNull(path);
+        return UriUtils.appendPath(uri, path);
+    }
 
     /**
      * Returns an interaction which will wait until the application is ready.
@@ -27,7 +63,8 @@ public class Application {
      * @return a non-null instance
      */
     public static Interaction waitUntilReady() {
-        return null;
+        String script = "return Application.isReady()";
+        return WaitUntil.the(ExpectedConditions.jsReturnsValue(script));
     }
 
     /**
@@ -137,9 +174,8 @@ public class Application {
      * @return a non-null instance
      */
     public static Question<Boolean> isLogin() {
-        return Question.about("is login page displayed").answeredBy(actor -> {
-            return null;
-        });
+        return Question.about("is login page displayed")
+                .answeredBy(Question.not(User.isAuthenticated()));
     }
 
     /**
@@ -157,9 +193,8 @@ public class Application {
      * @return a non-null instance
      */
     public static Question<Boolean> isError() {
-        return Question.about("is error page").answeredBy(actor -> {
-            return null;
-        });
+        return Question.about("is error page")
+                .answeredBy(actor -> false);
     }
 
     /**
@@ -168,9 +203,9 @@ public class Application {
      * @return a non-null instance
      */
     public static Question<Boolean> isAny() {
-        return Question.about("is a application page  displayed").answeredBy(actor -> {
-            return null;
-        });
+        return Question.about("is a application page  displayed")
+                .answeredBy(actor -> !isError().answeredBy(actor) || !isLogin()
+                        .answeredBy(actor));
     }
 
     private static void noop() {

@@ -81,6 +81,14 @@ Application.open = function (path, params, newWindow) {
 }
 
 /**
+ * Returns whether the application is ready.
+ * @returns true if ready, false otherwise
+ */
+Application.isReady = function () {
+    return true;
+}
+
+/**
  * Reloads the current page.
  */
 Application.reload = function () {
