@@ -66,6 +66,7 @@
         <module>template</module>
         <module>dataset</module>
         <module>web</module>
+        <module>serenity</module>
         <module>security</module>
         <module>demo</module>
         <module>deploy</module>
