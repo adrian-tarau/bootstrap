@@ -45,14 +45,15 @@ User.getEmail = function () {
  * @return {boolean} true if the user has the role, false otherwise
  */
 User.hasRole = function (role) {
+    Utils.requireNonNull(role);
     if (!this.roles) {
         this.roles = {};
         let existingRoles = this.getData().roles || {};
         for (const existingRole of existingRoles) {
-            this.roles[existingRole] = 1;
+            this.roles[existingRole.toUpperCase()] = 1;
         }
     }
-    return this.roles[role] === 1;
+    return this.roles[role.toUpperCase()] === 1;
 }
 
 /**
