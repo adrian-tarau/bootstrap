@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.web.template;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.search.SearchUtils;
 import net.microfalx.bootstrap.web.application.ApplicationService;
@@ -7,8 +9,13 @@ import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.container.WebContainerRequest;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.template.tools.LinkTool;
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.TextUtils;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.IProcessor;
@@ -18,6 +25,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
@@ -50,6 +58,33 @@ public class ApplicationDialect extends AbstractProcessorDialect {
         return processors;
     }
 
+    private static UserInfo getCurrentUser() {
+        UserInfo userInfo = new UserInfo();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        userInfo.userName = "anonymous";
+        userInfo.name = "Anonymous";
+        userInfo.authenticated = authentication != null && authentication.isAuthenticated();
+        if (userInfo.authenticated) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof UserDetails userDetails) {
+                userInfo.userName = userDetails.getUsername();
+                userInfo.name = authentication.getName();
+                userInfo.roles.addAll(authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority).collect(Collectors.toSet()));
+            }
+        }
+        return userInfo;
+    }
+
+    private static String getCurrentUserAsJson() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.writeValueAsString(getCurrentUser());
+        } catch (JsonProcessingException e) {
+            return ExceptionUtils.throwException(e);
+        }
+    }
+
     private abstract class BaseTagProcessor extends AbstractElementTagProcessor {
 
         public BaseTagProcessor(String elementName) {
@@ -75,6 +110,7 @@ public class ApplicationDialect extends AbstractProcessorDialect {
             builder.append("\nconst APP_REQUEST_QUERY=").append(linkTool.toJson(linkTool.getQuery())).append(";");
             String timeZone = containerRequest.hasTimeZone() ? containerRequest.getTimeZone().getId() : EMPTY_STRING;
             builder.append("\nconst APP_TIME_ZONE=\"").append(timeZone).append("\";");
+            builder.append("\nconst APP_USER=").append(getCurrentUserAsJson()).append(";");
             String filterableOperator = defaultIfEmpty(dataSetTool.getFilterableOperator(), SearchUtils.DEFAULT_FILTER_OPERATOR);
             builder.append("\nconst DATASET_FILTERABLE_OPERATOR=\"").append(filterableOperator).append("\"");
             String filterableQuoteChar = defaultIfEmpty(dataSetTool.getFilterableQuoteChar(), String.valueOf(SearchUtils.DEFAULT_FILTER_QUOTE_CHAR));
@@ -89,4 +125,33 @@ public class ApplicationDialect extends AbstractProcessorDialect {
 
     private static String SCRIPT_START_TAG = "<script type=\"text/javascript\">";
     private static String SCRIPT_START_END = "</script>";
+
+    private static final class UserInfo {
+
+        private String userName;
+        private String name;
+        private String email;
+        private boolean authenticated;
+        private Set<String> roles = new HashSet<>();
+
+        public boolean isAuthenticated() {
+            return authenticated;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public Set<String> getRoles() {
+            return roles;
+        }
+    }
 }

@@ -33,7 +33,30 @@ Application.showWarnAlert = function (title, message) {
  * @param {String} message the message to display, it can contain HTML tags
  */
 Application.showErrorAlert = function (title, message) {
+    Application.errors = Application.errors || [];
+    Application.errors.push({
+        title: title,
+        message: message,
+    })
     Application.showAlert(title, message, ALERT_TYPE_ERROR);
+}
+
+/**
+ * Returns an array with application errors.
+ *
+ * @return {Object[]} the errors
+ */
+Application.getErrors = function () {
+    return this.errors || [];
+}
+
+/**
+ * Returns whether the application has (AJAX) errors.
+ *
+ * @return {boolean} true if it has errors, false otherwise
+ */
+Application.hasErrors = function () {
+    return this.getErrors().length > 0;
 }
 
 /**
