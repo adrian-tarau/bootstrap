@@ -6,8 +6,10 @@ import net.microfalx.lang.UriUtils;
 import net.serenitybdd.annotations.Step;
 import net.serenitybdd.screenplay.*;
 import net.serenitybdd.screenplay.ensure.Ensure;
+import net.serenitybdd.screenplay.questions.Presence;
 import net.serenitybdd.screenplay.waits.WaitUntil;
 import org.hamcrest.core.IsAnything;
+import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.net.URI;
@@ -175,7 +177,7 @@ public class Application {
      */
     public static Question<Boolean> isLogin() {
         return Question.about("is login page displayed")
-                .answeredBy(Question.not(User.isAuthenticated()));
+                .answeredBy(actor ->Presence.of(By.id("login")).answeredBy(actor));
     }
 
     /**
@@ -194,7 +196,7 @@ public class Application {
      */
     public static Question<Boolean> isError() {
         return Question.about("is error page")
-                .answeredBy(actor -> false);
+                .answeredBy(actor -> Presence.of(By.id("error")).answeredBy(actor));
     }
 
     /**
