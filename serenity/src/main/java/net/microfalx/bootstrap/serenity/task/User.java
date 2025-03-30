@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.serenity;
+package net.microfalx.bootstrap.serenity.task;
 
 import net.serenitybdd.screenplay.Performable;
 import net.serenitybdd.screenplay.Question;

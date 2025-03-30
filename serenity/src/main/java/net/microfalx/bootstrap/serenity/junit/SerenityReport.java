@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.serenity.extension;
+package net.microfalx.bootstrap.serenity.junit;
 
 import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.lang.StringUtils;

@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.serenity;
+package net.microfalx.bootstrap.serenity.task;
 
 import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.lang.ThreadUtils;
@@ -27,7 +27,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class Application {
 
     private static Duration timeout = Duration.ofSeconds(5);
-    private static URI uri = URI.create("http://localhost:8080");
+    private static URI uri;
 
     /**
      * Returns the home page of the application
@@ -56,6 +56,9 @@ public class Application {
      */
     public static URI getUri(String path) {
         ArgumentUtils.requireNonNull(path);
+        if (uri == null) {
+            uri = URI.create(System.getProperty("test.app.uri","http://localhost:8080"));
+        }
         return UriUtils.appendPath(uri, path);
     }
 
