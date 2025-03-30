@@ -77,13 +77,13 @@
             <div th:text="${#security.getName()}"></div>
         </div>
     </a>
-    <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+    <div id ="user" class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
         <a th:href="@{/user/settings}" class="dropdown-item">Settings</a>
         <a th:href="@{/user/messages}" class="dropdown-item">Messages</a>
         <a th:href="@{/user/profile}" class="dropdown-item">Profile</a>
         <th:block th:if="${#security.isAuthenticated()}">
             <div class="dropdown-divider"></div>
-            <a th:href="@{/logout}" class="dropdown-item">Logout</a>
+            <a th:href="@{/logout}" class="dropdown-item">Sign out</a>
         </th:block>
     </div>
 </div>

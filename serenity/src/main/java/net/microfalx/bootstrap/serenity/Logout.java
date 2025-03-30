@@ -2,6 +2,8 @@ package net.microfalx.bootstrap.serenity;
 
 import net.microfalx.bootstrap.serenity.task.Application;
 import net.serenitybdd.screenplay.Task;
+import net.serenitybdd.screenplay.actions.Click;
+import org.openqa.selenium.By;
 
 /**
  * An interaction regarding the application logout
@@ -26,7 +28,7 @@ public class Logout {
      */
     public static Task withButton() {
         return Task.where("{0} logout",
-                Application.open("logout"),
-                Application.checkLogin());
+                Click.on(By.id("user")),
+                Click.on(By.linkText("Sign out")));
     }
 }
