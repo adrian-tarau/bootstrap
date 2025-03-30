@@ -11,8 +11,15 @@ public class AuthenticationTest extends AbstractSystemTestCase {
     }
 
     @Test
-    void loginAsAdminAndLogout() {
+    void loginAsAdminAndLogoutWithLink() {
         loginAsAdmin();
+        toby.attemptsTo(Logout.withLink());
+    }
+
+    @Test
+    void loginAsAdminAndLogoutWithButton() {
+        loginAsAdmin();
+        toby.attemptsTo(Logout.withButton());
     }
 
     @Test

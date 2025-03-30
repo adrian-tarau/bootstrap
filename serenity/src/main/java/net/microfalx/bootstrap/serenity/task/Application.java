@@ -5,6 +5,7 @@ import net.microfalx.lang.ThreadUtils;
 import net.microfalx.lang.UriUtils;
 import net.serenitybdd.annotations.Step;
 import net.serenitybdd.screenplay.*;
+import net.serenitybdd.screenplay.actions.Open;
 import net.serenitybdd.screenplay.ensure.Ensure;
 import net.serenitybdd.screenplay.questions.Presence;
 import net.serenitybdd.screenplay.waits.WaitUntil;
@@ -82,7 +83,7 @@ public class Application {
     }
 
     /**
-     * Creates an application task which has all the validation performed after a series of steps
+     * Creates an application task which has all the validation performed after a series of steps.
      *
      * @param title the title of the task
      * @param steps the steps
@@ -107,6 +108,15 @@ public class Application {
      */
     public static Performable checkLogin() {
         return Ensure.that("login page", isLogin()).isTrue();
+    }
+
+    /**
+     * Creates an interaction which opens an application page.
+     *
+     * @return a non-null instance
+     */
+    public static Interaction open(String path) {
+        return Open.url(getUri(path).toASCIIString());
     }
 
     /**

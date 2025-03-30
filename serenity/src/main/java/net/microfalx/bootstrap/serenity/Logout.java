@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.serenity;
 
 import net.microfalx.bootstrap.serenity.task.Application;
 import net.serenitybdd.screenplay.Task;
-import net.serenitybdd.screenplay.actions.Open;
 
 /**
  * An interaction regarding the application logout
@@ -14,9 +13,20 @@ public class Logout {
      *
      * @return a non-null instance
      */
-    public static Task logout() {
+    public static Task withLink() {
         return Task.where("{0} logout",
-                Open.url(Application.getUri("logout").toASCIIString()),
+                Application.open("logout"),
+                Application.checkLogin());
+    }
+
+    /**
+     * Return a task that logout a user
+     *
+     * @return a non-null instance
+     */
+    public static Task withButton() {
+        return Task.where("{0} logout",
+                Application.open("logout"),
                 Application.checkLogin());
     }
 }
