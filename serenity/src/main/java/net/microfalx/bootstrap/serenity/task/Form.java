@@ -1,12 +1,21 @@
 package net.microfalx.bootstrap.serenity.task;
 
 import lombok.Getter;
+import net.microfalx.lang.ObjectUtils;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Interaction;
 import net.serenitybdd.screenplay.Question;
+import net.serenitybdd.screenplay.Task;
+import net.serenitybdd.screenplay.actions.Click;
+import net.serenitybdd.screenplay.actions.Enter;
+import net.serenitybdd.screenplay.ensure.Ensure;
+import net.serenitybdd.screenplay.questions.Attribute;
 import net.serenitybdd.screenplay.targets.Target;
 import net.serenitybdd.screenplay.targets.TargetBuilder;
 import org.openqa.selenium.By;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -26,6 +35,9 @@ public class Form implements Interaction {
      */
     @Getter
     private final Target button;
+
+    private final Map<String, Object> fieldsByNames = new LinkedHashMap<>();
+    private final Map<String, Object> fieldsByLabels = new LinkedHashMap<>();
 
     /**
      * Creates a form using a data set form.
@@ -68,8 +80,13 @@ public class Form implements Interaction {
      *
      * @return a non-null interaction
      */
-    public Interaction submit() {
-        return null;
+    public Task submit() {
+        return Application.task(
+                "{0} submits the form",
+                Ensure.that("form is present", isPresent()).isTrue(),
+                //Ensure.that("submit button", Enabled.of(button)).isTrue(),
+                Click.on(button)
+        );
     }
 
     /**
@@ -77,8 +94,12 @@ public class Form implements Interaction {
      *
      * @return a non-null interaction
      */
-    public Interaction fill() {
-        return null;
+    public Task fill() {
+        return Task.where("{0} fills in the form ",
+                Ensure.that("form is present", isPresent()).isTrue(),
+                new FillByNameInteraction(),
+                new FillByLabelInteraction()
+        );
     }
 
     /**
@@ -90,6 +111,7 @@ public class Form implements Interaction {
      */
     public Form fieldByName(String name, Object value) {
         requireNonNull(name);
+        fieldsByNames.put(name, value);
         return this;
     }
 
@@ -104,6 +126,7 @@ public class Form implements Interaction {
      */
     public Form fieldByLabel(String label, Object value) {
         requireNonNull(label);
+        fieldsByLabels.put(label, value);
         return this;
     }
 
@@ -113,11 +136,36 @@ public class Form implements Interaction {
      * @return a non-null instance
      */
     public Question<Boolean> isPresent() {
-        return null;
+        return form::isVisibleFor;
     }
 
     @Override
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(fill(), submit());
+    }
+
+    class FillByNameInteraction implements Interaction {
+
+        @Override
+        public <T extends Actor> void performAs(T actor) {
+            for (Map.Entry<String, Object> entry : fieldsByNames.entrySet()) {
+                actor.attemptsTo(Enter.theValue(ObjectUtils.toString(entry.getValue()))
+                        .into(By.name(entry.getKey())));
+            }
+        }
+    }
+
+    class FillByLabelInteraction implements Interaction {
+
+        @Override
+        public <T extends Actor> void performAs(T actor) {
+            for (Map.Entry<String, Object> entry : fieldsByLabels.entrySet()) {
+                Target field = form.find(Target.the("the label")
+                        .located(By.xpath("label[text()='" + entry.getKey() + "']")));
+                String fieldName = actor.asksFor(Attribute.of(field, "for"));
+                actor.attemptsTo(Enter.theValue(ObjectUtils.toString(entry.getValue()))
+                        .into(By.name(fieldName)));
+            }
+        }
     }
 }

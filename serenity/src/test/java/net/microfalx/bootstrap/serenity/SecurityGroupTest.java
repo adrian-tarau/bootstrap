@@ -23,9 +23,11 @@ public class SecurityGroupTest extends AbstractSystemTestCase {
 
     @Test
     void add() {
+        open();
         Form form = Form.create();
-        form.fieldByLabel("Name", "aaa")
-                .fieldByLabel("Description", "bbb");
+        form.fieldByLabel("Name", "Serenity Test")
+                .fieldByLabel("Enabled", true)
+                .fieldByLabel("Description", "A security group registered by Serenity");
         toby.attemptsTo(dataSet.add(form));
     }
 }

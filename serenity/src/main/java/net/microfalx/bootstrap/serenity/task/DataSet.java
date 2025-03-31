@@ -4,6 +4,7 @@ import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Interaction;
 import net.serenitybdd.screenplay.Question;
 import net.serenitybdd.screenplay.Task;
+import net.serenitybdd.screenplay.actions.Evaluate;
 import net.serenitybdd.screenplay.ensure.Ensure;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -46,15 +47,18 @@ public class DataSet implements Interaction {
      */
     public Task add(Form form) {
         return Application.task(
-                "{0} adds a new record to dataset '" + title + "'"
-
+                "{0} adds a new record to dataset '" + title + "'",
+                Evaluate.javascript("DataSet.add()"),
+                form.fill(),
+                form.submit(),
+                Ensure.that(Question.not(form.isPresent())).isTrue()
         );
     }
 
     /**
      * Creates an interaction to add a new record to the dataset.
      *
-     * @param id the identifier of the record being changed
+     * @param id   the identifier of the record being changed
      * @param form the fields changed during edit
      * @return a non-null instance
      */
