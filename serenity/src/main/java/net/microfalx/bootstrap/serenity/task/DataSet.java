@@ -44,7 +44,7 @@ public class DataSet implements Interaction {
      *
      * @return a non-null instance
      */
-    public Task add() {
+    public Task add(Form form) {
         return Application.task(
                 "{0} adds a new record to dataset '" + title + "'"
 
@@ -54,9 +54,11 @@ public class DataSet implements Interaction {
     /**
      * Creates an interaction to add a new record to the dataset.
      *
+     * @param id the identifier of the record being changed
+     * @param form the fields changed during edit
      * @return a non-null instance
      */
-    public Task edit() {
+    public <ID> Task edit(ID id, Form form) {
         return Application.task(
                 "{0} edits a record from dataset '" + title + "'"
 
@@ -66,9 +68,10 @@ public class DataSet implements Interaction {
     /**
      * Creates an interaction to delete an existing record from the dataset.
      *
+     * @param id the identifier of the record being removed
      * @return a non-null instance
      */
-    public Task delete() {
+    public <ID> Task delete(ID id) {
         return Application.task(
                 "{0} deletes a record from dataset '" + title + "'"
 

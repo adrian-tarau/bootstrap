@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.serenity;
 
 import net.microfalx.bootstrap.serenity.task.DataSet;
+import net.microfalx.bootstrap.serenity.task.Form;
 import net.microfalx.bootstrap.serenity.task.Login;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,5 +19,13 @@ public class SecurityGroupTest extends AbstractSystemTestCase {
     @Test
     void open() {
         toby.attemptsTo(dataSet.open());
+    }
+
+    @Test
+    void add() {
+        Form form = Form.create();
+        form.fieldByLabel("Name", "aaa")
+                .fieldByLabel("Description", "bbb");
+        toby.attemptsTo(dataSet.add(form));
     }
 }
