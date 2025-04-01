@@ -2,17 +2,14 @@ package net.microfalx.bootstrap.serenity.task;
 
 import lombok.Getter;
 import net.microfalx.lang.ObjectUtils;
-import net.serenitybdd.screenplay.Actor;
-import net.serenitybdd.screenplay.Interaction;
-import net.serenitybdd.screenplay.Question;
-import net.serenitybdd.screenplay.Task;
-import net.serenitybdd.screenplay.actions.Click;
-import net.serenitybdd.screenplay.actions.Enter;
+import net.serenitybdd.screenplay.*;
+import net.serenitybdd.screenplay.actions.*;
 import net.serenitybdd.screenplay.ensure.Ensure;
 import net.serenitybdd.screenplay.questions.Attribute;
 import net.serenitybdd.screenplay.targets.Target;
 import net.serenitybdd.screenplay.targets.TargetBuilder;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,7 +22,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public class Form implements Interaction {
 
     /**
-     * The target which identifies the for,
+     * The target which identifies the form.
      */
     @Getter
     private final Target form;
@@ -34,7 +31,7 @@ public class Form implements Interaction {
      * The target which identifies the submit button (optional),
      */
     @Getter
-    private final Target button;
+    private Target button;
 
     private final Map<String, Object> fieldsByNames = new LinkedHashMap<>();
     private final Map<String, Object> fieldsByLabels = new LinkedHashMap<>();
@@ -83,9 +80,8 @@ public class Form implements Interaction {
     public Task submit() {
         return Application.task(
                 "{0} submits the form",
-                Ensure.that("form is present", isPresent()).isTrue(),
-                //Ensure.that("submit button", Enabled.of(button)).isTrue(),
-                Click.on(button)
+                checkPresent(),
+                new SubmitInteraction()
         );
     }
 
@@ -96,7 +92,7 @@ public class Form implements Interaction {
      */
     public Task fill() {
         return Task.where("{0} fills in the form ",
-                Ensure.that("form is present", isPresent()).isTrue(),
+                checkPresent(),
                 new FillByNameInteraction(),
                 new FillByLabelInteraction()
         );
@@ -139,9 +135,39 @@ public class Form implements Interaction {
         return form::isVisibleFor;
     }
 
+    /**
+     * Returns a performable which checks if the form is present.
+     *
+     * @return a non-null instance
+     */
+    public Performable checkPresent() {
+        return Ensure.that("form " + form.getName() + " is present", isPresent()).isTrue();
+    }
+
     @Override
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(fill(), submit());
+    }
+
+    private <T extends Actor> void setValue(T actor, String name, Object value) {
+        Target field = form.find(Target.the("the field")
+                .located(By.name(name)));
+        String type = actor.asksFor(Attribute.of(field, "type"));
+        if (type == null) type = actor.asksFor(tagName(field));
+        if ("checkbox".equals(type)) {
+            SetCheckboxInteraction interaction = SetCheckbox.of(field);
+            actor.attemptsTo(Boolean.TRUE.equals(value) ? interaction.toTrue() : interaction.toFalse());
+        } else if ("select".equals(type) || "select-multiple".equals(type)) {
+            actor.attemptsTo(SelectFromOptions.byVisibleText(ObjectUtils.toStringArray(value)).from(field));
+        } else {
+            actor.attemptsTo(Enter.theValue(ObjectUtils.toString(value))
+                    .into(field));
+        }
+    }
+
+    private static Question<String> tagName(Target target) {
+        return Question.about(target.getName() + " name")
+                .answeredBy(actor -> target.resolveAllFor(actor).stream().findFirst().map(WebElement::getTagName).orElse(null));
     }
 
     class FillByNameInteraction implements Interaction {
@@ -149,8 +175,7 @@ public class Form implements Interaction {
         @Override
         public <T extends Actor> void performAs(T actor) {
             for (Map.Entry<String, Object> entry : fieldsByNames.entrySet()) {
-                actor.attemptsTo(Enter.theValue(ObjectUtils.toString(entry.getValue()))
-                        .into(By.name(entry.getKey())));
+                setValue(actor, entry.getKey(), entry.getValue());
             }
         }
     }
@@ -160,12 +185,23 @@ public class Form implements Interaction {
         @Override
         public <T extends Actor> void performAs(T actor) {
             for (Map.Entry<String, Object> entry : fieldsByLabels.entrySet()) {
-                Target field = form.find(Target.the("the label")
-                        .located(By.xpath("label[text()='" + entry.getKey() + "']")));
-                String fieldName = actor.asksFor(Attribute.of(field, "for"));
-                actor.attemptsTo(Enter.theValue(ObjectUtils.toString(entry.getValue()))
-                        .into(By.name(fieldName)));
+                Target label = form.find(Target.the("a label")
+                        .located(By.xpath("//label[text()='" + entry.getKey() + "']")));
+                String fieldName = actor.asksFor(Attribute.of(label, "for"));
+                setValue(actor, fieldName, entry.getValue());
             }
+        }
+    }
+
+    class SubmitInteraction implements Interaction {
+
+        @Override
+        public <T extends Actor> void performAs(T actor) {
+            if (button == null) {
+                button = form.find(Target.the("a button")
+                        .located(By.xpath("//button[text()='Save']")));
+            }
+            actor.attemptsTo(Click.on(button));
         }
     }
 }
