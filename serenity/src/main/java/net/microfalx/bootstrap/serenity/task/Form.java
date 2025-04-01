@@ -141,7 +141,7 @@ public class Form implements Interaction {
      * @return a non-null instance
      */
     public Performable checkPresent() {
-        return Ensure.that("form " + form.getName() + " is present", isPresent()).isTrue();
+        return Ensure.that("form is present", isPresent()).isTrue();
     }
 
     @Override
@@ -186,7 +186,7 @@ public class Form implements Interaction {
         public <T extends Actor> void performAs(T actor) {
             for (Map.Entry<String, Object> entry : fieldsByLabels.entrySet()) {
                 Target label = form.find(Target.the("a label")
-                        .located(By.xpath("//label[text()='" + entry.getKey() + "']")));
+                        .located(By.tagName("label")).containingText(entry.getKey()));
                 String fieldName = actor.asksFor(Attribute.of(label, "for"));
                 setValue(actor, fieldName, entry.getValue());
             }
@@ -198,8 +198,8 @@ public class Form implements Interaction {
         @Override
         public <T extends Actor> void performAs(T actor) {
             if (button == null) {
-                button = form.find(Target.the("a button")
-                        .located(By.xpath("//button[text()='Save']")));
+                button = Target.the("a button")
+                        .located(By.tagName("button")).containingText("Save");
             }
             actor.attemptsTo(Click.on(button));
         }
