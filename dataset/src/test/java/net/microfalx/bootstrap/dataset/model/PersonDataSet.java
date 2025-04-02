@@ -11,17 +11,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @Provider
-public class PersonDataSet extends MemoryDataSet<PersonJpa, Field<PersonJpa>, Integer> {
+public class PersonDataSet extends MemoryDataSet<Person, Field<Person>, Integer> {
 
-    public PersonDataSet(DataSetFactory<PersonJpa, Field<PersonJpa>, Integer> factory, Metadata<PersonJpa, Field<PersonJpa>, Integer> metadata) {
+    public PersonDataSet(DataSetFactory<Person, Field<Person>, Integer> factory, Metadata<Person, Field<Person>, Integer> metadata) {
         super(factory, metadata);
     }
 
     @Override
-    protected Iterable<PersonJpa> extractModels(Filter filterable) {
-        Collection<PersonJpa> persons = new ArrayList<>();
-        persons.add(new PersonJpa().setId(1).setFirstName("John").setLastName("Doe").setAge(25));
-        persons.add(new PersonJpa().setId(1).setFirstName("Jane").setLastName("Doe").setAge(20));
+    protected Iterable<Person> extractModels(Filter filterable) {
+        Collection<Person> persons = new ArrayList<>();
+        persons.add(new Person().setId(1).setFirstName("John").setLastName("Doe").setAge(25));
+        persons.add(new Person().setId(1).setFirstName("Jane").setLastName("Doe").setAge(20));
         return persons;
     }
 }

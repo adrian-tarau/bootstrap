@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.dataset;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.resource.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -26,10 +27,15 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
      */
     public static <M, F extends Field<M>, ID> DataSetExport<M, F, ID> create(final Format format) {
         requireNonNull(format);
-        throw new IllegalStateException("Not Implemented");
+        switch (format) {
+            case CSV -> {
+                return new CSVDataSetExport<>(format);
+            }
+            default -> throw new IllegalArgumentException("Unsupported format: " + format);
+        }
     }
 
-    private DataSetExport(Format format) {
+    protected DataSetExport(Format format) {
         requireNonNull(format);
         this.format = format;
     }
@@ -52,7 +58,8 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
      */
     public final Resource export(DataSet<M, F, ID> dataSet) {
         requireNonNull(dataSet);
-        return doExport(dataSet, Optional.empty());
+        Page<M> page = dataSet.findAll(Pageable.ofSize(5000));
+        return doExport(dataSet, Optional.of(page));
     }
 
     /**
