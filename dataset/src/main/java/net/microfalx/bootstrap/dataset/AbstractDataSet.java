@@ -2,9 +2,9 @@ package net.microfalx.bootstrap.dataset;
 
 import com.google.common.collect.Lists;
 import net.microfalx.bootstrap.core.i18n.I18nService;
+import net.microfalx.bootstrap.dataset.annotation.*;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.Lookup;
-import net.microfalx.bootstrap.dataset.annotation.*;
 import net.microfalx.bootstrap.dataset.formatter.EnumFormatter;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
@@ -458,7 +458,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
      * @return a non-null instance
      */
     protected final DataSetService getDataSetService() {
-        return getService(DataSetService.class);
+        return dataSetService;
     }
 
     /**
