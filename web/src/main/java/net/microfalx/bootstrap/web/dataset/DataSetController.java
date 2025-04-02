@@ -28,6 +28,7 @@ import net.microfalx.bootstrap.web.util.FieldHistory;
 import net.microfalx.bootstrap.web.util.JsonFormResponse;
 import net.microfalx.bootstrap.web.util.JsonResponse;
 import net.microfalx.lang.AnnotationUtils;
+import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.CreatedAt;
@@ -252,6 +253,29 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                 .body(new InputStreamResource(resource.getInputStream(true)));
     }
 
+    @GetMapping(value = "export")
+    @ResponseBody()
+    public final ResponseEntity<InputStreamResource> export(Model model,
+                                                            @RequestParam("format") String format,
+                                                            @RequestParam(defaultValue = "0") int pageParameter,
+                                                            @RequestParam(defaultValue = "") String rangeParameter,
+                                                            @RequestParam(defaultValue = "") String queryParameter,
+                                                            @RequestParam(defaultValue = "") String sortParameter) throws IOException {
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "export", pageParameter, rangeParameter, queryParameter, sortParameter);
+        updateHelp(model);
+        updateTitle(model);
+        updateModel(dataSet, model, State.BROWSE);
+        updateModel(dataSet, model, null, State.BROWSE);
+        Page<M> page = processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
+        DataSetExport.Format parsedFormat = EnumUtils.fromName(DataSetExport.Format.class, format);
+        DataSetExport<M, Field<M>, ID> exporter = DataSetExport.create(parsedFormat);
+        Resource resource = exporter.export(dataSet, page);
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(resource.getMimeType()))
+                .header("Content-Disposition", "attachment; filename=\"" + resource.getFileName() + "\"")
+                .body(new InputStreamResource(resource.getInputStream(true)));
+    }
+
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody()
     public JsonFormResponse<?> save(Model model, @RequestBody MultiValueMap<String, String> fields) {
@@ -356,7 +380,6 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @param dataSet         the data set
      * @param controllerModel the model associated with the controller
      * @param dataSetModel    the data set model for the selected row, null when invoked before any model is rendered
-     * @return {@code true} to continue the browse action, {@code false} otherwise
      */
     protected void beforeBrowse(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
     }
