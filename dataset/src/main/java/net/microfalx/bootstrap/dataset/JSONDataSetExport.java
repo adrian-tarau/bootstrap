@@ -1,7 +1,8 @@
 package net.microfalx.bootstrap.dataset;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -25,48 +26,42 @@ public class JSONDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
         List<F> fields = metadata.getFields();
         List<M> models = page.orElse(Page.empty()).getContent();
         Resource resource = TemporaryFileResource.file("temp", "json");
-        ObjectMapper objectMapper = new JsonMapper();
-        JsonNode metadataNode=extractMetadata(fields, objectMapper);
-        extractData(objectMapper, metadataNode,models, fields, resource);
-        return resource;
-    }
-
-    private void extractData(ObjectMapper objectMapper,JsonNode metadataNode, List<M> models, List<F> fields, Resource resource) {
         try {
-            ArrayNode data=objectMapper.createArrayNode();
-            for (M model : models) {
-                ArrayNode dataArray = objectMapper.createArrayNode();
-                for (F field : fields) {
-                    dataArray.add(field.get(model, String.class));
-                }
-                data.add(dataArray);
-            }
-            ObjectNode objectNode= objectMapper.createObjectNode();
-            objectNode.set("data",data);
-            ((ObjectNode) metadataNode).setAll(objectNode);
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(resource.getWriter(),metadataNode);
+            ObjectMapper objectMapper = new JsonMapper();
+            ObjectNode root = objectMapper.createObjectNode();
+            extractMetadata(fields, root);
+            extractData(root, models, fields);
+
+            DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
+            ObjectWriter writer = objectMapper.writer(printer);
+            writer.writeValue(resource.getWriter(), root);
+            return resource;
         } catch (Exception e) {
             throw new DataSetExportException("Failed to export data set to JSON", e);
         }
     }
 
-    private JsonNode extractMetadata(List<F> fields, ObjectMapper objectMapper) {
-        JsonNode result;
-        try {
-            ArrayNode fieldNodes = objectMapper.createArrayNode();
-            ObjectNode objectNode = objectMapper.createObjectNode();
+    private void extractMetadata(List<F> fields, ObjectNode root) {
+        ArrayNode fieldNodes = root.withArrayProperty("fields");
+        for (F field : fields) {
+            ObjectNode objectNode = fieldNodes.addObject();
+            objectNode.put("name", field.getName());
+            objectNode.put("label", field.getLabel());
+            objectNode.put("data-type", field.getDataType().name());
+            objectNode.put("required", field.isRequired());
+            objectNode.put("id", field.isId());
+        }
+    }
+
+    private void extractData(ObjectNode root, List<M> models, List<F> fields) {
+        ArrayNode dataArray = root.withArrayProperty("data");
+        for (M model : models) {
+            ArrayNode modelArray = dataArray.addArray();
             for (F field : fields) {
-                objectNode.put("name",field.getName());
-                objectNode.put("label",field.getLabel());
-                objectNode.put("data-type",field.getDataType().name());
-                objectNode.put("required",field.isRequired());
-                objectNode.put("id",field.isId());
+                modelArray.add(field.get(model, String.class));
             }
-            result = objectMapper.createObjectNode().set("fields", fieldNodes.add(objectNode));
-        } catch (Exception e) {
-            throw new DataSetExportException("Failed to export data set to JSON", e);
         }
-        return result;
     }
+
 
 }
