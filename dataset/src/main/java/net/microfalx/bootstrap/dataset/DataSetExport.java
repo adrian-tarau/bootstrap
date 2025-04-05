@@ -34,6 +34,9 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
             case XML -> {
                 return new XMLDataSetExport<>(format);
             }
+            case JSON -> {
+                return new JSONDataSetExport<>(format);
+            }
             default -> throw new IllegalArgumentException("Unsupported format: " + format);
         }
     }
