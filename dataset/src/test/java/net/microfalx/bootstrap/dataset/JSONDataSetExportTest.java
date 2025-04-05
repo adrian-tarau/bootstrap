@@ -23,6 +23,7 @@ class JSONDataSetExportTest extends AbstractDataSetTestCase {
         assertNotNull(dataSetExport);
         Resource resource = dataSetExport.export(dataSet);
         assertNotNull(resource);
-        Assertions.assertThat(resource.loadAsString()).contains(List.of("fields", "data"));
+        Assertions.assertThat(resource.loadAsString()).contains(List.of("fields", "data","name","label","data-type",
+                "required","id"));
     }
 }

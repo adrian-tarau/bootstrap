@@ -54,14 +54,15 @@ public class JSONDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
         JsonNode result;
         try {
             ArrayNode fieldNodes = objectMapper.createArrayNode();
+            ObjectNode objectNode = objectMapper.createObjectNode();
             for (F field : fields) {
-                fieldNodes.add(objectMapper.createObjectNode().put("name", field.getName()));
-                fieldNodes.add(objectMapper.createObjectNode().put("label", field.getLabel()));
-                fieldNodes.add(objectMapper.createObjectNode().put("data-type", field.getDataType().name()));
-                fieldNodes.add(objectMapper.createObjectNode().put("required", field.isRequired()));
-                fieldNodes.add(objectMapper.createObjectNode().put("id", field.getId()));
+                objectNode.put("name",field.getName());
+                objectNode.put("label",field.getLabel());
+                objectNode.put("data-type",field.getDataType().name());
+                objectNode.put("required",field.isRequired());
+                objectNode.put("id",field.isId());
             }
-            result = objectMapper.createObjectNode().set("fields", fieldNodes);
+            result = objectMapper.createObjectNode().set("fields", fieldNodes.add(objectNode));
         } catch (Exception e) {
             throw new DataSetExportException("Failed to export data set to JSON", e);
         }
