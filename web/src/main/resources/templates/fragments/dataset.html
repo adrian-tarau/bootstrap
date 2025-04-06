@@ -73,7 +73,7 @@
     <tbody th:replace="~{ fragments/dataset :: grid-body}"></tbody>
 </table>
 
-<div class="dropdown-menu" th:fragment="action-menu" id="dataset-actions">
+<div class="dropdown-menu" th:fragment="action-menu(id, actions)" th:id="${id}">
     <div th:each="action : ${#component.getChildren(actions)}" th:remove="tag">
         <a href="#" class="dropdown-item" th:unless="${#component.isSeparator(action)}"
            th:attr="onclick=|Application.action('${action.action}')|" component:tooltip="${action.description}">
@@ -87,12 +87,19 @@
     <div class="container-fluid ps-1">
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto">
-                <button th:each="button : ${#component.getChildren(toolbar)}" type="button"
-                        component:tooltip="${button}"
-                        th:attr="onclick=|Application.action('${button.action}')|"
-                        th:class="${#component.getCssClass(button,'btn btn-primary btn-color me-2 btn-sm')}">
-                    <i th:class="${button.icon}"></i><span class="ms-2" th:text="${button.text}"></span>
-                </button>
+                <div th:each="button : ${#component.getChildren(toolbar)}" th:remove="tag">
+                    <button th:if="${button.menu == null}" type="button" component:tooltip="${button}" th:attr="onclick=|Application.action('${button.action}')|"
+                            th:class="${#component.getCssClass(button,'btn btn-primary btn-color me-2 btn-sm')}">
+                        <i th:class="${button.icon}"></i><span class="ms-2" th:text="${button.text}"></span>
+                    </button>
+                    <div th:if="${button.menu != null}" class="dropdown">
+                        <button th:class="${#component.getCssClass(button,'btn btn-primary dropdown-toggle btn-color me-2 btn-sm')}" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i th:class="${button.icon}"></i><span class="ms-2" th:text="${button.text}"></span>
+                        </button>
+                        <div th:replace="~{ fragments/dataset :: action-menu('dataset-export-actions', ${button.menu})}"></div>
+                    </div>
+                </div>
             </ul>
             <div class="dataset-drop-zone"></div>
             <div class="me-2">

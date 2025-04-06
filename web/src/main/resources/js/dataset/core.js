@@ -246,6 +246,17 @@ DataSet.download = function () {
 }
 
 /**
+ * Exports the grid.
+ *
+ * @param format the export format
+ */
+DataSet.export = function (format) {
+    if (Utils.isEmpty(format)) throw new Error("The export format is expected")
+    let uri = this.getUri("export", {format: format});
+    window.location.replace(uri);
+}
+
+/**
  * Shows an HTML fragment which contains a data set modal.
  * @param {String} html the modal
  */
@@ -503,6 +514,10 @@ DataSet.initActions = function () {
     Application.bind("dataset.refresh", DataSet.refresh);
     Application.bind("dataset.download", DataSet.download);
     Application.bind("dataset.upload", DataSet.upload);
+
+    Application.bind("dataset.export.csv", DataSet.export, "csv");
+    Application.bind("dataset.export.xml", DataSet.export, "xml");
+    Application.bind("dataset.export.json", DataSet.export, "json");
 }
 
 /**

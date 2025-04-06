@@ -256,11 +256,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @GetMapping(value = "export")
     @ResponseBody()
     public final ResponseEntity<InputStreamResource> export(Model model,
-                                                            @RequestParam("format") String format,
-                                                            @RequestParam(defaultValue = "0") int pageParameter,
-                                                            @RequestParam(defaultValue = "") String rangeParameter,
-                                                            @RequestParam(defaultValue = "") String queryParameter,
-                                                            @RequestParam(defaultValue = "") String sortParameter) throws IOException {
+                                                            @RequestParam(value = "format", defaultValue = "csv") String format,
+                                                            @RequestParam(value = "page", defaultValue = "0") int pageParameter,
+                                                            @RequestParam(value = "range", defaultValue = "") String rangeParameter,
+                                                            @RequestParam(value = "query", defaultValue = "") String queryParameter,
+                                                            @RequestParam(value = "sort", defaultValue = "") String sortParameter) throws IOException {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "export", pageParameter, rangeParameter, queryParameter, sortParameter);
         updateHelp(model);
@@ -272,7 +272,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSetExport<M, Field<M>, ID> exporter = DataSetExport.create(parsedFormat);
         Resource resource = exporter.export(dataSet, page);
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(resource.getMimeType()))
-                .header("Content-Disposition", "attachment; filename=\"" + resource.getFileName() + "\"")
+                .header("Content-Disposition", "attachment; filename=\"" + resource.getName() + "\"")
                 .body(new InputStreamResource(resource.getInputStream(true)));
     }
 
@@ -651,6 +651,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             toolbar.add(new Button().setAction("dataset.upload").setText("Upload").setIcon("fa-solid fa-upload")
                     .setCssClass("dataset-drop-zone").setPosition(2).setDescription("Uploads a new " + dataSet.getName()));
         }
+        toolbar.add(new Button().setText("Export").setIcon("fa-solid fa-file-export").setPosition(100)
+                .setDescription("Exports dashboard data").setMenu(getExportMenu(dataSet)));
         // if (toolbar.hasChildren()) toolbar.add(new Separator());
         //toolbar.add(new Button().setAction("print").setText("Print").setIcon("fa-solid fa-print").setPosition(100));
         //toolbar.add(new Separator());
@@ -674,6 +676,17 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             }
         }
         updateActions(menu);
+        return menu;
+    }
+
+    private Menu getExportMenu(DataSet<M, Field<M>, ID> dataSet) {
+        Menu menu = new Menu().setId("actions");
+        menu.add(new Item().setAction("dataset.export.csv").setText("Comma Separated Values (CSV)")
+                .setIcon("fa-solid fa-file-csv"));
+        menu.add(new Item().setAction("dataset.export.xml").setText("Extensible Markup Language (XML)")
+                .setIcon("fa-solid fa-folder-tree"));
+        menu.add(new Item().setAction("dataset.export.json").setText("JavaScript Object Notation (JSON)")
+                .setIcon("fa-solid fa-folder-tree"));
         return menu;
     }
 

@@ -372,11 +372,15 @@ Application.action = function (eventOrHandler) {
  * @param {String} name the event name
  * @param {Function} callback the function to be called when the event it is triggered.
  */
-Application.bind = function (name, callback) {
-    Logger.debug("Bind event " + name);
+Application.bind = function (name, callback,) {
+    let args = Array.prototype.slice.call(arguments, 2);
+    Logger.debug("Bind event " + name + ", arguments: " + Utils.toString(args));
     this.listeners = this.listeners || {};
     this.listeners[name] = this.listeners[name] || []
     this.listeners[name].push(callback);
+    this.listeners_args = this.listeners_args || {};
+    this.listeners_args[name] = this.listeners_args[name] || []
+    this.listeners_args[name] = args;
 }
 
 /**
@@ -401,6 +405,8 @@ Application.unbind = function (name, callback) {
 Application.fire = function (name) {
     let me = this;
     let args = Array.prototype.slice.call(arguments, 1);
+    let extraArgs = this.listeners_args[name] || [];
+    args = args.concat(extraArgs);
     Logger.debug("Fire event " + name + ", arguments " + Utils.toString(args));
     let listeners = this.getListeners(name);
     for (const listener of listeners) {

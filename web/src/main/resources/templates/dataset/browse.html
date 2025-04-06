@@ -3,7 +3,7 @@
       layout:decorate="~{layouts/default}">
 <body>
 <section layout:fragment="content">
-    <div th:replace="~{ fragments/dataset :: action-menu}"></div>
+    <div th:replace="~{ fragments/dataset :: action-menu('dataset-actions', ${actions})}"></div>
     <div th:replace="~{ fragments/dataset :: render}"></div>
 </section>
 </body>
