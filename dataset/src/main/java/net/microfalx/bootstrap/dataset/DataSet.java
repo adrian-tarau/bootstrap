@@ -133,12 +133,28 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
     boolean isFilterable(Field<M> field);
 
     /**
+     * Returns whether the field is available during exports.
+     *
+     * @param field the field
+     * @return {@code true} if exportable, {@code false} otherwise
+     */
+    boolean isExportable(Field<M> field);
+
+    /**
      * Returns a list with visible fields for the current state, sorted by position.
      *
      * @return a non-null instance
      * @see #getState()
      */
     List<F> getVisibleFields();
+
+    /**
+     * Returns a list with fields which can exported, sorted by position.
+     *
+     * @return a non-null instance
+     * @see #getState()
+     */
+    List<F> getExportableFields();
 
     /**
      * Returns the value of a field for a given model in a display format.

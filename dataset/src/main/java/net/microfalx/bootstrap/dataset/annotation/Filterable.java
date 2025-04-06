@@ -14,7 +14,7 @@ import java.lang.annotation.*;
 public @interface Filterable {
 
     /**
-     * Returns whether the annotated field is searchable.
+     * Returns whether the annotated field is filterable.
      *
      * @return {@code true} if searchable, {@code false} otherwise
      */

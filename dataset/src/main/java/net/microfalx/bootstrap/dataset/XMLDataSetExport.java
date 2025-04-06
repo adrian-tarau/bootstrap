@@ -1,9 +1,6 @@
 package net.microfalx.bootstrap.dataset;
 
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.model.Metadata;
-import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.TemporaryFileResource;
 import org.dom4j.Document;
@@ -17,6 +14,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static net.microfalx.lang.ObjectUtils.defaultIfNull;
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
+
 public class XMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M, F, ID> {
 
     protected XMLDataSetExport(Format format) {
@@ -27,8 +27,7 @@ public class XMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M
     protected Resource doExport(DataSet<M, F, ID> dataSet, Optional<Page<M>> page) {
         Document document = DocumentHelper.createDocument();
         Element root = document.addElement("dataset");
-        Metadata<M, F, ID> metadata = dataSet.getMetadata();
-        List<F> fields = metadata.getFields();
+        List<F> fields = getExportableFields();
         exportMetadata(root, fields);
         exportData(root, fields, page.orElse(Page.empty()).getContent());
         Resource resource = TemporaryFileResource.file("temp", "xml");
@@ -50,7 +49,7 @@ public class XMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M
             fieldElement.addAttribute("label", field.getLabel());
             fieldElement.addAttribute("data-type", field.getDataType().name());
             fieldElement.addAttribute("required", Boolean.toString(field.isRequired()));
-            fieldElement.addAttribute("id", field.getId());
+            fieldElement.addAttribute("id", Boolean.toString(field.isId()));
         }
     }
 
@@ -59,7 +58,8 @@ public class XMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M
         for (M model : models) {
             Element modelElement = dataElement.addElement("model");
             for (F field : fields) {
-                modelElement.addElement("value").addText(ObjectUtils.defaultIfNull(field.get(model, String.class), StringUtils.EMPTY_STRING));
+                String value = defaultIfNull(getValueAsString(model, field), EMPTY_STRING);
+                modelElement.addElement("value").addText(value);
             }
         }
     }

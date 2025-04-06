@@ -1,13 +1,16 @@
 package net.microfalx.bootstrap.dataset;
 
 import net.microfalx.bootstrap.model.Field;
+import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
  * Base class for all exporters.
@@ -15,6 +18,8 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 public abstract class DataSetExport<M, F extends Field<M>, ID> {
 
     private final Format format;
+
+    private DataSet<M, F, ID> dataSet;
 
     /**
      * Creates an exporter for a given format.
@@ -65,7 +70,7 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
     public final Resource export(DataSet<M, F, ID> dataSet) {
         requireNonNull(dataSet);
         Page<M> page = dataSet.findAll(Pageable.ofSize(5000));
-        return doExport(dataSet, Optional.of(page));
+        return doExportAndName(dataSet, Optional.of(page));
     }
 
     /**
@@ -79,7 +84,7 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
     public final Resource export(DataSet<M, F, ID> dataSet, Page<M> page) {
         requireNonNull(dataSet);
         requireNonNull(page);
-        return doExport(dataSet, Optional.of(page));
+        return doExportAndName(dataSet, Optional.of(page));
     }
 
     /**
@@ -90,6 +95,98 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
      * @return the resource holding the exported data
      */
     protected abstract Resource doExport(DataSet<M, F, ID> dataSet, Optional<Page<M>> page);
+
+    /**
+     * Returns the value to export for a given model and field.
+     *
+     * @param model the model
+     * @param field the field
+     * @return the value
+     */
+    protected final Object getValue(M model, F field) {
+        requireNonNull(model);
+        requireNonNull(field);
+        return dataSet.getDisplayValue(model, field);
+    }
+
+    /**
+     * Returns the value to export for a given model and field as a string.
+     *
+     * @param model the model
+     * @param field the field
+     * @return the value
+     */
+    protected final String getValueAsString(M model, F field) {
+        return Field.from(getValue(model, field), String.class);
+    }
+
+    /**
+     * Returns whether the field should be exportable.
+     *
+     * @param field the field
+     * @return {@code true} if exportable, {@code false}
+     */
+    protected final boolean isExportable(F field) {
+        return dataSet.isExportable(field);
+    }
+
+    /**
+     * Returns a list of fields which are exportable.
+     *
+     * @return a non-null instance
+     * @see #isExportable(Field)
+     * @see DataSet#isExportable(Field)
+     */
+    protected final List<F> getExportableFields() {
+        return dataSet.getExportableFields().stream().filter(this::isExportable).toList();
+    }
+
+    /**
+     * Subclasses would implement the export
+     *
+     * @param dataSet the data set
+     * @param page    the page, optional; if missing, the whole data set is exported
+     * @return the resource holding the exported data
+     */
+    private Resource doExportAndName(DataSet<M, F, ID> dataSet, Optional<Page<M>> page) {
+        this.dataSet = dataSet;
+        Resource resource = doExport(dataSet, page);
+        return resource.withMimeType(getMimeType()).withName(getFileName(dataSet));
+    }
+
+    private MimeType getMimeType() {
+        switch (format) {
+            case CSV -> {
+                return MimeType.TEXT_CSV;
+            }
+            case XML -> {
+                return MimeType.TEXT_XML;
+            }
+            case JSON -> {
+                return MimeType.APPLICATION_JSON;
+            }
+            default -> throw new IllegalArgumentException("Unsupported format: " + format);
+        }
+    }
+
+    private String getFileName(DataSet<M, F, ID> dataSet) {
+        return toIdentifier(dataSet.getName()) + "." + getFileExtension();
+    }
+
+    private String getFileExtension() {
+        switch (format) {
+            case CSV -> {
+                return "csv";
+            }
+            case XML -> {
+                return "xml";
+            }
+            case JSON -> {
+                return "json";
+            }
+            default -> throw new IllegalArgumentException("Unsupported format: " + format);
+        }
+    }
 
     /**
      * An enum for the export format.

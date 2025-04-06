@@ -2,9 +2,9 @@ package net.microfalx.bootstrap.dataset;
 
 import com.google.common.collect.Lists;
 import net.microfalx.bootstrap.core.i18n.I18nService;
-import net.microfalx.bootstrap.dataset.annotation.*;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.Lookup;
+import net.microfalx.bootstrap.dataset.annotation.*;
 import net.microfalx.bootstrap.dataset.formatter.EnumFormatter;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
@@ -179,6 +179,16 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public boolean isExportable(Field<M> field) {
+        Exportable exportableAnnot = field.findAnnotation(Exportable.class);
+        if (exportableAnnot != null) {
+            return exportableAnnot.value();
+        } else {
+            return field.isId() || isVisible(field);
+        }
+    }
+
+    @Override
     public final List<F> getVisibleFields() {
         switch (state) {
             case BROWSE -> {
@@ -199,6 +209,14 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
             }
             default -> throw new DataSetException("Unhandled state: " + state);
         }
+    }
+
+    @Override
+    public List<F> getExportableFields() {
+        List<F> exportableFields = new ArrayList<>();
+        exportableFields.addAll(getMetadata().getIdFields());
+        exportableFields.addAll(getVisibleFields());
+        return exportableFields;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

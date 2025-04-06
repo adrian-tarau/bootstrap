@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.dataset;
 
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.TemporaryFileResource;
 import org.apache.commons.csv.CSVFormat;
@@ -20,8 +19,7 @@ class CSVDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M, F, ID
 
     @Override
     protected Resource doExport(DataSet<M, F, ID> dataSet, Optional<Page<M>> page) {
-        Metadata<M, F, ID> metadata = dataSet.getMetadata();
-        List<F> fields = metadata.getFields();
+        List<F> fields = getExportableFields();
         List<M> models = page.orElse(Page.empty()).getContent();
         CSVFormat.Builder builder = CSVFormat.DEFAULT.builder();
         String[] columns = fields.stream().map(Field::getName).toList().toArray(new String[0]);
@@ -30,7 +28,7 @@ class CSVDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M, F, ID
         Resource temporary = TemporaryFileResource.file("temp");
         try (final CSVPrinter printer = new CSVPrinter(temporary.getWriter(), csvFormat)) {
             for (M model : models) {
-                List<String> values = fields.stream().map(f -> f.get(model, String.class)).toList();
+                List<String> values = fields.stream().map(f -> getValueAsString(model, f)).toList();
                 printer.printRecord(values);
             }
         } catch (IOException e) {
