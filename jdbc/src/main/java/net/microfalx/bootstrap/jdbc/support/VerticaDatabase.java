@@ -2,13 +2,13 @@ package net.microfalx.bootstrap.jdbc.support;
 
 import net.microfalx.bootstrap.core.utils.HostnameUtils;
 import net.microfalx.bootstrap.metrics.util.SimpleStatisticalSummary;
-import net.microfalx.lang.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -81,7 +81,8 @@ public class VerticaDatabase extends AbstractDatabase {
                 session.setSchema(session.getUserName());
                 session.setClientHostname(getHostFromHostAndPort(rs.getString("client_hostname")));
                 session.setState(getState(rs));
-                session.setStartedAt(TimeUtils.toZonedDateTime(rs.getTimestamp("statement_start")).withZoneSameInstant(getZoneId()));
+                Timestamp statementStart = rs.getTimestamp("statement_start");
+                session.setStartedAt(statementStart != null ? toZonedDateTime(statementStart).withZoneSameInstant(getZoneId()) : null);
                 session.setStatement(createStatement(this, rs.getString("current_statement"), session.getUserName()));
                 session.setCreatedAt(toZonedDateTime(rs.getTimestamp("login_timestamp")));
                 sessions.add(session);
