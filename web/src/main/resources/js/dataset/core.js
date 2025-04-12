@@ -248,12 +248,20 @@ DataSet.download = function () {
 /**
  * Exports the grid.
  *
- * @param format the export format
+ * @param {String} format the export format
+ * @param {Boolean} [download=true] true to download the export, false to just loaded from the server side.
  */
-DataSet.export = function (format) {
+DataSet.export = function (format, download) {
     if (Utils.isEmpty(format)) throw new Error("The export format is expected")
-    let uri = this.getUri("export", {format: format});
-    window.location.replace(uri);
+    download = Utils.defaultIfNotDefinedOrNull(download, false);
+    let uri = this.getUri("export", {format: format, download:download});
+    let id = "export_" + Utils.uuid();
+    $('<iframe>', {
+        src: uri,
+        id: id,
+        style: 'display:none'
+    }).appendTo('body');
+    return id;
 }
 
 /**

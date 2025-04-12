@@ -2,6 +2,7 @@
 * The Utilities Global Variables
  */
 window.Utils = window.Utils || {};
+window.Utils.ID_GENERATOR = 1;
 
 /**
  * Returns whether the passed value is empty. The value is deemed to be empty if it is either:
@@ -318,5 +319,16 @@ Utils.intercept = function (value, interceptor) {
     } else {
         return value;
     }
+}
+
+/**
+ * Returns a unique identifier.
+ *
+ * The identifier will be unique across a page and can be used to create DOM element identifiers.
+ *
+ * @return {number} the identifier
+ */
+Utils.uuid = function () {
+    return Utils.ID_GENERATOR++;
 }
 

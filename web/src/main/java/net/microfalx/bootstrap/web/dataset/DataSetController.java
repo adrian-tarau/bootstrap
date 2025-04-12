@@ -257,6 +257,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @ResponseBody()
     public final ResponseEntity<InputStreamResource> export(Model model,
                                                             @RequestParam(value = "format", defaultValue = "csv") String format,
+                                                            @RequestParam(value = "download", defaultValue = "true") boolean download,
                                                             @RequestParam(value = "page", defaultValue = "0") int pageParameter,
                                                             @RequestParam(value = "range", defaultValue = "") String rangeParameter,
                                                             @RequestParam(value = "query", defaultValue = "") String queryParameter,
@@ -271,9 +272,16 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSetExport.Format parsedFormat = EnumUtils.fromName(DataSetExport.Format.class, format);
         DataSetExport<M, Field<M>, ID> exporter = DataSetExport.create(parsedFormat);
         Resource resource = exporter.export(dataSet, page);
-        return ResponseEntity.ok().contentType(MediaType.parseMediaType(resource.getMimeType()))
-                .header("Content-Disposition", "attachment; filename=\"" + resource.getName() + "\"")
-                .body(new InputStreamResource(resource.getInputStream(true)));
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+        if (download) {
+            builder.contentType(MediaType.parseMediaType(resource.getMimeType()))
+                    .header("Content-Disposition", "attachment; filename=\"" + resource.getName() + "\"");
+        } else {
+            builder.contentType(MediaType.TEXT_PLAIN)
+                    .header("Content-Disposition", "inline");
+        }
+        builder.body(new InputStreamResource(resource.getInputStream(true)));
+        return builder.build();
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
