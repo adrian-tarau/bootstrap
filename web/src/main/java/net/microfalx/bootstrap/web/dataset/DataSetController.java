@@ -280,8 +280,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             builder.contentType(MediaType.TEXT_PLAIN)
                     .header("Content-Disposition", "inline");
         }
-        builder.body(new InputStreamResource(resource.getInputStream(true)));
-        return builder.build();
+        return builder.body(new InputStreamResource(resource.getInputStream(true)));
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)

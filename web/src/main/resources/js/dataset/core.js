@@ -253,7 +253,7 @@ DataSet.download = function () {
  */
 DataSet.export = function (format, download) {
     if (Utils.isEmpty(format)) throw new Error("The export format is expected")
-    download = Utils.defaultIfNotDefinedOrNull(download, false);
+    download = Utils.defaultIfNotDefinedOrNull(download, true);
     let uri = this.getUri("export", {format: format, download:download});
     let id = "export_" + Utils.uuid();
     $('<iframe>', {
