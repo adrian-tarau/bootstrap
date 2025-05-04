@@ -1,29 +1,35 @@
 package net.microfalx.bootstrap.serenity;
 
-import net.microfalx.bootstrap.serenity.task.Login;
+import net.microfalx.bootstrap.serenity.task.Logout;
+import net.microfalx.bootstrap.serenity.task.User;
 import org.junit.jupiter.api.Test;
 
-public class AuthenticationTest extends AbstractSystemTestCase {
+public class AuthenticationTest extends net.microfalx.bootstrap.serenity.junit.AbstractSystemTestCase {
 
     @Test
     void loginAsAdmin() {
-        toby.attemptsTo(Login.as(getAdminUserName(), getAdminPassword()));
+        actor.attemptsTo(User.asAdmin().login());
     }
 
     @Test
     void loginAsAdminAndLogoutWithLink() {
         loginAsAdmin();
-        toby.attemptsTo(Logout.withLink());
+        actor.attemptsTo(Logout.withLink());
     }
 
     @Test
     void loginAsAdminAndLogoutWithButton() {
         loginAsAdmin();
-        toby.attemptsTo(Logout.withButton());
+        actor.attemptsTo(Logout.withButton());
+    }
+
+    @Test
+    void loginAsRegular() {
+        actor.attemptsTo(User.asRegular());
     }
 
     @Test
     void loginAsGuest() {
-        toby.attemptsTo(Login.as(getGuestUserName(), getGuestPassword()));
+        actor.attemptsTo(User.asGuest());
     }
 }

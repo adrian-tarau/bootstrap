@@ -1,6 +1,5 @@
-package net.microfalx.bootstrap.serenity;
+package net.microfalx.bootstrap.serenity.task;
 
-import net.microfalx.bootstrap.serenity.task.Application;
 import net.serenitybdd.screenplay.Task;
 import net.serenitybdd.screenplay.actions.Click;
 import org.openqa.selenium.By;

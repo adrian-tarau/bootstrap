@@ -1,17 +1,51 @@
 package net.microfalx.bootstrap.serenity.task;
 
+import lombok.Getter;
+import lombok.ToString;
+import net.serenitybdd.screenplay.Actor;
+import net.serenitybdd.screenplay.Interaction;
 import net.serenitybdd.screenplay.Performable;
 import net.serenitybdd.screenplay.Question;
 import net.serenitybdd.screenplay.ensure.Ensure;
 import net.serenitybdd.screenplay.questions.JavaScript;
 import net.serenitybdd.screenplay.targets.Target;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+
 /**
  * A collections of interactions and questions related to the security context (user).
  */
-public class User {
+@ToString
+public class User implements Interaction {
 
     public static final Target USER_NAME_BUTTON = null;
+
+    @Getter
+    private final String userName;
+    @Getter
+    private final String password;
+
+    public static User asAdmin() {
+        return create(getAdminUserName(), getAdminPassword());
+    }
+
+    public static User asRegular() {
+        return create(getRegularUserName(), getRegularPassword());
+    }
+
+    public static User asGuest() {
+        return create(getGuestUserName(), getGuestPassword());
+    }
+
+    public static User create(final String userName, final String password) {
+        return new User(userName, password);
+    }
+
+    private User(String userName, String password) {
+        requireNonNull(userName);
+        this.userName = userName;
+        this.password = password;
+    }
 
     /**
      * Creates an interaction which validates whether the session is authentication.
@@ -61,4 +95,41 @@ public class User {
         return Question.about("user has at least " + role + " role").answeredBy(actor -> User.hasRole(role)).asBoolean();
     }
 
+    /**
+     * Returns an interaction which logs in with the current user.
+     *
+     * @return self
+     */
+    public Interaction login() {
+        return this;
+    }
+
+    @Override
+    public <T extends Actor> void performAs(T actor) {
+        actor.attemptsTo(Login.as(userName, password));
+    }
+
+    private static String getAdminUserName() {
+        return "test_admin";
+    }
+
+    private static String getAdminPassword() {
+        return System.getProperty("test.security.admin.password", "test123");
+    }
+
+    private static String getRegularUserName() {
+        return "test_user";
+    }
+
+    private static String getRegularPassword() {
+        return System.getProperty("test.security.user.password", "test123");
+    }
+
+    private static String getGuestUserName() {
+        return "test_guest";
+    }
+
+    private static String getGuestPassword() {
+        return System.getProperty("test.security.guest.password", "test123");
+    }
 }

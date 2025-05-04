@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.serenity.task;
 
+import lombok.ToString;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Interaction;
 import net.serenitybdd.screenplay.Question;
@@ -7,37 +8,25 @@ import net.serenitybdd.screenplay.Task;
 import net.serenitybdd.screenplay.actions.Evaluate;
 import net.serenitybdd.screenplay.ensure.Ensure;
 
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-
 /**
  * A collections of interactions and questions related to a <code>DataSet</code> dashboard.
  */
-public class DataSet implements Interaction {
+@ToString(callSuper = true)
+public class DataSet extends Dashboard<DataSet> implements Interaction {
 
-    private final String path;
-    private final String title;
-
+    /**
+     * Creates a data set dashboard reference.
+     *
+     * @param path  the path to the dashboard
+     * @param title the title of the dashboard
+     * @return a non-null instance
+     */
     public static DataSet create(String path, String title) {
         return new DataSet(path, title);
     }
 
     private DataSet(String path, String title) {
-        requireNonNull(path);
-        this.path = path;
-        this.title = title;
-    }
-
-    /**
-     * Creates an interaction to open the data set dashboard.
-     *
-     * @return a non-null instance
-     */
-    public Task open() {
-        return Application.task(
-                "{0} opens data set '" + title + "'",
-                Application.open(path),
-                Ensure.that("dataset is valid", isValid()).isTrue()
-        );
+        super(path, title);
     }
 
     /**
@@ -47,7 +36,7 @@ public class DataSet implements Interaction {
      */
     public Task add(Form form) {
         return Application.task(
-                "{0} adds a new record to dataset '" + title + "'",
+                "{0} adds a new record to dataset '" + getTitle() + "'",
                 Evaluate.javascript("DataSet.add()"),
                 form.fill(),
                 form.submit(),
@@ -64,7 +53,7 @@ public class DataSet implements Interaction {
      */
     public <ID> Task edit(ID id, Form form) {
         return Application.task(
-                "{0} edits a record from dataset '" + title + "'"
+                "{0} edits a record from dataset '" + getTitle() + "'"
 
         );
     }
@@ -77,19 +66,9 @@ public class DataSet implements Interaction {
      */
     public <ID> Task delete(ID id) {
         return Application.task(
-                "{0} deletes a record from dataset '" + title + "'"
+                "{0} deletes a record from dataset '" + getTitle() + "'"
 
         );
-    }
-
-    /**
-     * Returns a question which answers whether the dashboard is a data set and it is the right one.
-     *
-     * @return a non-null instance
-     */
-    public static Question<Boolean> isValid() {
-        return Question.about("is login page displayed")
-                .answeredBy(actor -> true);
     }
 
     @Override

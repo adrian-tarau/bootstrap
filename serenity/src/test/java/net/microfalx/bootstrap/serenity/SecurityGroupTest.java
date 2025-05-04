@@ -1,34 +1,34 @@
 package net.microfalx.bootstrap.serenity;
 
+import net.microfalx.bootstrap.serenity.junit.AbstractDataSetSystemTestCase;
 import net.microfalx.bootstrap.serenity.task.DataSet;
 import net.microfalx.bootstrap.serenity.task.Form;
-import net.microfalx.bootstrap.serenity.task.Login;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import net.microfalx.bootstrap.serenity.task.User;
 
-public class SecurityGroupTest extends AbstractSystemTestCase {
+public class SecurityGroupTest extends AbstractDataSetSystemTestCase {
 
-    private DataSet dataSet;
-
-    @BeforeEach
-    void setup() {
-        toby.attemptsTo(Login.as(getAdminUserName(), getAdminPassword()));
-        dataSet = DataSet.create("security/groups", "Group");
+    @Override
+    protected User createUser() {
+        return User.asAdmin();
     }
 
-    @Test
-    void open() {
-        toby.attemptsTo(dataSet.open());
+    @Override
+    protected DataSet createDataSet() {
+        return DataSet.create("security/groups", "Group");
     }
 
-    @Test
-    void add() {
-        open();
+    @Override
+    protected Form createAddForm() {
         Form form = Form.create();
         form.fieldByLabel("Name", "Serenity Test")
                 .fieldByLabel("Enabled", true)
                 .fieldByLabel("Roles", "Admin")
                 .fieldByLabel("Description", "A security group registered by Serenity");
-        toby.attemptsTo(dataSet.add(form));
+        return form;
+    }
+
+    @Override
+    protected Form createEditForm() {
+        return null;
     }
 }
