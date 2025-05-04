@@ -45,6 +45,9 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
             case TEXT -> {
                 return new TextDataSetExport<>(format);
             }
+            case HTML -> {
+                return new HTMLDataSetExport<>(format);
+            }
             default -> throw new IllegalArgumentException("Unsupported format: " + format);
         }
     }
@@ -171,6 +174,9 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
             case TEXT -> {
                 return MimeType.TEXT;
             }
+            case HTML -> {
+                return MimeType.TEXT_HTML;
+            }
             default -> throw new IllegalArgumentException("Unsupported format: " + format);
         }
     }
@@ -192,6 +198,9 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
             }
             case TEXT -> {
                 return "text";
+            }
+            case HTML -> {
+                return "html";
             }
             default -> throw new IllegalArgumentException("Unsupported format: " + format);
         }
