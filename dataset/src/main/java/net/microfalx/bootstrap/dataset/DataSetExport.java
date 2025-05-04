@@ -42,6 +42,9 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
             case JSON -> {
                 return new JSONDataSetExport<>(format);
             }
+            case TEXT -> {
+                return new TextDataSetExport<>(format);
+            }
             default -> throw new IllegalArgumentException("Unsupported format: " + format);
         }
     }
@@ -165,6 +168,9 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
             case JSON -> {
                 return MimeType.APPLICATION_JSON;
             }
+            case TEXT -> {
+                return MimeType.TEXT;
+            }
             default -> throw new IllegalArgumentException("Unsupported format: " + format);
         }
     }
@@ -184,6 +190,9 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
             case JSON -> {
                 return "json";
             }
+            case TEXT -> {
+                return "text";
+            }
             default -> throw new IllegalArgumentException("Unsupported format: " + format);
         }
     }
@@ -192,6 +201,6 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> {
      * An enum for the export format.
      */
     public enum Format {
-        CSV, JSON, XML
+        CSV, JSON, XML,TEXT,HTML
     }
 }
