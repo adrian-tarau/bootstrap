@@ -5,7 +5,7 @@ import net.microfalx.bootstrap.serenity.task.DataSet;
 import net.microfalx.bootstrap.serenity.task.Form;
 import net.microfalx.bootstrap.serenity.task.User;
 
-public class SecurityGroupTest extends AbstractDataSetSystemTestCase {
+public class SecurityUserTest extends AbstractDataSetSystemTestCase {
 
     @Override
     protected User createUser() {
@@ -14,16 +14,12 @@ public class SecurityGroupTest extends AbstractDataSetSystemTestCase {
 
     @Override
     protected DataSet createDataSet() {
-        return DataSet.create("security/groups", "Groups");
+        return DataSet.create("security/users", "Users");
     }
 
     @Override
     protected Form createAddForm() {
         Form form = Form.create();
-        form.fieldByLabel("Name", "Serenity Test")
-                .fieldByLabel("Enabled", true)
-                .fieldByLabel("Roles", "Admin")
-                .fieldByLabel("Description", "A security group registered by Serenity");
         return form;
     }
 

@@ -89,4 +89,9 @@ public class Dashboard<D extends Dashboard<D>> implements Interaction {
     protected void updateValidation(Collection<Performable> steps) {
         // empty on purpose
     }
+
+    @SuppressWarnings("unchecked")
+    protected final D self() {
+        return (D) this;
+    }
 }

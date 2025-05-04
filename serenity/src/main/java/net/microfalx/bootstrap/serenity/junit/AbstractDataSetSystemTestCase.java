@@ -14,12 +14,24 @@ public abstract class AbstractDataSetSystemTestCase extends AbstractDashboardSys
     @Test
     @Order(10)
     void add() {
-        Form form = Form.create();
-        form.fieldByLabel("Name", "Serenity Test")
-                .fieldByLabel("Enabled", true)
-                .fieldByLabel("Roles", "Admin")
-                .fieldByLabel("Description", "A security group registered by Serenity");
+        if (!getDataSet().isCrud()) return;
+        Form form = createAddForm();
         actor.attemptsTo(getDataSet().add(form));
+    }
+
+    @Test
+    @Order(11)
+    void edit() {
+        if (!getDataSet().isCrud()) return;
+        Form form = createEditForm();
+        actor.attemptsTo(getDataSet().add(form));
+    }
+
+    @Test
+    @Order(12)
+    void delete() {
+        if (!getDataSet().isCrud()) return;
+        actor.attemptsTo(getDataSet().delete(null));
     }
 
     @Override
@@ -48,14 +60,18 @@ public abstract class AbstractDataSetSystemTestCase extends AbstractDashboardSys
      *
      * @return a non-bull instance
      */
-    protected abstract Form createAddForm();
+    protected Form createAddForm() {
+        throw new IllegalStateException("Data Set dashboards with CRUD enabled requires a form");
+    }
 
     /**
      * Creates the form used to edit an existing  record.
      *
      * @return a non-bull instance
      */
-    protected abstract Form createEditForm();
+    protected Form createEditForm() {
+        return createAddForm();
+    }
 
 
 }

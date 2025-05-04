@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.serenity.task;
 
+import lombok.Getter;
 import lombok.ToString;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Interaction;
@@ -15,6 +16,12 @@ import net.serenitybdd.screenplay.ensure.Ensure;
 public class DataSet extends Dashboard<DataSet> implements Interaction {
 
     /**
+     * Holds whether the data set has CRUD operations available.
+     */
+    @Getter
+    private boolean crud = true;
+
+    /**
      * Creates a data set dashboard reference.
      *
      * @param path  the path to the dashboard
@@ -27,6 +34,17 @@ public class DataSet extends Dashboard<DataSet> implements Interaction {
 
     private DataSet(String path, String title) {
         super(path, title);
+    }
+
+    /**
+     * Changes whether the data set has CRUD operations available.
+     *
+     * @param crud {@code true} if CRUD is available, {@code false} otherwise
+     * @return self
+     */
+    public DataSet setCrud(boolean crud) {
+        this.crud = crud;
+        return self();
     }
 
     /**
