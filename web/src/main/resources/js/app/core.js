@@ -282,16 +282,16 @@ Application.closeModal = function () {
 }
 
 /**
- * Shows an HTML fragment which contains a data set modal.
+ * Shows a dialog (modal) which contains the HTML fragment.
  *
  * @param {String} id the identifier of the modal (DOM element)
- * @param {String} html the modal
+ * @param {String} content the contained of the modal (HTML, Text, etc)
  * @return {bootstrap.Modal} the modal
  */
-Application.loadModal = function (id, html) {
+Application.loadModal = function (id, content) {
     //Logger.debug(html);
     $('#' + id).remove();
-    $(document.body).append(html);
+    $(document.body).append(content);
     let modal = new bootstrap.Modal('#' + id, {});
     modal.show();
     this.registerModal(modal);

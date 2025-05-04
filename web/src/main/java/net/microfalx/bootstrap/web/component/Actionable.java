@@ -17,7 +17,7 @@ import java.util.Set;
 public interface Actionable<A extends Actionable<A>> extends Itemable<A> {
 
     /**
-     * Returns the action name associated with this actionable.
+     * Returns the action (event) name associated with this actionable.
      * <p>
      * The action is converted to an event on the client side (JavaScript).
      *
@@ -26,7 +26,9 @@ public interface Actionable<A extends Actionable<A>> extends Itemable<A> {
     String getAction();
 
     /**
-     * Set the actionable action name.
+     * Set the action (event) name associated with this actionable.
+     * <p>
+     * The action will translate to an application event on the client side.
      *
      * @param action the action name
      * @return self
