@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.dataset;
 
 import com.jakewharton.fliptables.FlipTable;
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
@@ -22,8 +21,7 @@ class TextDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M,F,ID>
     @Override
     protected Resource doExport(DataSet<M, F, ID> dataSet, Optional<Page<M>> ms) {
         List<M> models = ms.orElse(Page.empty()).getContent();
-        Metadata<M, F, ID> metadata = dataSet.getMetadata();
-        List<F> fields = metadata.getFields();
+        List<F> fields = dataSet.getExportableFields();
         List<String> headers = fields.stream().map(Field::getName).toList();
         List<String [] > rows= new ArrayList<>();
         Resource resource;
