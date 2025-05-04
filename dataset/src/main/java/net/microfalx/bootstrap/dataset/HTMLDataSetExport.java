@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.dataset;
 
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
@@ -20,8 +19,7 @@ public class HTMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
     @Override
     protected Resource doExport(DataSet<M, F, ID> dataSet, Optional<Page<M>> ms) {
         List<M> models = ms.orElse(Page.empty()).getContent();
-        Metadata<M, F, ID> metadata = dataSet.getMetadata();
-        List<F> fields = metadata.getFields();
+        List<F> fields =  dataSet.getExportableFields();
         StringBuilder table = new StringBuilder();
         Resource resource;
         try {
@@ -40,10 +38,7 @@ public class HTMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
                   <thead class="table-dark">
                     <tr>
                 """);
-        String id = fields.stream().filter(Field::isId).findFirst().orElseThrow().getLabel();
-        table.append("         <th scope=\"col\">").append(id).append("</th>\n");
-        List<F> nonIDFields = fields.stream().filter(f -> !f.isId()).toList();
-        nonIDFields.forEach(f -> table.append("         <th scope=\"col\">").append(f.getLabel()).append("</th>\n"));
+        fields.forEach(f -> table.append("         <th scope=\"col\">").append(f.getLabel()).append("</th>\n"));
         table.append("""
                     </tr>
                  </thead>
@@ -55,9 +50,9 @@ public class HTMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
         try {
             for (M model : models) {
                 table.append("   <tr>\n");
-                String id = fields.stream().filter(Field::isId).findFirst().orElseThrow().get(model, String.class);
+                String id = fields.getFirst().get(model, String.class);
                 table.append("     <th scope=\"row\">").append(id).append("</th>\n");
-                List<F> nonIDFields = fields.stream().filter(f -> !f.isId()).toList();
+                List<F> nonIDFields = fields.subList(1,fields.size());
                 for (F field : nonIDFields) {
                     table.append("     <td>").append(StringUtils.defaultIfNull(field.get(model, String.class),
                             StringUtils.EMPTY_STRING)).append("</td>\n");
