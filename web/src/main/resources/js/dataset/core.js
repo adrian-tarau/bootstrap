@@ -264,6 +264,12 @@ DataSet.export = function (format, download) {
     return id;
 }
 
+DataSet.viewAs = function (format){
+  Application.get("export", {format: format, download:false}, function (data) {
+        DataSet.loadModal(data);
+    });
+}
+
 /**
  * Shows an HTML fragment which contains a data set modal.
  * @param {String} html the modal
@@ -526,6 +532,9 @@ DataSet.initActions = function () {
     Application.bind("dataset.export.csv", DataSet.export, "csv");
     Application.bind("dataset.export.xml", DataSet.export, "xml");
     Application.bind("dataset.export.json", DataSet.export, "json");
+
+    Application.bind("dataset.view_as.text", DataSet.viewAs, "text");
+    Application.bind("dataset.view_as.html", DataSet.viewAs, "html");
 }
 
 /**

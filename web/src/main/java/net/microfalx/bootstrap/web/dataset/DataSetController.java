@@ -658,10 +658,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             toolbar.add(new Button().setAction("dataset.upload").setText("Upload").setIcon("fa-solid fa-upload")
                     .setCssClass("dataset-drop-zone").setPosition(2).setDescription("Uploads a new " + dataSet.getName()));
         }
+        //toolbar.add(new Separator());
         toolbar.add(new Button().setText("Export").setIcon("fa-solid fa-file-export").setPosition(100)
                 .setDescription("Exports dashboard data").setMenu(getExportMenu(dataSet)));
-        // if (toolbar.hasChildren()) toolbar.add(new Separator());
-        //toolbar.add(new Button().setAction("print").setText("Print").setIcon("fa-solid fa-print").setPosition(100));
+        toolbar.add(new Button().setText("View As").setIcon("fa-solid fa-eye").setPosition(110).
+                setDescription("View dashboard data").setMenu(getViewAsMenu(dataSet)));
         //toolbar.add(new Separator());
         toolbar.add(new Button().setAction("dataset.refresh").setText("Refresh").setIcon("fa-solid fa-arrows-rotate").setPosition(200)
                 .setDescription("Refreshes the dashboard"));
@@ -694,6 +695,15 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                 .setIcon("fa-solid fa-folder-tree"));
         menu.add(new Item().setAction("dataset.export.json").setText("JavaScript Object Notation (JSON)")
                 .setIcon("fa-solid fa-folder-tree"));
+        return menu;
+    }
+
+    private Menu getViewAsMenu(DataSet<M, Field<M>, ID> dataSet) {
+        Menu menu = new Menu().setId("actions");
+        menu.add(new Item().setAction("dataset.view_as.text").setText("Text")
+                .setIcon("fa-solid fa-file-lines"));
+        menu.add(new Item().setAction("dataset.view_as.html").setText("HTML")
+                .setIcon("fa-solid fa-file-code"));
         return menu;
     }
 
