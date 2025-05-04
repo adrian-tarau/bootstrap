@@ -29,7 +29,7 @@
 
 <tr th:fragment="grid-row" th:class="${#dataset.getPrimaryRowClass(model)}">
     <div th:text="${#dataset.beforeBrowse(model)}" th:remove="tag"></div>
-    <td class="text-right" th:text="${#dataset.getCurrentIndex()}"></td>
+    <td class="text-right" th:text="${#dataset.getCurrentIndex()}" th:attr="data-table-row-id=${#dataset.getId(model)}"></td>
     <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}" th:with="alert=${#dataset.getAlert(model, field)},actionable=${#dataset.getActionable(model, field)},tooltip=${#dataset.getTooltip(model, field)}">
         <span th:if="${#dataset.hasDisplayValue(field)}" th:utext="${#dataset.getDisplayValue(model, field)}"
               th:class="${#dataset.getAlertClass(alert)}" th:style="${#dataset.getAlertStyle(alert)}" component:fast-tooltip="${tooltip}">
@@ -43,7 +43,7 @@
            th:utext="${#dataset.getDisplayValue(model, field)}"></a>
         <span th:if="${#dataset.hasChart(field)}" th:remove="tag"><chart:render inline="true" value="${#dataset.getChart(model, field)}"></chart:render></span>
     </td>
-    <td class="text-center" th:if="${#dataset.hasActions}">
+    <td id="dataset-actions" class="text-center" th:if="${#dataset.hasActions}">
         <a class="icon-link" href="#" th:attr="onclick=|DataSet.showActions(event, '${#dataset.getId(model)}')|"><i
                 class="fa-solid fa-ellipsis"></i></a>
     </td>
@@ -85,7 +85,7 @@
 
 <nav class="navbar navbar-expand-lg" th:fragment="toolbar">
     <div class="container-fluid ps-1">
-        <div class="collapse navbar-collapse">
+        <div id="dataset-toolbar" class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto">
                 <div th:each="button : ${#component.getChildren(toolbar)}" th:remove="tag">
                     <button th:if="${button.menu == null}" type="button" component:tooltip="${button}" th:attr="onclick=|Application.action('${button.action}')|"
@@ -103,7 +103,7 @@
             </ul>
             <div class="dataset-drop-zone"></div>
             <div class="me-2">
-                <span id="page_info" class="badge rounded-pill bg-success text-white p-2" th:text="${#dataset.getPageInfo()}"
+                <span id="dataset-toolbar-page-info" class="badge rounded-pill bg-success text-white p-2" th:text="${#dataset.getPageInfo()}"
                     component:tooltip-text="Displays the number of pages and number of records available using the current filter"></span>
                 <button class="btn btn-primary btn-sm" type="button" th:attr="onclick=|DataSet.trend()|" th:if="${hasTrend}"><i class="fa-solid fa-arrow-trend-up"></i></button>
             </div>
@@ -122,10 +122,10 @@
     <p id="dataset-message" class="d-none" th:if="${message}" th:utext="${message}"></p>
 </nav>
 
-<div class="text-center w-100 p-2 pt-5" th:fragment="grid-next-page" th:if="${#dataset.hasNext()}">
-    <span id="page_info_and_records" class="badge rounded-pill bg-success text-white p-2"
+<div id="dataset-footer" class="text-center w-100 p-2 pt-5" th:fragment="grid-next-page" th:if="${#dataset.hasNext()}">
+    <span id="dataset-footer-records" class="badge rounded-pill bg-success text-white p-2"
           th:text="${#dataset.getPageAndRecordInfo()}" component:tooltip-text="Displays the number of pages and number of records available using the current filter"></span>
-    <a id="more_results" href="#" th:data-page="${#dataset.getNextPage()}"
+    <a id="dataset-footer-more-results" href="#" th:data-page="${#dataset.getNextPage()}"
        th:onclick="DataSet.loadPage(this.getAttribute('data-page')); return false">
     <span class="badge rounded-pill bg-success-subtle text-success-emphasis p-2" component:tooltip-text="Loads next page with results">
         More results
@@ -138,7 +138,7 @@
         <div class="card mb-4">
             <div class="card-header border-0 pb-0" th:if="${#page.hasTitle()}">
                 <div class="d-flex justify-content-between">
-                    <h3 class="card-title fs-3" th:text="${#page.getTitle()}"></h3>
+                    <h3 id="dashboard-title" class="card-title fs-3" th:text="${#page.getTitle()}"></h3>
                     <div>
                         <span th:replace="~{ fragments/page :: help}"></span>
                     </div>
