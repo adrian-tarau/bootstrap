@@ -4,6 +4,8 @@ import com.google.common.collect.Iterables;
 import net.microfalx.bootstrap.dataset.*;
 import net.microfalx.bootstrap.dataset.annotation.Align;
 import net.microfalx.bootstrap.dataset.annotation.Component;
+import net.microfalx.bootstrap.dataset.annotation.Tab;
+import net.microfalx.bootstrap.dataset.annotation.Tabs;
 import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.bootstrap.model.Field;
@@ -45,6 +47,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.bootstrap.web.template.TemplateUtils.getModelAttribute;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -285,6 +288,16 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         }
         if (hasColumnGroups == null) hasColumnGroups = false;
         return hasColumnGroups;
+    }
+
+    /**
+     * Returns the groups of fields used to create the form.
+     *
+     * @return a non-null instance
+     */
+    public FormGroups<M, F, ID> getFormGroups() {
+        DataSet<M, F, ID> dataSet = getDataSet();
+        return new FormGroups<>(dataSet, dataSet.getVisibleFields());
     }
 
     /**
@@ -1173,6 +1186,129 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
 
     public boolean isModelOrEnum(Field<M> field) {
         return field.getDataType() == Field.DataType.MODEL || field.getDataType() == Field.DataType.ENUM;
+    }
+
+    public static class FormGroup<M, F extends Field<M>, ID> {
+
+        private final String id;
+        private final String label;
+        private final List<F> fields = new ArrayList<>();
+        private boolean active;
+
+        FormGroup(String label) {
+            requireNonNull(label);
+            this.label = label;
+            this.id = toIdentifier(label);
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public String getDomId() {
+            return "#" + getId();
+        }
+
+        public String getTabCssClass() {
+            return active ? "active" : "";
+        }
+
+        public String getContentCssClass() {
+            return active ? "show active" : "";
+        }
+
+        public boolean isField() {
+            return fields.size() == 1;
+        }
+
+        public boolean isGroup() {
+            return !isField();
+        }
+
+        public Collection<F> getFields() {
+            return unmodifiableCollection(fields);
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", FormGroup.class.getSimpleName() + "[", "]")
+                    .add("label='" + label + "'")
+                    .add("fields=" + fields)
+                    .toString();
+        }
+    }
+
+    public static class FormGroups<M, F extends Field<M>, ID> {
+
+        private final DataSet<M, F, ID> dataSet;
+        private final Collection<F> fields;
+        private final List<FormGroup<M, F, ID>> groups = new ArrayList<>();
+
+        FormGroups(DataSet<M, F, ID> dataSet, Collection<F> fields) {
+            this.dataSet = dataSet;
+            this.fields = fields;
+            init();
+        }
+
+        public boolean hasGroups() {
+            return !groups.isEmpty();
+        }
+
+        public Collection<FormGroup<M, F, ID>> getGroups() {
+            return unmodifiableCollection(groups);
+        }
+
+        private FormGroup<M, F, ID> findGroup(String label) {
+            for (FormGroup<M, F, ID> group : groups) {
+                if (group.label.equals(label)) return group;
+            }
+            return null;
+        }
+
+        private void init() {
+            Tabs tabs = dataSet.getMetadata().findAnnotation(Tabs.class);
+            if (tabs == null) return;
+            boolean useLabelAsGroup = tabs.useLabelAsGroup();
+            FormGroup<M, F, ID> defaultGroup = new FormGroup<>(tabs.defaultTab());
+            defaultGroup.active = true;
+            groups.add(defaultGroup);
+            for (F field : fields) {
+                Tab tabAnnot = field.findAnnotation(Tab.class);
+                FormGroup<M, F, ID> group;
+                if (tabAnnot != null) {
+                    group = findGroup(tabAnnot.label());
+                    if (group == null) {
+                        group = new FormGroup<>(field.getGroup());
+                        groups.add(group);
+                    }
+                } else if (isNotEmpty(field.getGroup()) && useLabelAsGroup) {
+                    group = findGroup(field.getGroup());
+                    if (group == null) {
+                        group = new FormGroup<>(field.getGroup());
+                        groups.add(group);
+                    }
+                } else {
+                    group = defaultGroup;
+                }
+                group.fields.add(field);
+            }
+            System.out.println("Groups");
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", FormGroups.class.getSimpleName() + "[", "]")
+                    .add("groups=" + groups)
+                    .toString();
+        }
     }
 
     public static class ColumnGroup<M, F extends Field<M>, ID> {

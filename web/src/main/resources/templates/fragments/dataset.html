@@ -175,7 +175,30 @@
     </div>
 </div>
 
-<div th:fragment="fields" class="mb-1 row" th:each="field : ${#dataset.getFields()}">
+<div th:fragment="fields" th:remove="tag" th:with="form=${#dataset.getFormGroups()}">
+    <div th:unless="${form.hasGroups()}" th:remove="tag">
+        <th:block th:each="field : ${#dataset.getFields()}">
+            <div th:replace="~{ fragments/dataset :: field(${field})}"></div>
+        </th:block>
+    </div>
+    <ul th:if="${form.hasGroups()}" class="nav nav-tabs" role="tablist">
+        <li class="nav-item" th:each="group : ${form.getGroups()}">
+            <a class="nav-link" th:classappend="${group.getTabCssClass()}" data-bs-toggle="tab" th:attr="data-bs-target=${group.getDomId()}" type="button" th:text="${group.label}"></a>
+        </li>
+    </ul>
+    <div class="tab-content p-2">
+        <div th:each="group : ${form.getGroups()}" th:remove="tag">
+            <div th:id="${group.getId()}" class="tab-pane fade" th:classappend="${group.getContentCssClass()}" >
+                <th:block th:each="field : ${group.getFields()}">
+                    <div th:replace="~{ fragments/dataset :: field(${field})}"></div>
+                </th:block>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div th:fragment="field(field)" class="mb-1 row">
     <label th:attr="for=${field.name}" th:class="${#dataset.getInputLabelClass(field)}" th:text="${field.label}"></label>
     <div th:class="${#dataset.getInputContainerClass(field)}">
         <input th:if="${#dataset.isInputField(field)}" th:name="${field.name}"
