@@ -186,7 +186,7 @@
             <a class="nav-link" th:classappend="${group.getTabCssClass()}" data-bs-toggle="tab" th:attr="data-bs-target=${group.getDomId()}" type="button" th:text="${group.label}"></a>
         </li>
     </ul>
-    <div class="tab-content p-2">
+    <div th:if="${form.hasGroups()}" class="tab-content p-2">
         <div th:each="group : ${form.getGroups()}" th:remove="tag">
             <div th:id="${group.getId()}" class="tab-pane fade" th:classappend="${group.getContentCssClass()}" >
                 <th:block th:each="field : ${group.getFields()}">

@@ -46,6 +46,7 @@
         <depends-on-asset-bundle>app</depends-on-asset-bundle>
 
         <asset path="sort.css" type="stylesheet"/>
+        <asset path="dialog.css" type="stylesheet"/>
         <asset path="grid.css" type="stylesheet"/>
         <asset path="formatting.css" type="stylesheet"/>
         <asset path="tools.css" type="stylesheet"/>

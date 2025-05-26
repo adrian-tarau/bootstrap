@@ -24,7 +24,6 @@ import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.dataset.DataSetChartProvider;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
 import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.apache.commons.lang3.mutable.MutableLong;
@@ -548,7 +547,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public String getAlertIcon(Alert alert) {
         if (alert == null) return null;
-        if (StringUtils.isEmpty(alert.getMessage())) {
+        if (isEmpty(alert.getMessage())) {
             return "fa-solid fa-circle fa-blank";
         } else {
             return switch (alert.getIcon()) {
@@ -1251,6 +1250,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         private final DataSet<M, F, ID> dataSet;
         private final Collection<F> fields;
         private final List<FormGroup<M, F, ID>> groups = new ArrayList<>();
+        private final Map<String, String> groupOverrides = new HashMap<>();
 
         FormGroups(DataSet<M, F, ID> dataSet, Collection<F> fields) {
             this.dataSet = dataSet;
@@ -1259,7 +1259,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         }
 
         public boolean hasGroups() {
-            return !groups.isEmpty();
+            return groups.size() > 1;
         }
 
         public Collection<FormGroup<M, F, ID>> getGroups() {
@@ -1276,6 +1276,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         private void init() {
             Tabs tabs = dataSet.getMetadata().findAnnotation(Tabs.class);
             if (tabs == null) return;
+            initOverrides(tabs);
             boolean useLabelAsGroup = tabs.useLabelAsGroup();
             FormGroup<M, F, ID> defaultGroup = new FormGroup<>(tabs.defaultTab());
             defaultGroup.active = true;
@@ -1284,23 +1285,38 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
                 Tab tabAnnot = field.findAnnotation(Tab.class);
                 FormGroup<M, F, ID> group;
                 if (tabAnnot != null) {
-                    group = findGroup(tabAnnot.label());
-                    if (group == null) {
-                        group = new FormGroup<>(field.getGroup());
-                        groups.add(group);
-                    }
+                    group = findOrCreateGroup(tabAnnot.label());
                 } else if (isNotEmpty(field.getGroup()) && useLabelAsGroup) {
-                    group = findGroup(field.getGroup());
-                    if (group == null) {
-                        group = new FormGroup<>(field.getGroup());
-                        groups.add(group);
-                    }
+                    group = findOrCreateGroup(field.getGroup());
                 } else {
-                    group = defaultGroup;
+                    String label = groupOverrides.get(field.getName().toLowerCase());
+                    if (isNotEmpty(label)) {
+                        group = findOrCreateGroup(label);
+                    } else {
+                        group = defaultGroup;
+                    }
                 }
                 group.fields.add(field);
             }
-            System.out.println("Groups");
+        }
+
+        private FormGroup<M, F, ID> findOrCreateGroup(String label) {
+            FormGroup<M, F, ID> group = findGroup(label);
+            if (group == null) {
+                group = new FormGroup<>(label);
+                groups.add(group);
+            }
+            return group;
+        }
+
+        private void initOverrides(Tabs tabs) {
+            for (String attribute : tabs.attributes()) {
+                groupOverrides.put(attribute.toLowerCase(), "Attributes");
+            }
+            for (Tab tab : tabs.fields()) {
+                if (isEmpty(tab.fieldName())) continue;
+                groupOverrides.put(tab.fieldName().toLowerCase(), tab.label());
+            }
         }
 
         @Override

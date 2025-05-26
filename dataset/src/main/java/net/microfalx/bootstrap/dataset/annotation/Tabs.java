@@ -8,6 +8,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Inherited
 public @interface Tabs {
 
     /**
@@ -25,4 +26,20 @@ public @interface Tabs {
      * @return the name of the tab
      */
     String defaultTab() default "General";
+
+    /**
+     * Returns an array of field names that should be displayed in a tab called "Attributes".
+     *
+     * @return the attributes
+     */
+    String[] attributes() default {};
+
+    /**
+     * Returns the per-field tab overrides
+     *
+     * @return an array of tabs to override the default tab behavior
+     */
+    Tab[] fields() default {};
+
+
 }
