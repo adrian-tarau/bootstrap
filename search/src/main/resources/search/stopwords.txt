@@ -11,7 +11,7 @@ for
 if
 in
 into
-is,
+is
 it
 no
 not
@@ -23,7 +23,7 @@ that
 the
 their
 then
-there,
+there
 these
 they
 this

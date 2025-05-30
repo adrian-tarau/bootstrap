@@ -31,11 +31,11 @@ public final class ApplicationService implements InitializingBean {
 
     private static final long timestamp = System.currentTimeMillis();
 
-    @Autowired
-    private ApplicationProperties applicationProperties;
+    @Autowired(required = false)
+    private ApplicationProperties applicationProperties = new ApplicationProperties();
 
-    @Autowired
-    private AssetProperties assetProperties;
+    @Autowired(required = false)
+    private AssetProperties assetProperties = new AssetProperties();
 
     @Autowired
     private WebContainerService webContainerService;

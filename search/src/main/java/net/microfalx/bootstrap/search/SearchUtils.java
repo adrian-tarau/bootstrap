@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.metrics.Metrics;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.index.*;
@@ -22,8 +24,8 @@ public class SearchUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchUtils.class);
 
-    static Metrics INDEX_METRICS = Metrics.of("Index");
-    static Metrics SEARCH_METRICS = Metrics.of("Search");
+    public static Metrics INDEX_METRICS = Metrics.of("Index");
+    public static Metrics SEARCH_METRICS = Metrics.of("Search");
 
     public static final String DEFAULT_FIELD = BODY_FIELD;
 
@@ -283,6 +285,18 @@ public class SearchUtils {
                 LOGGER.warn("Failed to extract terms for '" + fieldName + ", root cause: " + e.getMessage());
             }
         }
+    }
+
+    /**
+     * Returns whether the given throwable is a Lucene exception.
+     *
+     * @param throwable the throwable
+     * @return <code>true</code> if Lucene exception, <code>false</code> otherwise
+     */
+    public static boolean isLuceneException(Throwable throwable) {
+        Throwable rootCause = ExceptionUtils.getRootCause(throwable);
+        if (rootCause == null) rootCause = throwable;
+        return ClassUtils.getName(rootCause).startsWith("org.apache.lucene");
     }
 
     private final static String[] OPERATORS = new String[]{

@@ -11,13 +11,13 @@ import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.ThreadPool;
 import org.apache.lucene.document.LongPoint;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.IndexNotFoundException;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.StoredFields;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.store.NativeFSLockFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -37,12 +37,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static java.util.Collections.emptySet;
 import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
 import static net.microfalx.lang.FormatterUtils.formatDuration;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.StringUtils.*;
@@ -56,8 +56,8 @@ public class SearchService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchService.class);
 
-    @Autowired
-    private SearchProperties searchProperties;
+    @Autowired(required = false)
+    private SearchProperties searchProperties = new SearchProperties();
 
     @Autowired
     private ResourceService resourceService;
@@ -71,7 +71,7 @@ public class SearchService implements InitializingBean {
     private volatile ThreadPool threadPool;
 
     private final Object lock = new Object();
-    private volatile SearchHolder searchHolder;
+    private volatile Searcher searcher;
 
     private final Map<String, String> attributeClasses = new ConcurrentHashMap<>();
     private final Collection<SearchListener> listeners = new CopyOnWriteArrayList<>();
@@ -89,6 +89,21 @@ public class SearchService implements InitializingBean {
      */
     public ThreadPool getThreadPool() {
         return threadPool;
+    }
+
+    /**
+     * Registers a search listener.
+     *
+     * @param listener the listener to register
+     */
+    public void registerListener(SearchListener listener) {
+        requireNonNull(listener);
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+            LOGGER.debug("Registered search listener {}", ClassUtils.getName(listener));
+        } else {
+            LOGGER.warn("Search listener already registered {}", ClassUtils.getName(listener));
+        }
     }
 
     /**
@@ -150,7 +165,7 @@ public class SearchService implements InitializingBean {
                 @Override
                 public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
                     LOGGER.info("Find failure " + throwable.getMessage());
-                    releaseSearchHolder();
+                    releaseSearcher();
                 }
             });
             return retryTemplate.execute((RetryCallback<Document, Exception>) context -> doFind(id));
@@ -187,7 +202,7 @@ public class SearchService implements InitializingBean {
      * Next search will see latests documents available in the index.
      */
     public void reload() {
-        releaseSearchHolder();
+        releaseSearcher();
     }
 
     /**
@@ -341,6 +356,24 @@ public class SearchService implements InitializingBean {
         return true;
     }
 
+    /**
+     * Returns a searcher which carries an {@link org.apache.lucene.search.IndexSearcher} and associated
+     * objects.
+     *
+     * @param directory the directory where the index is stored
+     * @param options   the thread pool to use for search operations
+     * @return a non-null instance
+     * @throws SearchException if the index cannot be opened
+     */
+    public Searcher createSearcher(File directory, SearcherOptions options) {
+        LOGGER.debug("Open searcher");
+        try {
+            return SEARCH_METRICS.timeCallable("Open", () -> new Searcher(directory, options));
+        } catch (Exception e) {
+            return ExceptionUtils.throwException(e);
+        }
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         initListeners();
@@ -353,8 +386,8 @@ public class SearchService implements InitializingBean {
         retryTemplate.registerListener(new RetryListener() {
             @Override
             public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-                LOGGER.info("Failure detected during action '" + operation + "', root cause: " + throwable.getMessage());
-                releaseSearchHolder();
+                LOGGER.info("Failure detected during action '{}', root cause: {}", operation, getRootCauseMessage(throwable));
+                releaseSearcher();
             }
         });
         try {
@@ -371,9 +404,7 @@ public class SearchService implements InitializingBean {
         // String normalizedQuery = SearchUtils.normalizeQuery(query.getQuery(), query.isAutoWildcard(), query.isAllowLeadingWildcard()).trim();
         String normalizedQuery = query.getQuery();
         if (isNotEmpty(query.getFilter())) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("(").append(normalizedQuery).append(") AND (").append(query.getFilter()).append(")");
-            normalizedQuery = builder.toString();
+            normalizedQuery = "(" + normalizedQuery + ") AND (" + query.getFilter() + ")";
         }
         return normalizedQuery;
     }
@@ -500,7 +531,7 @@ public class SearchService implements InitializingBean {
     }
 
     private IndexSearcher getIndexSearcher() {
-        return getSearchHolder(false).getIndexSearcher();
+        return getSearcher(false).getSearcher();
     }
 
     /**
@@ -511,28 +542,25 @@ public class SearchService implements InitializingBean {
      * @return a non-null instance
      * @throws SearchException if the index cannot be opened
      */
-    private SearchHolder getSearchHolder(boolean reopen) {
+    private Searcher getSearcher(boolean reopen) {
         synchronized (lock) {
-            reopen = reopen || (searchHolder != null && searchHolder.isStale());
-            if (searchHolder == null || reopen) {
-                if (searchHolder != null) releaseSearchHolder();
-                LOGGER.debug("Open searcher");
-                try {
-                    searchHolder = SEARCH_METRICS.timeCallable("Open", SearchHolder::new);
-                } catch (Exception e) {
-                    return ExceptionUtils.throwException(e);
-                }
+            reopen = reopen || (searcher != null && searcher.isStale());
+            if (searcher == null || reopen) {
+                if (searcher != null) releaseSearcher();
+                SearcherOptions options = SearcherOptions.create().setThreadPool(getThreadPool())
+                        .setRefreshInterval(searchProperties.getRefreshInterval());
+                searcher = createSearcher(getIndexDirectory(), options);
             }
-            return searchHolder;
+            return searcher;
         }
     }
 
-    private void releaseSearchHolder() {
+    private void releaseSearcher() {
         LOGGER.debug("Release searcher");
         synchronized (lock) {
-            if (searchHolder != null) {
-                SEARCH_METRICS.time("Release", (t) -> searchHolder.release());
-                searchHolder = null;
+            if (searcher != null) {
+                searcher.release();
+                searcher = null;
             }
         }
     }
@@ -542,8 +570,8 @@ public class SearchService implements InitializingBean {
         retryTemplate.registerListener(new RetryListener() {
             @Override
             public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-                LOGGER.info("Failed to search for '" + searchQuery + ", root cause: " + ExceptionUtils.getRootCauseMessage(throwable));
-                releaseSearchHolder();
+                LOGGER.info("Failed to search for '" + searchQuery + ", root cause: " + getRootCauseMessage(throwable));
+                releaseSearcher();
             }
         });
         return retryTemplate;
@@ -561,13 +589,12 @@ public class SearchService implements InitializingBean {
     }
 
     private void initListeners() {
-        LOGGER.debug("Register search listeners:");
         Collection<SearchListener> discoveredListeners = ClassUtils.resolveProviderInstances(SearchListener.class);
+        LOGGER.info("Register {} search listeners", discoveredListeners.size());
         for (SearchListener discoveredListener : discoveredListeners) {
-            LOGGER.debug(" - " + ClassUtils.getName(discoveredListener));
-            this.listeners.add(discoveredListener);
+            LOGGER.debug(" - {}", ClassUtils.getName(discoveredListener));
+            registerListener(discoveredListener);
         }
-        LOGGER.info("Registered " + listeners.size() + " search listeners");
     }
 
     private void initTaskExecutor() {
@@ -600,49 +627,4 @@ public class SearchService implements InitializingBean {
         }
     }
 
-    /**
-     * Holds a {@link org.apache.lucene.index.IndexWriter} and any required structures.
-     */
-    private class SearchHolder {
-
-        private final IndexSearcher indexSearcher;
-        private final IndexReader indexReader;
-        private final Directory directory;
-
-        private final AtomicBoolean stale = new AtomicBoolean();
-        private final AtomicInteger useCount = new AtomicInteger(0);
-        private final long created = System.currentTimeMillis();
-
-        private SearchHolder() throws IOException {
-            File indexDirectory = getIndexDirectory();
-            directory = new NIOFSDirectory(indexDirectory.toPath(), NativeFSLockFactory.getDefault());
-            indexReader = SEARCH_METRICS.timeCallable("Open Reader", () -> DirectoryReader.open(directory));
-            indexSearcher = SEARCH_METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(indexReader, getThreadPool()));
-        }
-
-        public IndexReader getIndexReader() {
-            return indexReader;
-        }
-
-        public IndexSearcher getIndexSearcher() {
-            return indexSearcher;
-        }
-
-        public synchronized void release() {
-            try {
-                indexReader.close();
-            } catch (Exception e) {
-                LOGGER.error("Failed to close index reader", e);
-            }
-            try {
-                if (directory != null) directory.close();
-            } catch (IOException e) {
-                LOGGER.error("Failed to rollback index", e);
-            }
-        }
-
-        public boolean isStale() {
-            return millisSince(created) > searchProperties.getRefreshInterval().toMillis();
-        }
-    }
 }

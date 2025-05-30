@@ -29,6 +29,7 @@ public abstract class PojoField<M> extends AbstractField<M> {
 
     @Override
     public Object get(M model) {
+        requireNonNull(model);
         if (getter == null) throw new ModelException("The field '" + getName() + "' cannot be read");
         try {
             return getter.invoke(model);
@@ -39,12 +40,15 @@ public abstract class PojoField<M> extends AbstractField<M> {
 
     @Override
     public <V> V get(M model, Class<V> type) {
+        requireNonNull(model);
+        requireNonNull(type);
         Object value = get(model);
         return Field.from(value, type);
     }
 
     @Override
     public void set(M model, Object value) {
+        requireNonNull(model);
         if (setter == null) throw new ModelException("The field '" + getName() + "' is read only");
         try {
             value = from(value, getDataClass());

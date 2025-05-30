@@ -6,7 +6,6 @@ import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.apache.lucene.analysis.core.StopFilterFactory;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.en.EnglishPossessiveFilterFactory;
-import org.apache.lucene.analysis.en.PorterStemFilterFactory;
 import org.apache.lucene.queryparser.classic.QueryParser;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -28,7 +27,7 @@ public class Analyzers {
     }
 
     /**
-     * Creates an analyzer used during indexing.
+     * Creates an analyzer used during indexing & searching.
      *
      * @return a non-null instance
      */
@@ -39,8 +38,7 @@ public class Analyzers {
                     .addTokenFilter(EnglishPossessiveFilterFactory.NAME)
                     .addTokenFilter(LowerCaseFilterFactory.NAME)
                     .addTokenFilter(StopFilterFactory.NAME, "ignoreCase", "true",
-                            "words", "stopwords.txt", "format", "wordset")
-                    .addTokenFilter(PorterStemFilterFactory.NAME);
+                            "words", "stopwords.txt", "format", "wordset");
             return builder.build();
         } catch (Exception e) {
             throw new IndexException("Could not create analyzer", e);

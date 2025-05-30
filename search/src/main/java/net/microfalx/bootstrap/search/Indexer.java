@@ -1,0 +1,233 @@
+package net.microfalx.bootstrap.search;
+
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.store.AlreadyClosedException;
+import org.apache.lucene.store.Directory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.retry.support.RetryTemplate;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static java.lang.System.currentTimeMillis;
+import static net.microfalx.bootstrap.search.SearchUtils.INDEX_METRICS;
+import static net.microfalx.bootstrap.search.SearchUtils.isLuceneException;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.throwException;
+
+/**
+ * Represents an index in the search system.
+ * <p>
+ * This class wraps Lucene structures supporting the indexer.
+ */
+public class Indexer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Indexer.class);
+
+    private final IndexWriter indexWriter;
+    private final Directory directory;
+    private final IndexerOptions options;
+
+    private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
+    private final Lock rlock = lock.readLock();
+    private final Lock wlock = lock.writeLock();
+
+    private volatile long indexLastUpdated;
+    private volatile long indexLastCommited = currentTimeMillis();
+    private volatile long indexLastMerged = currentTimeMillis();
+    private final AtomicBoolean indexChanged = new AtomicBoolean(false);
+    private final AtomicBoolean indexChangedOptimizationPending = new AtomicBoolean(false);
+    private final static ThreadLocal<Boolean> READ_LOCK_RELEASED = ThreadLocal.withInitial(() -> Boolean.FALSE);
+
+    Indexer(IndexWriter indexWriter, Directory directory, IndexerOptions options) {
+        requireNonNull(indexWriter);
+        requireNonNull(directory);
+        requireNonNull(directory);
+        this.indexWriter = indexWriter;
+        this.directory = directory;
+        this.options = options;
+    }
+
+    /**
+     * Returns the indexer options.
+     *
+     * @return a non-null instance
+     */
+    public IndexerOptions getOptions() {
+        return options;
+    }
+
+    /**
+     * Returns the Lucene index writer.
+     *
+     * @return a non-null instance
+     */
+    public IndexWriter getWriter() {
+        return indexWriter;
+    }
+
+    /**
+     * Returns the Lucene directory where the index is stored.
+     *
+     * @return a non-null instance
+     */
+    public Directory getDirectory() {
+        return directory;
+    }
+
+    /**
+     * Returns whether the index is opened
+     *
+     * @return {@code true} if the index is open, {@code false} otherwise
+     */
+    public boolean isOpen() {
+        return indexWriter.isOpen();
+    }
+
+    /**
+     * Returns a count with documents in the index.
+     *
+     * @return a positive integer
+     */
+    public long getDocumentCount() {
+        return indexWriter.getDocStats().numDocs;
+    }
+
+    /**
+     * Returns a count with documents pending in memory.
+     *
+     * @return a positive integer
+     */
+    public int getPendingDocumentCount() {
+        return (int) (indexWriter.getPendingNumDocs() - getDocumentCount());
+    }
+
+    /**
+     * Commits pending changes to the index.
+     */
+    public void commit() {
+        lockForRead();
+        try {
+            if (!isOpen()) {
+                LOGGER.info("Index is closed, cannot commit changes");
+            } else {
+                doWithIndex("Commit", indexWriter -> {
+                    LOGGER.debug("Committing index writer");
+                    if (indexWriter.isOpen()) {
+                        indexWriter.flush();
+                        indexWriter.commit();
+                    }
+                    return null;
+                });
+                indexLastCommited = currentTimeMillis();
+            }
+        } catch (AlreadyClosedException e) {
+            LOGGER.error("Index closed to commit changes to index", e);
+        } catch (Exception e) {
+            LOGGER.error("Failed to commit changes to index", e);
+        } finally {
+            unlockForRead();
+        }
+        try {
+            indexCommited();
+        } catch (Exception e) {
+            LOGGER.error("Failed to commit index", e);
+        }
+    }
+
+    /**
+     * Commits pending changes to the index, closes the index writer and releases resources.
+     */
+    public void release() {
+        commit();
+        unlockForRead();
+        wlock.lock();
+        try {
+            try {
+                if (isOpen()) indexWriter.close();
+            } catch (IOException e) {
+                LOGGER.error("Failed to close index", e);
+            }
+            try {
+                directory.close();
+            } catch (IOException e) {
+                LOGGER.error("Failed to close directory", e);
+            }
+        } finally {
+            wlock.unlock();
+        }
+    }
+
+    /**
+     * Performs an operation on an index.
+     *
+     * @param name     the action name
+     * @param callback the index callback
+     */
+    public <R> R doWithIndex(String name, Callback<R> callback) {
+        lockForRead();
+        try {
+            if (!isOpen()) throw new IndexException("Index is closed");
+            RetryTemplate template = new RetryTemplate();
+            return template.execute(context -> INDEX_METRICS.getTimer(name).recordCallable(() -> callback.doWithIndex(indexWriter)));
+        } catch (Exception e) {
+            if (isLuceneException(e)) release();
+            return throwException(e);
+        } finally {
+            markIndexChanged(false);
+            unlockForRead();
+        }
+    }
+
+    void markIndexChanged(boolean commit) {
+        if (commit) {
+            commit();
+        } else {
+            indexChanged();
+        }
+    }
+
+    protected void indexChanged() {
+        indexChanged.set(true);
+        indexLastUpdated = currentTimeMillis();
+    }
+
+    protected void indexCommited() {
+        indexChanged.set(false);
+        indexLastUpdated = currentTimeMillis();
+        indexChangedOptimizationPending.set(true);
+    }
+
+    private void lockForRead() {
+        rlock.lock();
+        READ_LOCK_RELEASED.set(Boolean.FALSE);
+    }
+
+    private void unlockForRead() {
+        if (!READ_LOCK_RELEASED.get()) {
+            rlock.unlock();
+            READ_LOCK_RELEASED.set(Boolean.TRUE);
+        }
+    }
+
+    /**
+     * A callback interface for operations on the index.
+     *
+     * @param <R> the return type of the operation
+     */
+    public interface Callback<R> {
+
+        /**
+         * Invoked to perform an operation on the index under a retry loop.
+         *
+         * @param indexWriter the Lucene index writer
+         * @return the result of the operation
+         * @throws Exception the exception that may be thrown during the operation
+         */
+        R doWithIndex(IndexWriter indexWriter) throws Exception;
+    }
+}
