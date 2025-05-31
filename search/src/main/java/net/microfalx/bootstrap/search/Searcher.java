@@ -1,7 +1,9 @@
 package net.microfalx.bootstrap.search;
 
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
@@ -12,6 +14,7 @@ import org.springframework.retry.support.RetryTemplate;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -35,7 +38,7 @@ public class Searcher {
     private final IndexReader indexReader;
     private final Directory directory;
 
-    private final AtomicBoolean open = new AtomicBoolean();
+    private final AtomicBoolean open = new AtomicBoolean(false);
     private final AtomicInteger useCount = new AtomicInteger(0);
     private final long created = System.currentTimeMillis();
 
@@ -50,6 +53,7 @@ public class Searcher {
         this.directory = new NIOFSDirectory(directory.toPath(), NativeFSLockFactory.getDefault());
         indexReader = SEARCH_METRICS.timeCallable("Open Reader", () -> DirectoryReader.open(this.directory));
         indexSearcher = SEARCH_METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(this.indexReader, options.getThreadPool()));
+        open.set(true);
     }
 
     /**
@@ -90,6 +94,57 @@ public class Searcher {
     }
 
     /**
+     * Returns the Lucene stored fields.
+     *
+     * @return a non-null instance
+     */
+    public StoredFields getStoredFields() {
+        rlock.lock();
+        try {
+            return indexReader.storedFields();
+        } catch (IOException e) {
+            throw new SearchException("Failed to retrieve stored fields", e);
+        } finally {
+            rlock.unlock();
+        }
+    }
+
+    /**
+     * Returns the Lucene document for the given document ID.
+     *
+     * @param docID the document ID
+     * @return a non-null instance of {@link Document}
+     */
+    public Document getDocument(int docID) {
+        rlock.lock();
+        try {
+            return getStoredFields().document(docID);
+        } catch (IOException e) {
+            throw new SearchException("Failed to retrieve document with ID " + docID, e);
+        } finally {
+            rlock.unlock();
+        }
+    }
+
+    /**
+     * Returns the Lucene document for the given document ID.
+     *
+     * @param docID      the document ID
+     * @param fieldNames the set of field names to retrieve
+     * @return a non-null instance of {@link Document}
+     */
+    public Document getDocument(int docID, Set<String> fieldNames) {
+        rlock.lock();
+        try {
+            return getStoredFields().document(docID, fieldNames);
+        } catch (IOException e) {
+            throw new SearchException("Failed to retrieve document with ID " + docID, e);
+        } finally {
+            rlock.unlock();
+        }
+    }
+
+    /**
      * Performs an operation on an index.
      *
      * @param name     the action name
@@ -97,16 +152,30 @@ public class Searcher {
      */
     public <R> R doWithSearcher(String name, Searcher.Callback<R> callback) {
         rlock.lock();
+        boolean shouldClose = false;
         try {
-            if (!isOpen()) throw new IndexException("Index is closed");
-            RetryTemplate template = new RetryTemplate();
-            return template.execute(context -> INDEX_METRICS.getTimer(name).recordCallable(() -> callback.doWithSearcher(indexSearcher)));
+            if (isOpen()) {
+                RetryTemplate template = new RetryTemplate();
+                return template.execute(context -> INDEX_METRICS.getTimer(name).recordCallable(() -> callback.doWithSearcher(indexSearcher)));
+            } else {
+                throw new SearchException("Searcher is not open");
+            }
         } catch (Exception e) {
-            if (isLuceneException(e)) release();
+            shouldClose = isLuceneException(e);
             return throwException(e);
         } finally {
             rlock.unlock();
+            if (shouldClose) release();
         }
+    }
+
+    /**
+     * Returns whether the searcher is stale and needs to be refreshed.
+     *
+     * @return {@code true} if the searcher is stale, {@code false} otherwise
+     */
+    public boolean isStale() {
+        return millisSince(created) > options.getRefreshInterval().toMillis();
     }
 
     /**
@@ -140,15 +209,6 @@ public class Searcher {
         } finally {
             wlock.unlock();
         }
-    }
-
-    /**
-     * Returns whether the searcher is stale and needs to be refreshed.
-     *
-     * @return {@code true} if the searcher is stale, {@code false} otherwise
-     */
-    public boolean isStale() {
-        return millisSince(created) > options.getRefreshInterval().toMillis();
     }
 
     /**

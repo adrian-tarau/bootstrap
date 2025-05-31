@@ -66,6 +66,14 @@ public class IndexService implements InitializingBean {
     private volatile Indexer indexer;
 
     /**
+     * Returns the service used to access the content of the documents.
+     * @return a non-null instance
+     */
+    public ContentService getContentService() {
+        return contentService;
+    }
+
+    /**
      * Returns the thread pool used by the index service.
      *
      * @return a non-null instance
@@ -421,7 +429,7 @@ public class IndexService implements InitializingBean {
             LOGGER.debug("Fire indexed listener for {} documents", documents.size());
             for (IndexListener listener : listeners) {
                 try {
-                    listener.indexed(documents);
+                    listener.afterIndexing(documents);
                 } catch (Exception e) {
                     LOGGER.atError().setCause(e).log("Failed to process indexed documents with listener {}",
                             ClassUtils.getName(listener));

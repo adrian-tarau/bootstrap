@@ -83,6 +83,14 @@ public class SearchService implements InitializingBean {
     private final CountDownLatch fieldLoadingLatch = new CountDownLatch(1);
 
     /**
+     * Returns the service used to access the content of the documents.
+     * @return a non-null instance
+     */
+    public ContentService getContentService() {
+        return contentService;
+    }
+
+    /**
      * Returns the executor used by the search service.
      *
      * @return a non-null instance

@@ -12,5 +12,5 @@ public interface IndexListener {
      *
      * @param documents a collection of indexed documents
      */
-    void indexed(Collection<Document> documents);
+    void afterIndexing(Collection<Document> documents);
 }

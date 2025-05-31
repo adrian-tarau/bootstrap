@@ -11,7 +11,7 @@ import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.validation.beanvalidation.CustomValidatorBean;
+import org.springframework.validation.beanvalidation.OptionalValidatorFactoryBean;
 
 import java.lang.annotation.*;
 
@@ -22,7 +22,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@ContextConfiguration(classes = {I18nService.class, ResourceService.class, ResourceProperties.class, CustomValidatorBean.class, MetadataService.class})
+@ContextConfiguration(classes = {I18nService.class, ResourceService.class, ResourceProperties.class, OptionalValidatorFactoryBean.class, MetadataService.class})
 @Import({I18nProperties.class, AsynchronousConfig.class})
 //@TestExecutionListeners(MockitoAnswersExecutionListener.class)
 @OverrideAutoConfiguration(enabled = false)

@@ -1,7 +1,8 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.metrics.Metrics;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import org.springframework.retry.support.RetryTemplate;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -28,9 +30,12 @@ public class Indexer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Indexer.class);
 
+    private final static int MAX_INDEX_RETRIES = 3;
+
     private final IndexWriter indexWriter;
     private final Directory directory;
     private final IndexerOptions options;
+    private final Metrics metrics;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
     private final Lock rlock = lock.readLock();
@@ -39,9 +44,10 @@ public class Indexer {
     private volatile long indexLastUpdated;
     private volatile long indexLastCommited = currentTimeMillis();
     private volatile long indexLastMerged = currentTimeMillis();
+    private final AtomicBoolean open = new AtomicBoolean(true);
     private final AtomicBoolean indexChanged = new AtomicBoolean(false);
     private final AtomicBoolean indexChangedOptimizationPending = new AtomicBoolean(false);
-    private final static ThreadLocal<Boolean> READ_LOCK_RELEASED = ThreadLocal.withInitial(() -> Boolean.FALSE);
+    private final AtomicInteger indexRetries = new AtomicInteger(MAX_INDEX_RETRIES);
 
     Indexer(IndexWriter indexWriter, Directory directory, IndexerOptions options) {
         requireNonNull(indexWriter);
@@ -50,6 +56,7 @@ public class Indexer {
         this.indexWriter = indexWriter;
         this.directory = directory;
         this.options = options;
+        this.metrics = options.getMetrics();
     }
 
     /**
@@ -85,7 +92,7 @@ public class Indexer {
      * @return {@code true} if the index is open, {@code false} otherwise
      */
     public boolean isOpen() {
-        return indexWriter.isOpen();
+        return open.get() && indexWriter.isOpen();
     }
 
     /**
@@ -110,7 +117,7 @@ public class Indexer {
      * Commits pending changes to the index.
      */
     public void commit() {
-        lockForRead();
+        rlock.lock();
         try {
             if (!isOpen()) {
                 LOGGER.info("Index is closed, cannot commit changes");
@@ -125,12 +132,14 @@ public class Indexer {
                 });
                 indexLastCommited = currentTimeMillis();
             }
-        } catch (AlreadyClosedException e) {
-            LOGGER.error("Index closed to commit changes to index", e);
         } catch (Exception e) {
-            LOGGER.error("Failed to commit changes to index", e);
+            if (isLuceneException(e)) {
+                LOGGER.warn("Failed to commit changes to index. root cause: {}", ExceptionUtils.getRootCauseMessage(e));
+            } else {
+                ExceptionUtils.throwException(e);
+            }
         } finally {
-            unlockForRead();
+            rlock.unlock();
         }
         try {
             indexCommited();
@@ -144,7 +153,7 @@ public class Indexer {
      */
     public void release() {
         commit();
-        unlockForRead();
+        open.set(false);
         wlock.lock();
         try {
             try {
@@ -169,17 +178,19 @@ public class Indexer {
      * @param callback the index callback
      */
     public <R> R doWithIndex(String name, Callback<R> callback) {
-        lockForRead();
+        boolean shouldRelease = false;
+        rlock.lock();
         try {
             if (!isOpen()) throw new IndexException("Index is closed");
             RetryTemplate template = new RetryTemplate();
             return template.execute(context -> INDEX_METRICS.getTimer(name).recordCallable(() -> callback.doWithIndex(indexWriter)));
         } catch (Exception e) {
-            if (isLuceneException(e)) release();
+            shouldRelease = isLuceneException(e);
             return throwException(e);
         } finally {
             markIndexChanged(false);
-            unlockForRead();
+            rlock.unlock();
+            if (shouldRelease && indexRetries.decrementAndGet() <= 0) release();
         }
     }
 
@@ -200,18 +211,6 @@ public class Indexer {
         indexChanged.set(false);
         indexLastUpdated = currentTimeMillis();
         indexChangedOptimizationPending.set(true);
-    }
-
-    private void lockForRead() {
-        rlock.lock();
-        READ_LOCK_RELEASED.set(Boolean.FALSE);
-    }
-
-    private void unlockForRead() {
-        if (!READ_LOCK_RELEASED.get()) {
-            rlock.unlock();
-            READ_LOCK_RELEASED.set(Boolean.TRUE);
-        }
     }
 
     /**
