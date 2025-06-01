@@ -93,9 +93,11 @@ Application.question = function (title, message, callback) {
  *
  * @param {String} title the title
  * @param {String} message the message to display, it can contain HTML tags
- * @param {String} type the type of alert
+ * @param {String|Boolean} type the type of alert or a boolean indicating whether to
+ * show an information alert (true) or a warning alert (false).
  */
 Application.showAlert = function (title, message, type) {
+    if (Utils.isBoolean(type)) type = type ? ALERT_TYPE_INFO : ALERT_TYPE_WARN;
     type = type || "INFO";
     let icon = "fa-solid fa-circle-info";
     let color = "green";

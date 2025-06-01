@@ -112,8 +112,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         log(dataSet, "browse", pageParameter, rangeParameter, queryParameter, sortParameter);
         updateHelp(model);
         updateTitle(model);
-        updateModel(dataSet, model, State.BROWSE);
         updateModel(dataSet, model, null, State.BROWSE);
+        updateControllerModel(dataSet, model, State.BROWSE);
         processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         beforeBrowse(dataSet, model, null);
         return BROWSE_VIEW;
@@ -127,7 +127,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                              @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "next page", pageParameter, rangeParameter, queryParameter, sortParameter);
-        updateModel(dataSet, model, State.BROWSE);
+        updateControllerModel(dataSet, model, State.BROWSE);
         Page<M> page = processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         response.addHeader("X-DATASET-PAGE-INFO", DataSetTool.getPageInfo(page));
         response.addHeader("X-DATASET-PAGE-INFO-EXTENDED", DataSetTool.getPageAndRecordInfo(page));
@@ -142,10 +142,10 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     public final String add(Model model) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "add", 0, null, null, null);
-        updateModel(dataSet, model, State.ADD);
         M dataSetModel = dataSet.getMetadata().create();
         model.addAttribute("model", dataSetModel);
         updateModel(dataSet, model, dataSetModel, State.ADD);
+        updateControllerModel(dataSet, model, State.ADD);
         if (beforeAdd(dataSet, model)) {
             return "dataset/add::#dataset-modal";
         } else {
@@ -158,8 +158,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         throwIdentifierRequired(id);
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "view", 0, null, null, null);
-        updateModel(dataSet, model, State.VIEW);
         M dataSetModel = findModel(dataSet, model, id, State.VIEW);
+        updateControllerModel(dataSet, model, State.VIEW, dataSetModel);
         beforeView(dataSet, model, dataSetModel);
         return "dataset/view::#dataset-modal";
     }
@@ -171,8 +171,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         try {
             DataSet<M, Field<M>, ID> dataSet = getDataSet();
             log(dataSet, "edit", 0, null, null, null);
-            updateModel(dataSet, model, State.EDIT);
             M dataSetModel = findModel(dataSet, model, id, State.EDIT);
+            updateControllerModel(dataSet, model, State.EDIT, dataSetModel);
             if (dataSetModel != null) {
                 if (beforeEdit(dataSet, model, dataSetModel)) {
                     model.addAttribute("readOnlyFields", READ_ONLY_FIELDS.get());
@@ -266,8 +266,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         log(dataSet, "export", pageParameter, rangeParameter, queryParameter, sortParameter);
         updateHelp(model);
         updateTitle(model);
-        updateModel(dataSet, model, State.BROWSE);
         updateModel(dataSet, model, null, State.BROWSE);
+        updateControllerModel(dataSet, model, State.BROWSE, null);
         Page<M> page = processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         DataSetExport.Format parsedFormat = EnumUtils.fromName(DataSetExport.Format.class, format);
         DataSetExport<M, Field<M>, ID> exporter = DataSetExport.create(parsedFormat);
@@ -707,7 +707,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         return menu;
     }
 
-    private void updateModel(DataSet<M, Field<M>, ID> dataSet, Model model, State state) {
+    private void updateControllerModel(DataSet<M, Field<M>, ID> dataSet, Model model, State state) {
+        updateControllerModel(dataSet, model, state, null);
+    }
+
+    private void updateControllerModel(DataSet<M, Field<M>, ID> dataSet, Model model, State state, M dataSetModel) {
+        CompositeIdentifier<M, Field<M>, ID> dataSetModelId = null;
+        if (dataSetModel != null) dataSetModelId = dataSet.getCompositeId(dataSetModel);
         dataSet.setState(state);
         model.addAttribute("controller", this);
         model.addAttribute("dataset", dataSet);
@@ -715,7 +721,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         model.addAttribute("metadata", dataSet.getMetadata());
         model.addAttribute("toolbar", getToolBar(dataSet));
         model.addAttribute("actions", getMenu(dataSet));
-        model.addAttribute("model", null);
+        model.addAttribute("model", dataSetModel);
+        if (dataSetModelId != null) {
+            model.addAttribute("modelCompositeId", dataSetModelId.toId());
+            model.addAttribute("modelId", dataSetModelId.toString());
+        }
         model.addAttribute("hasTrend", getDataSetAnnotation().trend() && hasTimeRange(dataSet));
         updateModelTemplate(dataSet, model);
     }
