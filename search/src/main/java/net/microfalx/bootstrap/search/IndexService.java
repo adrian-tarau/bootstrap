@@ -5,6 +5,7 @@ import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.FormatterUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.resource.FileResource;
 import net.microfalx.resource.Resource;
@@ -26,17 +27,21 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.Collections.singleton;
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.bootstrap.search.SearchUtils.INDEX_METRICS;
 import static net.microfalx.bootstrap.search.SearchUtils.isLuceneException;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.throwException;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
  * Provides indexing capabilities for full text search.
@@ -63,7 +68,32 @@ public class IndexService implements InitializingBean {
     private final Lock lock = new ReentrantLock();
     private final Collection<IndexListener> listeners = new CopyOnWriteArrayList<>();
     private final Queue<Collection<Document>> pendingDocuments = new ArrayBlockingQueue<>(500);
+    private final Map<String, Indexer> indexers = new ConcurrentHashMap<>();
     private volatile Indexer indexer;
+
+    /**
+     * Returns the indexer with the specified id.
+     *
+     * @param id the id of the indexer to return
+     * @return a non-null instance of {@link Indexer}
+     */
+    public Indexer getIndexer(String id) {
+        requireNonNull(id);
+        Indexer indexer = indexers.get(toIdentifier(id));
+        if (indexer == null) {
+            throw new IllegalArgumentException("No indexer found with id: " + id);
+        }
+        return indexer;
+    }
+
+    /**
+     * Returns a collection of indexes registered with this service.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Indexer> getIndexers() {
+        return unmodifiableCollection(indexers.values());
+    }
 
     /**
      * Returns the service used to access the content of the documents.
@@ -226,12 +256,13 @@ public class IndexService implements InitializingBean {
     /**
      * Creates the index.
      *
-     * @param directory the directory where the index is stored
      * @param options   the options for the indexer
      */
-    public Indexer createIndexer(File directory, IndexerOptions options) {
-        requireNonNull(directory);
+    public Indexer createIndexer(IndexerOptions options) {
         requireNonNull(options);
+        if (options.getDirectory() == null) {
+            throw new IllegalArgumentException("Index directory must be set");
+        }
         IndexWriterConfig.OpenMode openMode = IndexWriterConfig.OpenMode.CREATE_OR_APPEND;
         if (options.isRecreate()) openMode = IndexWriterConfig.OpenMode.CREATE;
         IndexWriterConfig writerConfig = new IndexWriterConfig(options.getAnalyzer());
@@ -241,15 +272,18 @@ public class IndexService implements InitializingBean {
         writerConfig.setUseCompoundFile(true);
         writerConfig.setRAMBufferSizeMB(getRAMBufferSizeMB());
         writerConfig.setRAMPerThreadHardLimitMB(getRAMBPerThreadBufferSizeMB());
+
         if (LOGGER.isDebugEnabled()) writerConfig.setInfoStream(new LoggerInfoStream());
         try {
-            Directory luceneDirectory = new NIOFSDirectory(directory.toPath());
+            Directory luceneDirectory = new NIOFSDirectory(options.getDirectory().toPath());
             IndexWriter indexWriter = new IndexWriter(luceneDirectory, writerConfig);
             if (openMode == IndexWriterConfig.OpenMode.CREATE) indexWriter.commit();
             LOGGER.debug("Create index writer, RAM Buffer " + writerConfig.getRAMBufferSizeMB() + " MB" +
                     ", Thread RAM Buffer " + writerConfig.getRAMPerThreadHardLimitMB() + " MB" +
                     ", Use compound files " + writerConfig.getUseCompoundFile());
-            return new Indexer(indexWriter, luceneDirectory, options);
+            Indexer indexer = new Indexer(indexWriter, luceneDirectory, options);
+            this.indexers.put(indexer.getOptions().getId(), indexer);
+            return indexer;
         } catch (IOException e) {
             throw new IndexException("Failed to create the index", e);
         }
@@ -261,6 +295,7 @@ public class IndexService implements InitializingBean {
         initListeners();
         initTaskExecutor();
         initTasks();
+        logSettings();
         ThreadPool.get().scheduleAtFixedRate(new IndexMaintenanceTask(), Duration.ofSeconds(30));
     }
 
@@ -316,7 +351,11 @@ public class IndexService implements InitializingBean {
         try {
             if (indexer != null) return indexer;
             try {
-                indexer = INDEX_METRICS.time("Open", () -> createIndexer(getIndexDirectory(), IndexerOptions.create()));
+                IndexerOptions options = IndexerOptions.builder().id("main").name("Main")
+                        .description("The primary index used by the application to provide full text search")
+                        .directory(getIndexDirectory()).main(true)
+                        .build();
+                indexer = INDEX_METRICS.time("Open", () -> createIndexer(options));
                 return indexer;
             } catch (Exception e) {
                 if (indexer != null) indexer.release();
@@ -405,6 +444,12 @@ public class IndexService implements InitializingBean {
 
     private void initTasks() {
         getThreadPool().scheduleAtFixedRate(new IndexedDocumentsTask(), 0, 10, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
+    private void logSettings() {
+        LOGGER.info("Index settings: Maximum RAM (Heap)= {} MB, RAM Buffer Size = {} MB, RAM Per Thread Buffer Size = {} MB",
+                Runtime.getRuntime().maxMemory() / FormatterUtils.M,
+                getRAMBufferSizeMB(), getRAMBPerThreadBufferSizeMB());
     }
 
     private void initTaskExecutor() {

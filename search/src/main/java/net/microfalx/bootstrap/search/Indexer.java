@@ -1,7 +1,9 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Metrics;
+import org.apache.commons.io.FileUtils;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.retry.support.RetryTemplate;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -20,6 +23,8 @@ import static net.microfalx.bootstrap.search.SearchUtils.INDEX_METRICS;
 import static net.microfalx.bootstrap.search.SearchUtils.isLuceneException;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.throwException;
+import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
+import static net.microfalx.lang.TimeUtils.millisSince;
 
 /**
  * Represents an index in the search system.
@@ -41,9 +46,12 @@ public class Indexer {
     private final Lock rlock = lock.readLock();
     private final Lock wlock = lock.writeLock();
 
-    private volatile long indexLastUpdated;
+    private volatile long indexLastUpdated = currentTimeMillis();
     private volatile long indexLastCommited = currentTimeMillis();
     private volatile long indexLastMerged = currentTimeMillis();
+    private volatile long indexSizeLastUpdated = TimeUtils.oneHourAgo();
+    private volatile long indexMemorySize = -1;
+    private volatile long indexDiskSize = -1;
     private final AtomicBoolean open = new AtomicBoolean(true);
     private final AtomicBoolean indexChanged = new AtomicBoolean(false);
     private final AtomicBoolean indexChangedOptimizationPending = new AtomicBoolean(false);
@@ -111,6 +119,26 @@ public class Indexer {
      */
     public int getPendingDocumentCount() {
         return (int) (indexWriter.getPendingNumDocs() - getDocumentCount());
+    }
+
+    /**
+     * Returns the size of the index on disk in bytes
+     *
+     * @return a positive integer
+     */
+    public long getMemorySize() {
+        updateSize();
+        return indexMemorySize;
+    }
+
+    /**
+     * Returns the size of the index on disk in bytes
+     *
+     * @return a positive integer
+     */
+    public long getDiskSize() {
+        updateSize();
+        return indexDiskSize;
     }
 
     /**
@@ -194,6 +222,18 @@ public class Indexer {
         }
     }
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Indexer indexer)) return false;
+        return Objects.equals(options, indexer.options);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(options);
+    }
+
     void markIndexChanged(boolean commit) {
         if (commit) {
             commit();
@@ -211,6 +251,13 @@ public class Indexer {
         indexChanged.set(false);
         indexLastUpdated = currentTimeMillis();
         indexChangedOptimizationPending.set(true);
+    }
+
+    private void updateSize() {
+        if (indexDiskSize == -1 || millisSince(indexSizeLastUpdated) > FIVE_MINUTE) {
+            indexSizeLastUpdated = currentTimeMillis();
+            indexDiskSize = FileUtils.sizeOfDirectory(options.getDirectory());
+        }
     }
 
     /**

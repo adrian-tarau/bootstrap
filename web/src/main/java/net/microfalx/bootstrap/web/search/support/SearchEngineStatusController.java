@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.web.search;
+package net.microfalx.bootstrap.web.search.support;
 
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.bootstrap.search.SearchService;
@@ -6,16 +6,17 @@ import net.microfalx.bootstrap.web.component.panel.Row;
 import net.microfalx.bootstrap.web.dashboard.AbstractReportProvider;
 import net.microfalx.bootstrap.web.dashboard.DashboardController;
 import net.microfalx.bootstrap.web.dashboard.annotation.Dashboard;
+import net.microfalx.bootstrap.web.search.SearchEngineReportStats;
 import net.microfalx.lang.annotation.Provider;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Arrays;
 
-@RequestMapping("/support/search")
+@RequestMapping("/support/search/status")
 @Dashboard("search-engine")
 @Controller
-public class SearchEngineController extends DashboardController {
+public class SearchEngineStatusController extends DashboardController {
 
     @Dashboard("search-engine")
     @Provider

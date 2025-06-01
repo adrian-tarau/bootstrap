@@ -23,7 +23,7 @@ import static org.apache.commons.lang3.StringUtils.abbreviate;
 /**
  * Central point of extraction for all stats.
  */
-class SearchEngineReportStats {
+public class SearchEngineReportStats {
 
     public static final int TOP_100 = 100;
     public static final int TOP_10 = 20;
@@ -34,9 +34,9 @@ class SearchEngineReportStats {
     private final IndexService indexService;
     private final SearchService searchService;
 
-    private int limit;
+    private final int limit;
 
-    SearchEngineReportStats(IndexService indexService, SearchService searchService, int limit) {
+    public SearchEngineReportStats(IndexService indexService, SearchService searchService, int limit) {
         requireNonNull(indexService);
         requireNonNull(searchService);
         this.indexService = indexService;
@@ -44,7 +44,7 @@ class SearchEngineReportStats {
         this.limit = limit;
     }
 
-    Column getIndexStatistics() {
+    public Column getIndexStatistics() {
         Collection<FieldStatistics> fieldStatistics = searchService.getFieldStatistics();
         return Column.create(3).setTitle("Index Statistics").setMaxHeight(MAX_HEIGHT)
                 .add(Table.create(2)
@@ -55,7 +55,7 @@ class SearchEngineReportStats {
                 );
     }
 
-    Column getFieldStatistics() {
+    public  Column getFieldStatistics() {
         Iterable<FieldStatistics> fields = Iterables.limit(searchService.getFieldStatistics().stream()
                 .filter(f -> !isStandardFieldName(f.getName())).collect(Collectors.toList()), TOP_100);
         return Column.create(5).setTitle("Top 100 Fields").setMaxHeight(MAX_HEIGHT)
@@ -65,7 +65,7 @@ class SearchEngineReportStats {
                 );
     }
 
-    void buildFieldStatistics(Row row) {
+    public void buildFieldStatistics(Row row) {
         row.add(getSeverityStatistics());
         row.add(getOwnerStatistics());
         row.add(getTypeStatistics());
@@ -73,27 +73,27 @@ class SearchEngineReportStats {
         row.add(getTargetStatistics());
     }
 
-    Column getSeverityStatistics() {
+    public Column getSeverityStatistics() {
         return getFieldStatistics("Top {limit} Severities", Attribute.SEVERITY);
     }
 
-    Column getSourceStatistics() {
+    public Column getSourceStatistics() {
         return getFieldStatistics("Top {limit} Sources", Document.SOURCE_FIELD);
     }
 
-    Column getTargetStatistics() {
+    public Column getTargetStatistics() {
         return getFieldStatistics("Top {limit} Targets", Document.TARGET_FIELD);
     }
 
-    Column getOwnerStatistics() {
+    public Column getOwnerStatistics() {
         return getFieldStatistics("Top {limit} Owners", Document.OWNER_FIELD);
     }
 
-    Column getTypeStatistics() {
+    public Column getTypeStatistics() {
         return getFieldStatistics("Top {limit} Types", Document.TYPE_FIELD);
     }
 
-    Column termsStatistics() {
+    public Column termsStatistics() {
         PriorityQueue<TermStatistics> priorityQueue = new PriorityQueue<>(comparingLong(TermStatistics::getCount));
         for (FieldStatistics fieldStatistic : searchService.getFieldStatistics()) {
             if (isStandardFieldName(fieldStatistic.getName())) continue;

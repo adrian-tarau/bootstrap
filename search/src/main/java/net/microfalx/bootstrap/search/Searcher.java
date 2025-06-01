@@ -14,6 +14,7 @@ import org.springframework.retry.support.RetryTemplate;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,8 +35,8 @@ public class Searcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(Searcher.class);
 
     private final SearcherOptions options;
-    private final IndexSearcher indexSearcher;
-    private final IndexReader indexReader;
+    private volatile IndexSearcher indexSearcher;
+    private volatile IndexReader indexReader;
     private final Directory directory;
 
     private final AtomicBoolean open = new AtomicBoolean(false);
@@ -51,9 +52,7 @@ public class Searcher {
         requireNonNull(options);
         this.options = options;
         this.directory = new NIOFSDirectory(directory.toPath(), NativeFSLockFactory.getDefault());
-        indexReader = SEARCH_METRICS.timeCallable("Open Reader", () -> DirectoryReader.open(this.directory));
-        indexSearcher = SEARCH_METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(this.indexReader, options.getThreadPool()));
-        open.set(true);
+        openReader();
     }
 
     /**
@@ -209,6 +208,24 @@ public class Searcher {
         } finally {
             wlock.unlock();
         }
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Searcher searcher)) return false;
+        return Objects.equals(options, searcher.options);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(options);
+    }
+
+    private void openReader() {
+        indexReader = SEARCH_METRICS.timeCallable("Open Reader", () -> DirectoryReader.open(this.directory));
+        indexSearcher = SEARCH_METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(this.indexReader, options.getThreadPool()));
+        open.set(true);
     }
 
     /**

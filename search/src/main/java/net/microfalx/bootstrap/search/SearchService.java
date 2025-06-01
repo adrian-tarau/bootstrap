@@ -166,13 +166,13 @@ public class SearchService implements InitializingBean {
      */
     public Document find(String id) {
         requireNonNull(id);
-        LOGGER.info("Searching for document with identifier  '" + id + "'");
+        LOGGER.info("Searching for document with identifier '{}'", id);
         try {
             RetryTemplate retryTemplate = new RetryTemplate();
             retryTemplate.registerListener(new RetryListener() {
                 @Override
                 public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-                    LOGGER.info("Find failure " + throwable.getMessage());
+                    LOGGER.info("Failed to find document with id {}, root cause: {}", id, getRootCauseMessage(throwable));
                     releaseSearcher();
                 }
             });
@@ -368,15 +368,18 @@ public class SearchService implements InitializingBean {
      * Returns a searcher which carries an {@link org.apache.lucene.search.IndexSearcher} and associated
      * objects.
      *
-     * @param directory the directory where the index is stored
-     * @param options   the thread pool to use for search operations
+     * @param options  the options to use for search operations
      * @return a non-null instance
      * @throws SearchException if the index cannot be opened
      */
-    public Searcher createSearcher(File directory, SearcherOptions options) {
+    public Searcher createSearcher(SearcherOptions options) {
+        requireNonNull(options);
+        if (options.getDirectory() == null) {
+            throw new IllegalArgumentException("Index directory must be set");
+        }
         LOGGER.debug("Open searcher");
         try {
-            return SEARCH_METRICS.timeCallable("Open", () -> new Searcher(directory, options));
+            return SEARCH_METRICS.timeCallable("Open", () -> new Searcher(options.getDirectory(), options));
         } catch (Exception e) {
             return ExceptionUtils.throwException(e);
         }
@@ -555,9 +558,11 @@ public class SearchService implements InitializingBean {
             reopen = reopen || (searcher != null && searcher.isStale());
             if (searcher == null || reopen) {
                 if (searcher != null) releaseSearcher();
-                SearcherOptions options = SearcherOptions.create().setThreadPool(getThreadPool())
-                        .setRefreshInterval(searchProperties.getRefreshInterval());
-                searcher = createSearcher(getIndexDirectory(), options);
+                SearcherOptions options = SearcherOptions.builder().id("main").name("Main")
+                        .directory(getIndexDirectory()).threadPool(getThreadPool())
+                        .refreshInterval(searchProperties.getRefreshInterval())
+                        .build();
+                searcher = createSearcher(options);
             }
             return searcher;
         }
