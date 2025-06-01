@@ -3,6 +3,8 @@ package net.microfalx.bootstrap.web.search.support;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Component;
+import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.model.NamedIdentityAware;
 import net.microfalx.bootstrap.search.Indexer;
@@ -10,6 +12,8 @@ import net.microfalx.bootstrap.search.IndexerOptions;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.annotation.*;
+
+import static net.microfalx.lang.CollectionUtils.setToString;
 
 @Getter
 @Setter
@@ -20,7 +24,7 @@ public class Index extends NamedIdentityAware<String> {
 
     @Position(10)
     @Description("Indicates whether the index is the primary index")
-    private boolean main;
+    private boolean primary;
 
     @Position(15)
     @Name
@@ -53,6 +57,13 @@ public class Index extends NamedIdentityAware<String> {
     @Label(value = "Pending", group = "Documents")
     private long pendingDocumentCount = -1;
 
+    @Position(400)
+    @Component(Component.Type.TEXT_AREA)
+    @Description("A collection of tags associated with a {name}")
+    @Width("150px")
+    @Filterable()
+    private String tags;
+
     public static Index from(Indexer indexer) {
         IndexerOptions options = indexer.getOptions();
         Index model = new Index();
@@ -61,9 +72,10 @@ public class Index extends NamedIdentityAware<String> {
         model.setDescription(options.getDescription());
         model.setDirectory(ObjectUtils.toString(options.getDirectory()));
         model.setAnalyzer(ClassUtils.getName(options.getAnalyzer()));
-        model.setMain(options.isMain());
+        model.setPrimary(options.isPrimary());
         model.setMemorySize(indexer.getMemorySize());
         model.setDiskSize(indexer.getDiskSize());
+        model.setTags(setToString(options.getTags()));
         try {
             model.setDocumentCount(indexer.getDocumentCount());
             model.setPendingDocumentCount(indexer.getPendingDocumentCount());

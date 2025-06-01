@@ -1,62 +1,15 @@
 package net.microfalx.bootstrap.search;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-import net.microfalx.lang.Descriptable;
-import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.Nameable;
-import net.microfalx.metrics.Metrics;
-import org.apache.lucene.analysis.Analyzer;
-
-import java.io.File;
-import java.util.Objects;
+import net.microfalx.lang.IdentityAware;
 
 /**
  * Represents options for configuring the indexer.
  */
 @Getter
 @ToString
-@Builder
-public class IndexerOptions implements Identifiable<String>, Nameable, Descriptable {
-
-    /**
-     * The unique identifier for the indexer.
-     * <p>
-     * This identifier is used to distinguish different indexers.
-     */
-    private final String id;
-
-    /**
-     * The name of the indexer.
-     * <p>
-     * This name is used for display purposes and should be unique.
-     */
-    private String name;
-
-    /**
-     * A description of the indexer.
-     * <p>
-     * This description provides additional information about the indexer.
-     */
-    private String description;
-
-    /**
-     * The directory where the index will be stored.
-     * <p>
-     * This directory must be writable and accessible by the application.
-     */
-    private File directory;
-
-    /**
-     * An analyzer used for indexing.
-     */
-    @Builder.Default private Analyzer analyzer = Analyzers.createIndexAnalyzer();
-
-    /**
-     * The metrics instance used for tracking indexing performance.
-     */
-    @Builder.Default private Metrics metrics = SearchUtils.INDEX_METRICS;
+public class IndexerOptions extends BaseOptions {
 
     /**
      * Indicates whether the index should be recreated.
@@ -64,19 +17,50 @@ public class IndexerOptions implements Identifiable<String>, Nameable, Descripta
     private boolean recreate;
 
     /**
-     * Indicates whether this indexer is the main indexer.
+     * Indicates whether this indexer is the primary indexer.
      */
-    private boolean main;
+    private boolean primary;
 
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof IndexerOptions options)) return false;
-        return Objects.equals(id, options.id);
+    /**
+     * Creates a new builder for IndexerOptions.
+     *
+     * @param id the identifier for the index
+     * @return a new Builder instance
+     */
+    public static Builder create(String id) {
+        return new Builder(id);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
+    public static final class Builder extends BaseOptions.Builder {
+
+        private boolean recreate;
+        private boolean primary;
+
+        public Builder(String id) {
+            super(id);
+        }
+
+        public Builder recreate(boolean recreate) {
+            this.recreate = recreate;
+            return this;
+        }
+
+        public Builder primary(boolean primary) {
+            this.primary = primary;
+            return this;
+        }
+
+        @Override
+        protected IdentityAware<String> create() {
+            return new IndexerOptions();
+        }
+
+        public IndexerOptions build() {
+            IndexerOptions options = (IndexerOptions) super.build();
+            options.recreate = recreate;
+            options.primary = primary;
+            return options;
+        }
     }
+
 }

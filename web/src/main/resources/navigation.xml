@@ -33,8 +33,8 @@
                 <item id="pool" text="Thread Pools" action="/support/thread/pool" icon="fa-solid fa-layer-group"/>
                 <item id="executor" text="Executors" action="/support/executor" roles="admin" icon="fa-solid fa-cubes"/>
             </menu>
-            <menu id="search_engine" text="Search" action="/support/search" position="1000" roles="admin" icon="fa-solid fa-book">
-                <item id="index" text="Indexes" action="/support/search/index" icon="fa-solid fa-temperature-quarter"/>
+            <menu id="search_engine" text="Search" action="/support/search" position="1000" roles="admin" icon="fa-solid fa-magnifying-glass">
+                <item id="index" text="Indexes" action="/support/search/index" icon="fa-solid fa-book"/>
                 <item id="status" text="Status" action="/support/search/status" icon="fa-solid fa-temperature-quarter"/>
             </menu>
             <item id="status" text="Status" action="/support/status" position="5000" icon="fa-solid fa-temperature-quarter"/>

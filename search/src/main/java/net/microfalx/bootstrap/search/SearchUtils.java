@@ -1,14 +1,20 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.FileUtils;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.metrics.Metrics;
+import net.microfalx.resource.ResourceUtils;
+import net.microfalx.threadpool.ThreadPool;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.index.*;
 import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -79,6 +85,8 @@ public class SearchUtils {
      * Returns the operator injected when the user clicks on a field value in the grid.
      */
     public final static char DEFAULT_FILTER_QUOTE_CHAR = '"';
+
+    final static String INDEX_NAME = "primary";
 
     /**
      * Returns whether the given field name is part of the standard field names.
@@ -297,6 +305,18 @@ public class SearchUtils {
         Throwable rootCause = ExceptionUtils.getRootCause(throwable);
         if (rootCause == null) rootCause = throwable;
         return ClassUtils.getName(rootCause).startsWith("org.apache.lucene");
+    }
+
+    /**
+     * Update the options based on service configuration
+     */
+    static void updateOptions(ResourceService resourceService, ThreadPool threadPool, BaseOptions options) {
+        threadPool = ObjectUtils.defaultIfNull(threadPool, ThreadPool.get());
+        if (options.directory == null) {
+            File directory = ResourceUtils.toFile(resourceService.getPersisted("search"));
+            options.directory = FileUtils.validateDirectoryExists(new File(directory, options.getId()));
+        }
+        if (options.threadPool == null) options.threadPool = threadPool;
     }
 
     private final static String[] OPERATORS = new String[]{

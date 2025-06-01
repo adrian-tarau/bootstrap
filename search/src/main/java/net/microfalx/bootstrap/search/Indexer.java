@@ -19,7 +19,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.System.currentTimeMillis;
-import static net.microfalx.bootstrap.search.SearchUtils.INDEX_METRICS;
 import static net.microfalx.bootstrap.search.SearchUtils.isLuceneException;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.throwException;
@@ -211,7 +210,7 @@ public class Indexer {
         try {
             if (!isOpen()) throw new IndexException("Index is closed");
             RetryTemplate template = new RetryTemplate();
-            return template.execute(context -> INDEX_METRICS.getTimer(name).recordCallable(() -> callback.doWithIndex(indexWriter)));
+            return template.execute(context -> metrics.getTimer(name).recordCallable(() -> callback.doWithIndex(indexWriter)));
         } catch (Exception e) {
             shouldRelease = isLuceneException(e);
             return throwException(e);

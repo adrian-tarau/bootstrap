@@ -7,8 +7,6 @@ import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.lang.*;
 import net.microfalx.metrics.Matrix;
 import net.microfalx.metrics.Timer;
-import net.microfalx.resource.FileResource;
-import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.ThreadPool;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.IndexNotFoundException;
@@ -28,7 +26,6 @@ import org.springframework.retry.RetryListener;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -374,9 +371,7 @@ public class SearchService implements InitializingBean {
      */
     public Searcher createSearcher(SearcherOptions options) {
         requireNonNull(options);
-        if (options.getDirectory() == null) {
-            throw new IllegalArgumentException("Index directory must be set");
-        }
+        SearchUtils.updateOptions(resourceService, getThreadPool(), options);
         LOGGER.debug("Open searcher");
         try {
             return SEARCH_METRICS.timeCallable("Open", () -> new Searcher(options.getDirectory(), options));
@@ -558,10 +553,7 @@ public class SearchService implements InitializingBean {
             reopen = reopen || (searcher != null && searcher.isStale());
             if (searcher == null || reopen) {
                 if (searcher != null) releaseSearcher();
-                SearcherOptions options = SearcherOptions.builder().id("main").name("Main")
-                        .directory(getIndexDirectory()).threadPool(getThreadPool())
-                        .refreshInterval(searchProperties.getRefreshInterval())
-                        .build();
+                SearcherOptions options = getSearcherOptions();
                 searcher = createSearcher(options);
             }
             return searcher;
@@ -596,11 +588,6 @@ public class SearchService implements InitializingBean {
         return queryParser;
     }
 
-    private File getIndexDirectory() {
-        Resource resource = resourceService.getPersisted("index");
-        return ((FileResource) resource).getFile();
-    }
-
     private void initListeners() {
         Collection<SearchListener> discoveredListeners = ClassUtils.resolveProviderInstances(SearchListener.class);
         LOGGER.info("Register {} search listeners", discoveredListeners.size());
@@ -616,6 +603,13 @@ public class SearchService implements InitializingBean {
 
     private void initTasks() {
         threadPool.submit(() -> getFieldStatistics());
+    }
+
+    private SearcherOptions getSearcherOptions() {
+        return (SearcherOptions) SearcherOptions.create(INDEX_NAME)
+                .refreshInterval(searchProperties.getRefreshInterval())
+                .threadPool(getThreadPool())
+                .build();
     }
 
     private String getI18n(String suffix) {

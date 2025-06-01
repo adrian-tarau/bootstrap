@@ -1,17 +1,13 @@
 package net.microfalx.bootstrap.search;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-import net.microfalx.metrics.Metrics;
-import net.microfalx.threadpool.ThreadPool;
-import org.apache.lucene.analysis.Analyzer;
+import net.microfalx.lang.IdentityAware;
 
-import java.io.File;
 import java.time.Duration;
-import java.util.Objects;
 
 import static java.time.Duration.ofSeconds;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Options for configuring the searcher.
@@ -21,51 +17,7 @@ import static java.time.Duration.ofSeconds;
  */
 @Getter
 @ToString
-@Builder
-public class SearcherOptions {
-
-    /**
-     * The unique identifier for the searcher.
-     * <p>
-     * This identifier is used to distinguish different searchers.
-     */
-    private final String id;
-
-    /**
-     * The name of the searcher.
-     * <p>
-     * This name is used for display purposes and should be unique.
-     */
-    private String name;
-
-    /**
-     * A description of the searcher.
-     * <p>
-     * This description provides additional information about the searcher.
-     */
-    private String description;
-
-    /**
-     * The directory where the index is stored.
-     * <p>
-     * This directory must be accessible by the application.
-     */
-    private File directory;
-
-    /**
-     * An analyzer used for searching.
-     */
-    @Builder.Default private Analyzer analyzer = Analyzers.createSearchAnalyzer();
-
-    /**
-     * The thread pool to use for executing search requests.
-     */
-    private ThreadPool threadPool;
-
-    /**
-     * The metrics instance used for tracking search performance.
-     */
-    @Builder.Default private Metrics metrics = SearchUtils.SEARCH_METRICS;
+public class SearcherOptions extends BaseOptions {
 
     /**
      * The interval at which the search index is refreshed.
@@ -73,17 +25,42 @@ public class SearcherOptions {
      * This is used to control how often the search index is updated with new data.
      * The default value is 60 seconds.
      */
-    @Builder.Default private Duration refreshInterval = ofSeconds(60);
+    private Duration refreshInterval;
 
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof SearcherOptions options)) return false;
-        return Objects.equals(id, options.id);
+    /**
+     * Creates a new builder for SearcherOptions.
+     *
+     * @param id the identifier for the index
+     * @return a new Builder instance
+     */
+    public static Builder create(String id) {
+        return new Builder(id);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
+    public static final class Builder extends BaseOptions.Builder {
+
+        private Duration refreshInterval = ofSeconds(60);
+
+        public Builder(String id) {
+            super(id);
+            metrics(SearchUtils.SEARCH_METRICS);
+        }
+
+        public Builder refreshInterval(Duration refreshInterval) {
+            requireNonNull(refreshInterval);
+            this.refreshInterval = refreshInterval;
+            return this;
+        }
+
+        @Override
+        protected IdentityAware<String> create() {
+            return new SearcherOptions();
+        }
+
+        public SearcherOptions build() {
+            SearcherOptions options = (SearcherOptions) super.build();
+            options.refreshInterval = refreshInterval;
+            return options;
+        }
     }
 }

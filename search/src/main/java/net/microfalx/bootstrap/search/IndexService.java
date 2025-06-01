@@ -7,8 +7,6 @@ import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.FormatterUtils;
 import net.microfalx.lang.ObjectUtils;
-import net.microfalx.resource.FileResource;
-import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.ThreadPool;
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.index.*;
@@ -25,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Queue;
@@ -35,10 +32,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableCollection;
-import static net.microfalx.bootstrap.search.SearchUtils.INDEX_METRICS;
-import static net.microfalx.bootstrap.search.SearchUtils.isLuceneException;
+import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.throwException;
 import static net.microfalx.lang.StringUtils.toIdentifier;
@@ -238,11 +235,13 @@ public class IndexService implements InitializingBean {
      * Clear the index.
      */
     public synchronized void clear() {
+        File directory = null;
+        if (indexer != null) directory = indexer.getOptions().getDirectory();
         releaseIndex();
         try {
-            FileUtils.deleteDirectory(getIndexDirectory());
+            if (directory != null) FileUtils.deleteDirectory(directory);
         } catch (IOException e) {
-            LOGGER.atError().setCause(e).log("Failed to remove index {}", getIndexDirectory());
+            LOGGER.atError().setCause(e).log("Failed to remove index {}", directory);
         }
     }
 
@@ -260,9 +259,7 @@ public class IndexService implements InitializingBean {
      */
     public Indexer createIndexer(IndexerOptions options) {
         requireNonNull(options);
-        if (options.getDirectory() == null) {
-            throw new IllegalArgumentException("Index directory must be set");
-        }
+        SearchUtils.updateOptions(resourceService, getThreadPool(), options);
         IndexWriterConfig.OpenMode openMode = IndexWriterConfig.OpenMode.CREATE_OR_APPEND;
         if (options.isRecreate()) openMode = IndexWriterConfig.OpenMode.CREATE;
         IndexWriterConfig writerConfig = new IndexWriterConfig(options.getAnalyzer());
@@ -272,7 +269,6 @@ public class IndexService implements InitializingBean {
         writerConfig.setUseCompoundFile(true);
         writerConfig.setRAMBufferSizeMB(getRAMBufferSizeMB());
         writerConfig.setRAMPerThreadHardLimitMB(getRAMBPerThreadBufferSizeMB());
-
         if (LOGGER.isDebugEnabled()) writerConfig.setInfoStream(new LoggerInfoStream());
         try {
             Directory luceneDirectory = new NIOFSDirectory(options.getDirectory().toPath());
@@ -291,12 +287,11 @@ public class IndexService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        openIndexer();
         initListeners();
         initTaskExecutor();
         initTasks();
         logSettings();
-        ThreadPool.get().scheduleAtFixedRate(new IndexMaintenanceTask(), Duration.ofSeconds(30));
+        openIndexer();
     }
 
     @PreDestroy
@@ -351,10 +346,7 @@ public class IndexService implements InitializingBean {
         try {
             if (indexer != null) return indexer;
             try {
-                IndexerOptions options = IndexerOptions.builder().id("main").name("Main")
-                        .description("The primary index used by the application to provide full text search")
-                        .directory(getIndexDirectory()).main(true)
-                        .build();
+                IndexerOptions options = createIndexOptions();
                 indexer = INDEX_METRICS.time("Open", () -> createIndexer(options));
                 return indexer;
             } catch (Exception e) {
@@ -423,16 +415,6 @@ public class IndexService implements InitializingBean {
         }
     }
 
-    /**
-     * Returns the directory which holds the index.
-     *
-     * @return a non-null instance
-     */
-    private File getIndexDirectory() {
-        Resource resource = resourceService.getPersisted("index");
-        return ((FileResource) resource).getFile();
-    }
-
     private void initListeners() {
         Collection<IndexListener> discoveredListeners = ClassUtils.resolveProviderInstances(IndexListener.class);
         LOGGER.info("Register {} index listeners", discoveredListeners.size());
@@ -442,14 +424,21 @@ public class IndexService implements InitializingBean {
         }
     }
 
+    private IndexerOptions createIndexOptions() {
+        return (IndexerOptions) IndexerOptions.create(INDEX_NAME).primary(true)
+                .tag("application").tag("search")
+                .name("Primary").description("The primary index used by the application to provide full text search")
+                .build();
+    }
+
     private void initTasks() {
-        getThreadPool().scheduleAtFixedRate(new IndexedDocumentsTask(), 0, 10, java.util.concurrent.TimeUnit.SECONDS);
+        getThreadPool().scheduleAtFixedRate(new IndexedDocumentsTask(), ofSeconds(10));
+        ThreadPool.get().scheduleAtFixedRate(new IndexMaintenanceTask(), ofSeconds(30));
     }
 
     private void logSettings() {
-        LOGGER.info("Index settings: Maximum RAM (Heap)= {} MB, RAM Buffer Size = {} MB, RAM Per Thread Buffer Size = {} MB",
-                Runtime.getRuntime().maxMemory() / FormatterUtils.M,
-                getRAMBufferSizeMB(), getRAMBPerThreadBufferSizeMB());
+        LOGGER.info("Index settings: Maximum RAM (Heap)= {} MB, Maximum RAM Size = {} MB, Maximum RAM Per Thread Buffer Size = {} MB",
+                Runtime.getRuntime().maxMemory() / FormatterUtils.M, getRAMBufferSizeMB(), getRAMBPerThreadBufferSizeMB());
     }
 
     private void initTaskExecutor() {

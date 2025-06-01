@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.metrics.Metrics;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -22,7 +23,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static net.microfalx.bootstrap.search.SearchUtils.*;
+import static net.microfalx.bootstrap.search.SearchUtils.INDEX_METRICS;
+import static net.microfalx.bootstrap.search.SearchUtils.isLuceneException;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.throwException;
 import static net.microfalx.lang.TimeUtils.millisSince;
@@ -38,6 +40,7 @@ public class Searcher {
     private volatile IndexSearcher indexSearcher;
     private volatile IndexReader indexReader;
     private final Directory directory;
+    private final Metrics metrics;
 
     private final AtomicBoolean open = new AtomicBoolean(false);
     private final AtomicInteger useCount = new AtomicInteger(0);
@@ -51,6 +54,7 @@ public class Searcher {
         requireNonNull(directory);
         requireNonNull(options);
         this.options = options;
+        this.metrics = options.getMetrics();
         this.directory = new NIOFSDirectory(directory.toPath(), NativeFSLockFactory.getDefault());
         openReader();
     }
@@ -193,7 +197,7 @@ public class Searcher {
         wlock.lock();
         try {
             open.set(false);
-            SEARCH_METRICS.time("Release", (t) -> {
+            metrics.time("Release", (t) -> {
                 try {
                     indexReader.close();
                 } catch (Exception e) {
@@ -223,8 +227,8 @@ public class Searcher {
     }
 
     private void openReader() {
-        indexReader = SEARCH_METRICS.timeCallable("Open Reader", () -> DirectoryReader.open(this.directory));
-        indexSearcher = SEARCH_METRICS.timeCallable("Open Searcher", () -> new IndexSearcher(this.indexReader, options.getThreadPool()));
+        indexReader = metrics.timeCallable("Open Reader", () -> DirectoryReader.open(this.directory));
+        indexSearcher = metrics.timeCallable("Open Searcher", () -> new IndexSearcher(this.indexReader, options.getThreadPool()));
         open.set(true);
     }
 
