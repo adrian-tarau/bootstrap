@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.search;
 
+import net.microfalx.lang.Identifiable;
+import net.microfalx.lang.Nameable;
 import net.microfalx.metrics.Metrics;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -23,8 +25,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static net.microfalx.bootstrap.search.SearchUtils.INDEX_METRICS;
-import static net.microfalx.bootstrap.search.SearchUtils.isLuceneException;
+import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.throwException;
 import static net.microfalx.lang.TimeUtils.millisSince;
@@ -32,7 +33,7 @@ import static net.microfalx.lang.TimeUtils.millisSince;
 /**
  * Represents a searcher in the search system.
  */
-public class Searcher {
+public class Searcher implements Identifiable<String>, Nameable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Searcher.class);
 
@@ -57,6 +58,16 @@ public class Searcher {
         this.metrics = options.getMetrics();
         this.directory = new NIOFSDirectory(directory.toPath(), NativeFSLockFactory.getDefault());
         openReader();
+    }
+
+    @Override
+    public String getId() {
+        return options.getId();
+    }
+
+    @Override
+    public String getName() {
+        return options.getName();
     }
 
     /**
@@ -158,13 +169,13 @@ public class Searcher {
         boolean shouldClose = false;
         try {
             if (isOpen()) {
-                RetryTemplate template = new RetryTemplate();
+                RetryTemplate template = createRetryTemplate();
                 return template.execute(context -> INDEX_METRICS.getTimer(name).recordCallable(() -> callback.doWithSearcher(indexSearcher)));
             } else {
                 throw new SearchException("Searcher is not open");
             }
         } catch (Exception e) {
-            shouldClose = isLuceneException(e);
+            shouldClose = isIndexUnusable(e);
             return throwException(e);
         } finally {
             rlock.unlock();

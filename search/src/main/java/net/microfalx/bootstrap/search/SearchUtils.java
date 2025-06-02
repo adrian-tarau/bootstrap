@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.bootstrap.resource.ResourceService;
-import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.FileUtils;
 import net.microfalx.lang.ObjectUtils;
@@ -10,9 +9,14 @@ import net.microfalx.resource.ResourceUtils;
 import net.microfalx.threadpool.ThreadPool;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.index.*;
+import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.RetryListener;
+import org.springframework.retry.support.RetryTemplate;
 
 import java.io.File;
 import java.io.IOException;
@@ -296,15 +300,15 @@ public class SearchUtils {
     }
 
     /**
-     * Returns whether the given throwable is a Lucene exception.
+     * Returns whether the index is unusable due to a Lucene exception.
      *
      * @param throwable the throwable
-     * @return <code>true</code> if Lucene exception, <code>false</code> otherwise
+     * @return <code>true</code> if the index is unusable, <code>false</code> otherwise
      */
-    public static boolean isLuceneException(Throwable throwable) {
+    public static boolean isIndexUnusable(Throwable throwable) {
         Throwable rootCause = ExceptionUtils.getRootCause(throwable);
         if (rootCause == null) rootCause = throwable;
-        return ClassUtils.getName(rootCause).startsWith("org.apache.lucene");
+        return rootCause instanceof AlreadyClosedException || rootCause instanceof CorruptIndexException;
     }
 
     /**
@@ -317,6 +321,17 @@ public class SearchUtils {
             options.directory = FileUtils.validateDirectoryExists(new File(directory, options.getId()));
         }
         if (options.threadPool == null) options.threadPool = threadPool;
+    }
+
+    /**
+     * Creates the retry template to include a listener for Lucene exceptions.
+     *
+     * @return the updated retry template
+     */
+    static RetryTemplate createRetryTemplate() {
+        RetryTemplate template = new RetryTemplate();
+        template.registerListener(new LuceneRetryListener());
+        return template;
     }
 
     private final static String[] OPERATORS = new String[]{
@@ -371,6 +386,14 @@ public class SearchUtils {
 
         FIELD_NAMES.addAll(STANDARD_FIELD_NAMES);
 
+    }
+
+    private static class LuceneRetryListener implements RetryListener {
+
+        @Override
+        public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+            if (isIndexUnusable(throwable)) context.setExhaustedOnly();
+        }
     }
 
     private static class LeafReaderFields extends Fields {

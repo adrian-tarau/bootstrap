@@ -71,7 +71,7 @@ public class Index extends NamedIdentityAware<String> {
         model.setName(options.getName());
         model.setDescription(options.getDescription());
         model.setDirectory(ObjectUtils.toString(options.getDirectory()));
-        model.setAnalyzer(ClassUtils.getName(options.getAnalyzer()));
+        model.setAnalyzer(ClassUtils.getCompactName(options.getAnalyzer()));
         model.setPrimary(options.isPrimary());
         model.setMemorySize(indexer.getMemorySize());
         model.setDiskSize(indexer.getDiskSize());

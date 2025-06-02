@@ -37,6 +37,7 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
 import static net.microfalx.lang.ExceptionUtils.throwException;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 
@@ -366,13 +367,13 @@ public class IndexService implements InitializingBean {
      */
     private <R> R doWithIndex(String name, Indexer.Callback<R> callback) {
         try {
-            RetryTemplate template = new RetryTemplate();
+            RetryTemplate template = createRetryTemplate();
             return template.execute(context -> {
                 Indexer index = openIndexer();
                 return index.doWithIndex(name, callback);
             });
         } catch (Exception e) {
-            if (isLuceneException(e)) releaseIndex();
+            if (isIndexUnusable(e)) releaseIndex();
             return throwException(e);
         }
     }
@@ -437,7 +438,7 @@ public class IndexService implements InitializingBean {
     }
 
     private void logSettings() {
-        LOGGER.info("Index settings: Maximum RAM (Heap)= {} MB, Maximum RAM Size = {} MB, Maximum RAM Per Thread Buffer Size = {} MB",
+        LOGGER.info("Index settings: Maximum RAM (Heap)= {} MB, Maximum RAM Buffer Size = {} MB, Maximum RAM Per Thread Buffer Size = {} MB",
                 Runtime.getRuntime().maxMemory() / FormatterUtils.M, getRAMBufferSizeMB(), getRAMBPerThreadBufferSizeMB());
     }
 
@@ -447,13 +448,17 @@ public class IndexService implements InitializingBean {
 
     class IndexMaintenanceTask implements Runnable {
 
+        private void handleIndex(Indexer indexer) {
+            try {
+                indexer.commit();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to commit changes to index {}. root cause: {}", indexer.getId(), getRootCauseMessage(e));
+            }
+        }
+
         @Override
         public void run() {
-            try {
-                commitIndex();
-            } catch (Exception e) {
-                LOGGER.error("Failed to commit index", e);
-            }
+            indexers.values().forEach(this::handleIndex);
         }
     }
 

@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.search;
 
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.Identifiable;
+import net.microfalx.lang.Nameable;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Metrics;
 import org.apache.commons.io.FileUtils;
@@ -19,10 +21,11 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.System.currentTimeMillis;
-import static net.microfalx.bootstrap.search.SearchUtils.isLuceneException;
+import static net.microfalx.bootstrap.search.SearchUtils.createRetryTemplate;
+import static net.microfalx.bootstrap.search.SearchUtils.isIndexUnusable;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.throwException;
-import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
+import static net.microfalx.lang.TimeUtils.ONE_MINUTE;
 import static net.microfalx.lang.TimeUtils.millisSince;
 
 /**
@@ -30,7 +33,7 @@ import static net.microfalx.lang.TimeUtils.millisSince;
  * <p>
  * This class wraps Lucene structures supporting the indexer.
  */
-public class Indexer {
+public class Indexer implements Identifiable<String>, Nameable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Indexer.class);
 
@@ -64,6 +67,16 @@ public class Indexer {
         this.directory = directory;
         this.options = options;
         this.metrics = options.getMetrics();
+    }
+
+    @Override
+    public String getId() {
+        return options.getId();
+    }
+
+    @Override
+    public String getName() {
+        return options.getName();
     }
 
     /**
@@ -160,7 +173,7 @@ public class Indexer {
                 indexLastCommited = currentTimeMillis();
             }
         } catch (Exception e) {
-            if (isLuceneException(e)) {
+            if (isIndexUnusable(e)) {
                 LOGGER.warn("Failed to commit changes to index. root cause: {}", ExceptionUtils.getRootCauseMessage(e));
             } else {
                 ExceptionUtils.throwException(e);
@@ -209,10 +222,10 @@ public class Indexer {
         rlock.lock();
         try {
             if (!isOpen()) throw new IndexException("Index is closed");
-            RetryTemplate template = new RetryTemplate();
+            RetryTemplate template = createRetryTemplate();
             return template.execute(context -> metrics.getTimer(name).recordCallable(() -> callback.doWithIndex(indexWriter)));
         } catch (Exception e) {
-            shouldRelease = isLuceneException(e);
+            shouldRelease = isIndexUnusable(e);
             return throwException(e);
         } finally {
             markIndexChanged(false);
@@ -253,7 +266,7 @@ public class Indexer {
     }
 
     private void updateSize() {
-        if (indexDiskSize == -1 || millisSince(indexSizeLastUpdated) > FIVE_MINUTE) {
+        if (indexDiskSize == -1 || millisSince(indexSizeLastUpdated) > ONE_MINUTE) {
             indexSizeLastUpdated = currentTimeMillis();
             indexDiskSize = FileUtils.sizeOfDirectory(options.getDirectory());
         }
