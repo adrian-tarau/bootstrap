@@ -8,6 +8,7 @@ import net.microfalx.metrics.Metrics;
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.retry.support.RetryTemplate;
@@ -58,6 +59,8 @@ public class Indexer implements Identifiable<String>, Nameable {
     private final AtomicBoolean indexChanged = new AtomicBoolean(false);
     private final AtomicBoolean indexChangedOptimizationPending = new AtomicBoolean(false);
     private final AtomicInteger indexRetries = new AtomicInteger(MAX_INDEX_RETRIES);
+
+    static ThreadLocal<Boolean> INTERRUPTED = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     Indexer(IndexWriter indexWriter, Directory directory, IndexerOptions options) {
         requireNonNull(indexWriter);
@@ -222,6 +225,7 @@ public class Indexer implements Identifiable<String>, Nameable {
         rlock.lock();
         try {
             if (!isOpen()) throw new IndexException("Index is closed");
+            saveThreadInterruptedFlag();
             RetryTemplate template = createRetryTemplate();
             return template.execute(context -> metrics.getTimer(name).recordCallable(() -> callback.doWithIndex(indexWriter)));
         } catch (Exception e) {
@@ -230,6 +234,7 @@ public class Indexer implements Identifiable<String>, Nameable {
         } finally {
             markIndexChanged(false);
             rlock.unlock();
+            restoreThreadInterruptedFlag();
             if (shouldRelease && indexRetries.decrementAndGet() <= 0) release();
         }
     }
@@ -270,6 +275,24 @@ public class Indexer implements Identifiable<String>, Nameable {
             indexSizeLastUpdated = currentTimeMillis();
             indexDiskSize = FileUtils.sizeOfDirectory(options.getDirectory());
         }
+    }
+
+    /**
+     * Saves and resets the interrupt flag).
+     * <p>
+     * THis ia a hack around Java gug where an interrupted thread kills the NIO channel.
+     *
+     * @see FSDirectory for more details about the bug
+     */
+    private void saveThreadInterruptedFlag() {
+        INTERRUPTED.set(Thread.interrupted());
+    }
+
+    /**
+     * Restore the interrupt flag;
+     */
+    private void restoreThreadInterruptedFlag() {
+        if (INTERRUPTED.get()) Thread.currentThread().interrupt();
     }
 
     /**

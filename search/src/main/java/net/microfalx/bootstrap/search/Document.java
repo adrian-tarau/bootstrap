@@ -143,7 +143,7 @@ public final class Document extends AbstractAttributes<Attribute> implements Ser
         if (body == null && bodyUri != null) {
             body = ResourceFactory.resolve(bodyUri).withMimeType(getMimeType());
         }
-        return body;
+        return body != null ? body : Resource.memory();
     }
 
     public void setBody(Resource body) {

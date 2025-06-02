@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.InfoStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +95,7 @@ public class IndexService implements InitializingBean {
 
     /**
      * Returns the service used to access the content of the documents.
+     *
      * @return a non-null instance
      */
     public ContentService getContentService() {
@@ -256,7 +257,7 @@ public class IndexService implements InitializingBean {
     /**
      * Creates the index.
      *
-     * @param options   the options for the indexer
+     * @param options the options for the indexer
      */
     public Indexer createIndexer(IndexerOptions options) {
         requireNonNull(options);
@@ -272,12 +273,12 @@ public class IndexService implements InitializingBean {
         writerConfig.setRAMPerThreadHardLimitMB(getRAMBPerThreadBufferSizeMB());
         if (LOGGER.isDebugEnabled()) writerConfig.setInfoStream(new LoggerInfoStream());
         try {
-            Directory luceneDirectory = new NIOFSDirectory(options.getDirectory().toPath());
+            Directory luceneDirectory = FSDirectory.open(options.getDirectory().toPath());
             IndexWriter indexWriter = new IndexWriter(luceneDirectory, writerConfig);
             if (openMode == IndexWriterConfig.OpenMode.CREATE) indexWriter.commit();
             LOGGER.debug("Create index writer, RAM Buffer " + writerConfig.getRAMBufferSizeMB() + " MB" +
-                    ", Thread RAM Buffer " + writerConfig.getRAMPerThreadHardLimitMB() + " MB" +
-                    ", Use compound files " + writerConfig.getUseCompoundFile());
+                         ", Thread RAM Buffer " + writerConfig.getRAMPerThreadHardLimitMB() + " MB" +
+                         ", Use compound files " + writerConfig.getUseCompoundFile());
             Indexer indexer = new Indexer(indexWriter, luceneDirectory, options);
             this.indexers.put(indexer.getOptions().getId(), indexer);
             return indexer;
@@ -450,7 +451,7 @@ public class IndexService implements InitializingBean {
 
         private void handleIndex(Indexer indexer) {
             try {
-                indexer.commit();
+                //indexer.commit();
             } catch (Exception e) {
                 LOGGER.warn("Failed to commit changes to index {}. root cause: {}", indexer.getId(), getRootCauseMessage(e));
             }
