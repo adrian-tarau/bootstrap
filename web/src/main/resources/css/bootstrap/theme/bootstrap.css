@@ -30,7 +30,7 @@
 
     .modal-lg,
     .modal-xl {
-        --bs-modal-width: 800px !important;
+        --bs-modal-width: 850px !important;
     }
 
 }
@@ -38,22 +38,22 @@
 @media (min-width: 1200px) {
 
     .modal-lg {
-        --bs-modal-width: 900px;
+        --bs-modal-width: 950px;
     }
 
     .modal-xl {
-        --bs-modal-width: 1000px;
+        --bs-modal-width: 1100px;
     }
 }
 
-@media (min-width: 1600px) {
+@media (min-width: 1500px) {
 
     .modal-lg {
-        --bs-modal-width: 1200px !important;
+        --bs-modal-width: 1100px !important;
     }
 
     .modal-xl {
-        --bs-modal-width: 1500px !important;
+        --bs-modal-width: 1300px !important;
     }
 
 }

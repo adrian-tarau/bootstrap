@@ -74,6 +74,7 @@ import java.util.stream.Collectors;
 import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_DEFAULT_POINTS;
 import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_MAXIMUM_POINTS;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ObjectUtils.isNotEmpty;
 import static net.microfalx.lang.StringUtils.*;
 
 /**
@@ -211,7 +212,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                 afterPersist(dataSet, dataSetModel, State.DELETE);
             }
             String message = (String) model.getAttribute(MESSAGE_ATTR);
-            if (isNotEmpty(message)) {
+            if (StringUtils.isNotEmpty(message)) {
                 return JsonResponse.fail(message).setErrorCode(JsonResponse.ABORT_ERROR);
             } else {
                 return JsonResponse.success(message);
@@ -748,11 +749,15 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         }
         model.addAttribute("detailTemplate", detailTemplate);
         model.addAttribute("detailFragment", detailFragment);
-        if (ObjectUtils.isNotEmpty(dataSetAnnotation.viewClasses()) && dataSet.getState() == State.VIEW) {
-            model.addAttribute("viewClasses", StringUtils.join(" ", dataSetAnnotation.viewClasses()));
-        } else {
-            model.addAttribute("viewClasses", EMPTY_STRING);
+        Set<String> viewClasses = new LinkedHashSet<>();
+        if (isNotEmpty(dataSetAnnotation.viewClasses()) && dataSet.getState() == State.VIEW) {
+            viewClasses.addAll(Arrays.asList(dataSetAnnotation.viewClasses()));
         }
+        if (dataSet.getState() == State.ADD || dataSet.getState() == State.EDIT
+                || (dataSet.getState() == State.VIEW && ObjectUtils.isEmpty(dataSetAnnotation.viewClasses(), true))) {
+            viewClasses.add("modal-fixed-height");
+        }
+        model.addAttribute("viewClasses", String.join(" ", viewClasses));
     }
 
     private M doFindModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
@@ -889,7 +894,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             filter = Filter.create(ComparisonExpression.eq(ComparisonExpression.QUERY, queryParameter));
         } else {
             String defaultQuery = getDefaultQuery();
-            if (isNotEmpty(defaultQuery)) {
+            if (StringUtils.isNotEmpty(defaultQuery)) {
                 QueryParser<M, Field<M>, ID> queryParser = createQueryParser(dataSet, defaultQuery);
                 if (!queryParser.isValid()) {
                     defaultQuery = null;

@@ -1,6 +1,6 @@
 @media (min-width: 576px) {
 
-    .modal-content {
+    .modal-fixed-height .modal-content {
         height: 450px !important;
     }
 
@@ -8,11 +8,11 @@
 
 @media (min-width: 992px) {
 
-    .modal-lg .modal-content {
+    .modal-lg.modal-fixed-height .modal-content {
         min-height: 500px !important;
     }
 
-    .modal-xl .modal-content {
+    .modal-xl.modal-fixed-height .modal-content {
         min-height: 500px !important;
     }
 
@@ -20,11 +20,11 @@
 
 @media (min-width: 1200px) {
 
-    .modal-lg .modal-content {
+    .modal-lg.modal-fixed-height .modal-content {
         min-height: 500px !important;
     }
 
-    .modal-xl .modal-content {
+    .modal-xl.modal-fixed-height .modal-content {
         min-height: 600px !important;
     }
 
@@ -32,11 +32,11 @@
 
 @media (min-width: 1600px) {
 
-    .modal-lg .modal-content {
+    .modal-lg.modal-fixed-height .modal-content {
         min-height: 700px !important;
     }
 
-    .modal-xl .modal-content {
+    .modal-xl.modal-fixed-height .modal-content {
         min-height: 800px !important;
     }
 
