@@ -2,9 +2,9 @@ package net.microfalx.bootstrap.dataset;
 
 import com.google.common.collect.Lists;
 import net.microfalx.bootstrap.core.i18n.I18nService;
+import net.microfalx.bootstrap.dataset.annotation.*;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.Lookup;
-import net.microfalx.bootstrap.dataset.annotation.*;
 import net.microfalx.bootstrap.dataset.formatter.EnumFormatter;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
@@ -225,7 +225,6 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
         requireNonNull(field);
         if (model == null) return null;
         Object value = field.get(model);
-        if (value == null) return null;
         return METRICS.time("Get Display Value", () -> {
             String displayValue = null;
             Formattable formattableAnnot = field.findAnnotation(Formattable.class);
@@ -236,7 +235,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                 displayValue = EMPTY_STRING;
             } else {
                 Lookup lookupAnnot = field.findAnnotation(Lookup.class);
-                if (lookupAnnot != null) {
+                if (lookupAnnot != null && value != null) {
                     LookupProvider<net.microfalx.bootstrap.dataset.Lookup<Object>, Object> lookupProvider = getDataSetService().getLookupProvider(lookupAnnot.model());
                     Optional<?> lookupModel = lookupProvider.findById(value);
                     if (lookupModel.isPresent()) {
@@ -247,7 +246,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                     displayValue = ((Formatter<M, Field<M>, Object>) ENUM_FORMATTER).format(value, field, model);
                 } else if (value instanceof Number) {
                     displayValue = ((Formatter<M, Field<M>, Object>) NUMBER_FORMATTER).format(value, field, model);
-                } else if (field.getDataType().isStructure()) {
+                } else if (field.getDataType().isStructure() && value instanceof Collection) {
                     MetadataService metadataService = dataSetService.getBean(MetadataService.class);
                     Metadata modelMetadata = metadataService.getMetadata(field.getGenericDataClass());
                     StringBuilder builder = new StringBuilder();
@@ -259,13 +258,13 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                     displayValue = builder.toString();
                 } else if (isJdkType(value)) {
                     displayValue = FormatterUtils.basicFormatting(value, formattableAnnot);
-                } else {
+                } else if (value != null) {
                     MetadataService metadataService = dataSetService.getBean(MetadataService.class);
                     Metadata modelMetadata = metadataService.getMetadata(value.getClass());
                     displayValue = modelMetadata.getName(value);
                 }
             }
-            if (displayValue != null && !isJdkType(value)) {
+            if (value != null && displayValue != null && !isJdkType(value)) {
                 getDataSetService().registerByDisplayName(value, displayValue);
             }
             return displayValue;

@@ -79,6 +79,17 @@ public class FormatterUtils {
     /**
      * Applies basic formatting rules.
      *
+     * @param value the value
+     * @return the formatted value
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static String basicFormatting(Object value) {
+        return basicFormatting(value, null);
+    }
+
+    /**
+     * Applies basic formatting rules.
+     *
      * @param value       the value
      * @param formattable the rule for formatting
      * @return the formatted value

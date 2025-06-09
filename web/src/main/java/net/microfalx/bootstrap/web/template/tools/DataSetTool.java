@@ -6,6 +6,7 @@ import net.microfalx.bootstrap.dataset.annotation.Align;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.Tab;
 import net.microfalx.bootstrap.dataset.annotation.Tabs;
+import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
 import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.bootstrap.model.Field;
@@ -935,7 +936,6 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
         DataSet<M, F, ID> dataSet = getDataSet();
         State state = dataSet.getState();
         Object value = field.get(model);
-        if (value == null) return null;
         if (field.getDataType() == Field.DataType.BOOLEAN) {
             if (state == State.VIEW) {
                 // the value attribute should be null during view for booleans since we are used checked attribute
@@ -946,7 +946,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
                 return bool ? BOOLEAN_CHECKED : BOOLEAN_UNCHECKED;
             }
         } else if (state == State.VIEW && value instanceof Temporal) {
-            return value.toString();
+            return FormatterUtils.basicFormatting(value);
         } else {
             return dataSet.getDisplayValue(model, field);
         }
