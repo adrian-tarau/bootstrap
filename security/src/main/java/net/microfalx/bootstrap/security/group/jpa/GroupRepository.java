@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.security.group;
+package net.microfalx.bootstrap.security.group.jpa;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

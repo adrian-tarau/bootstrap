@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.security.user;
+package net.microfalx.bootstrap.security.user.jpa;
 
 import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;

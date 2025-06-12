@@ -2,12 +2,15 @@ package net.microfalx.bootstrap.security.user;
 
 import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
-import net.microfalx.bootstrap.security.audit.Audit;
+import net.microfalx.bootstrap.security.SecurityConstants;
 import net.microfalx.bootstrap.security.audit.AuditContext;
-import net.microfalx.bootstrap.security.audit.AuditRepository;
-import net.microfalx.bootstrap.security.group.Group;
+import net.microfalx.bootstrap.security.audit.jpa.Audit;
+import net.microfalx.bootstrap.security.audit.jpa.AuditRepository;
 import net.microfalx.bootstrap.security.group.GroupService;
+import net.microfalx.bootstrap.security.group.jpa.Group;
 import net.microfalx.bootstrap.security.provisioning.SecurityProperties;
+import net.microfalx.bootstrap.security.user.jpa.User;
+import net.microfalx.bootstrap.security.user.jpa.UserRepository;
 import net.microfalx.bootstrap.web.preference.PreferenceService;
 import net.microfalx.bootstrap.web.preference.PreferenceStorage;
 import net.microfalx.lang.StringUtils;
@@ -15,11 +18,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
+import org.springframework.security.authentication.event.LogoutSuccessEvent;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
@@ -45,7 +51,7 @@ import static net.microfalx.lang.StringUtils.toIdentifier;
  * A service around user management.
  */
 @Service
-public class UserService extends ApplicationContextSupport implements InitializingBean {
+public class UserService extends ApplicationContextSupport implements InitializingBean, ApplicationListener<LogoutSuccessEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
@@ -79,6 +85,7 @@ public class UserService extends ApplicationContextSupport implements Initializi
     private JdbcClient jdbcClient;
 
     private final Map<String, Role> roles = new ConcurrentHashMap<>();
+    private final Map<String, SecurityContext> securityContexts = new ConcurrentHashMap<>();
 
     /**
      * Returns the roles registered with the application.
@@ -141,6 +148,25 @@ public class UserService extends ApplicationContextSupport implements Initializi
         if (user == null) throw new SecurityException("A user with user name '" + getCurrentUserName()
                 + "' could not be located");
         return user;
+    }
+
+    /**
+     * Returns the current security context, associated with the
+     *
+     * @return a non-null instance
+     */
+    public SecurityContext getCurrentSecurityContext() {
+        String currentUserName = getCurrentUserName();
+        SecurityContext securityContext = securityContexts.get(currentUserName.toLowerCase());
+        if (securityContext != null) return securityContext;
+        if (!SecurityConstants.ANONYMOUS_USER.equals(currentUserName)) {
+            User currentUser = findUser(false);
+            if (currentUser != null) {
+                securityContext = securityContexts.computeIfAbsent(currentUser.getUserName().toLowerCase(),
+                        userName -> new SecurityContextImpl(currentUser, SecurityContextHolder.getContext()));
+            }
+        }
+        return securityContext != null ? securityContext : new SecurityContextImpl();
     }
 
     /**
@@ -258,6 +284,15 @@ public class UserService extends ApplicationContextSupport implements Initializi
                 .setDescription("User '" + failures.getAuthentication().getName() + "' failed to authenticate, root cause: " + getRootCauseMessage(failures.getException()));
         context = updateAuditContext(context, failures.getAuthentication());
         audit(context);
+    }
+
+    @Override
+    public void onApplicationEvent(LogoutSuccessEvent event) {
+        String userName = getUserName(event.getAuthentication());
+        if (userName != null) {
+            LOGGER.info("Logged out user '{}'", userName);
+            securityContexts.remove(userName.toLowerCase());
+        }
     }
 
     private Audit createAudit(AuditContext context) {

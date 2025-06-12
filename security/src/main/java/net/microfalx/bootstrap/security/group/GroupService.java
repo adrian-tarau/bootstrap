@@ -2,6 +2,8 @@ package net.microfalx.bootstrap.security.group;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import net.microfalx.bootstrap.security.group.jpa.Group;
+import net.microfalx.bootstrap.security.group.jpa.GroupRepository;
 import net.microfalx.bootstrap.security.user.Role;
 import net.microfalx.lang.Identifiable;
 import org.slf4j.Logger;

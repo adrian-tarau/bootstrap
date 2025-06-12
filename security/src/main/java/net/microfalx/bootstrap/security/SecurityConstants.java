@@ -6,7 +6,7 @@ package net.microfalx.bootstrap.security;
 public class SecurityConstants {
 
     /**
-     * The user name for a user which is not authenticated.
+     * The username for a user which is not authenticated.
      */
     public static final String ANONYMOUS_USER = "anonymous";
 

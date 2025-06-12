@@ -4,6 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.security.Principal;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.Collections.emptyList;
@@ -45,12 +46,40 @@ public class SecurityUtils {
      * @return a non-null instance
      */
     public static String getCurrentUserName() {
-        Authentication authentication = getAuthentication();
+        return getUserName(getAuthentication());
+    }
+
+    /**
+     * Returns the username of the given authentication.
+     * <p>
+     * If the authentication is not available, the method returns {@link SecurityConstants#ANONYMOUS_USER}
+     *
+     * @param authentication the authentication
+     * @return a non-null instance
+     */
+    public static String getUserName(Authentication authentication) {
         if (authentication != null) {
             Object principal = authentication.getPrincipal();
             if (principal instanceof UserDetails) return ((UserDetails) principal).getUsername();
         }
         return SecurityConstants.ANONYMOUS_USER;
+    }
+
+    /**
+     * Returns the current principal.
+     * <p>
+     * If the security context is not available, the method returns a principal based on
+     * {@link SecurityConstants#ANONYMOUS_USER}.
+     *
+     * @return a non-null instance
+     */
+    public static Principal getCurrentPrincipal() {
+        Authentication authentication = getAuthentication();
+        if (authentication != null) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof Principal) return (Principal) principal;
+        }
+        return () -> SecurityConstants.ANONYMOUS_USER;
     }
 
     /**

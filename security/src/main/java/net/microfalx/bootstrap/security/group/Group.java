@@ -1,37 +1,23 @@
 package net.microfalx.bootstrap.security.group;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import net.microfalx.bootstrap.jdbc.entity.NamedAndTimestampedIdentityAware;
 import net.microfalx.bootstrap.security.user.Role;
-import net.microfalx.bootstrap.security.user.User;
-import net.microfalx.lang.annotation.Description;
-import net.microfalx.lang.annotation.Position;
-import net.microfalx.lang.annotation.Visible;
+import net.microfalx.lang.Descriptable;
+import net.microfalx.lang.Nameable;
 
-import java.util.Collection;
 import java.util.Set;
 
-@Entity
-@Table(name = "security_groups")
-@Getter
-@Setter
-@ToString(exclude = "users", callSuper = true)
-public class Group extends NamedAndTimestampedIdentityAware<Integer> {
+/**
+ * Represents a group of users.
+ * <p>
+ * A group is identified by a unique ID and has a name and description.
+ * It can be used to manage permissions and roles for a set of users.
+ */
+public interface Group extends Nameable, Descriptable {
 
-    @Column(name = "enabled", nullable = false)
-    @Position(10)
-    @Description("Indicates whether the {name} is enabled or disabled")
-    private boolean enabled;
-
-    @Transient
-    @Position(20)
-    private Set<Role> roles;
-
-    @Visible(value = false)
-    @ManyToMany()
-    @JoinTable(name = "security_group_members", joinColumns = @JoinColumn(name = "group_id"), inverseJoinColumns = @JoinColumn(name = "username"))
-    private Collection<User> users;
+    /**
+     * Returns the roles associated with this group.
+     *
+     * @return a non-null instance
+     */
+    Set<Role> getRoles();
 }
