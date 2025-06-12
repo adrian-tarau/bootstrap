@@ -141,7 +141,7 @@ public class HelpService implements InitializingBean {
      */
     public void render(String path, Writer writer) throws IOException {
         requireNonNull(path);
-        LOGGER.info("Render help at '" + path + "'");
+        LOGGER.info("Render help at '{}'", path);
 
         // initialize the HTML renderer
         MutableDataSet options = new MutableDataSet();
