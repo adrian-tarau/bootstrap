@@ -14,6 +14,7 @@ class UserImpl implements User {
 
     private final String id;
     private final String name;
+    private final String displayName;
     private final String userName;
     private final boolean enabled;
     private final String email;

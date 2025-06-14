@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.security.user;
 
 import lombok.ToString;
 import net.microfalx.bootstrap.security.SecurityConstants;
+import net.microfalx.bootstrap.security.SecurityContext;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -28,7 +29,7 @@ public class SecurityContextImpl implements SecurityContext {
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     private final Set<String> roles = ConcurrentHashMap.newKeySet();
 
-    static ThreadLocal<SecurityContext> CONTEXT = ThreadLocal.withInitial(SecurityContextImpl::new);
+    public static ThreadLocal<SecurityContext> CONTEXT = ThreadLocal.withInitial(SecurityContextImpl::new);
 
     SecurityContextImpl() {
     }
@@ -63,7 +64,7 @@ public class SecurityContextImpl implements SecurityContext {
 
     @Override
     public Principal getPrincipal() {
-        return principal;
+        return user;
     }
 
     @Override
@@ -76,6 +77,7 @@ public class SecurityContextImpl implements SecurityContext {
         throw new IllegalStateException("Should not be called directly");
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T getAttribute(String name) {
         requireNonNull(name);
@@ -90,6 +92,7 @@ public class SecurityContextImpl implements SecurityContext {
 
     private void initialize() {
         initializeSpringSecurity();
+        initializeUser();
         initializeRoles();
     }
 
@@ -100,22 +103,23 @@ public class SecurityContextImpl implements SecurityContext {
         if (this.authentication == null) {
             this.authentication = new AnonymousAuthenticationToken(SecurityConstants.ANONYMOUS_USER, getCurrentPrincipal(), Collections.emptyList());
         }
-        if (this.authentication.getPrincipal() instanceof Principal) {
-            this.principal = (Principal) this.authentication.getPrincipal();
-        }
         if (this.authentication.getPrincipal() instanceof UserDetails userDetailsFromPrincipal) {
             this.userDetails = userDetailsFromPrincipal;
-        }
-        if (this.principal == null) {
-            this.principal = new PrincipalImpl(user.getUserName());
         }
     }
 
     private void initializeRoles() {
-        this.roles.addAll(this.authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).filter(Objects::nonNull).map(String::toLowerCase).toList());
+        this.roles.addAll(this.authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(Objects::nonNull).map(String::toLowerCase)
+                .toList());
     }
 
     private void initializeUser() {
-        this.user = UserImpl.builder().name(this.user.getName()).userName(this.user.getUserName()).email(this.user.getEmail()).enabled(this.user.isEnabled()).description(this.user.getDescription()).build();
+        this.user = UserImpl.builder().name(this.user.getName())
+                .userName(this.user.getUserName())
+                .email(this.user.getEmail())
+                .enabled(this.user.isEnabled())
+                .description(this.user.getDescription()).build();
     }
 }

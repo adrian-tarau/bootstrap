@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.security;
+package net.microfalx.bootstrap.security.util;
 
 import net.microfalx.bootstrap.web.dataset.SystemDataSetController;
 

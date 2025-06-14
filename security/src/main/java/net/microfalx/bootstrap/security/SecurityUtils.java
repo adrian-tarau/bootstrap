@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.security;
 
+import net.microfalx.bootstrap.security.user.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,6 +37,21 @@ public class SecurityUtils {
      */
     public static boolean isAnonymous(String userName) {
         return SecurityConstants.ANONYMOUS_USER.equalsIgnoreCase(userName);
+    }
+
+    /**
+     * Returns the display name of the current principal.
+     * <p>
+     * If the security context is not available, the method returns {@link SecurityConstants#ANONYMOUS_USER}.
+     *
+     * @return a non-null instance
+     */
+    public static String getDisplayName(Principal principal) {
+        if (principal instanceof User user) {
+            return user.getDisplayName();
+        } else {
+            return principal.getName();
+        }
     }
 
     /**

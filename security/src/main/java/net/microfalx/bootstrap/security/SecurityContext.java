@@ -1,5 +1,7 @@
-package net.microfalx.bootstrap.security.user;
+package net.microfalx.bootstrap.security;
 
+import net.microfalx.bootstrap.security.user.SecurityContextImpl;
+import net.microfalx.bootstrap.security.user.User;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 

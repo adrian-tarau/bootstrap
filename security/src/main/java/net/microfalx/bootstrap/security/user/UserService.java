@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.security.user;
 import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.security.SecurityConstants;
+import net.microfalx.bootstrap.security.SecurityContext;
 import net.microfalx.bootstrap.security.audit.AuditContext;
 import net.microfalx.bootstrap.security.audit.jpa.Audit;
 import net.microfalx.bootstrap.security.audit.jpa.AuditRepository;

@@ -69,6 +69,7 @@
             <groupId>net.microfalx.bootstrap</groupId>
             <artifactId>bootstrap-web</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Testing -->
