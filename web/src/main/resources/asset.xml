@@ -22,6 +22,7 @@
         <asset path="core.js" type="script"/>
         <asset path="user.js" type="script"/>
         <asset path="alert.js" type="script"/>
+        <asset path="sse.js" type="script"/>
         <asset path="help.js" type="script"/>
         <asset path="ajax.js" type="script"/>
         <asset path="chart.js" type="script"/>

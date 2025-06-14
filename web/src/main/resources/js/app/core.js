@@ -31,8 +31,8 @@ Application.getQuery = function (params) {
 /**
  * Returns an application URI.
  *
- * @param {String} [path] an optional path to add to the base URI
- * @param {Object} params the new parameters
+ * @param {String} path an optional path to add to the base URI
+ * @param {Object} [params] an optional list of parameters
  * @param {Object} [options] an optional object, to control how parameters are calculated
  * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI to the current page (within the same resource)
  * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the URI
@@ -123,6 +123,7 @@ Application.get = function (path, params, callback, options) {
  * @param {Boolean} [options.self=true] an optional boolean, to calculate the URI relative to the current page (self)
  * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
  * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
+ * @param {Boolean} [options.contentType] the content type of the request, defaults to "application/x-www-form-urlencoded; charset=UTF-8" for a POST
  * @param {Boolean} [options.mask] an optional DOM selector, which will be masked while the request is running
  * @param {Boolean} [options.error] an optional function, to be called if the request fails
  * @param {Boolean} [options.complete] an optional function, to be called when the request ends (successful or not)
@@ -161,6 +162,7 @@ Application.delete = function (path, params, callback, options) {
  * @param {Boolean} [options.params=false] an optional boolean, to include the parameters in the current URI
  * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
  * @param {Boolean} [options.data=text] the body of a POST
+ * @param {Boolean} [options.contentType] the content type of the request, defaults to "application/x-www-form-urlencoded; charset=UTF-8" for a POST
  * @param {Boolean} [options.mask] an optional DOM selector, which will be masked while the request is running
  * @param {Boolean} [options.error] an optional function, to be called if the request fails
  * @param {Boolean} [options.complete] an optional function, to be called when the request ends (successful or not)
@@ -186,6 +188,7 @@ Application.ajax = function (type, path, params, callback, options) {
         type: type,
         data: data,
         dataType: options.dataType,
+        contentType: Utils.defaultIfNotDefinedOrNull(options.contentType, "application/x-www-form-urlencoded; charset=UTF-8"),
         timeout: APP_AJAX_DEFAULT_TIMEOUT,
         headers: {"X-TimeZone": Application.getTimezoneOffset()},
         success: function (output, status, xhr) {
