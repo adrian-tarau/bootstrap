@@ -63,6 +63,7 @@
         <module>help</module>
         <module>search</module>
         <module>model</module>
+        <module>dsv</module>
         <module>template</module>
         <module>dataset</module>
         <module>web</module>

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
@@ -57,13 +58,21 @@ public class DataSetPage<M> implements Page<M> {
 
     @Override
     public int getNumberOfElements() {
-        return getEndIndex() - getStartIndex();
+        if (pageable.isUnpaged()) {
+            return models.size();
+        } else {
+            return getEndIndex() - getStartIndex();
+        }
     }
 
     @Override
     public List<M> getContent() {
         if (models.isEmpty()) return emptyList();
-        return models.subList(getStartIndex(), getEndIndex());
+        if (pageable.isUnpaged()) {
+            return unmodifiableList(models);
+        } else {
+            return models.subList(getStartIndex(), getEndIndex());
+        }
     }
 
     @Override
@@ -78,22 +87,38 @@ public class DataSetPage<M> implements Page<M> {
 
     @Override
     public boolean isFirst() {
-        return pageable.getPageNumber() == 0;
+        if (pageable.isPaged()) {
+            return pageable.getPageNumber() == 0;
+        } else {
+            return true;
+        }
     }
 
     @Override
     public boolean isLast() {
-        return pageable.getPageNumber() == (getTotalPages() - 1);
+        if (pageable.isPaged()) {
+            return pageable.getPageNumber() == (getTotalPages() - 1);
+        } else {
+            return true;
+        }
     }
 
     @Override
     public boolean hasNext() {
-        return pageable.getPageNumber() < (getTotalPages() - 1);
+        if (pageable.isPaged()) {
+            return pageable.getPageNumber() < (getTotalPages() - 1);
+        } else {
+            return false;
+        }
     }
 
     @Override
     public boolean hasPrevious() {
-        return pageable.getPageNumber() > 0;
+        if (pageable.isPaged()) {
+            return pageable.getPageNumber() > 0;
+        } else {
+            return false;
+        }
     }
 
     @Override
