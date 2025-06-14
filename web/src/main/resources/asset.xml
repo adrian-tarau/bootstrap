@@ -15,6 +15,7 @@
         <asset path="component.css" type="stylesheet"/>
         <asset path="dropzone.css" type="stylesheet"/>
         <asset path="help.css" type="stylesheet"/>
+        <asset path="page.css" type="stylesheet"/>
         <asset path="chart.css" type="stylesheet"/>
 
         <asset path="utils.js" type="script"/>

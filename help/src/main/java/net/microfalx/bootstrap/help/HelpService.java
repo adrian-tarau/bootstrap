@@ -17,6 +17,7 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.lang.AnnotationUtils;
+import net.microfalx.lang.FileUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.AnnotatedElement;
 import java.util.Arrays;
@@ -122,6 +124,7 @@ public class HelpService implements InitializingBean {
      * The path of the document is extracted from the annotated element.
      *
      * @param element the annotated element
+     * @param writer the writer to write the rendered content to
      * @throws IOException if an I/O error occurs
      * @see Help
      */
@@ -134,34 +137,63 @@ public class HelpService implements InitializingBean {
     }
 
     /**
+     * Renders the content of the resource.
+     *
+     * @param resource the resource to render
+     * @throws IOException if an I/O error occurs
+     */
+    public String render(Resource resource) throws IOException {
+        StringWriter writer = new StringWriter();
+        render(resource, writer);
+        return writer.toString();
+    }
+
+    /**
      * Renders a document.
      *
-     * @param path the path in the file system, without extension
+     * @param path   the path in the file system, without extension
+     * @param writer the writer to write the rendered content to
      * @throws IOException if an I/O error occurs
      */
     public void render(String path, Writer writer) throws IOException {
         requireNonNull(path);
         LOGGER.info("Render help at '{}'", path);
+        // resolve the Markdown file
+        path = resolveContent(path);
+        Resource resource = ClassPathResource.file(path);
+        render(resource, writer);
+    }
+
+    /**
+     * Renders a document.
+     *
+     * @param resource the resource to render
+     * @param writer the writer to write the rendered content to
+     * @throws IOException if an I/O error occurs
+     */
+    public void render(Resource resource, Writer writer) throws IOException {
+        requireNonNull(resource);
+        LOGGER.debug("Render help content '{}'", resource.toURI());
 
         // initialize the HTML renderer
         MutableDataSet options = new MutableDataSet();
-        registerExtensions(options, path);
+        registerExtensions(options, resource);
         updateOptions(options);
 
         Parser parser = Parser.builder(options).build();
         HtmlRenderer renderer = HtmlRenderer.builder(options).build();
 
-        // resolve the Markdown file
-        path = resolveContent(path);
-        Resource resource = ClassPathResource.file(path);
-        if (!resource.exists()) throw new HelpNotFoundException("A help entry at path '" + path + "' does not exist");
+        if (!resource.exists()) {
+            throw new HelpNotFoundException("A help entry at path '" + resource.toURI() + "' does not exist");
+        }
 
         // render the file
         Node document = parser.parse(resource.loadAsString());
         renderer.render(document, writer);
     }
 
-    private void registerExtensions(MutableDataSet options, String path) {
+    private void registerExtensions(MutableDataSet options, Resource resource) {
+        String path = FileUtils.removeFileExtension(resource.getPath());
         options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create(),
                 AdmonitionExtension.create(), MediaTagsExtension.create(), FootnoteExtension.create(),
                 TaskListExtension.create(),ResizableImageExtension.create(), GitLabExtension.create(),

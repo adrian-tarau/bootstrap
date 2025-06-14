@@ -293,8 +293,13 @@ Application.closeModal = function () {
  */
 Application.loadModal = function (id, content) {
     //Logger.debug(html);
-    $('#' + id).remove();
+    let modelElement = $('#' + id);
+    modelElement.remove();
     $(document.body).append(content);
+    modelElement = $('#' + id);
+    if (modelElement.length === 0) {
+        throw new Error("A modal with id '" + id + "' does not exist in the DOM");
+    }
     let modal = new bootstrap.Modal('#' + id, {});
     modal.show();
     this.registerModal(modal);
@@ -376,6 +381,10 @@ Application.action = function (eventOrHandler) {
  * @param {Function} callback the function to be called when the event it is triggered.
  */
 Application.bind = function (name, callback,) {
+    if (!Utils.isFunction(callback)) {
+        Logger.error("Callback is not a function for event '" + name + "'");
+        return
+    }
     let args = Array.prototype.slice.call(arguments, 2);
     Logger.debug("Bind event " + name + ", arguments: " + Utils.toString(args));
     this.listeners = this.listeners || {};
