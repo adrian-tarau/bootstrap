@@ -2,6 +2,8 @@ package net.microfalx.bootstrap.help;
 
 import com.vladsch.flexmark.ext.admonition.AdmonitionExtension;
 import com.vladsch.flexmark.ext.anchorlink.AnchorLinkExtension;
+import com.vladsch.flexmark.ext.definition.DefinitionExtension;
+import com.vladsch.flexmark.ext.emoji.EmojiExtension;
 import com.vladsch.flexmark.ext.footnotes.FootnoteExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
 import com.vladsch.flexmark.ext.gfm.tasklist.TaskListExtension;
@@ -197,7 +199,8 @@ public class HelpService implements InitializingBean {
         options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create(),
                 AdmonitionExtension.create(), MediaTagsExtension.create(), FootnoteExtension.create(),
                 TaskListExtension.create(),ResizableImageExtension.create(), GitLabExtension.create(),
-                TypographicExtension.create(), AnchorLinkExtension.create(),
+                TypographicExtension.create(), AnchorLinkExtension.create(), DefinitionExtension.create(),
+                EmojiExtension.create(),
                 new HelpExtension(this, path)));
     }
 

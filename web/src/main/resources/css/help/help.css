@@ -30,6 +30,15 @@
     color : inherit;
 }
 
+.help pre {
+    background-color: #f6f8fa;
+    border-radius: 3px;
+    font-size: 85%;
+    line-height: 1.45;
+    overflow: auto;
+    padding: 16px;
+}
+
 .help img {
     max-width: 100%;
     height: auto;
@@ -41,6 +50,30 @@
 .help img + em, .help img + br + em {
     color: saddlebrown;
     font-size: smaller;
+}
+
+/**
+ * Blockquotes
+ */
+
+.help blockquote {
+    margin-left: 30px;
+    margin-top: 0px;
+    margin-bottom: 16px;
+    border-left-width: 3px;
+    padding: 0 1em;
+    color: #828282;
+    border-left: 4px solid #e8e8e8;
+    padding-left: 15px;
+    font-size: 18px;
+    letter-spacing: -1px;
+    font-style: italic;
+}
+
+.help blockquote * {
+    font-style: normal !important;
+    letter-spacing: 0;
+    color: #6a737d !important;
 }
 
 @media (min-width: 992px) {

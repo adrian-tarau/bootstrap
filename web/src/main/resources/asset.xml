@@ -37,6 +37,7 @@
         <depends-on-asset-bundle>app</depends-on-asset-bundle>
 
         <asset path="help.css" type="stylesheet"/>
+        <asset path="code.css" type="stylesheet"/>
         <asset path="admonition.css" type="stylesheet"/>
 
         <asset path="admonition.js" type="script"/>
