@@ -58,6 +58,7 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
         public static final String COMPONENT_OBJECT_NAME = "component";
         public static final String HELP_OBJECT_NAME = "help";
         public static final String DATASET_OBJECT_NAME = "dataset";
+        public static final String BOOTSTRAP_OBJECT_NAME = "bootstrap";
         public static final String LINK_OBJECT_NAME = "link";
         public static final String USER_OBJECT_NAME = "user";
         public static final String RESOURCE_OBJECT_NAME = "resources";
@@ -66,9 +67,10 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
         public static final String FORMAT_TOOL_NAME = "formats";
 
         protected static final Set<String> ALL_EXPRESSION_OBJECT_NAMES = unmodifiableSet(
-                new LinkedHashSet<>(asList(APPLICATION_OBJECT_NAME, NAVIGATION_OBJECT_NAME, PAGE_OBJECT_NAME, SECURITY_OBJECT_NAME, COMPONENT_OBJECT_NAME,
-                        USER_OBJECT_NAME, DATASET_OBJECT_NAME, LINK_OBJECT_NAME, HELP_OBJECT_NAME,
-                        RESOURCE_OBJECT_NAME, MODEL_TOOL_NAME, CONTENT_TOOL_NAME, FORMAT_TOOL_NAME)));
+                new LinkedHashSet<>(asList(APPLICATION_OBJECT_NAME, NAVIGATION_OBJECT_NAME, PAGE_OBJECT_NAME,
+                        SECURITY_OBJECT_NAME, COMPONENT_OBJECT_NAME, USER_OBJECT_NAME, DATASET_OBJECT_NAME,
+                        LINK_OBJECT_NAME, HELP_OBJECT_NAME, RESOURCE_OBJECT_NAME, MODEL_TOOL_NAME,
+                        CONTENT_TOOL_NAME, FORMAT_TOOL_NAME, BOOTSTRAP_OBJECT_NAME)));
 
         @Override
         public Set<String> getAllExpressionObjectNames() {
@@ -103,6 +105,8 @@ public class ExpressionsDialect extends AbstractDialect implements IExpressionOb
                 return new SecurityTool(context, applicationContext);
             } else if (PAGE_OBJECT_NAME.equals(expressionObjectName)) {
                 return new PageTool(context, applicationContext);
+            } else if (BOOTSTRAP_OBJECT_NAME.equals(expressionObjectName)) {
+                return new BootstrapTool(context, applicationContext);
             } else {
                 return null;
             }
