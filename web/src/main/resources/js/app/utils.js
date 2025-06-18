@@ -120,6 +120,16 @@ Utils.isDefined = function (value) {
 }
 
 /**
+ * Returns whether the passed value is not defined.
+ *
+ * @param {Object} value the value to test.
+ * @return {Boolean} true if not defined, false otherwise
+ */
+Utils.isUndefined = function (value) {
+    return !Utils.isDefined(value);
+}
+
+/**
  * Returns whether the value if defined or the default value.
  *
  * @param {*} value the value to test.
