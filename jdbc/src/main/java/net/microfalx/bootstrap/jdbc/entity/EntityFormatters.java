@@ -10,7 +10,7 @@ import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 /**
  * A class containing various formatters for base entities.
  */
-class EntityFormatters {
+public class EntityFormatters {
 
     private static abstract class TimestampleTooltip<T> implements Formattable.TooltipProvider<T, Field<T>, T> {
 
@@ -37,7 +37,7 @@ class EntityFormatters {
         }
     }
 
-    static class CreatedAtTooltip<T> extends TimestampleTooltip<T> {
+    public static class CreatedAtTooltip<T> extends TimestampleTooltip<T> {
 
         @Override
         protected boolean isCreated() {
@@ -46,7 +46,7 @@ class EntityFormatters {
 
     }
 
-    static class ModifiedAtTooltip<T> extends TimestampleTooltip<T> {
+    public static class ModifiedAtTooltip<T> extends TimestampleTooltip<T> {
 
         @Override
         protected boolean isCreated() {

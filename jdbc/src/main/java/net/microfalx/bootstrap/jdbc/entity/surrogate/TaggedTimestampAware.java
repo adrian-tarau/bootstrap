@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.jdbc.entity;
+package net.microfalx.bootstrap.jdbc.entity.surrogate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
@@ -11,16 +11,14 @@ import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Width;
 
-import java.io.Serializable;
-
 /**
- * A base class for all entities which can be named, tagged and have an optional description.
+ * A base class for all entities which can be tagged and have timestamps.
  */
 @MappedSuperclass
 @ToString(callSuper = true)
 @Getter
 @Setter
-public abstract class NamedAndTaggedIdentityAware<T extends Serializable> extends NamedIdentityAware<T> {
+public abstract class TaggedTimestampAware extends TimestampAware {
 
     @Column(name = "tags")
     @Position(400)

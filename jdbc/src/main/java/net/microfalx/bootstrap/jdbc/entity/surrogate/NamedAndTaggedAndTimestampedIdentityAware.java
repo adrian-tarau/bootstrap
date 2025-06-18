@@ -1,28 +1,29 @@
-package net.microfalx.bootstrap.jdbc.entity;
+package net.microfalx.bootstrap.jdbc.entity.surrogate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Position;
 import net.microfalx.lang.annotation.Width;
 
+import java.io.Serializable;
+
 /**
- * A base class for all entities which can be tagged and have timestamps.
+ * A base class for all entities which can be named and tagged and have timestamps.
  */
 @MappedSuperclass
 @ToString(callSuper = true)
 @Getter
 @Setter
-public abstract class TaggedTimestampAware extends TimestampAware {
+public abstract class NamedAndTaggedAndTimestampedIdentityAware<T extends Serializable> extends NamedAndTimestampedIdentityAware<T> {
 
     @Column(name = "tags")
     @Position(400)
-    @Component(Component.Type.TEXT_AREA)
+    //@Component(Component.Type.TAG)
     @Description("A collection of tags associated with a {name}")
     @Width("150px")
     @Filterable()

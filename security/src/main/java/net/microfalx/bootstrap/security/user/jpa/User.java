@@ -8,7 +8,7 @@ import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.Filterable;
-import net.microfalx.bootstrap.jdbc.entity.TimestampAware;
+import net.microfalx.bootstrap.jdbc.entity.surrogate.TimestampAware;
 import net.microfalx.bootstrap.security.group.jpa.Group;
 import net.microfalx.lang.annotation.*;
 

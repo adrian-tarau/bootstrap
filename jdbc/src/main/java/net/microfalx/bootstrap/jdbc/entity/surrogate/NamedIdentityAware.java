@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.jdbc.entity;
+package net.microfalx.bootstrap.jdbc.entity.surrogate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;

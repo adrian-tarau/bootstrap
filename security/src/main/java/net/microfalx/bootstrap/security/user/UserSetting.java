@@ -6,7 +6,7 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import net.microfalx.bootstrap.jdbc.entity.TimestampAware;
+import net.microfalx.bootstrap.jdbc.entity.surrogate.TimestampAware;
 
 import java.io.Serial;
 import java.io.Serializable;

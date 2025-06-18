@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.jdbc.entity;
+package net.microfalx.bootstrap.jdbc.entity.surrogate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.jdbc.entity.EntityFormatters;
 import net.microfalx.lang.Timestampable;
 import net.microfalx.lang.annotation.*;
 import org.springframework.data.annotation.CreatedDate;

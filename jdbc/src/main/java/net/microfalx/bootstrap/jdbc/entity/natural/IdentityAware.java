@@ -1,6 +1,8 @@
-package net.microfalx.bootstrap.jdbc.entity;
+package net.microfalx.bootstrap.jdbc.entity.natural;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,7 +16,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * A base class for all entities which can be identified (which is all).
+ * A base class for all entities which can be identified (which is all) and the primary key is a natural key.
  */
 @MappedSuperclass
 @ToString
@@ -26,7 +28,6 @@ public abstract class IdentityAware<T extends Serializable> implements Identifia
     private static final long serialVersionUID = 1023653519669708398L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     @Position(1)
     @Visible(false)
