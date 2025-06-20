@@ -47,6 +47,7 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
 
     private final DataSetFactory<M, F, ID> factory;
     private final Metadata<M, F, ID> metadata;
+    private final Set<String> tags = new HashSet<>();
     private String name;
     private boolean readOnly;
     private State state = State.BROWSE;
@@ -104,6 +105,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public final State getState() {
         return state;
+    }
+
+    @Override
+    public Set<String> getTags() {
+        return Collections.unmodifiableSet(tags);
     }
 
     public final DataSet<M, F, ID> setState(State state) {
@@ -467,6 +473,16 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public void afterPropertiesSet() throws Exception {
         // empty by default
+    }
+
+    /**
+     * Registers a tag for this data set.
+     *
+     * @param tag the tag to register
+     */
+    public void addTag(String tag) {
+        requireNotEmpty(tag);
+        tags.add(tag);
     }
 
     /**

@@ -47,6 +47,7 @@ public final class DataSetService extends ApplicationContextSupport implements I
     private final Map<String, SoftReference<CachedModelsById<?, ?>>> cachesById = new ConcurrentHashMap<>();
     private final Map<Class<?>, SoftReference<CachedModelsByDisplayValue<?>>> cachesByDisplayName = new ConcurrentHashMap<>();
     private final Map<Class<?>, Repository<?, ?>> repositories = new ConcurrentHashMap<>();
+    private final Map<String, DataSetRequest> dataSetRequests = new ConcurrentHashMap<>();
 
     @Autowired
     private MetadataService metadataService;
@@ -262,6 +263,27 @@ public final class DataSetService extends ApplicationContextSupport implements I
         } catch (Exception e) {
             return Optional.of(Alert.builder().type(Alert.Type.DARK).message("#ERROR: " + getRootCauseName(e)).build());
         }
+    }
+
+    /**
+     * Registers a data set request.
+     *
+     * @param request the request to register
+     */
+    public <M, F extends Field<M>, ID> void registerRequest(DataSetRequest<M, F, ID> request) {
+        requireNonNull(request);
+        dataSetRequests.put(request.getId(), request);
+        DataSetRequest.CURRENT.set(request);
+    }
+
+    /**
+     * Returns a previously registered data set request.
+     *
+     * @param id the request identifier
+     * @return the request, null if not found
+     */
+    public DataSetRequest<?, ?, ?> getRequest(String id) {
+        return dataSetRequests.get(id);
     }
 
     /**

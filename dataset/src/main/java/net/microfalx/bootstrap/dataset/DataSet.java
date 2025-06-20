@@ -44,6 +44,13 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
     State getState();
 
     /**
+     * Returns the tags associated with this data set.
+     *
+     * @return a non-null instance
+     */
+    Set<String> getTags();
+
+    /**
      * Changes the state of the data set.
      *
      * @param state the state

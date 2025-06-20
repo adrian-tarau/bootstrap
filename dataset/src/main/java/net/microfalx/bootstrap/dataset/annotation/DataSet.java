@@ -170,4 +170,13 @@ public @interface DataSet {
      * @return an array of field names, empty to leave the data set provide the field names.
      */
     String[] trendFieldNames() default {};
+
+    /**
+     * Returns the tags associated with this data set.
+     * <p>
+     * Key/value pairs can also be passed as tags, in the form of "key=value".
+     *
+     * @return a non-null array of tags, empty if no tags are associated
+     */
+    String[] tags() default {};
 }
