@@ -44,6 +44,8 @@ import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -94,6 +96,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     @Autowired
     private PreferenceService preferenceService;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Autowired
     private ThreadPool threadPool;
@@ -507,7 +512,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @SuppressWarnings("unchecked")
     protected final DataSet<M, Field<M>, ID> getDataSet() {
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = getDataSetAnnotation();
-        return dataSetService.getDataSet((Class<M>) dataSetAnnot.model(), this);
+        DataSet<M, Field<M>, ID> dataSet = dataSetService.getDataSet((Class<M>) dataSetAnnot.model(), this);
+        if (dataSet instanceof AbstractDataSet<M, Field<M>, ID> abstractDataSet) {
+            Arrays.stream(dataSetAnnot.tags()).forEach(abstractDataSet::addTag);
+        }
+        return dataSet;
     }
 
     @Override
@@ -861,6 +870,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Sort sort = getSort(sortParameter);
         Pageable page = getPage(pageParameter, sort);
         Filter filter = getFilter(dataSet, model, rangeParameter, queryParameter);
+        DataSetRequest<M, Field<M>, ID> request = DataSetRequest.create(dataSet, filter, page);
+        dataSetService.registerRequest(request);
         Page<M> pagedModels = extractModels(filter, page);
         model.addAttribute("page", pagedModels);
         model.addAttribute("query", defaultIfEmpty(queryParameter, getDefaultQuery()));
@@ -868,6 +879,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         model.addAttribute("index", new MutableLong(pagedModels.getPageable().getOffset() + 1));
         model.addAttribute("hasTimeRange", hasTimeRange(dataSet));
         model.addAttribute("queryHistory", getHistory(dataSet, queryParameter));
+        Toolbar toolbar = (Toolbar) model.getAttribute("toolbar");
+        fireUpdateToolbar(request, toolbar);
         return pagedModels;
     }
 
@@ -972,6 +985,31 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         } else {
             return true;
         }
+    }
+
+    private void fireUpdateToolbar(DataSetRequest<M, Field<M>, ID> dataSetRequest, Toolbar toolbar) {
+        if (toolbar == null) return;
+        Collection<DataSetControllerListener<M, Field<M>, ID>> listeners = getDataSetControllerListeners();
+        for (DataSetControllerListener<M, Field<M>, ID> listener : listeners) {
+            try {
+                listener.updateToolbar(dataSetRequest, toolbar);
+            } catch (Exception e) {
+                LOGGER.atError().setCause(e).log("Failed to update toolbar for {}", dataSetRequest.getName());
+            }
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Collection<DataSetControllerListener<M, Field<M>, ID>> getDataSetControllerListeners() {
+        Collection<DataSetControllerListener<M, Field<M>, ID>> listeners = new ArrayList<>();
+        net.microfalx.lang.ClassUtils.resolveProviderInstances(DataSetControllerListener.class)
+                .forEach(l -> {
+                    if (l instanceof ApplicationContextAware applicationContextAware) {
+                        applicationContextAware.setApplicationContext(applicationContext);
+                    }
+                    listeners.add(l);
+                });
+        return listeners;
     }
 
     private String[] getDefaultRange(DataSet<M, Field<M>, ID> dataSet) {

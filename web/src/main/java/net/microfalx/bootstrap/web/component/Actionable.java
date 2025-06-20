@@ -98,6 +98,9 @@ public interface Actionable<A extends Actionable<A>> extends Itemable<A> {
 
     /**
      * Adds a new parameter to the action.
+     * <p>
+     * The order of the parameters is preserved, so the values can be passed to the
+     * action (event) in the same order
      *
      * @param name  the parameter name
      * @param value the parameter value

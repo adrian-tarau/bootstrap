@@ -19,7 +19,7 @@ public class ActionableSupport implements Actionable<ActionableSupport> {
     private String action;
     private String target;
     private Set<String> roles;
-    private ItemableSupport itemable;
+    private final ItemableSupport itemable;
     private final Parameters parameters = Parameters.create();
 
     public ActionableSupport(Component<?> owner) {

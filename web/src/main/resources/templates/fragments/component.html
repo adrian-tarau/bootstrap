@@ -5,7 +5,7 @@
 <div class="dropdown-menu" th:fragment="render-dropdown-menu(menu, id)" th:id="${id}">
     <div th:each="action : ${#component.getChildren(menu)}" th:remove="tag">
         <a href="#" class="dropdown-item" th:unless="${#component.isSeparator(action)}"
-           th:attr="onclick=|Application.action('${action.action}')|" component:tooltip="${action.description}">
+           th:attr="onclick=|Application.action('${action.action}'${#component.getFunctionArguments(action)})|" component:tooltip="${action.description}">
             <i th:class="${action.icon}"></i><span th:text="${action.text}" class="ms-2"></span></a>
         <div class="dropdown-divider" th:if="${#component.isSeparator(action)}"></div>
     </div>

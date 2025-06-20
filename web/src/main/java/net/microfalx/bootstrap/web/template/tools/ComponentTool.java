@@ -242,9 +242,10 @@ public class ComponentTool extends AbstractTool {
      */
     public String getFunctionArguments(net.microfalx.bootstrap.web.component.Component<?> component) {
         if (!(component instanceof Actionable<?> actionable)) return EMPTY_STRING;
-        Parameters parameters = ((Actionable<?>) component).getParameters();
+        Parameters parameters = actionable.getParameters();
+        if (parameters.isEmpty()) return EMPTY_STRING;
         String convertedParams = parameters.toValues().stream()
-                .map(this::getJavaScriptValue).map(ObjectUtils::toString)
+                .map(this::getJavaScriptValue)
                 .collect(Collectors.joining(", "));
         return ", " + convertedParams;
     }
@@ -273,18 +274,23 @@ public class ComponentTool extends AbstractTool {
      * @return the JavaScript object
      */
     private String getJavaScriptValue(Object value) {
-        if (value == null) {
-            return "null";
-        } else if (value instanceof String) {
-            return "'" + StringEscapeUtils.escapeEcmaScript((String) value) + "'";
-        } else if (value instanceof Number) {
-            if (value instanceof Double || value instanceof Float) {
-                return Double.toString(((Number) value).doubleValue());
-            } else {
-                return Long.toString(((Number) value).longValue());
+        switch (value) {
+            case null -> {
+                return "null";
             }
-        } else {
-            return "'" + toJson(value) + "'";
+            case String s -> {
+                return "'" + StringEscapeUtils.escapeEcmaScript(s) + "'";
+            }
+            case Number number -> {
+                if (value instanceof Double || value instanceof Float) {
+                    return Double.toString(((Number) value).doubleValue());
+                } else {
+                    return Long.toString(((Number) value).longValue());
+                }
+            }
+            default -> {
+                return "'" + toJson(value) + "'";
+            }
         }
     }
 
