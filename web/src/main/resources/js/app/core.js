@@ -3,7 +3,6 @@
  */
 window.Application = window.Application || {};
 window.Application.MODAL_Z_INDEX = 1050;
-window.Application.MODAL_BACKDROP_Z_INDEX = 1045;
 
 /**
  * Default params for ajax requests.
@@ -284,6 +283,7 @@ Application.getPopups = function () {
 Application.closeModal = function () {
     let modal = this.getModals().pop();
     if (modal) {
+        Application.MODAL_Z_INDEX -= 10;
         modal.hide();
     }
 }
@@ -333,8 +333,9 @@ Application.removeModal = function (id) {
 Application.registerModal = function (id, modal) {
     this.getModals().push(modal);
     let selector = '#' + id;
-    let modalIndex = Application.MODAL_Z_INDEX++;
-    let modalBackdropIndex = Application.MODAL_BACKDROP_Z_INDEX++;
+    Application.MODAL_Z_INDEX += 10;
+    let modalIndex = Application.MODAL_Z_INDEX;
+    let modalBackdropIndex = Application.MODAL_Z_INDEX - 1;
     // Manually bump z-index of the modal and backdrop
     $(selector).css('z-index', modalIndex);
     $('.modal-backdrop').last().css('z-index', modalBackdropIndex);
