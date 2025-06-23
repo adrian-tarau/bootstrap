@@ -40,7 +40,7 @@ public class AsynchronousConfig implements AsyncConfigurer, SchedulingConfigurer
     public ThreadPool getThreadPool() {
         ThreadPool threadPool = ThreadPool.builder(properties.getPrefix()).maximumSize(properties.getCoreThreads())
                 .queueSize(properties.getQueueCapacity()).virtual(properties.isVirtual())
-                .build();
+                .getOrBuild();
         ThreadPoolUtils.setDefault(threadPool);
         return threadPool;
     }

@@ -58,6 +58,6 @@ public class ThreadPoolFactory {
                 .queueSize((int) (properties.getQueueCapacity() * ratio));
         builder.virtual(properties.isVirtual())
                 .keepAliveTime(properties.getKeepAlive());
-        return builder.build();
+        return builder.getOrBuild();
     }
 }
