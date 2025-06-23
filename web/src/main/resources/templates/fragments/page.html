@@ -12,8 +12,7 @@
 </head>
 
 <span th:fragment="help" th:if="${#help.hasHelp()}">
-    <a href="#" th:attr="onclick=|Help.open('${title}','${#help.getHelp()}')|"
-       component:tooltip-text="Opens the documentation for the current dashboard">
+    <a href="#" th:attr="onclick=|Help.open('${title}','${#help.getHelp()}')|" class="icon-link" component:tooltip-text="Opens the documentation for the current dashboard">
         <i class="fa-solid fa-circle-question text-primary help-icon"></i>
     </a>
 </span>

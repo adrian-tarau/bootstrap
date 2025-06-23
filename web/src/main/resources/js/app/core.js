@@ -2,6 +2,8 @@
 * The Application Global Variables
  */
 window.Application = window.Application || {};
+window.Application.MODAL_Z_INDEX = 1050;
+window.Application.MODAL_BACKDROP_Z_INDEX = 1045;
 
 /**
  * Default params for ajax requests.
@@ -281,7 +283,9 @@ Application.getPopups = function () {
  */
 Application.closeModal = function () {
     let modal = this.getModals().pop();
-    if (modal) modal.hide();
+    if (modal) {
+        modal.hide();
+    }
 }
 
 /**
@@ -292,27 +296,48 @@ Application.closeModal = function () {
  * @return {bootstrap.Modal} the modal
  */
 Application.loadModal = function (id, content) {
-    //Logger.debug(html);
-    let modelElement = $('#' + id);
-    modelElement.remove();
+    let me = Application;
+    Utils.requireNonNull(id, "id")
+    me.removeModal(id);
+    let selector = '#' + id;
     $(document.body).append(content);
-    modelElement = $('#' + id);
-    if (modelElement.length === 0) {
+    let modalElement = $(selector);
+    if (modalElement.length === 0) {
         throw new Error("A modal with id '" + id + "' does not exist in the DOM");
     }
-    let modal = new bootstrap.Modal('#' + id, {});
+    // remove the DOM element after the hide transition finishes
+    modalElement.on('hidden.bs.modal', function () {
+        me.removeModal(id);
+    })
+    let modal = new bootstrap.Modal(selector, {});
     modal.show();
-    this.registerModal(modal);
+    this.registerModal(id, modal);
     tippy('[data-tippy-content]');
     return modal;
+}
+
+/**
+ * @private
+ * Removes the model element with a given id from the DOM.
+ * @param {String} id the element id
+ */
+Application.removeModal = function (id) {
+    Utils.requireNonNull(id, "id")
+    $('#' + id).remove();
 }
 
 /**
  * Registers a modal, which is used to validate if the user clicks outside the popup.
  * @param {bootstrap.Modal} modal the modal instance
  */
-Application.registerModal = function (modal) {
+Application.registerModal = function (id, modal) {
     this.getModals().push(modal);
+    let selector = '#' + id;
+    let modalIndex = Application.MODAL_Z_INDEX++;
+    let modalBackdropIndex = Application.MODAL_BACKDROP_Z_INDEX++;
+    // Manually bump z-index of the modal and backdrop
+    $(selector).css('z-index', modalIndex);
+    $('.modal-backdrop').last().css('z-index', modalBackdropIndex);
 }
 
 /**

@@ -5,6 +5,17 @@ window.Utils = window.Utils || {};
 window.Utils.ID_GENERATOR = 1;
 
 /**
+ * Validates that the value is not undefined or null.
+ *
+ * @param {Object} value the value to test
+ * @param {String} [name] the name of the value, used in the error message
+ */
+Utils.requireNonNull = function (value, name) {
+    name = Utils.defaultIfNotDefinedOrNull(name, "N/A")
+    if (Utils.isEmpty(value)) throw new Error("The argument '" + name + "' cannot be undefined or NULL");
+}
+
+/**
  * Returns whether the passed value is empty. The value is deemed to be empty if it is either:
  *
  * - `null`
@@ -181,6 +192,22 @@ Utils.requireNonNull = function (reference) {
 Utils.defer = function (callback, delay, self) {
     if (!this.isDefined(delay)) delay = 0;
     setTimeout(callback, delay);
+}
+
+/**
+ * Joins the paths together, removing any trailing slashes.
+ *
+ * @return {string}
+ */
+Utils.joinPaths = function () {
+    let paths = Array.prototype.slice.call(arguments);
+    let cleanedPaths = [];
+    for (const path of paths) {
+        if (Utils.isNotEmpty(path)) cleanedPaths.push(path);
+    }
+    return cleanedPaths.map(function (path) {
+        return path.replace(/\/+$/, '');
+    }).join('/');
 }
 
 /**
