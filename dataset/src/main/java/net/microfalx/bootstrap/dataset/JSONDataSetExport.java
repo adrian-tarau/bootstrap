@@ -59,6 +59,15 @@ public class JSONDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
         }
     }
 
+    @Override
+    protected Object getDisplayValue(M model, F field) {
+        if (shouldExportOnlyData() && field.getDataType().isSimple()) {
+            return field.get(model);
+        } else {
+            return super.getDisplayValue(model, field);
+        }
+    }
+
     private void extractMetadata(List<F> fields, ObjectNode root) {
         if (shouldExportOnlySchema()) {
             extractMetadataSchema(fields, root);
@@ -165,6 +174,10 @@ public class JSONDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
         String name = field.getName();
         if (value instanceof String) {
             node.put(name, (String) value);
+        } else if (value instanceof Double || value instanceof Float) {
+            node.put(name, ((Number) value).doubleValue());
+        } else if (value instanceof Boolean) {
+            node.put(name, (Boolean) value);
         } else if (value instanceof Number) {
             node.put(name, ((Number) value).longValue());
         } else if (value instanceof Temporal) {
@@ -179,6 +192,10 @@ public class JSONDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
             modelArray.addNull();
         } else if (value instanceof String) {
             modelArray.add((String) value);
+        } else if (value instanceof Double || value instanceof Float) {
+            modelArray.add(((Number) value).doubleValue());
+        } else if (value instanceof Boolean) {
+            modelArray.add((Boolean) value);
         } else if (value instanceof Number) {
             modelArray.add(((Number) value).longValue());
         } else if (value instanceof Temporal) {

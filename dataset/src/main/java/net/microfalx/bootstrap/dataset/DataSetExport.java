@@ -172,11 +172,34 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> implements Clonea
         if (field.isId() && field.getDataType().isNumeric()) {
             value = field.get(model);
         } else {
-            value = dataSet.getDisplayValue(model, field);
+            value = getDisplayValue(model, field);
         }
         for (DataSetExportCallback<M, F, ID> callback : callbacks) {
             value = callback.getValue(dataSet, field, model, value);
         }
+        return adaptValue(model, field, value);
+    }
+
+    /**
+     * Returns the display value for a given model and field.
+     *
+     * @param model the model
+     * @param field the field
+     * @return the display value
+     */
+    protected Object getDisplayValue(M model, F field) {
+        return dataSet.getDisplayValue(model, field);
+    }
+
+    /**
+     * Adds a value to export for a given model and field.
+     *
+     * @param model the model
+     * @param field the field
+     * @param value the value
+     * @return the adapted value to export
+     */
+    protected Object adaptValue(M model, F field, Object value) {
         return value;
     }
 

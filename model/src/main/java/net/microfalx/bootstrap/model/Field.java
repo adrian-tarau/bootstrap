@@ -308,8 +308,16 @@ public interface Field<M> extends Identifiable<String>, Nameable, Descriptable {
             return temporal;
         }
 
+        public boolean isEnum() {
+            return this == ENUM;
+        }
+
         public boolean isStructure() {
             return this == COLLECTION || this == MAP;
+        }
+
+        public boolean isSimple() {
+            return isText() || isBoolean() || isNumeric() || isTemporal() || isEnum();
         }
     }
 }
