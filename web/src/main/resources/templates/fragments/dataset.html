@@ -18,8 +18,8 @@
     </th>
 </tr>
 <tr th:unless="${#dataset.hasColumnGroups()}">
-    <th scope="col" class="text-right align-middle">#</th>
-    <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}"
+    <th scope="col" class="text-right align-middle index-field">#</th>
+    <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}" th:style="${#dataset.getHeaderStyle(field)}"
         th:attr="field_name=${field.name},field_index=${#dataset.getFieldIndex(field)}" component:tooltip="${field}">
         <span th:if="${field.labelIcon}" th:class="${field.labelIcon}"></span><span th:utext="${field.label}"></span>
     </th>

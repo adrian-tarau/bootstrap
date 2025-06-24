@@ -8,7 +8,6 @@ import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.bootstrap.logger.AlertEvent;
 import net.microfalx.bootstrap.logger.LoggerEvent;
 import net.microfalx.lang.annotation.*;
-import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -36,6 +35,7 @@ public class Alert extends IdentityAware<String> {
     @Position(10)
     @Name
     @Description("The message associated with the alert")
+    @Width("30%")
     private String message;
 
     @Position(11)
@@ -68,7 +68,7 @@ public class Alert extends IdentityAware<String> {
         model.setCreatedAt(event.getCreatedAt());
         model.setModifiedAt(event.getModifiedAt());
         model.setLevel(event.getLevel());
-        model.setMessage(StringUtils.abbreviate(event.getMessage(), 80));
+        model.setMessage(event.getMessage());
         model.setAcknowledged(event.isAcknowledged());
         model.setFailureType(event.getFailureType());
         model.setFailureClass(event.getFailureClass());

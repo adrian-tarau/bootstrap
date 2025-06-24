@@ -25,6 +25,8 @@ import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.dataset.DataSetChartProvider;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.Width;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.apache.commons.lang3.mutable.MutableLong;
@@ -64,6 +66,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
 
     public static final String BOOLEAN_CHECKED = "<i class=\"far fa-check-square\"></i>";
     public static final String BOOLEAN_UNCHECKED = "<i class=\"far fa-square\"></i>";
+    private static final String STYLE_SEPARATOR = "; ";
 
     private final DataSetService dataSetService;
     private final ChartService chartService;
@@ -851,25 +854,47 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public String getHeaderClass(Field<M> field, boolean group) {
         DataSet<M, F, ID> dataSet = getDataSet();
-        String classes = "align-middle";
+        StringBuilder builder = new StringBuilder("align-middle");
         if (!group) {
-            if (!field.isTransient() && dataSet.isSortable(field)) classes += " sortable";
+            if (!field.isTransient() && dataSet.isSortable(field)) {
+                StringUtils.append(builder, "sortable", SPACE);
+            }
             Sort sort = getSort();
             Sort.Order order = sort.getOrderFor(field.getName());
             if (order != null) {
-                if (order.getDirection().isAscending()) {
-                    classes += " asc";
-                } else {
-                    classes += " desc";
-                }
+                StringUtils.append(builder, (order.getDirection().isAscending() ? "asc" : "desc"), SPACE);
             }
         }
         String cellClass = getCellClass(field, group, true);
-        if (cellClass != null) {
-            classes += " " + cellClass;
-        }
-        classes = classes.trim();
+        if (cellClass != null) StringUtils.append(builder, cellClass, SPACE);
+        StringUtils.append(builder, getHeaderCustomClasses(field), SPACE);
+        String classes = builder.toString().trim();
         return isNotEmpty(classes) ? classes : null;
+    }
+
+    /**
+     * Returns the custom styles to be used with a header cell.
+     *
+     * @param field the field
+     * @return the class
+     */
+    public String getHeaderStyle(Field<M> field) {
+        StringBuilder builder = new StringBuilder();
+        Width widthAnnot = field.findAnnotation(Width.class);
+        if (widthAnnot != null) {
+            if (isNotEmpty(widthAnnot.value())) {
+                builder.append("width: ").append(widthAnnot.value());
+            } else {
+                if (isNotEmpty(widthAnnot.min())) {
+                    builder.append("min-width: ").append(widthAnnot.min());
+                }
+                if (isNotEmpty(widthAnnot.min())) {
+                    StringUtils.append(builder, "min-width: " + widthAnnot.min(), STYLE_SEPARATOR);
+                }
+            }
+        }
+        String style = builder.toString().trim();
+        return style.isEmpty() ? null : style;
     }
 
     /**
@@ -1185,6 +1210,17 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
 
     public boolean isModelOrEnum(Field<M> field) {
         return field.getDataType() == Field.DataType.MODEL || field.getDataType() == Field.DataType.ENUM;
+    }
+
+    private String getHeaderCustomClasses(Field<M> field) {
+        return switch (field.getDataType()) {
+            case DATE -> "date-field";
+            case TIME -> "time-field";
+            case DATE_TIME -> "date-time-field";
+            case BOOLEAN -> "boolean-field";
+            case ENUM -> "enum-field";
+            default -> EMPTY_STRING;
+        };
     }
 
     public static class FormGroup<M, F extends Field<M>, ID> {

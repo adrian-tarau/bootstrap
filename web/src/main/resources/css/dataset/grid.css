@@ -17,20 +17,24 @@
     cursor: pointer;
 }
 
-.dataset-table td.index-field {
-    width : 40px;
+.dataset-table th.index-field {
+    max-width : 40px;
 }
 
-.dataset-table td.date-time-field {
-    width : 150px;
+.dataset-table th.date-time-field {
+    max-width : 150px;
 }
 
-.dataset-table td.date-field {
-    width : 90px;
+.dataset-table th.date-field {
+    max-width : 80px;
 }
 
-.dataset-table td.time-field {
-    width : 90px;
+.dataset-table th.time-field {
+    max-width : 80px;
+}
+
+.dataset-table th.enum-field {
+    max-width : 80px;
 }
 
 .dataset-table td {

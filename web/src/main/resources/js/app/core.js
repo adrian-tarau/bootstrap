@@ -164,7 +164,8 @@ Application.delete = function (path, params, callback, options) {
  * @param {Boolean} [options.dataType=text] an optional string, to provide a data type for the response
  * @param {Boolean} [options.data=text] the body of a POST
  * @param {Boolean} [options.contentType] the content type of the request, defaults to "application/x-www-form-urlencoded; charset=UTF-8" for a POST
- * @param {Boolean} [options.mask] an optional DOM selector, which will be masked while the request is running
+ * @param {String} [options.mask] an optional DOM selector, which will be masked while the request is running
+ * @param {String} [options.maskMessage] an optional message to display while masking, defaults to no message
  * @param {Boolean} [options.error] an optional function, to be called if the request fails
  * @param {Boolean} [options.complete] an optional function, to be called when the request ends (successful or not)
  */
@@ -183,7 +184,7 @@ Application.ajax = function (type, path, params, callback, options) {
     let uri = this.getUri(path, {}, options);
     let data = type === 'POST' && Utils.isNotEmpty(options.data) ? options.data : params;
     Logger.info("Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);
-    if (options.mask) me.mask(options.mask);
+    if (options.mask) me.mask(options.mask, options.maskMessage);
     $.ajax({
         url: uri,
         type: type,
@@ -362,17 +363,25 @@ Application.getTimezoneOffset = function () {
 
 /**
  * Masks the element with a given selector.
+ *
+ * @param {String} [selector] the DOM selector to mask, if not provided the whole body will be masked
+ * @param {String} [message] the message to display while masking, defaults to no message
  */
-Application.mask = function (selector) {
+Application.mask = function (selector, message) {
     let options = {
         image: false,
+        //text: message,
         fontawesome: "fa-solid fa-arrows-rotate",
         fontawesomeAnimation: 'rotate_right',
         minSize: 20,
         maxSize: 40
     }
     $.LoadingOverlaySetup(options);
-    if (selector) $(selector).LoadingOverlay("show");
+    if (selector) {
+        $(selector).LoadingOverlay("show");
+    } else {
+        $.LoadingOverlay("show");
+    }
 }
 
 /**
