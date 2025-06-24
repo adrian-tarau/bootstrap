@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URI;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseName;
 import static net.microfalx.lang.UriUtils.parseUri;
 
 /**
@@ -58,9 +59,10 @@ public class ResourceTool extends AbstractTool {
      */
     public String load(Resource resource) {
         try {
+            if (resource == null || !resource.exists()) return null;
             return resource.loadAsString();
         } catch (IOException e) {
-            LOGGER.error("Failed to retrieve resource '" + resource.toURI() + "'", e);
+            LOGGER.error("Failed to retrieve resource '{}', root cause: {}", resource.toURI(), getRootCauseName(e));
             return "Resource '" + resource.toURI() + "' is unavailable";
         }
     }
@@ -86,7 +88,7 @@ public class ResourceTool extends AbstractTool {
         try {
             return ResourceFactory.resolve(uri);
         } catch (Exception e) {
-            LOGGER.error("Failed to locate resource '" + uri + "'", e);
+            LOGGER.error("Failed to locate resource '{}', root cause {}", uri, getRootCauseName(e));
             return Resource.NULL;
         }
     }

@@ -17,6 +17,29 @@
     cursor: pointer;
 }
 
+.dataset-table td.index-field {
+    width : 40px;
+}
+
+.dataset-table td.date-time-field {
+    width : 150px;
+}
+
+.dataset-table td.date-field {
+    width : 90px;
+}
+
+.dataset-table td.time-field {
+    width : 90px;
+}
+
+.dataset-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 0;
+}
+
 .dataset-table-resizer {
     position: absolute;
     top: 0;

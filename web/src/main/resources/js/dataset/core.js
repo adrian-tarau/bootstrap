@@ -249,12 +249,13 @@ DataSet.download = function () {
  * Exports the grid.
  *
  * @param {String} format the export format
+ * @param {String} [mode] the export variations
  * @param {Boolean} [download=true] true to download the export, false to just loaded from the server side.
  */
-DataSet.export = function (format, download) {
+DataSet.export = function (format, mode, download) {
     if (Utils.isEmpty(format)) throw new Error("The export format is expected")
     download = Utils.defaultIfNotDefinedOrNull(download, true);
-    let uri = this.getUri("export", {format: format, download:download});
+    let uri = this.getUri("export", {format: format, mode: mode, download: download});
     let id = "export_" + Utils.uuid();
     $('<iframe>', {
         src: uri,
@@ -529,12 +530,12 @@ DataSet.initActions = function () {
     Application.bind("dataset.download", DataSet.download);
     Application.bind("dataset.upload", DataSet.upload);
 
-    Application.bind("dataset.export.csv", DataSet.export, "csv");
-    Application.bind("dataset.export.xml", DataSet.export, "xml");
-    Application.bind("dataset.export.json", DataSet.export, "json");
+    Application.bind("dataset.export.csv", DataSet.export);
+    Application.bind("dataset.export.xml", DataSet.export);
+    Application.bind("dataset.export.json", DataSet.export);
 
-    Application.bind("dataset.view_as.text", DataSet.viewAs, "text");
-    Application.bind("dataset.view_as.html", DataSet.viewAs, "html");
+    Application.bind("dataset.view_as.text", DataSet.viewAs);
+    Application.bind("dataset.view_as.html", DataSet.viewAs);
 }
 
 /**
