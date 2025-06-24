@@ -148,6 +148,13 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
     boolean isExportable(Field<M> field);
 
     /**
+     * Returns a list with fields for the current state, sorted by position.
+     *
+     * @return a non-null instance
+     */
+    List<F> getFields();
+
+    /**
      * Returns a list with visible fields for the current state, sorted by position.
      *
      * @return a non-null instance

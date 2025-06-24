@@ -22,7 +22,7 @@ class CSVDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M, F, ID
         List<F> fields = getExportableFields();
         List<M> models = page.orElse(Page.empty()).getContent();
         CSVFormat.Builder builder = CSVFormat.DEFAULT.builder();
-        String[] columns = fields.stream().map(Field::getName).toList().toArray(new String[0]);
+        String[] columns = fields.stream().map(this::getName).toList().toArray(new String[0]);
         builder.setHeader(columns);
         CSVFormat csvFormat = builder.get();
         Resource temporary = TemporaryFileResource.file("temp");
@@ -32,7 +32,7 @@ class CSVDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M, F, ID
                 printer.printRecord(values);
             }
         } catch (IOException e) {
-            throw new DataSetExportException("Failed to export data set to CSV", e);
+            throw new DataSetExportException("Failed to export data set '" + dataSet.getName() + "' to CSV", e);
         }
         return temporary;
     }

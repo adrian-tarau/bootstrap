@@ -195,6 +195,13 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public List<F> getFields() {
+        return getMetadata().getFields().stream()
+                .sorted(Comparator.comparing(Field::getPosition))
+                .toList();
+    }
+
+    @Override
     public final List<F> getVisibleFields() {
         switch (state) {
             case BROWSE -> {

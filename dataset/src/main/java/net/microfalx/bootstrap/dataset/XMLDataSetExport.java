@@ -36,7 +36,7 @@ public class XMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M
             writer.write(document);
             writer.close();
         } catch (IOException e) {
-            throw new DataSetExportException("Failed to export data set to XML", e);
+            throw new DataSetExportException("Failed to export data set '" + dataSet.getName() + "' to XML", e);
         }
         return resource;
     }
@@ -45,8 +45,8 @@ public class XMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M
         Element fieldsElement = root.addElement("fields");
         for (F field : fields) {
             Element fieldElement = fieldsElement.addElement("field");
-            fieldElement.addAttribute("name", field.getName());
-            fieldElement.addAttribute("label", field.getLabel());
+            fieldElement.addAttribute("name", getName(field));
+            fieldElement.addAttribute("label", getLabel(field));
             fieldElement.addAttribute("data-type", field.getDataType().name());
             fieldElement.addAttribute("required", Boolean.toString(field.isRequired()));
             fieldElement.addAttribute("id", Boolean.toString(field.isId()));

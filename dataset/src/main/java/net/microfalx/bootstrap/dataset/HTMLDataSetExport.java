@@ -27,7 +27,7 @@ public class HTMLDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
             createRows(table, models, fields);
             resource = TemporaryFileResource.create(MemoryResource.create(table.toString()));
         } catch (Exception e) {
-            throw new DataSetExportException("Failed to export data set to HTML", e);
+            throw new DataSetExportException("Failed to export data set '" + dataSet.getName() + "' to HTML", e);
         }
         return resource;
     }

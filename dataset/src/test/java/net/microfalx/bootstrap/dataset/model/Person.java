@@ -20,4 +20,8 @@ public class Person {
     private int age;
 
     private Double dummy;
+
+    private String nonExportable;
+
+    private String renamed;
 }

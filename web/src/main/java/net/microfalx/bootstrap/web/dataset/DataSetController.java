@@ -17,10 +17,7 @@ import net.microfalx.bootstrap.web.chart.plot.Bar;
 import net.microfalx.bootstrap.web.chart.plot.PlotOptions;
 import net.microfalx.bootstrap.web.chart.tooltip.Tooltip;
 import net.microfalx.bootstrap.web.chart.xaxis.XAxis;
-import net.microfalx.bootstrap.web.component.Button;
-import net.microfalx.bootstrap.web.component.Item;
-import net.microfalx.bootstrap.web.component.Menu;
-import net.microfalx.bootstrap.web.component.Toolbar;
+import net.microfalx.bootstrap.web.component.*;
 import net.microfalx.bootstrap.web.controller.NavigableController;
 import net.microfalx.bootstrap.web.preference.PreferenceService;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
@@ -263,6 +260,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @ResponseBody()
     public final ResponseEntity<InputStreamResource> export(Model model,
                                                             @RequestParam(value = "format", defaultValue = "csv") String format,
+                                                            @RequestParam(value = "mode", required = false) String mode,
                                                             @RequestParam(value = "download", defaultValue = "true") boolean download,
                                                             @RequestParam(value = "page", defaultValue = "0") int pageParameter,
                                                             @RequestParam(value = "range", defaultValue = "") String rangeParameter,
@@ -277,6 +275,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Page<M> page = processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         DataSetExport.Format parsedFormat = EnumUtils.fromName(DataSetExport.Format.class, format);
         DataSetExport<M, Field<M>, ID> exporter = DataSetExport.create(parsedFormat);
+        if ("split".equalsIgnoreCase(mode)) exporter.setMultipleFiles(true);
         Resource resource = exporter.export(dataSet, page);
         ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
         if (download) {
@@ -700,20 +699,27 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private Menu getExportMenu(DataSet<M, Field<M>, ID> dataSet) {
         Menu menu = new Menu().setId("actions");
         menu.add(new Item().setAction("dataset.export.csv").setText("Comma Separated Values (CSV)")
-                .setIcon("fa-solid fa-file-csv"));
+                        .setIcon("fa-solid fa-file-csv").addParameter("type", "csv"))
+                .setDescription("Exports the current data set using CSV format");
         menu.add(new Item().setAction("dataset.export.xml").setText("Extensible Markup Language (XML)")
-                .setIcon("fa-solid fa-folder-tree"));
+                        .setIcon("fa-solid fa-folder-tree").addParameter("type", "xml"))
+                .setDescription("Exports the current data set using XML format");
         menu.add(new Item().setAction("dataset.export.json").setText("JavaScript Object Notation (JSON)")
-                .setIcon("fa-solid fa-folder-tree"));
+                        .setIcon("fa-solid fa-folder-tree").addParameter("type", "json"))
+                .setDescription("Exports the current data set using JSON format");
+        menu.add(new Separator());
+        menu.add(new Item().setAction("dataset.export.json").setText("JavaScript Object Notation (JSON, Schema+Data)")
+                        .setIcon("fa-solid fa-folder-tree").addParameter("type", "json").addParameter("mode", "split"))
+                .setDescription("Exports the current data set using JSON format (JSON Schema & Data, inside a ZIP file)");
         return menu;
     }
 
     private Menu getViewAsMenu(DataSet<M, Field<M>, ID> dataSet) {
         Menu menu = new Menu().setId("actions");
         menu.add(new Item().setAction("dataset.view_as.text").setText("Text")
-                .setIcon("fa-solid fa-file-lines"));
+                .setIcon("fa-solid fa-file-lines").addParameter("type", "text"));
         menu.add(new Item().setAction("dataset.view_as.html").setText("HTML")
-                .setIcon("fa-solid fa-file-code"));
+                .setIcon("fa-solid fa-file-code").addParameter("type", "html"));
         return menu;
     }
 

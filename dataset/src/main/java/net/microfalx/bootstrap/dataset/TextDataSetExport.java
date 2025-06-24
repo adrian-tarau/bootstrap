@@ -38,7 +38,7 @@ class TextDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<M,F,ID>
             String table = FlipTable.of(headers.toArray(new String[0]), data);
             resource=TemporaryFileResource.create(MemoryResource.create(table));
         } catch (Exception e) {
-            throw new DataSetExportException("Failed to export data set to text", e);
+            throw new DataSetExportException("Failed to export data set '" + dataSet.getName() + "' to text", e);
         }
         return resource;
     }
