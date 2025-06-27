@@ -109,14 +109,10 @@ public class ResourceService implements InitializingBean {
         ResourceFactory.setWorkspace(FileResource.directory(persistedDirectory));
         LOGGER.info("Transient resources directory {}", transientDirectory);
         LOGGER.info("Shared resources directory {}", getSharedResource(null).toURI());
-        if (JvmUtils.getTemporaryDirectory().getAbsolutePath().startsWith(JvmUtils.getHomeDirectory().getAbsolutePath())
-                && JvmUtils.getVariableDirectory().getAbsolutePath().startsWith(JvmUtils.getHomeDirectory().getAbsolutePath())) {
-            // if both tmp and var are in home, we can relocate
-            LOGGER.info("Change JVM directories to match the service");
-            JvmUtils.setVariableDirectory(persistedDirectory);
-            JvmUtils.setCacheDirectory(persistedDirectory);
-            ResourceFactory.setTemporary(FileResource.directory(transientDirectory));
-        }
+        LOGGER.info("Change JVM (var & cache) directories to match the service: {}", persistedDirectory);
+        JvmUtils.setVariableDirectory(persistedDirectory);
+        JvmUtils.setCacheDirectory(persistedDirectory);
+        ResourceFactory.setTemporary(FileResource.directory(transientDirectory));
     }
 
     private void initializeSharedResource() {
