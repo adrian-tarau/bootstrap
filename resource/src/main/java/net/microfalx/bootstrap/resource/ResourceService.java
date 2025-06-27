@@ -114,6 +114,7 @@ public class ResourceService implements InitializingBean {
             // if both tmp and var are in home, we can relocate
             LOGGER.info("Change JVM directories to match the service");
             JvmUtils.setVariableDirectory(persistedDirectory);
+            JvmUtils.setCacheDirectory(persistedDirectory);
             ResourceFactory.setTemporary(FileResource.directory(transientDirectory));
         }
     }
