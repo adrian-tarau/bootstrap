@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
 import com.zaxxer.hikari.HikariDataSource;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
 
 import java.net.URI;
@@ -17,6 +16,7 @@ import static java.util.Collections.unmodifiableMap;
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 class DataSourceImpl implements DataSource, Cloneable {
@@ -177,7 +177,7 @@ class DataSourceImpl implements DataSource, Cloneable {
         try {
             return (DataSourceImpl) clone();
         } catch (CloneNotSupportedException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

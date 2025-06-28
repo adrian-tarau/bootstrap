@@ -1,6 +1,9 @@
 package net.microfalx.bootstrap.store;
 
-import net.microfalx.lang.*;
+import net.microfalx.lang.Identifiable;
+import net.microfalx.lang.Nameable;
+import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.Timestampable;
 import net.microfalx.resource.Resource;
 
 import java.time.Duration;
@@ -8,6 +11,7 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
@@ -186,7 +190,7 @@ public interface Store<T extends Identifiable<ID>, ID> extends Nameable, Iterabl
             try {
                 return (Options) clone();
             } catch (CloneNotSupportedException e) {
-                return ExceptionUtils.throwException(e);
+                return rethrowExceptionAndReturn(e);
             }
         }
     }

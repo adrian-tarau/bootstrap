@@ -20,7 +20,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.throwException;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.formatMessage;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
@@ -299,7 +299,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
                         return result;
                     }
                 } catch (InterruptedException e) {
-                    return ExceptionUtils.rethrowInterruptedException(e);
+                    return ExceptionUtils.rethrowExceptionAndReturn(e);
                 } catch (Exception e) {
                     return handleTimeout(e, responseHolder, input, result);
                 }
@@ -334,7 +334,6 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
         responses.clear();
     }
 
-    @SuppressWarnings("unchecked")
     private O handleTimeout(Throwable throwable, ResponseHolder<O> responseHolder, I input, O result) {
         O defaultResult = getDefaultResult(input, responseHolder);
         if (defaultValueSupplier != null) {
@@ -344,7 +343,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
                 return defaultResult;
             }
         }
-        return throwException(throwable.getCause() != null ? throwable.getCause() : throwable);
+        return rethrowExceptionAndReturn(throwable.getCause() != null ? throwable.getCause() : throwable);
     }
 
     private boolean isTimeoutAndNetwork(Throwable throwable) {
@@ -402,7 +401,7 @@ public class AsynchronousFunction<I, O> implements Identifiable<String>, Cloneab
         try {
             return (AsynchronousFunction<I, O>) clone();
         } catch (CloneNotSupportedException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

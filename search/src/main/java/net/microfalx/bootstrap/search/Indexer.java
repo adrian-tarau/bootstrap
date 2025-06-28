@@ -25,7 +25,8 @@ import static java.lang.System.currentTimeMillis;
 import static net.microfalx.bootstrap.search.SearchUtils.createRetryTemplate;
 import static net.microfalx.bootstrap.search.SearchUtils.isIndexUnusable;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.throwException;
+import static net.microfalx.lang.ExceptionUtils.rethrowException;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.TimeUtils.ONE_MINUTE;
 import static net.microfalx.lang.TimeUtils.millisSince;
 
@@ -179,7 +180,7 @@ public class Indexer implements Identifiable<String>, Nameable {
             if (isIndexUnusable(e)) {
                 LOGGER.warn("Failed to commit changes to index. root cause: {}", ExceptionUtils.getRootCauseMessage(e));
             } else {
-                ExceptionUtils.throwException(e);
+                rethrowException(e);
             }
         } finally {
             rlock.unlock();
@@ -230,7 +231,7 @@ public class Indexer implements Identifiable<String>, Nameable {
             return template.execute(context -> metrics.getTimer(name).recordCallable(() -> callback.doWithIndex(indexWriter)));
         } catch (Exception e) {
             shouldRelease = isIndexUnusable(e);
-            return throwException(e);
+            return rethrowExceptionAndReturn(e);
         } finally {
             markIndexChanged(false);
             rlock.unlock();

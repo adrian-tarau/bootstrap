@@ -5,8 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.jdbc.entity.surrogate.NamedAndTimestampedIdentityAware;
-import net.microfalx.lang.ExceptionUtils;
 import org.hibernate.annotations.NaturalId;
+
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 
 @Entity
 @Table(name = "test_entity")
@@ -28,7 +29,7 @@ public class TestEntity extends NamedAndTimestampedIdentityAware implements Clon
         try {
             return (TestEntity) clone();
         } catch (CloneNotSupportedException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 }

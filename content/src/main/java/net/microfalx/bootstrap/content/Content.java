@@ -2,7 +2,10 @@ package net.microfalx.bootstrap.content;
 
 import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Attributes;
-import net.microfalx.lang.*;
+import net.microfalx.lang.Descriptable;
+import net.microfalx.lang.Identifiable;
+import net.microfalx.lang.Nameable;
+import net.microfalx.lang.TimeUtils;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +19,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
@@ -248,7 +252,7 @@ public final class Content implements Identifiable<String>, Nameable, Descriptab
             content.attributes = Attributes.create(this.attributes);
             return content;
         } catch (CloneNotSupportedException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

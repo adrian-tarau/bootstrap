@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static net.microfalx.lang.AnnotationUtils.getAnnotation;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 
 /**
  * A data set for JPA entities.
@@ -199,7 +200,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
         if (throwable instanceof SQLIntegrityConstraintViolationException || throwable instanceof DataIntegrityViolationException) {
             throw new DataSetConstraintViolationException("Failed to executed'" + action + "' due to constraints violation", throwable);
         } else {
-            return ExceptionUtils.throwException(throwable);
+            return rethrowExceptionAndReturn(throwable);
         }
     }
 

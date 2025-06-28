@@ -27,7 +27,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.throwException;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.TimeUtils.millisSince;
 
 /**
@@ -176,7 +176,7 @@ public class Searcher implements Identifiable<String>, Nameable {
             }
         } catch (Exception e) {
             shouldClose = isIndexUnusable(e);
-            return throwException(e);
+            return rethrowExceptionAndReturn(e);
         } finally {
             rlock.unlock();
             if (shouldClose) release();

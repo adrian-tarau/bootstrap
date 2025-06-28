@@ -3,7 +3,6 @@ package net.microfalx.bootstrap.web.template.tools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ExceptionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -12,6 +11,7 @@ import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.context.IWebContext;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 
 /**
  * Base class for all tools.
@@ -84,7 +84,7 @@ public abstract class AbstractTool {
         try {
             return getObjectMapper().writeValueAsString(value);
         } catch (JsonProcessingException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

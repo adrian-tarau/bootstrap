@@ -38,7 +38,7 @@ import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
-import static net.microfalx.lang.ExceptionUtils.throwException;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
@@ -353,7 +353,7 @@ public class IndexService implements InitializingBean {
                 return indexer;
             } catch (Exception e) {
                 if (indexer != null) indexer.release();
-                return throwException(e);
+                return rethrowExceptionAndReturn(e);
             }
         } finally {
             lock.unlock();
@@ -375,7 +375,7 @@ public class IndexService implements InitializingBean {
             });
         } catch (Exception e) {
             if (isIndexUnusable(e)) releaseIndex();
-            return throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

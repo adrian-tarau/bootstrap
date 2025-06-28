@@ -4,7 +4,6 @@ import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
-import net.microfalx.lang.ExceptionUtils;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -12,6 +11,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 
 /**
  * Base class for all template context.
@@ -116,7 +116,7 @@ public abstract class AbstractTemplateContext<M, F extends Field<M>, ID> impleme
             clone.wrapper = clone.new WrapperMap();
             return clone;
         } catch (CloneNotSupportedException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

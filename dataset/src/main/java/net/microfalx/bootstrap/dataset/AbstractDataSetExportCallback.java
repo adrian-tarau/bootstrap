@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.dataset;
 
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.Initializable;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceFactory;
@@ -13,6 +12,7 @@ import java.io.IOException;
 import java.net.URI;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.UriUtils.parseUri;
 
 /**
@@ -62,7 +62,7 @@ public abstract class AbstractDataSetExportCallback<M, F extends Field<M>, ID> e
             if (resource == null || !resource.exists()) return null;
             return resource.loadAsString();
         } catch (IOException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 
@@ -76,7 +76,7 @@ public abstract class AbstractDataSetExportCallback<M, F extends Field<M>, ID> e
         try {
             return ResourceFactory.resolve(uri);
         } catch (Exception e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 }

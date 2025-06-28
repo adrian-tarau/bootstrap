@@ -9,7 +9,6 @@ import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.container.WebContainerRequest;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.template.tools.LinkTool;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.TextUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
@@ -27,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeEcmaScript;
@@ -81,7 +81,7 @@ public class ApplicationDialect extends AbstractProcessorDialect {
         try {
             return mapper.writeValueAsString(getCurrentUser());
         } catch (JsonProcessingException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

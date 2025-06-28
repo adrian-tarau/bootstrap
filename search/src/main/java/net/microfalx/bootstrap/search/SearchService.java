@@ -4,7 +4,10 @@ import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.resource.ResourceService;
-import net.microfalx.lang.*;
+import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ConcurrencyUtils;
+import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Matrix;
 import net.microfalx.metrics.Timer;
 import net.microfalx.threadpool.ThreadPool;
@@ -40,6 +43,7 @@ import static java.util.Collections.emptySet;
 import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.FormatterUtils.formatDuration;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.StringUtils.*;
@@ -376,7 +380,7 @@ public class SearchService implements InitializingBean {
         try {
             return SEARCH_METRICS.timeCallable("Open", () -> new Searcher(options.getDirectory(), options));
         } catch (Exception e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
 import net.microfalx.bootstrap.metrics.util.SimpleStatisticalSummary;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.Hashing;
 import net.microfalx.lang.StringUtils;
 import net.sf.jsqlparser.JSQLParserException;
@@ -30,6 +29,7 @@ import java.util.StringJoiner;
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.cleanupStatement;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.lang.StringUtils.split;
 
@@ -212,7 +212,7 @@ public class StatementImpl implements Statement, Cloneable {
         try {
             return (StatementImpl) clone();
         } catch (CloneNotSupportedException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

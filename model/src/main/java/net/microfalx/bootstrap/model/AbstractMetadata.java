@@ -10,13 +10,14 @@ import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.CustomValidatorBean;
 
 import java.lang.annotation.Annotation;
-import java.util.Optional;
 import java.util.*;
+import java.util.Optional;
 
 import static java.util.Collections.unmodifiableList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ClassUtils.isBaseClass;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.ObjectUtils.isNull;
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.lang.StringUtils.toIdentifier;
@@ -87,9 +88,9 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     @Override
     public M create() {
         try {
-            return modelClass.newInstance();
+            return ClassUtils.create(modelClass);
         } catch (Exception e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

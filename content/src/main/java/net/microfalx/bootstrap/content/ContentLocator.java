@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.content;
 
 import net.microfalx.bootstrap.model.Attribute;
 import net.microfalx.bootstrap.model.Attributes;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
@@ -12,6 +11,7 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.*;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 
 /**
  * A class which carries information to identify a content.
@@ -234,7 +234,7 @@ public final class ContentLocator implements Identifiable<String>, Cloneable {
         try {
             return (ContentLocator) clone();
         } catch (CloneNotSupportedException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

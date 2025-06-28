@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.IOUtils;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
@@ -24,6 +23,7 @@ import java.util.zip.ZipOutputStream;
 
 import static java.lang.System.currentTimeMillis;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
@@ -418,7 +418,7 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> implements Clonea
         try {
             return (DataSetExport<M, F, ID>) clone();
         } catch (CloneNotSupportedException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

@@ -1,6 +1,9 @@
 package net.microfalx.bootstrap.broker;
 
-import net.microfalx.lang.*;
+import net.microfalx.lang.Descriptable;
+import net.microfalx.lang.Identifiable;
+import net.microfalx.lang.Nameable;
+import net.microfalx.lang.StringUtils;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -8,6 +11,7 @@ import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 
 /**
  * A topic for a broker.
@@ -256,7 +260,7 @@ public final class Topic implements Identifiable<String>, Nameable, Descriptable
         try {
             return (Topic) clone();
         } catch (CloneNotSupportedException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

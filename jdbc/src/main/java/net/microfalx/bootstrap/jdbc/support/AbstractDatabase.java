@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.jdbc.support;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Metrics;
 import org.slf4j.Logger;
@@ -26,6 +25,7 @@ import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.describe;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
 import static net.microfalx.lang.TimeUtils.TEN_SECONDS;
@@ -301,7 +301,7 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
         try {
             return new URI(uri.getScheme(), uri.getUserInfo(), hostName, port, uri.getPath(), uri.getQuery(), uri.getFragment());
         } catch (URISyntaxException e) {
-            return ExceptionUtils.throwException(e);
+            return rethrowExceptionAndReturn(e);
         }
     }
 

@@ -19,6 +19,7 @@ import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singleton;
 import static net.microfalx.lang.EnumUtils.fromName;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 import static net.microfalx.lang.StringUtils.toLowerCase;
 import static net.microfalx.lang.TimeUtils.toZonedDateTimeSameInstant;
@@ -55,7 +56,7 @@ public class MySqlDatabase extends AbstractDatabase {
                     clustered = !(errorCode == TABLE_NOT_FOUND_ERROR || errorCode == COMMAND_DENIED_ERROR);
                     if (clustered) LOGGER.error("Could not extract nodes from " + getName(), e);
                 } else {
-                    return net.microfalx.lang.ExceptionUtils.throwException(e);
+                    return rethrowExceptionAndReturn(e);
                 }
             }
         }
