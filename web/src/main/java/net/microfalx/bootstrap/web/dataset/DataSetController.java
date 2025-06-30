@@ -275,8 +275,15 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Page<M> page = processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         DataSetExport.Format parsedFormat = EnumUtils.fromName(DataSetExport.Format.class, format);
         DataSetExport<M, Field<M>, ID> exporter = DataSetExport.create(parsedFormat);
+        exporter.initialize(applicationContext);
         if ("split".equalsIgnoreCase(mode)) exporter.setMultipleFiles(true);
-        Resource resource = exporter.export(dataSet, page);
+        Resource resource;
+        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
+        if (transactionTemplate != null) {
+            resource = transactionTemplate.execute(status -> exporter.export(dataSet, page));
+        } else {
+            resource = exporter.export(dataSet, page);
+        }
         ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
         if (download) {
             builder.contentType(MediaType.parseMediaType(resource.getMimeType()))

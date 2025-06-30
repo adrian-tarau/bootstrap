@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.dataset;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.lang.Initializable;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.ResourceFactory;
 import org.slf4j.Logger;
@@ -64,6 +65,17 @@ public abstract class AbstractDataSetExportCallback<M, F extends Field<M>, ID> e
         } catch (IOException e) {
             return rethrowExceptionAndReturn(e);
         }
+    }
+
+    /**
+     * Returns the resource for a URI.
+     *
+     * @param uri the URI as string
+     * @return the text, error message
+     */
+    protected final Resource resolve(String uri) {
+        if (StringUtils.isEmpty(uri)) return Resource.memory();
+        return resolve(parseUri(uri));
     }
 
     /**

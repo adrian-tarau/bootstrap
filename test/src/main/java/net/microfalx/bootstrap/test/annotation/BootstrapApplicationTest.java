@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.test.annotation;
 
+import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.model.MetadataService;
@@ -24,7 +25,7 @@ import java.lang.annotation.*;
 @Inherited
 @ContextConfiguration(classes = {I18nService.class, ResourceService.class, ResourceProperties.class, CustomValidatorBean.class, MetadataService.class,
         WebContainerService.class, ApplicationService.class, ApplicationProperties.class,
-        IndexService.class, SearchService.class, DataSetService.class})
+        IndexService.class, SearchService.class, DataSetService.class, ContentService.class})
 @BootstrapServiceTest
 public @interface BootstrapApplicationTest {
 }

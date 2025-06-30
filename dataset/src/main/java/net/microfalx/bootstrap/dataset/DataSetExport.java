@@ -6,9 +6,12 @@ import lombok.Setter;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.IOUtils;
+import net.microfalx.lang.Initializable;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.TemporaryFileResource;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -36,7 +39,7 @@ import static net.microfalx.lang.StringUtils.toIdentifier;
  * (like JSON schema, XML schema, etc.) and the order of the fields is not important.
  */
 @Getter
-public abstract class DataSetExport<M, F extends Field<M>, ID> implements Cloneable {
+public abstract class DataSetExport<M, F extends Field<M>, ID> implements Initializable, Cloneable {
 
     /**
      * The default page size for the export.
@@ -76,6 +79,7 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> implements Clonea
     private String[] fieldLabels;
     private int[] fieldLabelIndexes;
     private DataSetExportCallback<M, F, ID>[] callbacks = new DataSetExportCallback[0];
+    private ApplicationContext applicationContext;
 
     /**
      * Creates an exporter for a given format.
@@ -147,6 +151,16 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> implements Clonea
         requireNonNull(dataSet);
         requireNonNull(page);
         return doExportAndName(dataSet, Optional.of(page));
+    }
+
+    @Override
+    public void initialize(Object... context) {
+        if (ObjectUtils.isEmpty(context)) return;
+        if (context[0] instanceof ApplicationContext ac) {
+            this.applicationContext = ac;
+        } else {
+            throw new IllegalArgumentException("Invalid context, expected ApplicationContext but got: " + context[0].getClass().getName());
+        }
     }
 
     /**
@@ -426,6 +440,16 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> implements Clonea
     private void initCallbacks() {
         Collection<DataSetExportCallback> dataSetExportCallbacks = ClassUtils.resolveProviderInstances(DataSetExportCallback.class);
         callbacks = dataSetExportCallbacks.stream().filter(c -> c.supports(dataSet)).toList().toArray(new DataSetExportCallback[0]);
+        if (applicationContext == null && dataSet instanceof AbstractDataSet<M, F, ID> abstractDataSet) {
+            applicationContext = abstractDataSet.getApplicationContext();
+        }
+        if (applicationContext != null) {
+            for (DataSetExportCallback dataSetExportCallback : dataSetExportCallbacks) {
+                if (dataSetExportCallback instanceof AbstractDataSetExportCallback<?, ?, ?> abstractDataSetExportCallback) {
+                    abstractDataSetExportCallback.setApplicationContext(applicationContext);
+                }
+            }
+        }
     }
 
     private String extractFieldName(F field) {

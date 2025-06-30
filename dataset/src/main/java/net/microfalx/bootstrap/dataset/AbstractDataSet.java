@@ -23,6 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -58,13 +59,18 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     private List<F> editableFields;
     private List<F> appendableFields;
 
+    ApplicationContext applicationContext;
+
     public AbstractDataSet(DataSetFactory<M, F, ID> factory, Metadata<M, F, ID> metadata) {
         requireNonNull(factory);
         requireNonNull(metadata);
-
         this.factory = factory;
         this.metadata = metadata;
         initFromMetadata();
+    }
+
+    public final ApplicationContext getApplicationContext() {
+        return applicationContext;
     }
 
     @Override

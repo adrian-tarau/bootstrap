@@ -198,6 +198,7 @@ public final class DataSetService extends ApplicationContextSupport implements I
             DataSet<M, F, ID> dataSet = cachedFactory.create(metadata, parameters);
             AbstractDataSet abstractDataSet = (AbstractDataSet) dataSet;
             abstractDataSet.dataSetService = this;
+            abstractDataSet.applicationContext = getApplicationContext();
             try {
                 abstractDataSet.afterPropertiesSet();
             } catch (Exception e) {
