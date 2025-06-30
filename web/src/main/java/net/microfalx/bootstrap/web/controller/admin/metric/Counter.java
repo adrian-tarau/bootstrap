@@ -7,6 +7,7 @@ import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.lang.annotation.Description;
 import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Position;
+import net.microfalx.lang.annotation.Width;
 
 @Getter
 @Setter
@@ -17,6 +18,7 @@ public class Counter extends Metric {
     @Position(10)
     @Description("The number of times the counter was incremented")
     @OrderBy(OrderBy.Direction.DESC)
+    @Width("90px")
     private long value;
 
     public static Counter from(net.microfalx.metrics.Counter value) {

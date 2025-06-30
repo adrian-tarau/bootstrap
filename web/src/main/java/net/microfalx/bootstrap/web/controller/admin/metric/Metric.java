@@ -4,10 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.model.IdentityAware;
-import net.microfalx.lang.annotation.Description;
-import net.microfalx.lang.annotation.Name;
-import net.microfalx.lang.annotation.Position;
-import net.microfalx.lang.annotation.ReadOnly;
+import net.microfalx.lang.annotation.*;
 import net.microfalx.metrics.Meter;
 
 import java.time.LocalDateTime;
@@ -20,11 +17,13 @@ public abstract class Metric extends IdentityAware<String> {
 
     @Position(2)
     @Description("The group of the timer")
+    @Width("20%")
     private String group;
 
     @Position(3)
     @Name
     @Description("The name of the timer")
+    @Width("30%")
     private String name;
 
     @Position(101)

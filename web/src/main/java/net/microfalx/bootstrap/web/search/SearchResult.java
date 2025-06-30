@@ -31,14 +31,17 @@ public class SearchResult extends IdentityAware<String> {
     @Position(2)
     @Formattable(maximumLength = 300, maximumLines = 2)
     @Description("The name or description of the document")
+    @Width("60%")
     private String title;
 
     @Position(3)
     @Description("The owner of the document (usually a service or a module)")
+    @Width("90px")
     private String owner;
 
     @Position(4)
     @Description("The type of the document (the data type)")
+    @Width("90px")
     private String type;
 
     @Position(10)
@@ -50,11 +53,13 @@ public class SearchResult extends IdentityAware<String> {
     @Position(20)
     @Description("The length (size) of the document")
     @Formattable(unit = Formattable.Unit.BYTES)
+    @Width("90px")
     private int length;
 
     @Position(25)
     @Label("Fields")
     @Description("The number of fields present in the document")
+    @Width("90px")
     private int attributeCount;
 
     @Position(100)
