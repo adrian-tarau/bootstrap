@@ -18,6 +18,7 @@ import static org.apache.tika.mime.MediaType.OCTET_STREAM;
 public class JsonDetector implements Detector {
 
     private static final int BYTES_TO_TEST = 64 * 1024;
+    private static final int TOKENS_TO_TEST = 10;
     private static final MediaType APPLICATION_JSON = MediaType.parse("application/json");
 
     @Override
@@ -27,8 +28,13 @@ public class JsonDetector implements Detector {
             try {
                 ObjectMapper objectMapper = ContentUtils.createObjectMapper();
                 final JsonParser parser = objectMapper.getFactory().createParser(input);
-                JsonToken token = parser.nextToken();
-                return token != null ? APPLICATION_JSON : OCTET_STREAM;
+                int tokenCount = 0;
+                for (int i = 0; i < TOKENS_TO_TEST; i++) {
+                    JsonToken token = parser.nextToken();
+                    if (token == null) break;
+                    tokenCount++;
+                }
+                return tokenCount > 2 ? APPLICATION_JSON : OCTET_STREAM;
             } catch (JsonParseException e) {
                 // if we cannot parse, it is not a JSON
             } catch (JacksonException e) {
