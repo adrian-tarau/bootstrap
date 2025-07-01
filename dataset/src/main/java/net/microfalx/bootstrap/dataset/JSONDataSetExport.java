@@ -171,7 +171,7 @@ public class JSONDataSetExport<M, F extends Field<M>, ID> extends DataSetExport<
     }
 
     private void writeValueExternal(ObjectNode node, F field, Object value) {
-        String name = field.getName();
+        String name = getName(field);
         if (value instanceof String) {
             node.put(name, (String) value);
         } else if (value instanceof Double || value instanceof Float) {

@@ -51,6 +51,13 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
     Set<String> getTags();
 
     /**
+     * Adds a tag to the data set.
+     *
+     * @param tag the tag to add
+     */
+    void addTag(String tag);
+
+    /**
      * Changes the state of the data set.
      *
      * @param state the state

@@ -3,11 +3,9 @@ package net.microfalx.bootstrap.dataset;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.IOUtils;
-import net.microfalx.lang.Initializable;
-import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.*;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.TemporaryFileResource;
@@ -38,6 +36,7 @@ import static net.microfalx.lang.StringUtils.toIdentifier;
  * When schema is exported separately, the format is typically under an available standard for the export type
  * (like JSON schema, XML schema, etc.) and the order of the fields is not important.
  */
+@Slf4j
 @Getter
 public abstract class DataSetExport<M, F extends Field<M>, ID> implements Initializable, Cloneable {
 
@@ -214,6 +213,14 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> implements Initia
      * @return the adapted value to export
      */
     protected Object adaptValue(M model, F field, Object value) {
+        if (value instanceof Resource resource) {
+            try {
+                return resource.loadAsString();
+            } catch (IOException e) {
+                LOGGER.warn("Failed to load resource for field '{}' in model '{}': {}", field.getName(), model, e.getMessage());
+                return StringUtils.NA_STRING;
+            }
+        }
         return value;
     }
 
