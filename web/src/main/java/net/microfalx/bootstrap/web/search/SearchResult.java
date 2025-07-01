@@ -85,6 +85,8 @@ public class SearchResult extends IdentityAware<String> {
     private String mimeType;
 
     @Visible(false)
+    @Label("Body")
+    @Description("The body of the document")
     private Resource body;
 
     @Visible(false)

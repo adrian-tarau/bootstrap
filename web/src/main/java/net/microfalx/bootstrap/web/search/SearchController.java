@@ -30,7 +30,7 @@ import static net.microfalx.bootstrap.search.SearchUtils.DEFAULT_FILTER_QUOTE_CH
 @RequestMapping(value = "/search")
 @DataSet(rawQuery = true, trend = true, model = SearchResult.class, viewTemplate = "search/view", detailTemplate = "search/detail",
         viewClasses = "modal-xl", filterOperator = DEFAULT_FILTER_OPERATOR, filterQuoteChar = DEFAULT_FILTER_QUOTE_CHAR,
-        queryHelp = "/help/dataset/search_engine.html")
+        queryHelp = "/help/dataset/search_engine.html", tags = {"ai"})
 @Help("search")
 public final class SearchController extends DataSetController<SearchResult, String> {
 
