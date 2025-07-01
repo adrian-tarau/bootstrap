@@ -451,7 +451,7 @@ public class IndexService implements InitializingBean {
 
         private void handleIndex(Indexer indexer) {
             try {
-                //indexer.commit();
+                indexer.commit();
             } catch (Exception e) {
                 LOGGER.warn("Failed to commit changes to index {}. root cause: {}", indexer.getId(), getRootCauseMessage(e));
             }
