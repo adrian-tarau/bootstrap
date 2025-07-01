@@ -5,14 +5,14 @@
 <thead class="table-light" th:fragment="grid-header">
 <tr th:if="${#dataset.hasColumnGroups()}">
     <th scope="col" class="text-right align-middle" rowspan="2">#</th>
-    <th scope="col" th:each="group : ${#dataset.getColumnGroupsFirstRow()}" th:class="${#dataset.getHeaderClass(group.getField(), group.isGroup())}"
+    <th scope="col" th:each="group : ${#dataset.getColumnGroupsFirstRow()}" th:class="${#dataset.getHeaderClass(group.getField(), group.isGroup())}" th:style="${#dataset.getHeaderStyle(group.getField())}"
         th:attr="field_name=${group.getField().name},field_index=${#dataset.getFieldIndex(group.getField())}" component:tooltip="${group.getField()}" th:colspan="${group.getColSpan()}" th:rowspan="${group.getRowSpan()}">
         <span th:utext="${group.label}"></span>
     </th>
     <th scope="col" rowspan="2" class="text-center align-middle" th:if="${#dataset.hasActions}" component:tooltip-text="The actions available to interact with records">Actions</th>
 </tr>
 <tr th:if="${#dataset.hasColumnGroups()}">
-    <th scope="col" th:each="group : ${#dataset.getColumnGroupsSecondRow()}" th:class="${#dataset.getHeaderClass(group.getField())}"
+    <th scope="col" th:each="group : ${#dataset.getColumnGroupsSecondRow()}" th:class="${#dataset.getHeaderClass(group.getField())}" th:style="${#dataset.getHeaderStyle(group.getField())}"
         th:attr="field_name=${group.getField().name},field_index=${#dataset.getFieldIndex(group.getField())}" component:tooltip="${group.getField()}">
         <span th:if="${group.getField().labelIcon}" th:class="${group.getField().labelIcon}"></span><span th:utext="${group.getField().label}"></span>
     </th>
