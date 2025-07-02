@@ -31,29 +31,28 @@ public class DsvRecord {
     }
 
     /**
-     * Returns the record value at the specified index.
+     * Returns the record value at the specified field index.
      *
      * @param index the index of the value to retrieve
      * @return the value
      */
     public String get(int index) {
-
         return record.get(index);
     }
 
     /**
-     * Returns the record value at the specified index.
+     * Returns the record value for a specified field name.
      *
      * @param name the name of the field to retrieve
      * @return the value
      */
     public String get(String name) {
-        DsvField field = metadata.get(name);
-        return field.get(this, String.class);
+        DsvField field = metadata.find(name);
+        return field != null ? field.get(this, String.class) : null;
     }
 
     /**
-     * Changes the value at the specified index.
+     * Changes the value at the specified field index.
      *
      * @param index the index of the value to change
      * @param value the value
@@ -64,14 +63,14 @@ public class DsvRecord {
     }
 
     /**
-     * Changes the value at the specified index.
+     * Changes the value at the specified field name.
      *
-     * @param name  the name of the field to retriev
+     * @param name  the name of the field to set
      * @param value the value
      */
     public DsvRecord set(String name, String value) {
-        DsvField field = metadata.get(name);
-        field.set(this, value);
+        DsvField field = metadata.find(name);
+        if (field != null) field.set(this, value);
         return this;
     }
 }

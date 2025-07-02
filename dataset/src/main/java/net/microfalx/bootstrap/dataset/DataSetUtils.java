@@ -9,6 +9,7 @@ import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -105,11 +106,13 @@ public class DataSetUtils {
     /**
      * Sorts a list of models.
      *
+     * @param metadata   the metadata
      * @param models the models
      * @param sort   the sort
      * @return a non-null instance
      */
     public static <M, F extends Field<M>, ID> List<M> sort(Metadata<M, F, ID> metadata, Iterable<M> models, Sort sort) {
+        requireNonNull(metadata);
         requireNonNull(models);
         requireNonNull(sort);
         ModelSorter<M> sorter = new ModelSorter<>(metadata, models, DataSetUtils.from(sort));
@@ -119,14 +122,34 @@ public class DataSetUtils {
     /**
      * Paginates a list of models.
      *
+     * @param metadata   the metadata
      * @param models   the models
      * @param pageable the page information
      * @return a page of models
      */
     public static <M, F extends Field<M>, ID> Page<M> getPage(Metadata<M, F, ID> metadata, Iterable<M> models, Pageable pageable) {
+        requireNonNull(metadata);
         requireNonNull(models);
         requireNonNull(pageable);
         ModelSorter<M> sorter = new ModelSorter<>(metadata, models, DataSetUtils.from(pageable.getSort()));
+        return new DataSetPage<>(pageable, sorter.toList());
+    }
+
+    /**
+     * Paginates a list of models.
+     *
+     * @param metadata the metadata
+     * @param pageable the page information
+     * @param page     the page
+     * @param sort     the new sort order
+     * @return a page of models
+     */
+    public static <M, F extends Field<M>, ID> Page<M> resort(Metadata<M, F, ID> metadata, Pageable pageable, Page<M> page, net.microfalx.bootstrap.model.Sort sort) {
+        requireNonNull(metadata);
+        requireNonNull(page);
+        requireNonNull(sort);
+        ModelSorter<M> sorter = new ModelSorter<>(metadata, page.getContent(), sort);
+        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         return new DataSetPage<>(pageable, sorter.toList());
     }
 
@@ -140,6 +163,19 @@ public class DataSetUtils {
      */
     public static <M, F extends Field<M>, ID> Page<M> getPage(Metadata<M, F, ID> metadata, Iterable<M> models, Pageable pageable, Filter filterable) {
         return new DataSetPage<>(pageable, filterAndSort(metadata, models, filterable, DataSetUtils.from(pageable.getSort())));
+    }
+
+    /**
+     * Creates a new {@link Pageable} instance with a different page size.
+     *
+     * @param pageable the original pageable instance
+     * @param pageSize the new page size
+     * @return a new instance with the specified page size
+     */
+    public static Pageable repage(Pageable pageable, int pageSize) {
+        requireNonNull(pageable);
+        if (pageable.getPageSize() == pageSize) return pageable;
+        return PageRequest.of(0, pageSize, pageable.getSort());
     }
 
     /**
