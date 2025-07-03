@@ -240,6 +240,15 @@ public interface DataSet<M, F extends Field<M>, ID> extends Identifiable<String>
     String getName(M model);
 
     /**
+     * Returns the name for a model.
+     *
+     * @param model                the model
+     * @param includeSecondary {@code true} to include secondary name, {@code false} otherwise
+     * @return the identifier
+     */
+    String getName(M model, boolean includeSecondary);
+
+    /**
      * Validates a model.
      *
      * @param model the model

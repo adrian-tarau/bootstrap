@@ -19,8 +19,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ClassUtils.isBaseClass;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.ObjectUtils.isNull;
-import static net.microfalx.lang.StringUtils.defaultIfEmpty;
-import static net.microfalx.lang.StringUtils.toIdentifier;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * Base class for all metadata.
@@ -131,7 +130,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
             }
             nameFields.add(firstString.get());
         }
-        return Collections.unmodifiableList(nameFields);
+        return unmodifiableList(nameFields);
     }
 
     @Override
@@ -143,7 +142,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     @Override
     public F findTimestampField() {
         if (timestampField == null) {
-            if (createdAtField == null) {
+            if (createdAtField != null) {
                 timestampField = createdAtField;
             } else {
                 timestampField = modifiedAtField;
@@ -208,16 +207,29 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
 
     @Override
     public String getName(M model) {
+        return getName(model, true);
+    }
+
+    @Override
+    public String getName(M model, boolean includeSecondary) {
         requireNonNull(model);
         StringBuilder builder = new StringBuilder();
         List<F> nameFields = getNameFields();
         for (F nameField : nameFields) {
             Glue glueAnnot = nameField.findAnnotation(Glue.class);
+            Name nameAnnot = nameField.findAnnotation(Name.class);
+            if (nameAnnot != null && nameAnnot.secondary() && !includeSecondary) continue;
             String separator = glueAnnot != null ? glueAnnot.value() : " ";
-            if (builder.length() > 0) builder.append(separator);
-            if (glueAnnot != null && StringUtils.isNotEmpty(glueAnnot.before())) builder.append(glueAnnot.before());
-            builder.append(nameField.get(model));
-            if (glueAnnot != null && StringUtils.isNotEmpty(glueAnnot.after())) builder.append(glueAnnot.after());
+            if (!builder.isEmpty()) builder.append(separator);
+            if (glueAnnot != null && isNotEmpty(glueAnnot.before())) builder.append(glueAnnot.before());
+            Object value = nameField.get(model);
+            if (ClassUtils.isBaseClass(value)) {
+                builder.append(value);
+            } else {
+                Metadata<Object, Field<Object>, Object> metadata = metadataService.getMetadata(value);
+                builder.append(metadata.getName(value));
+            }
+            if (glueAnnot != null && isNotEmpty(glueAnnot.after())) builder.append(glueAnnot.after());
         }
         return builder.toString();
     }

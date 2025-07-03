@@ -341,6 +341,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     }
 
     @Override
+    public String getName(M model, boolean includeSecondary) {
+        return getMetadata().getName(model, includeSecondary);
+    }
+
+    @Override
     public final void setId(M model, ID id) {
         new CompositeIdentifier<>(metadata, model);
     }

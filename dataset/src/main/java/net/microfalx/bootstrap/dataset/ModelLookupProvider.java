@@ -5,7 +5,6 @@ import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Filter;
 import net.microfalx.bootstrap.model.ModelUtils;
 import net.microfalx.bootstrap.model.Sort;
-import net.microfalx.lang.ArgumentUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,13 +12,15 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+
 public class ModelLookupProvider<M, ID> extends AbstractLookupProvider<Lookup<ID>, ID> {
 
     private final DataSet<M, Field<M>, ID> dataSet;
 
     public ModelLookupProvider(Class<Lookup<ID>> modelClass, DataSet<M, Field<M>, ID> dataSet) {
         super(modelClass);
-        ArgumentUtils.requireNonNull(dataSet);
+        requireNonNull(dataSet);
         this.dataSet = dataSet;
     }
 

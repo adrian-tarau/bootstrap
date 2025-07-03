@@ -26,6 +26,7 @@ import net.microfalx.bootstrap.web.dataset.DataSetChartProvider;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.Width;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
@@ -597,7 +598,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if it has value, {@code false} otherwise
      */
     public boolean hasDisplayValue(Field<M> field) {
-        return !(hasChart(field) || hasRenderableMarkup(field) || field.isName());
+        return !(hasChart(field) || hasRenderableMarkup(field) || isName(field));
     }
 
     /**
@@ -608,6 +609,15 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      */
     public boolean hasChart(Field<M> field) {
         return field.findAnnotation(Chartable.class) != null;
+    }
+
+    /**
+     * Returns whether a field is supposed to be rendered as a name.
+     * @param field the field
+     * @return {@code true} if it is a name field, {@code false} otherwise
+     */
+    public boolean isName(Field<M> field) {
+        return  field.isName() && !field.findAnnotation(Name.class).secondary();
     }
 
     /**
