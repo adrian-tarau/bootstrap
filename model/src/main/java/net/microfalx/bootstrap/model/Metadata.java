@@ -61,6 +61,13 @@ public interface Metadata<M, F extends Field<M>, ID> extends Identifiable<String
     List<F> getIdFields();
 
     /**
+     * Returns the field which identifies the record outside the database.
+     *
+     * @return the field, null if there is no natural identifier
+     */
+    F findNaturalIdField();
+
+    /**
      * Returns the fields which gives name to a record.
      * <p>
      * The annotation {@link net.microfalx.lang.annotation.Name} will be used to decide which field is used to create

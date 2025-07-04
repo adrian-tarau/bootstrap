@@ -24,12 +24,10 @@ import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.util.FieldHistory;
 import net.microfalx.bootstrap.web.util.JsonFormResponse;
 import net.microfalx.bootstrap.web.util.JsonResponse;
-import net.microfalx.lang.AnnotationUtils;
-import net.microfalx.lang.EnumUtils;
-import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 import net.microfalx.lang.annotation.CreatedAt;
 import net.microfalx.lang.annotation.ModifiedAt;
+import net.microfalx.lang.annotation.Name;
 import net.microfalx.metrics.HeatMap;
 import net.microfalx.metrics.Matrix;
 import net.microfalx.metrics.Series;
@@ -190,6 +188,38 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             }
         } finally {
             cleanupRequest();
+        }
+    }
+
+    @PostMapping("{id}/clone")
+    @ResponseBody()
+    public final JsonResponse<?> clone(Model model, @PathVariable("id") String id) {
+        throwIdentifierRequired(id);
+        DataSet<M, Field<M>, ID> dataSet = getDataSet();
+        log(dataSet, "clone", 0, null, null, null);
+        M dataSetModel = findModel(dataSet, model, id, State.BROWSE);
+        if (dataSetModel != null) {
+            dataSetModel = clone(dataSet, dataSetModel);
+            if (beforeClone(dataSet, model, dataSetModel)) {
+                try {
+                    dataSet.save(dataSetModel);
+                } catch (Exception e) {
+                    if (e instanceof DataSetConstraintViolationException) {
+                        return JsonResponse.fail("Entry cannot be removed since it is is in use");
+                    } else {
+                        return JsonResponse.fail(e.getMessage());
+                    }
+                }
+                afterPersist(dataSet, dataSetModel, State.DELETE);
+            }
+            String message = (String) model.getAttribute(MESSAGE_ATTR);
+            if (StringUtils.isNotEmpty(message)) {
+                return JsonResponse.fail(message).setErrorCode(JsonResponse.ABORT_ERROR);
+            } else {
+                return JsonResponse.success(message);
+            }
+        } else {
+            return throwModelNotFound(id);
         }
     }
 
@@ -434,6 +464,20 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @return {@code true} to continue the add action, {@code false} otherwise
      */
     protected boolean beforeEdit(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
+        return true;
+    }
+
+    /**
+     * Invoked before the clone operation is completed.
+     * <p>
+     * The callback allows subclasses to perform additional changes and checks before the clone operation is performed.
+     *
+     * @param dataSet         the data set
+     * @param controllerModel the model associated with the controller
+     * @param dataSetModel    the data set model for the selected entry
+     * @return {@code true} to continue the clone action, {@code false} otherwise
+     */
+    protected boolean beforeClone(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
         return true;
     }
 
@@ -692,6 +736,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         if (!dataSet.isReadOnly()) {
             menu.add(new Item().setAction("dataset.view").setText("View").setIcon("fa-solid fa-eye").setDescription("Views the " + dataSet.getName()));
             menu.add(new Item().setAction("dataset.edit").setText("Edit").setIcon("fa-solid fa-pen-to-square").setDescription("Edits the " + dataSet.getName()));
+            if (dataSetAnnotation.canClone()) {
+                menu.add(new Item().setAction("dataset.clone").setText("Clone").setIcon("fa-solid fa-clone").setDescription("Clones the " + dataSet.getName()));
+            }
             if (dataSetAnnotation.canDelete()) {
                 menu.add(new Item().setAction("dataset.delete").setText("Delete").setIcon("fa-solid fa-trash-can").setDescription("Deletes the " + dataSet.getName()));
             }
@@ -1087,6 +1134,38 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                 });
         chart.getOptions().setEvents(new Events().setClick("DataSet.trendClick"));
         return chart;
+    }
+
+    private M clone(DataSet<M, Field<M>, ID> dataSet, M model) {
+        model = dataSet.getMetadata().copy(model);
+        for (Field<M> idField : dataSet.getMetadata().getIdFields()) {
+            Object value = idField.get(model);
+            if (value == null) continue;
+            if (value.getClass().isPrimitive()) {
+                idField.set(model, 0);
+            } else {
+                idField.set(model, null);
+            }
+        }
+        Field<M> naturalIdField = dataSet.getMetadata().findNaturalIdField();
+        if (naturalIdField != null) {
+            Object value = naturalIdField.get(model);
+            if (value instanceof String) {
+                naturalIdField.set(model, value + "_" + IdGenerator.get().nextAsString());
+            }
+        }
+        for (Field<M> nameField : dataSet.getMetadata().getNameFields()) {
+            Name nameAnnot = nameField.findAnnotation(Name.class);
+            if (nameAnnot != null && nameAnnot.secondary()) continue;
+            Object value = nameField.get(model);
+            if (!(value instanceof String)) continue;
+            nameField.set(model, value + " (clone)");
+        }
+        Field<M> createdAtField = dataSet.getMetadata().findCreatedAtField();
+        if (createdAtField != null) createdAtField.set(model, LocalDateTime.now());
+        Field<M> modifiedAtField = dataSet.getMetadata().findModifiedAtField();
+        if (modifiedAtField != null) modifiedAtField.set(model, LocalDateTime.now());
+        return model;
     }
 
     private Collection<Chart> getFieldTrends(DataSet<M, Field<M>, ID> dataSet, Filter filter) {

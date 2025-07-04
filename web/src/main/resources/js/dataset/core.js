@@ -196,12 +196,35 @@ DataSet.edit = function (id) {
  *
  * If no identifier is provided, the identifier if the currently selected row is used.
  *
- * @param {String} [id] an optional record identifier
+ * @param {String} id the record identifier
  */
 DataSet.delete = function (id) {
     DataSet.updateId(id);
     Logger.info("Delete record '" + DataSet.getId() + "'");
     Application.delete(DataSet.getId() + "/delete", {}, function (json) {
+        if (json.success) {
+            DataSet.refresh();
+        } else {
+            if (json.errorCode === 24) {
+                Application.showWarnAlert("Abort", json.message);
+            } else {
+                Application.showErrorAlert("Delete", json.message);
+            }
+        }
+    }, {dataType: "json"});
+}
+
+/**
+ * Clones the current model.
+ *
+ * If no identifier is provided, the identifier if the currently selected row is used.
+ *
+ * @param {String} id the record identifier
+ */
+DataSet.clone = function (id) {
+    DataSet.updateId(id);
+    Logger.info("Clone record '" + DataSet.getId() + "'");
+    Application.post(DataSet.getId() + "/clone", {}, function (json) {
         if (json.success) {
             DataSet.refresh();
         } else {
@@ -526,6 +549,7 @@ DataSet.initActions = function () {
     Application.bind("dataset.add", DataSet.add);
     Application.bind("dataset.edit", DataSet.edit);
     Application.bind("dataset.delete", DataSet.delete);
+    Application.bind("dataset.clone", DataSet.clone);
     Application.bind("dataset.refresh", DataSet.refresh);
     Application.bind("dataset.download", DataSet.download);
     Application.bind("dataset.upload", DataSet.upload);

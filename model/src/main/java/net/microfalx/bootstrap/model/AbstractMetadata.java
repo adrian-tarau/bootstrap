@@ -38,6 +38,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     private final Map<String, F> fieldsById = new HashMap<>();
     private F idField;
     private final List<F> idFields = new ArrayList<>();
+    private F naturalIdField;
     private final Map<String, F> idFieldsById = new HashMap<>();
     private final List<F> nameFields = new ArrayList<>();
     private F timestampField;
@@ -118,6 +119,11 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
     @Override
     public List<F> getIdFields() {
         return unmodifiableList(idFields);
+    }
+
+    @Override
+    public F findNaturalIdField() {
+        return naturalIdField;
     }
 
     @Override
@@ -347,6 +353,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
             nameFields.add(field);
         }
         if (idFields.size() > 1) idField = null;
+        if (field.hasAnnotation(NaturalId.class)) naturalIdField = field;
         if (field.hasAnnotation(Timestamp.class)) timestampField = field;
         if (field.hasAnnotation(CreatedAt.class)) createdAtField = field;
         if (field.hasAnnotation(ModifiedAt.class)) modifiedAtField = field;

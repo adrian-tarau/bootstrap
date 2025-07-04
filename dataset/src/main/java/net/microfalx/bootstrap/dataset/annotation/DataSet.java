@@ -76,6 +76,14 @@ public @interface DataSet {
     boolean canAdd() default true;
 
     /**
+     * Returns whether the data set allows the user to clone entry.
+     * <p>
+     *
+     * @return {@code true} to allow for add,  {@code false} otherwise
+     */
+    boolean canClone() default true;
+
+    /**
      * Returns whether the data set allows the user to remove entries.
      * <p>
      * When disabled, usually the user can either upload a file to provision a new entry (or a set of entries) or
