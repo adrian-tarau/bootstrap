@@ -362,6 +362,21 @@ Application.getTimezoneOffset = function () {
 }
 
 /**
+ * Copies the content of an element to the clipboard.
+ * @param {String|Element} selector the DOM selector or the element to copy
+ */
+Application.copyToClipboard = function (selector) {
+    Utils.requireNonNull(selector);
+    let text = $(selector).text();
+    try {
+        navigator.clipboard.writeText(text);
+        Application.showWarnAlert("Copy", "Text copied to clipboard");
+    } catch (e) {
+        Application.showWarnAlert("Copy", "Failed to copy text to clipboard, reason " + e.message);
+    }
+}
+
+/**
  * Masks the element with a given selector.
  *
  * @param {String} [selector] the DOM selector to mask, if not provided the whole body will be masked

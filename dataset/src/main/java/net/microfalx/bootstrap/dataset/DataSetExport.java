@@ -44,6 +44,10 @@ public abstract class DataSetExport<M, F extends Field<M>, ID> implements Initia
      * The default page size for the export.
      */
     public static final int DEFAULT_PAGE_SIZE = 500;
+    /**
+     * The default page size for the export.
+     */
+    public static final int MAXIMUM_PAGE_SIZE = 5000;
 
     /**
      * The format of the export.

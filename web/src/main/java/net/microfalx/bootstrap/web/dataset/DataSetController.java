@@ -113,10 +113,10 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     @GetMapping()
     public final String browse(Model model,
-                               @RequestParam(value = "page", defaultValue = "0") int pageParameter,
-                               @RequestParam(value = "range", defaultValue = "") String rangeParameter,
-                               @RequestParam(value = "query", defaultValue = "") String queryParameter,
-                               @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
+                               @RequestParam(value = "page", required = false, defaultValue = "0") int pageParameter,
+                               @RequestParam(value = "range", required = false, defaultValue = "") String rangeParameter,
+                               @RequestParam(value = "query", required = false, defaultValue = "") String queryParameter,
+                               @RequestParam(value = "sort", required = false, defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "browse", pageParameter, rangeParameter, queryParameter, sortParameter);
         updateModel(dataSet, model);
@@ -129,10 +129,10 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     @GetMapping("page")
     public final String next(Model model, HttpServletResponse response,
-                             @RequestParam(value = "page", defaultValue = "0") int pageParameter,
-                             @RequestParam(value = "range", defaultValue = "") String rangeParameter,
-                             @RequestParam(value = "query", defaultValue = "") String queryParameter,
-                             @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
+                             @RequestParam(value = "page", required = false, defaultValue = "0") int pageParameter,
+                             @RequestParam(value = "range", required = false, defaultValue = "") String rangeParameter,
+                             @RequestParam(value = "query", required = false, defaultValue = "") String queryParameter,
+                             @RequestParam(value = "sort", required = false, defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "next page", pageParameter, rangeParameter, queryParameter, sortParameter);
         updateControllerModel(dataSet, model, State.BROWSE);
@@ -311,11 +311,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     public final ResponseEntity<InputStreamResource> export(Model model,
                                                             @RequestParam(value = "format", defaultValue = "csv") String format,
                                                             @RequestParam(value = "mode", required = false) String mode,
-                                                            @RequestParam(value = "download", defaultValue = "true") boolean download,
-                                                            @RequestParam(value = "page", defaultValue = "0") int pageParameter,
-                                                            @RequestParam(value = "range", defaultValue = "") String rangeParameter,
-                                                            @RequestParam(value = "query", defaultValue = "") String queryParameter,
-                                                            @RequestParam(value = "sort", defaultValue = "") String sortParameter) throws IOException {
+                                                            @RequestParam(value = "download", required = false, defaultValue = "true") boolean download,
+                                                            @RequestParam(value = "page", required = false, defaultValue = "-1") int pageParameter,
+                                                            @RequestParam(value = "range", required = false, defaultValue = "") String rangeParameter,
+                                                            @RequestParam(value = "query", required = false, defaultValue = "") String queryParameter,
+                                                            @RequestParam(value = "sort", required = false, defaultValue = "") String sortParameter) throws IOException {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "export", pageParameter, rangeParameter, queryParameter, sortParameter);
         updateHelp(model);
@@ -669,7 +669,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Pageable getPage(int page, Sort sort) {
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
-        return PageRequest.of(page, dataSetAnnotation.pageSize(), sort);
+        if (page < 0) {
+            return PageRequest.of(0, DataSetExport.MAXIMUM_PAGE_SIZE, sort);
+        } else {
+            return PageRequest.of(page, dataSetAnnotation.pageSize(), sort);
+        }
     }
 
     private net.microfalx.bootstrap.dataset.annotation.DataSet getDataSetAnnotation() {

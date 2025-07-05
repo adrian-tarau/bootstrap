@@ -285,6 +285,7 @@ DataSet.export = function (format, mode, download) {
         id: id,
         style: 'display:none'
     }).appendTo('body');
+    Application.showInfoAlert("Export", "The export is being processed, please wait. You will be notified when it is ready.");
     return id;
 }
 
