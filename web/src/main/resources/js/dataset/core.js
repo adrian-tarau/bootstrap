@@ -371,12 +371,16 @@ DataSet.save = function () {
             } else {
                 $('#dataset-form input').removeClass('is-invalid').tooltip("dispose");
                 let errors = data.errors || {};
-                Application.showErrorAlert("Validation", "Form cannot be submitted with invalid values");
-                for (let field in errors) {
-                    let message = errors[field];
-                    let formField = $("#dataset-form input[name='" + field + "']");
-                    formField.addClass("is-invalid");
-                    Application.showTooltip(formField, message);
+                if (Utils.isNotEmpty(data.message)) {
+                    Application.showErrorAlert("Validation", data.message);
+                } else {
+                    Application.showErrorAlert("Validation", "Form cannot be submitted with invalid values");
+                    for (let field in errors) {
+                        let message = errors[field];
+                        let formField = $("#dataset-form input[name='" + field + "']");
+                        formField.addClass("is-invalid");
+                        Application.showTooltip(formField, message);
+                    }
                 }
             }
         }

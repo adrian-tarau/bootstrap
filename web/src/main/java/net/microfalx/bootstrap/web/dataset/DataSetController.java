@@ -72,7 +72,13 @@ import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_DEFAULT_POINTS;
 import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_MAXIMUM_POINTS;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ObjectUtils.isNotEmpty;
-import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
+import static net.microfalx.lang.StringUtils.EMPTY_STRING_ARRAY;
+import static net.microfalx.lang.StringUtils.capitalizeWords;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.split;
 
 /**
  * Base class for all data set controllers.
@@ -101,7 +107,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @Autowired(required = false)
     private PlatformTransactionManager transactionManager;
 
-    private static ThreadLocal<Map<String, Boolean>> READ_ONLY_FIELDS = new ThreadLocal<>();
+    private static final ThreadLocal<Map<String, Boolean>> READ_ONLY_FIELDS = new ThreadLocal<>();
+    private static final ThreadLocal<Model> MODEL = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> CANCELED = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     @GetMapping()
     public final String browse(Model model,
@@ -111,8 +119,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                                @RequestParam(value = "sort", defaultValue = "") String sortParameter) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "browse", pageParameter, rangeParameter, queryParameter, sortParameter);
-        updateHelp(model);
-        updateTitle(model);
+        updateModel(dataSet, model);
         updateModel(dataSet, model, null, State.BROWSE);
         updateControllerModel(dataSet, model, State.BROWSE);
         processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
@@ -145,11 +152,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         log(dataSet, "add", 0, null, null, null);
         M dataSetModel = dataSet.getMetadata().create();
         model.addAttribute("model", dataSetModel);
+        updateModel(dataSet, model);
         updateModel(dataSet, model, dataSetModel, State.ADD);
         updateControllerModel(dataSet, model, State.ADD);
-        if (beforeAdd(dataSet, model)) {
+        try {
+            beforeAdd(dataSet, model);
             return "dataset/add::#dataset-modal";
-        } else {
+        } catch (CanceledException e) {
             return BROWSE_VIEW;
         }
     }
@@ -160,6 +169,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "view", 0, null, null, null);
         M dataSetModel = findModel(dataSet, model, id, State.VIEW);
+        updateModel(dataSet, model);
         updateControllerModel(dataSet, model, State.VIEW, dataSetModel);
         beforeView(dataSet, model, dataSetModel);
         return "dataset/view::#dataset-modal";
@@ -173,9 +183,15 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             DataSet<M, Field<M>, ID> dataSet = getDataSet();
             log(dataSet, "edit", 0, null, null, null);
             M dataSetModel = findModel(dataSet, model, id, State.EDIT);
+            updateModel(dataSet, model);
             updateControllerModel(dataSet, model, State.EDIT, dataSetModel);
             if (dataSetModel != null) {
-                if (beforeEdit(dataSet, model, dataSetModel)) {
+                try {
+                    beforeEdit(dataSet, model, dataSetModel);
+                } catch (CanceledException e) {
+                    // ignore the cancellation exception
+                }
+                if (!isCanceled()) {
                     model.addAttribute("readOnlyFields", READ_ONLY_FIELDS.get());
                     return "dataset/view::#dataset-modal";
                 } else {
@@ -191,6 +207,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         }
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @PostMapping("{id}/clone")
     @ResponseBody()
     public final JsonResponse<?> clone(Model model, @PathVariable("id") String id) {
@@ -199,8 +216,14 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         log(dataSet, "clone", 0, null, null, null);
         M dataSetModel = findModel(dataSet, model, id, State.BROWSE);
         if (dataSetModel != null) {
+            updateModel(dataSet, model);
             dataSetModel = clone(dataSet, dataSetModel);
-            if (beforeClone(dataSet, model, dataSetModel)) {
+            try {
+                beforeClone(dataSet, model, dataSetModel);
+            } catch (CanceledException e) {
+                // ignore the cancellation exception
+            }
+            if (!isCanceled()) {
                 try {
                     dataSet.save(dataSetModel);
                 } catch (Exception e) {
@@ -212,17 +235,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                 }
                 afterPersist(dataSet, dataSetModel, State.DELETE);
             }
-            String message = (String) model.getAttribute(MESSAGE_ATTR);
-            if (StringUtils.isNotEmpty(message)) {
-                return JsonResponse.fail(message).setErrorCode(JsonResponse.ABORT_ERROR);
-            } else {
-                return JsonResponse.success(message);
-            }
+            return createResponse(model);
         } else {
             return throwModelNotFound(id);
         }
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @DeleteMapping("{id}/delete")
     @ResponseBody()
     public final JsonResponse<?> delete(Model model, @PathVariable("id") String id) {
@@ -231,7 +250,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         log(dataSet, "delete", 0, null, null, null);
         M dataSetModel = findModel(dataSet, model, id, State.BROWSE);
         if (dataSetModel != null) {
-            if (beforeDelete(dataSet, model, dataSetModel)) {
+            updateModel(dataSet, model);
+            try {
+                beforeDelete(dataSet, model, dataSetModel);
+            } catch (CanceledException e) {
+                // ignore the cancellation exception
+            }
+            if (!isCanceled()) {
                 try {
                     dataSet.delete(dataSetModel);
                 } catch (Exception e) {
@@ -243,12 +268,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                 }
                 afterPersist(dataSet, dataSetModel, State.DELETE);
             }
-            String message = (String) model.getAttribute(MESSAGE_ATTR);
-            if (StringUtils.isNotEmpty(message)) {
-                return JsonResponse.fail(message).setErrorCode(JsonResponse.ABORT_ERROR);
-            } else {
-                return JsonResponse.success(message);
-            }
+            return createResponse(model);
         } else {
             return throwModelNotFound(id);
         }
@@ -325,36 +345,40 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         return builder.body(new InputStreamResource(resource.getInputStream(true)));
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody()
     public JsonFormResponse<?> save(Model model, @RequestBody MultiValueMap<String, String> fields) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        JsonFormResponse<?> response = JsonFormResponse.success();
+        JsonFormResponse response = JsonFormResponse.success();
         M dataSetModel = bind(null, fields, response);
+        updateModel(dataSet, model);
         updateCreatedAtFields(dataSet, dataSetModel);
         updateFields(dataSet, dataSetModel, State.ADD);
         doValidate(dataSetModel, State.ADD, response);
         if (response.isSuccess()) {
-            doBeforePersistUnderTransaction(dataSet, dataSetModel, State.ADD);
+            doPersistUnderTransaction(dataSet, dataSetModel, State.ADD);
         }
-        return response;
+        return updateResponse(model, response);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @PostMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody()
     public JsonFormResponse<?> update(Model model, @PathVariable("id") String id, @RequestBody MultiValueMap<String, String> fields) {
         if (isEmpty(id)) throw new ModelException("The model identifier is required");
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        JsonFormResponse<?> response = JsonFormResponse.success();
+        JsonFormResponse response = JsonFormResponse.success();
         M dataSetModel = findModel(dataSet, model, id, State.EDIT);
         dataSetModel = bind(dataSetModel, fields, response);
         updateModifiedAtFields(dataSet, dataSetModel);
+        updateModel(dataSet, model);
         updateFields(dataSet, dataSetModel, State.EDIT);
         doValidate(dataSetModel, State.EDIT, response);
         if (response.isSuccess()) {
-            doBeforePersistUnderTransaction(dataSet, dataSetModel, State.EDIT);
+            doPersistUnderTransaction(dataSet, dataSetModel, State.EDIT);
         }
-        return response;
+        return updateResponse(model, response);
     }
 
     @ExceptionHandler(DataSetAbortException.class)
@@ -449,10 +473,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      *
      * @param dataSet         the data set
      * @param controllerModel the model associated with the controller
-     * @return {@code true} to continue the add action, {@code false} otherwise
      */
-    protected boolean beforeAdd(DataSet<M, Field<M>, ID> dataSet, Model controllerModel) {
-        return true;
+    protected void beforeAdd(DataSet<M, Field<M>, ID> dataSet, Model controllerModel) {
+        // empty by default
     }
 
     /**
@@ -461,10 +484,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @param dataSet         the data set
      * @param controllerModel the model associated with the controller
      * @param dataSetModel    the data set model for the selected entry
-     * @return {@code true} to continue the add action, {@code false} otherwise
      */
-    protected boolean beforeEdit(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
-        return true;
+    protected void beforeEdit(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
+        // empty by default
     }
 
     /**
@@ -475,22 +497,22 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @param dataSet         the data set
      * @param controllerModel the model associated with the controller
      * @param dataSetModel    the data set model for the selected entry
-     * @return {@code true} to continue the clone action, {@code false} otherwise
      */
-    protected boolean beforeClone(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
-        return true;
+    protected void beforeClone(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
+        // empty by default
     }
 
     /**
-     * Invoked before the delete is performed.
+     * Invoked before delete is performed.
+     *
+     * Subclasses can call {$link #cancel(Model, String)} to cancel the delete operation.
      *
      * @param dataSet         the data set
      * @param controllerModel the model associated with the controller
      * @param dataSetModel    the data set model for the selected entry
-     * @return {@code true} to continue the add action, {@code false} otherwise
      */
-    protected boolean beforeDelete(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
-        return true;
+    protected void beforeDelete(DataSet<M, Field<M>, ID> dataSet, Model controllerModel, M dataSetModel) {
+        // empty by default
     }
 
     /**
@@ -513,7 +535,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @param state   the state of the data set
      */
     protected void updateFields(DataSet<M, Field<M>, ID> dataSet, M model, State state) {
-        // empty
+        // empty by default
     }
 
     /**
@@ -524,7 +546,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @param response the JSON response
      */
     protected void validate(M model, State state, JsonFormResponse<?> response) {
-        // empty
+        // empty by default
     }
 
     /**
@@ -535,10 +557,9 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @param dataSet the data set
      * @param model   the model
      * @param state   the data set state
-     * @return {@code true} to continue the add action, {@code false} otherwise
      */
-    protected boolean beforePersist(DataSet<M, Field<M>, ID> dataSet, M model, State state) {
-        return true;
+    protected void beforePersist(DataSet<M, Field<M>, ID> dataSet, M model, State state) {
+        // empty by default
     }
 
     /**
@@ -551,7 +572,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @param state   the data set state
      */
     protected void afterPersist(DataSet<M, Field<M>, ID> dataSet, M model, State state) {
-        // empty
+        // empty by default
     }
 
     /**
@@ -579,14 +600,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * <p>
      * The method can be called in any <code>beforeXXXX</code> events/callbacks to cancel the operation.
      *
-     * @param model   the controller model
      * @param message the message
-     * @return false all the time
      */
-    protected final boolean cancel(Model model, String message) {
+    protected final void cancel(String message) {
         requireNotEmpty(message);
-        model.addAttribute(MESSAGE_ATTR, message);
-        return false;
+        getCurrentModel().addAttribute(MESSAGE_ATTR, message);
+        CANCELED.set(true);
+        throw new CanceledException();
     }
 
     /**
@@ -967,7 +987,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             filter = Filter.create(ComparisonExpression.eq(ComparisonExpression.QUERY, queryParameter));
         } else {
             String defaultQuery = getDefaultQuery();
-            if (StringUtils.isNotEmpty(defaultQuery)) {
+            if (isNotEmpty(defaultQuery)) {
                 QueryParser<M, Field<M>, ID> queryParser = createQueryParser(dataSet, defaultQuery);
                 if (!queryParser.isValid()) {
                     defaultQuery = null;
@@ -988,7 +1008,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         } else {
             String reason = queryParser.validate();
             model.addAttribute(MESSAGE_ATTR, INVALID_FILTER_PREFIX + reason);
-            LOGGER.warn("Failed to parse query '" + query + "', reason: " + reason);
+            LOGGER.warn("Failed to parse query '{}', reason: {}", query, reason);
         }
         try {
             dataSet.validate(filter);
@@ -1213,6 +1233,41 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         return dateTime.plusDays(1).minusSeconds(1);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private JsonResponse<?> createResponse(Model model) {
+        JsonResponse response = JsonResponse.success();
+        return updateResponse(model, response);
+    }
+
+    private <J extends JsonResponse<J>> J updateResponse(Model model, J response) {
+        String message = (String) model.getAttribute(MESSAGE_ATTR);
+        if (isNotEmpty(message)) {
+            response.setSuccess(false).setMessage(message).setErrorCode(JsonResponse.ABORT_ERROR);
+        }
+        return response;
+    }
+
+    private void updateModel(DataSet<M, Field<M>, ID> dataSet, Model model) {
+        attachModel(model);
+        updateHelp(model);
+        updateTitle(model);
+    }
+
+    private static Model getCurrentModel() {
+        Model model = MODEL.get();
+        if (model == null) throw new IllegalStateException("The model is not set");
+        return model;
+    }
+
+    private boolean isCanceled() {
+        return Boolean.TRUE.equals(CANCELED.get());
+    }
+
+    private static void attachModel(Model model) {
+        CANCELED.remove();
+        MODEL.set(model);
+    }
+
     private <T> T throwModelNotFound(String id) {
         throw new DataSetException("A model with identifier '" + id + " does not exist");
     }
@@ -1221,11 +1276,12 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         if (isEmpty(id)) throw new ModelException("The model identifier is required");
     }
 
-    private void doBeforePersistUnderTransaction(DataSet<M, Field<M>, ID> dataSet, M dataSetModel, State state) {
+    private void doPersistUnderTransaction(DataSet<M, Field<M>, ID> dataSet, M dataSetModel, State state) {
         TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
         if (transactionTemplate != null) {
             transactionTemplate.execute(status -> {
                 doBeforePersist(dataSet, dataSetModel, state);
+                if (isCanceled()) status.setRollbackOnly();
                 return null;
             });
         } else {
@@ -1234,9 +1290,17 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     private void doBeforePersist(DataSet<M, Field<M>, ID> dataSet, M dataSetModel, State state) {
-        beforePersist(dataSet, dataSetModel, state);
+        try {
+            beforePersist(dataSet, dataSetModel, state);
+        } catch (CanceledException e) {
+            return;
+        }
         dataSet.save(dataSetModel);
-        afterPersist(dataSet, dataSetModel, state);
+        try {
+            afterPersist(dataSet, dataSetModel, state);
+        } catch (Exception e) {
+            LOGGER.atError().setCause(e).log("Failed to invoke after persist callback for " + "data set {} model {}", dataSet.getName(), dataSetModel);
+        }
     }
 
     private void log(DataSet<M, Field<M>, ID> dataSet, String action, int page,
@@ -1246,6 +1310,10 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         sort = defaultIfEmpty(sort, "<empty>");
         LOGGER.debug("{} data set {}, page {}, range{}, query {}, sort {}", capitalizeWords(action), dataSet.getName(),
                 page, range, query, sort);
+    }
+
+    static class CanceledException extends RuntimeException {
+
     }
 
     static class TrendCallable<M, ID> implements Callable<Map<String, HeatMap>> {

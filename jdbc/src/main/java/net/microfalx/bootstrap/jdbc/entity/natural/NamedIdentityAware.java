@@ -9,10 +9,7 @@ import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.lang.Nameable;
-import net.microfalx.lang.annotation.Description;
-import net.microfalx.lang.annotation.Name;
-import net.microfalx.lang.annotation.Position;
-import net.microfalx.lang.annotation.Width;
+import net.microfalx.lang.annotation.*;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -43,6 +40,7 @@ public abstract class NamedIdentityAware<T extends Serializable> extends Identit
     @Description("A description for a {name}")
     @Width("300px")
     @Filterable()
+    @Visible(modes = {Visible.Mode.VIEW, Visible.Mode.EDIT, Visible.Mode.ADD})
     private String description;
 
 

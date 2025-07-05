@@ -413,21 +413,6 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
-     * Returns whether the field is disabled.
-     *
-     * @param field the field
-     * @return {@code true} if disabled, {@code false} otherwise
-     */
-    public boolean isDisabled(Field<M> field) {
-        DataSet<M, F, ID> dataSet = getDataSet();
-        if (dataSet.getState() == State.VIEW) {
-            return false;
-        } else {
-            return isReadOnly(field);
-        }
-    }
-
-    /**
      * Returns whether the field is checked (it only applies to boolean type fields.
      *
      * @param model the model

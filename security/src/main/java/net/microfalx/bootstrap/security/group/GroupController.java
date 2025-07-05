@@ -25,9 +25,8 @@ public class GroupController extends SecurityDataSetController<Group, Integer> {
     private GroupService groupService;
 
     @Override
-    protected boolean beforeEdit(net.microfalx.bootstrap.dataset.DataSet<Group, Field<Group>, Integer> dataSet, Model controllerModel, Group dataSetModel) {
+    protected void beforeEdit(net.microfalx.bootstrap.dataset.DataSet<Group, Field<Group>, Integer> dataSet, Model controllerModel, Group dataSetModel) {
         dataSetModel.setRoles(groupService.getRoles(dataSetModel));
-        return super.beforeEdit(dataSet, controllerModel, dataSetModel);
     }
 
     @Override
@@ -40,12 +39,6 @@ public class GroupController extends SecurityDataSetController<Group, Integer> {
 
     @Override
     protected void afterPersist(net.microfalx.bootstrap.dataset.DataSet<Group, Field<Group>, Integer> dataSet, Group model, State state) {
-        super.afterPersist(dataSet, model, state);
         groupService.setRoles(model, model.getRoles());
-    }
-
-    @Override
-    protected boolean beforePersist(net.microfalx.bootstrap.dataset.DataSet<Group, Field<Group>, Integer> dataSet, Group model, State state) {
-        return super.beforePersist(dataSet, model, state);
     }
 }

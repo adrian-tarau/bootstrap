@@ -203,20 +203,20 @@
     <div th:class="${#dataset.getInputContainerClass(field)}">
         <input th:if="${#dataset.isInputField(field)}" th:name="${field.name}"
                th:type="${#dataset.getInputType(field)}" th:class="${#dataset.getInputFieldClass(field)}"
-               th:readonly="${#dataset.isReadOnly(field)}" th:disabled="${#dataset.isDisabled(field)}" th:checked="${#dataset.isChecked(model, field)}"
+               th:readonly="${#dataset.isReadOnly(field)}" th:checked="${#dataset.isChecked(model, field)}"
                th:value="${#dataset.getValue(model, field)}" component:tooltip="${field}">
         <input th:unless="${#dataset.isVisible(field)}" type="hidden" th:name="${field.name}"
                th:value="${#dataset.getValue(model, field)}" component:tooltip="${field}">
         <div th:if="${#dataset.isCheckboxField(field)}" class="form-check">
             <input th:name="${field.name}" th:type="${#dataset.getInputType(field)}" th:class="${#dataset.getInputFieldClass(field)}"
-                   th:readonly="${#dataset.isReadOnly(field)}" th:disabled="${#dataset.isDisabled(field)}" th:checked="${#dataset.isChecked(model, field)}">
+                   th:readonly="${#dataset.isReadOnly(field)}" th:checked="${#dataset.isChecked(model, field)}">
         </div>
         <textarea th:if="${#dataset.isTextAreaField(field)}" th:name="${field.name}"
-                  th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}" th:disabled="${#dataset.isDisabled(field)}"
+                  th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}"
                   th:attr="rows=${#dataset.getInputRows(field)}"
                   th:text="${#dataset.getValue(model, field)}" component:tooltip="${field}"></textarea>
         <select th:if="${#dataset.isDropDownField(field)}" th:name="${field.name}"
-                th:readonly="${#dataset.isReadOnly(field)}" th:disabled="${#dataset.isDisabled(field)}" th:class="${#dataset.getInputFieldClass(field)}" th:multiple="${#dataset.isMultiSelect(field)}" component:tooltip="${field}">
+                th:readonly="${#dataset.isReadOnly(field)}" th:class="${#dataset.getInputFieldClass(field)}" th:multiple="${#dataset.isMultiSelect(field)}" component:tooltip="${field}">
             <option th:each="lookup : ${#dataset.getDropDownValues(field)}" th:selected="${#dataset.isSelected(model, field, lookup)}" th:value="${lookup.id}" th:text="${lookup.name}"></option>
         </select>
     </div>
