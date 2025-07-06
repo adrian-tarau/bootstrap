@@ -41,8 +41,7 @@ public class UserController extends SecurityDataSetController<User, Integer> {
     }
 
     @Override
-    protected boolean beforePersist(net.microfalx.bootstrap.dataset.DataSet<User, Field<User>, Integer> dataSet, User model, State state) {
+    protected void beforePersist(net.microfalx.bootstrap.dataset.DataSet<User, Field<User>, Integer> dataSet, User model, State state) {
         if (state == State.ADD) model.setPassword(passwordEncoder.encode(model.getPassword()));
-        return super.beforePersist(dataSet, model, state);
     }
 }
