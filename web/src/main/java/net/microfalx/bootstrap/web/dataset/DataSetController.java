@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.web.dataset;
 
-import jakarta.persistence.Entity;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.dataset.*;
@@ -50,8 +49,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -103,9 +100,6 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     @Autowired
     private ThreadPool threadPool;
-
-    @Autowired(required = false)
-    private PlatformTransactionManager transactionManager;
 
     private static final ThreadLocal<Map<String, Boolean>> READ_ONLY_FIELDS = new ThreadLocal<>();
     private static final ThreadLocal<Model> MODEL = new ThreadLocal<>();
@@ -327,13 +321,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSetExport<M, Field<M>, ID> exporter = DataSetExport.create(parsedFormat);
         exporter.initialize(applicationContext);
         if ("split".equalsIgnoreCase(mode)) exporter.setMultipleFiles(true);
-        Resource resource;
-        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
-        if (transactionTemplate != null) {
-            resource = transactionTemplate.execute(status -> exporter.export(dataSet, page));
-        } else {
-            resource = exporter.export(dataSet, page);
-        }
+        Resource resource = dataSetService.doWithDataSet(dataSet, ds -> exporter.export(dataSet, page));
         ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
         if (download) {
             builder.contentType(MediaType.parseMediaType(resource.getMimeType()))
@@ -645,12 +633,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      * @return the model, null if it does not exist
      */
     protected final M findModel(DataSet<M, Field<M>, ID> dataSet, Model model, String id, State state) {
-        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
-        if (transactionTemplate != null) {
-            return transactionTemplate.execute(status -> doFindModel(dataSet, model, id, state));
-        } else {
-            return doFindModel(dataSet, model, id, state);
-        }
+        return dataSetService.doWithDataSet(dataSet, ds -> doFindModel(ds, model, id, state));
     }
 
     private void updateModifiedAtFields(DataSet<M, Field<M>, ID> dataSet, M model) {
@@ -686,12 +669,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Page<M> extractModels(Filter filter, Pageable pageable) {
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
-        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
-        if (transactionTemplate != null) {
-            return transactionTemplate.execute(status -> dataSet.findAll(pageable, filter));
-        } else {
-            return dataSet.findAll(pageable, filter);
-        }
+        return dataSetService.doWithDataSet(dataSet, ds -> dataSet.findAll(pageable, filter));
     }
 
     private Sort getSort(String value) {
@@ -938,15 +916,6 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             models.add(findModel(dataSet, model, field, field.getGenericDataClass(), value));
         }
         return models;
-    }
-
-    private TransactionTemplate getTransactionTemplate(DataSet<M, Field<M>, ID> dataSet) {
-        Metadata<M, Field<M>, ID> metadata = dataSet.getMetadata();
-        if (transactionManager != null && metadata.hasAnnotation(Entity.class)) {
-            return new TransactionTemplate(transactionManager);
-        } else {
-            return null;
-        }
     }
 
     private Page<M> processParams(DataSet<M, Field<M>, ID> dataSet, Model model,
@@ -1280,17 +1249,12 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         if (isEmpty(id)) throw new ModelException("The model identifier is required");
     }
 
-    private void doPersistUnderTransaction(DataSet<M, Field<M>, ID> dataSet, M dataSetModel, State state) {
-        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
-        if (transactionTemplate != null) {
-            transactionTemplate.execute(status -> {
-                doBeforePersist(dataSet, dataSetModel, state);
-                if (isCanceled()) status.setRollbackOnly();
-                return null;
-            });
-        } else {
+    private boolean doPersistUnderTransaction(DataSet<M, Field<M>, ID> dataSet, M dataSetModel, State state) {
+        return dataSetService.doWithDataSet(dataSet, (ds, status) -> {
             doBeforePersist(dataSet, dataSetModel, state);
-        }
+            if (isCanceled() && status != null) status.setRollbackOnly();
+            return !isCanceled();
+        });
     }
 
     private void doBeforePersist(DataSet<M, Field<M>, ID> dataSet, M dataSetModel, State state) {

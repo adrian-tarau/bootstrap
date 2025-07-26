@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.dataset;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import jakarta.persistence.Entity;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
@@ -21,15 +22,21 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.lang.ref.SoftReference;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseName;
 import static net.microfalx.lang.FormatterUtils.formatDateTime;
 
@@ -267,6 +274,56 @@ public final class DataSetService extends ApplicationContextSupport implements I
     }
 
     /**
+     * Executes a callback with a data set.
+     * <p>
+     * If the data set is transactional, the callback will be executed within a transaction.
+     *
+     * @param dataSet  the dat
+     * @param callback the callback to execute
+     * @param <M>      the model type
+     * @param <F>      the field type
+     * @param <ID>     the model identifier type
+     * @param <R>      the return type of the callback
+     * @return the result of the callback execution
+     */
+    public <M, F extends Field<M>, ID, R> R doWithDataSet(DataSet<M, F, ID> dataSet, Function<DataSet<M, F, ID>, R> callback) {
+        requireNotEmpty(dataSet);
+        requireNotEmpty(callback);
+        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
+        if (transactionTemplate != null) {
+            return transactionTemplate.execute(status -> callback.apply(dataSet));
+        } else {
+            return callback.apply(dataSet);
+        }
+    }
+
+    /**
+     * Executes a callback with a data set.
+     * <p>
+     * If the data set is transactional, the callback will be executed within a transaction and the transaction status
+     * will be available.
+     *
+     * @param dataSet  the dat
+     * @param callback the callback to execute
+     * @param <M>      the model type
+     * @param <F>      the field type
+     * @param <ID>     the model identifier type
+     * @param <R>      the return type of the callback
+     * @return the result of the callback execution
+     */
+    public <M, F extends Field<M>, ID, R> R doWithDataSet(DataSet<M, F, ID> dataSet, BiFunction<DataSet<M, F, ID>,
+            TransactionStatus, R> callback) {
+        requireNotEmpty(dataSet);
+        requireNotEmpty(callback);
+        TransactionTemplate transactionTemplate = getTransactionTemplate(dataSet);
+        if (transactionTemplate != null) {
+            return transactionTemplate.execute(status -> callback.apply(dataSet, status));
+        } else {
+            return callback.apply(dataSet, null);
+        }
+    }
+
+    /**
      * Registers a data set request.
      *
      * @param request the request to register
@@ -428,6 +485,16 @@ public final class DataSetService extends ApplicationContextSupport implements I
             lookupProviders.put(lookupProvider.getModel(), lookupProvider);
         }
         LOGGER.info("Discovered {} dynamic lookups", lookupProviders.size());
+    }
+
+    private <M, F extends Field<M>, ID> TransactionTemplate getTransactionTemplate(DataSet<M, F, ID> dataSet) {
+        Metadata<M, F, ID> metadata = dataSet.getMetadata();
+        PlatformTransactionManager transactionManager = getBean(PlatformTransactionManager.class);
+        if (transactionManager != null && metadata.hasAnnotation(Entity.class)) {
+            return new TransactionTemplate(transactionManager);
+        } else {
+            return null;
+        }
     }
 
     <M> String getCacheKey(Class<M> modelClass, Filter filterable) {
