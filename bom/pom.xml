@@ -142,6 +142,48 @@
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-ai-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-ai-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-ai-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-ai-provider-github</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-ai-provider-hugging-face</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-ai-provider-ollama</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-ai-provider-openai</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
                 <artifactId>bootstrap-serenity</artifactId>
                 <version>${project.version}</version>
             </dependency>
