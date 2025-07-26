@@ -24,7 +24,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-help</artifactId>
+    <artifactId>bootstrap-data</artifactId>
+    <packaging>pom</packaging>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
@@ -33,35 +34,15 @@
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Help</name>
-
-    <dependencies>
-
-        <!-- Runtime -->
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-base-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-base-resource</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-search</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.vladsch.flexmark</groupId>
-            <artifactId>flexmark-all</artifactId>
-        </dependency>
-
-    </dependencies>
+    <name>Bootstrap :: Data</name>
+	
+	<modules>
+        <module>jdbc</module>
+        <module>model</module>
+        <module>dataset</module>
+        <module>content</module>
+        <module>dsv</module>
+        <module>broker</module>
+    </modules>
 
 </project>

@@ -24,16 +24,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-resource</artifactId>
+    <artifactId>bootstrap-base-logger</artifactId>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap</artifactId>
+        <artifactId>bootstrap-base</artifactId>
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Resource</name>
+    <name>Bootstrap :: Base :: Logger</name>
 
     <dependencies>
 
@@ -44,25 +44,16 @@
             <artifactId>bootstrap-core</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.resource</groupId>
-            <artifactId>resource-archive</artifactId>
+		
+		<dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-store</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.resource</groupId>
-            <artifactId>resource-sftp</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.resource</groupId>
-            <artifactId>resource-s3</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.resource</groupId>
-            <artifactId>resource-rocksdb</artifactId>
+            <groupId>biz.paluch.logging</groupId>
+            <artifactId>logstash-gelf</artifactId>
         </dependency>
 
         <!-- Testing -->

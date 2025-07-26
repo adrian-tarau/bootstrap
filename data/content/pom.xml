@@ -24,16 +24,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-search</artifactId>
+    <artifactId>bootstrap-data-content</artifactId>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap</artifactId>
+        <artifactId>bootstrap-data</artifactId>
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Search Engine</name>
+    <name>Bootstrap :: Data :: Content</name>
 
     <dependencies>
 
@@ -47,31 +47,58 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-base-resource</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-base-metrics</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-data-content</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
             <artifactId>bootstrap-data-model</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
+            <groupId>net.microfalx.resource</groupId>
+            <artifactId>resource-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-code-module</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-digest-commons</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-pdf-module</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-xml-module</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-xmp-commons</artifactId>
         </dependency>
 
         <dependency>
@@ -85,65 +112,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-queries</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-codecs</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-queryparser</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-suggest</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-facet</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-highlighter</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-misc</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-backward-codecs</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.retry</groupId>
-            <artifactId>spring-retry</artifactId>
-        </dependency>
-
-        <!-- Testing -->
-
-        <dependency>
-            <groupId>net.datafaker</groupId>
-            <artifactId>datafaker</artifactId>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-langdetect-optimaize</artifactId>
         </dependency>
 
     </dependencies>

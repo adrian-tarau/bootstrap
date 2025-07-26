@@ -24,16 +24,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-store</artifactId>
+    <artifactId>bootstrap-base-resource</artifactId>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap</artifactId>
+        <artifactId>bootstrap-base</artifactId>
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Store</name>
+    <name>Bootstrap :: Base :: Resource</name>
 
     <dependencies>
 
@@ -41,20 +41,31 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-core</artifactId>
+            <artifactId>bootstrap-base-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-resource</artifactId>
-            <version>${project.version}</version>
+            <groupId>net.microfalx.resource</groupId>
+            <artifactId>resource-archive</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.esotericsoftware</groupId>
-            <artifactId>kryo</artifactId>
+            <groupId>net.microfalx.resource</groupId>
+            <artifactId>resource-sftp</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.resource</groupId>
+            <artifactId>resource-s3</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.resource</groupId>
+            <artifactId>resource-rocksdb</artifactId>
+        </dependency>
+
+        <!-- Testing -->
 
     </dependencies>
 

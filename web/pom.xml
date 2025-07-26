@@ -37,6 +37,68 @@
 
     <dependencies>
 
+        <!-- Bootstrap -->
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-data-jdbc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-data-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-data-dataset</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-store</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-logger</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-search</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-data-content</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-data-broker</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-help</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Runtime -->
 
         <dependency>
@@ -85,65 +147,7 @@
             <artifactId>thymeleaf-spring-data-dialect</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-jdbc</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-model</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-dataset</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-store</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-logger</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-search</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-content</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-broker</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-help</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

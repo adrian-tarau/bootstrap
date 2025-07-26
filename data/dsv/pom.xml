@@ -24,16 +24,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-dataset</artifactId>
+    <artifactId>bootstrap-data-dsv</artifactId>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap</artifactId>
+        <artifactId>bootstrap-data</artifactId>
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Data Set</name>
+    <name>Bootstrap :: Data :: DSV</name>
 
     <dependencies>
 
@@ -41,35 +41,14 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-core</artifactId>
+            <artifactId>bootstrap-data-model</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-model</artifactId>
+            <artifactId>bootstrap-data-dataset</artifactId>
             <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-metrics</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-commons</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>joor</artifactId>
         </dependency>
 
         <dependency>
@@ -77,20 +56,6 @@
             <artifactId>commons-csv</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.dom4j</groupId>
-            <artifactId>dom4j</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.jakewharton.fliptables</groupId>
-            <artifactId>fliptables</artifactId>
-        </dependency>
 
         <!-- Testing -->
 
@@ -99,6 +64,13 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

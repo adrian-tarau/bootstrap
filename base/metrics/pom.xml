@@ -24,16 +24,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-metrics</artifactId>
+    <artifactId>bootstrap-base-metrics</artifactId>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap</artifactId>
+        <artifactId>bootstrap-base</artifactId>
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Metrics</name>
+    <name>Bootstrap :: Base :: Metrics</name>
 
     <dependencies>
 
@@ -41,13 +41,13 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-core</artifactId>
+            <artifactId>bootstrap-base-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-resource</artifactId>
+            <artifactId>bootstrap-base-resource</artifactId>
             <version>${project.version}</version>
         </dependency>
 

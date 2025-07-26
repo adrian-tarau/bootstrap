@@ -40,7 +40,7 @@
         <!-- Runtime -->
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-core</artifactId>
+            <artifactId>bootstrap-base-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -52,7 +52,7 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-jdbc</artifactId>
+            <artifactId>bootstrap-data-jdbc</artifactId>
             <version>${project.version}</version>
         </dependency>
 

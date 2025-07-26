@@ -40,25 +40,25 @@
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-core</artifactId>
+                <artifactId>bootstrap-base-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-broker</artifactId>
+                <artifactId>bootstrap-data-broker</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-content</artifactId>
+                <artifactId>bootstrap-data-content</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-dataset</artifactId>
+                <artifactId>bootstrap-data-dataset</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -70,43 +70,43 @@
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-jdbc</artifactId>
+                <artifactId>bootstrap-data-jdbc</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-logger</artifactId>
+                <artifactId>bootstrap-base-logger</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-metrics</artifactId>
+                <artifactId>bootstrap-base-metrics</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-model</artifactId>
+                <artifactId>bootstrap-data-model</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-dsv</artifactId>
+                <artifactId>bootstrap-data-dsv</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-registry</artifactId>
+                <artifactId>bootstrap-base-registry</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-resource</artifactId>
+                <artifactId>bootstrap-base-resource</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -124,7 +124,7 @@
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-store</artifactId>
+                <artifactId>bootstrap-base-store</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

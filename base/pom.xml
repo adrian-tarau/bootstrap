@@ -24,7 +24,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-logger</artifactId>
+    <artifactId>bootstrap-base</artifactId>
+    <packaging>pom</packaging>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
@@ -33,31 +34,15 @@
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Logger</name>
-
-    <dependencies>
-
-        <!-- Runtime -->
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-		
-		<dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-store</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>biz.paluch.logging</groupId>
-            <artifactId>logstash-gelf</artifactId>
-        </dependency>
-
-        <!-- Testing -->
-
-    </dependencies>
+    <name>Bootstrap :: Base</name>
+	
+	<modules>
+        <module>core</module>
+        <module>logger</module>
+        <module>resource</module>
+        <module>metrics</module>
+        <module>registry</module>
+        <module>store</module>
+    </modules>
 
 </project>

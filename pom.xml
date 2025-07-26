@@ -50,22 +50,12 @@
     </scm>
 
     <modules>
-        <module>core</module>
+        <module>base</module>
+        <module>data</module>
         <module>test</module>
-        <module>jdbc</module>
-        <module>content</module>
-        <module>broker</module>
-        <module>resource</module>
-        <module>store</module>
-        <module>registry</module>
-        <module>logger</module>
-        <module>metrics</module>
         <module>help</module>
         <module>search</module>
-        <module>model</module>
-        <module>dsv</module>
         <module>template</module>
-        <module>dataset</module>
         <module>web</module>
         <module>serenity</module>
         <module>security</module>
