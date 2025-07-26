@@ -24,7 +24,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-template</artifactId>
+    <artifactId>bootstrap-extension</artifactId>
+    <packaging>pom</packaging>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
@@ -33,48 +34,14 @@
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Template</name>
-
-    <dependencies>
-
-        <!-- Runtime -->
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-model</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mvel</groupId>
-            <artifactId>mvel2</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.thymeleaf</groupId>
-            <artifactId>thymeleaf</artifactId>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>ognl</groupId>
-                    <artifactId>ognl</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- Testing -->
-
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    <name>Bootstrap :: Extension</name>
+	
+	<modules>
+        <module>help</module>
+        <module>search</module>
+        <module>template</module>
+        <module>web</module>
+        <module>security</module>
+    </modules>
 
 </project>

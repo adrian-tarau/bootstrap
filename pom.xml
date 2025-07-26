@@ -52,13 +52,9 @@
     <modules>
         <module>base</module>
         <module>data</module>
+        <module>extension</module>
         <module>test</module>
-        <module>help</module>
-        <module>search</module>
-        <module>template</module>
-        <module>web</module>
         <module>serenity</module>
-        <module>security</module>
         <module>demo</module>
         <module>deploy</module>
         <module>bom</module>

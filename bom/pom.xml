@@ -64,7 +64,7 @@
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-help</artifactId>
+                <artifactId>bootstrap-extension-help</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -112,13 +112,13 @@
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-search</artifactId>
+                <artifactId>bootstrap-extension-search</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-security</artifactId>
+                <artifactId>bootstrap-extension-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -130,13 +130,13 @@
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-template</artifactId>
+                <artifactId>bootstrap-extension-template</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
-                <artifactId>bootstrap-web</artifactId>
+                <artifactId>bootstrap-extension-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
