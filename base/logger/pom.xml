@@ -41,13 +41,13 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-core</artifactId>
+            <artifactId>bootstrap-base-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 		
 		<dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-store</artifactId>
+            <artifactId>bootstrap-base-store</artifactId>
             <version>${project.version}</version>
         </dependency>
 
