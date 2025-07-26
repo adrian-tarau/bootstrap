@@ -1,0 +1,55 @@
+:root {
+    --bs-scrollbar-size: 5px;
+}
+
+[data-bs-theme=light] {
+    --bs-scrollbar-color: #F1F1F4;
+    --bs-scrollbar-hover-color: #DBDFE9;
+}
+
+[data-bs-theme=dark] {
+    --bs-scrollbar-color: #26272F;
+    --bs-scrollbar-hover-color: #363843;
+}
+
+.hover-scroll {
+    scrollbar-width:thin;
+    scrollbar-color: var(--bs-scrollbar-color) transparent
+}
+
+.hover-scroll::-webkit-scrollbar {
+    width: var(--bs-scrollbar-size);
+    height: var(--bs-scrollbar-size)
+}
+
+.hover-scroll::-webkit-scrollbar-track {
+    background-color: transparent
+}
+
+.hover-scroll::-webkit-scrollbar-thumb {
+    border-radius: var(--bs-scrollbar-size)
+}
+
+.hover-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--bs-scrollbar-color)
+}
+
+.hover-scroll::-webkit-scrollbar-corner {
+    background-color: transparent
+}
+
+.hover-scroll:hover {
+    scrollbar-color: var(--bs-scrollbar-hover-color) transparent
+}
+
+.hover-scroll:hover::-webkit-scrollbar-thumb {
+    background-color: var(--bs-scrollbar-hover-color)
+}
+
+.hover-scroll:hover::-webkit-scrollbar-corner {
+    background-color: transparent
+}
+
+.hover-scroll {
+    scrollbar-color: transparent transparent
+}

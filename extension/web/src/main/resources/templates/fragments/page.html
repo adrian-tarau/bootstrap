@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:asset="https://net.microfalx/asset"
+      xmlns:application="https://net.microfalx/application" xmlns:component="https://net.microfalx/component">
+
+<head th:fragment="header">
+    <title th:text="${#application.name}"></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <asset:css inline="true" bundles="loader"></asset:css>
+    <asset:css></asset:css>
+    <application:context></application:context>
+</head>
+
+<span th:fragment="help" th:if="${#help.hasHelp()}">
+    <a href="#" th:attr="onclick=|Help.open('${title}','${#help.getHelp()}')|" class="icon-link" component:tooltip-text="Opens the documentation for the current dashboard">
+        <i class="fa-solid fa-circle-question text-primary help-icon"></i>
+    </a>
+</span>
+
+<div th:fragment="section(title)" class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2" th:text="${title}"></h1>
+</div>
+
+<div th:fragment="code" th:remove="tag">
+    <asset:js></asset:js>
+    <asset:js inline="true" bundles="loader"></asset:js>
+    <script>
+        Application.start();
+    </script>
+</div>
+
+<body>
+</body>
+</html>

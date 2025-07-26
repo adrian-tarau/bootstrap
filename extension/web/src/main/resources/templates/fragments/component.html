@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
+<body>
+
+<div class="dropdown-menu" th:fragment="render-dropdown-menu(menu, id)" th:id="${id}">
+    <div th:each="action : ${#component.getChildren(menu)}" th:remove="tag">
+        <a href="#" class="dropdown-item" th:unless="${#component.isSeparator(action)}"
+           th:attr="onclick=|Application.action('${action.action}'${#component.getFunctionArguments(action)})|" component:tooltip="${action.description}">
+            <i th:class="${action.icon}"></i><span th:text="${action.text}" class="ms-2"></span></a>
+        <div class="dropdown-divider" th:if="${#component.isSeparator(action)}"></div>
+    </div>
+
+</div>
+
+<div th:fragment="render-titleless (component)" th:remove="tag">
+    <div th:unless="${#component.hasTitle(component)}" th:remove="tag">
+        <div th:replace="~{ :: render-container-children (${component})}"></div>
+    </div>
+</div>
+
+<div th:fragment="render-row (component)" class="row">
+    <div class="card mb-4" th:if="${#component.hasTitle(component)}">
+        <div class="card-header border-0 pb-0">
+            <div class="d-flex justify-content-between">
+                <h3 class="card-title fs-3" th:text="${component.title}"></h3>
+                <div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body row" th:style="${#component.getCssStyle(component)}">
+            <div th:replace="~{ :: render-container-children (${component})}"></div>
+        </div>
+    </div>
+    <div th:replace="~{ :: render-titleless (${component})}"></div>
+</div>
+
+<div th:fragment="render-column (component)" th:remove="tag">
+    <div class="card mb-2 me-2" th:classappend="${#component.getCssClass(component)}" th:if="${#component.hasTitle(component)}">
+        <div class="card-subtitle m-2 text-body-secondary">
+            <div class="d-flex justify-content-between">
+                <h6 class="card-title fs-5" th:text="${component.title}"></h6>
+                <div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body" th:style="${#component.getCssStyle(component)}">
+            <div th:replace="~{ :: render-container-children (${component})}"></div>
+        </div>
+    </div>
+    <div th:replace="~{ :: render-titleless (${component})}"></div>
+</div>
+
+<div th:fragment="render-table (component)" th:remove="tag">
+    <table class="table table-responsive table-sm">
+        <thead th:if="${component.hasHeader()}">
+        <tr>
+            <th th:each="column : ${component.getColumns()}" th:text="${column.text}" scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${component.getRows()}">
+            <td th:each="column : ${component.getColumns()}">
+                <span th:unless="${row.isComponent(column)}" th:text="${row.getDisplayValue(column)}"></span>
+                <div th:if="${row.isComponent(column)}" th:remove="tag">
+                    <div th:replace="~{ fragments/component :: ${#component.getComponentFragment(row.getValue(column))} (${row.getValue(column)})}"></div>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="render-link (component)" th:remove="tag">
+    <a th:if="${component.action}" class="icon-link" href="#" th:attr="onclick=|Application.action('${component.action}' ${#component.getFunctionArguments(component)})|">
+        <i th:if="${#component.hasIcon(component)}" th:class="${#component.getIconClass(component)}"></i><span th:text="${component.text}"></span></a>
+</div>
+
+<div th:fragment="render-invalid-component(component)" th:remove="tag">
+    <span th:text="|Invalid component '${component}'|"></span>
+</div>
+
+<div th:fragment="render-dashboard(component)" th:remove="tag">
+    <div th:replace="~{ :: render-container-children (${component})}"></div>
+</div>
+
+<div th:fragment="render-container-children(component)" th:each="child : ${#component.getChildren(component)}" th:remove="tag">
+    <div th:replace="~{ :: ${#component.getComponentFragment(child)} (${child})}"></div>
+</div>
+
+</body>
+</html>
+

@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:chart="https://net.microfalx/chart">
+<body>
+
+<div id="dataset-modal" tabindex="-1" th:class="|modal fade modal-lg|" data-bs-backdrop="static"
+     data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Trends</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div th:each="chart : ${trendCharts}" th:class="mb-3">
+                    <chart:render value="${chart}"></chart:render>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

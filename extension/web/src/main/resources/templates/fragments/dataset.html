@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component" xmlns:chart="https://net.microfalx/chart">
+<body>
+
+<thead class="table-light" th:fragment="grid-header">
+<tr th:if="${#dataset.hasColumnGroups()}">
+    <th scope="col" class="text-right align-middle" rowspan="2">#</th>
+    <th scope="col" th:each="group : ${#dataset.getColumnGroupsFirstRow()}" th:class="${#dataset.getHeaderClass(group.getField(), group.isGroup())}" th:style="${#dataset.getHeaderStyle(group.getField())}"
+        th:attr="field_name=${group.getField().name},field_index=${#dataset.getFieldIndex(group.getField())}" component:tooltip="${group.getField()}" th:colspan="${group.getColSpan()}" th:rowspan="${group.getRowSpan()}">
+        <span th:utext="${group.label}"></span>
+    </th>
+    <th scope="col" rowspan="2" class="text-center align-middle" th:if="${#dataset.hasActions}" component:tooltip-text="The actions available to interact with records">Actions</th>
+</tr>
+<tr th:if="${#dataset.hasColumnGroups()}">
+    <th scope="col" th:each="group : ${#dataset.getColumnGroupsSecondRow()}" th:class="${#dataset.getHeaderClass(group.getField())}" th:style="${#dataset.getHeaderStyle(group.getField())}"
+        th:attr="field_name=${group.getField().name},field_index=${#dataset.getFieldIndex(group.getField())}" component:tooltip="${group.getField()}">
+        <span th:if="${group.getField().labelIcon}" th:class="${group.getField().labelIcon}"></span><span th:utext="${group.getField().label}"></span>
+    </th>
+</tr>
+<tr th:unless="${#dataset.hasColumnGroups()}">
+    <th scope="col" class="text-right align-middle index-field">#</th>
+    <th scope="col" th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getHeaderClass(field)}" th:style="${#dataset.getHeaderStyle(field)}"
+        th:attr="field_name=${field.name},field_index=${#dataset.getFieldIndex(field)}" component:tooltip="${field}">
+        <span th:if="${field.labelIcon}" th:class="${field.labelIcon}"></span><span th:utext="${field.label}"></span>
+    </th>
+    <th scope="col" class="text-center align-middle" th:if="${#dataset.hasActions}" component:tooltip-text="The actions available to interact with records">Actions</th>
+</tr>
+</thead>
+
+<tr th:fragment="grid-row" th:class="${#dataset.getPrimaryRowClass(model)}">
+    <div th:text="${#dataset.beforeBrowse(model)}" th:remove="tag"></div>
+    <td class="text-right" th:text="${#dataset.getCurrentIndex()}" th:attr="data-table-row-id=${#dataset.getId(model)}"></td>
+    <td th:each="field : ${#dataset.getFields()}" th:class="${#dataset.getCellClass(field)}" th:with="alert=${#dataset.getAlert(model, field)},actionable=${#dataset.getActionable(model, field)},tooltip=${#dataset.getTooltip(model, field)}">
+        <span th:if="${#dataset.hasDisplayValue(field)}" th:utext="${#dataset.getDisplayValue(model, field)}"
+              th:class="${#dataset.getAlertClass(alert)}" th:style="${#dataset.getAlertStyle(alert)}" component:fast-tooltip="${tooltip}">
+        </span>
+        <span th:if="${alert != null and alert.message != null and !alert.tooltip}" th:class="text-sm-end"><i class="dataset-alert-icon" th:classappend="${#dataset.getAlertIcon(alert)}" component:fast-tooltip="${alert.message}"></i></span>
+        <span th:if="${alert != null and alert.message == null and !alert.tooltip}" th:class="text-sm-end"><i th:class="${#dataset.getAlertIcon(alert)}"></i></span>
+        <a th:if="${actionable}" href="#" th:attr="onclick=|Application.action('${actionable.action}', '${#dataset.getId(model)}')|">
+            <i th:if="${actionable.icon}" th:class="${actionable.icon}"></i>
+        </a>
+        <a th:if="${field.isName()}" href="#" th:attr="onclick=|Application.action('dataset.view', '${#dataset.getId(model)}')|"
+           th:utext="${#dataset.getDisplayValue(model, field)}"></a>
+        <span th:if="${#dataset.hasChart(field)}" th:remove="tag"><chart:render inline="true" value="${#dataset.getChart(model, field)}"></chart:render></span>
+    </td>
+    <td id="dataset-actions" class="text-center" th:if="${#dataset.hasActions}">
+        <a class="icon-link" href="#" th:attr="onclick=|DataSet.showActions(event, '${#dataset.getId(model)}')|"><i
+                class="fa-solid fa-ellipsis"></i></a>
+    </td>
+</tr>
+
+<tr th:fragment="grid-row-detail" th:if="${#dataset.hasDetails()}" th:class="${#dataset.getDetailsRowClass(model)}">
+    <td>&nbsp;</td>
+    <td th:colspan="${#dataset.getFields().size()}">
+        <div th:replace="~{ ${detailTemplate} :: ${detailFragment}}"></div>
+    </td>
+</tr>
+
+<div th:fragment="grid-rows" th:each="model : ${#dataset.getModels()}" th:remove="tag">
+    <tr th:replace="~{ fragments/dataset :: grid-row}"></tr>
+    <tr th:replace="~{ fragments/dataset :: grid-row-detail}"></tr>
+</div>
+
+<tbody th:fragment="grid-body">
+    <div th:each="model : ${#dataset.getModels()}" th:remove="tag">
+        <tr th:replace="~{ fragments/dataset :: grid-row}"></tr>
+        <tr th:replace="~{ fragments/dataset :: grid-row-detail}"></tr>
+    </div>
+</tbody>
+
+<table id="dataset-grid" class="table table-hover dataset-table" th:fragment="grid">
+    <thead th:replace="~{ fragments/dataset :: grid-header}"></thead>
+    <tbody th:replace="~{ fragments/dataset :: grid-body}"></tbody>
+</table>
+
+<div class="dropdown-menu" th:fragment="action-menu(id, actions)" th:id="${id}">
+    <div th:each="action : ${#component.getChildren(actions)}" th:remove="tag">
+        <a href="#" class="dropdown-item" th:unless="${#component.isSeparator(action)}"
+           th:attr="onclick=|Application.action('${action.action}'${#component.getFunctionArguments(action)})|" component:tooltip="${action.description}">
+            <i th:class="${action.icon}"></i><span th:text="${action.text}" class="ms-2"></span></a>
+        <div class="dropdown-divider" th:if="${#component.isSeparator(action)}"></div>
+    </div>
+
+</div>
+
+<nav class="navbar navbar-expand-lg" th:fragment="toolbar">
+    <div class="container-fluid ps-1">
+        <div id="dataset-toolbar" class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <div th:each="button : ${#component.getChildren(toolbar)}" th:remove="tag">
+                    <button th:if="${button.menu == null}" type="button" component:tooltip="${button}" th:attr="onclick=|Application.action('${button.action}')|"
+                            th:class="${#component.getCssClass(button,'btn btn-primary btn-color me-2 btn-sm')}">
+                        <i th:class="${button.icon}"></i><span class="ms-2" th:text="${button.text}"></span>
+                    </button>
+                    <div th:if="${button.menu != null}" class="dropdown">
+                        <button th:class="${#component.getCssClass(button,'btn btn-primary dropdown-toggle btn-color me-2 btn-sm')}" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i th:class="${button.icon}"></i><span class="ms-2" th:text="${button.text}"></span>
+                        </button>
+                        <div th:replace="~{ fragments/dataset :: action-menu('dataset-export-actions', ${button.menu})}"></div>
+                    </div>
+                </div>
+            </ul>
+            <div class="dataset-drop-zone"></div>
+            <div class="me-2">
+                <span id="dataset-toolbar-page-info" class="badge rounded-pill bg-success text-white p-2" th:text="${#dataset.getPageInfo()}"
+                    component:tooltip-text="Displays the number of pages and number of records available using the current filter"></span>
+                <button class="btn btn-primary btn-sm" type="button" th:attr="onclick=|DataSet.trend()|" th:if="${hasTrend}"><i class="fa-solid fa-arrow-trend-up"></i></button>
+            </div>
+            <form class="d-flex" role="search" th:attr="onsubmit='return DataSet.search()'">
+                <div id="daterange" th:if="${hasTimeRange}" class="form-control me-2 text-nowrap"
+                     style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%"
+                     component:tooltip-text="A time interval used to restrict the number of records">
+                    <i class="fa fa-calendar"></i>&nbsp;
+                    <span></span> <i class="fa fa-caret-down"></i>
+                    <span class="d-none" th:text="${daterange}"></span>
+                </div>
+            </form>
+        </div>
+    </div>
+    <iframe id="dataset-download" class="d-none"></iframe>
+    <p id="dataset-message" class="d-none" th:if="${message}" th:utext="${message}"></p>
+</nav>
+
+<div id="dataset-footer" class="text-center w-100 p-2 pt-5" th:fragment="grid-next-page" th:if="${#dataset.hasNext()}">
+    <span id="dataset-footer-records" class="badge rounded-pill bg-success text-white p-2"
+          th:text="${#dataset.getPageAndRecordInfo()}" component:tooltip-text="Displays the number of pages and number of records available using the current filter"></span>
+    <a id="dataset-footer-more-results" href="#" th:data-page="${#dataset.getNextPage()}"
+       th:onclick="DataSet.loadPage(this.getAttribute('data-page')); return false">
+    <span class="badge rounded-pill bg-success-subtle text-success-emphasis p-2" component:tooltip-text="Loads next page with results">
+        More results
+    </span>
+    </a>
+</div>
+
+<div th:fragment="render">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header border-0 pb-0" th:if="${#page.hasTitle()}">
+                <div class="d-flex justify-content-between">
+                    <h3 id="dashboard-title" class="card-title fs-3" th:text="${#page.getTitle()}"></h3>
+                    <div>
+                        <span th:replace="~{ fragments/page :: help}"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <nav th:replace="~{ fragments/dataset :: toolbar}"></nav>
+                <table th:replace="~{ fragments/dataset :: grid}"></table>
+                <div th:replace="~{ fragments/dataset :: grid-next-page}"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="dialog" id="dataset-modal" tabindex="-1"
+     th:class="|modal fade ${viewClasses}|" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="${dataset.name}"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dataset-form" novalidate autocomplete="off">
+                    <div th:replace="~{ ${fieldsTemplate} :: ${fieldsFragment}}"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-sm dataset-btn-sm" th:attr="onclick=|DataSet.save()|" th:unless="${#dataset.isView()}">Save</button>
+                <button type="button" class="btn btn-secondary btn-sm dataset-btn-sm" th:attr="onclick=|Application.closeModal()|" th:unless="${#dataset.isView()}">Cancel</button>
+                <button type="button" class="btn btn-secondary btn-sm dataset-btn-sm" th:attr="onclick=|Application.closeModal()|" th:if="${#dataset.isView()}">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="fields" th:remove="tag" th:with="form=${#dataset.getFormGroups()}">
+    <div th:unless="${form.hasGroups()}" th:remove="tag">
+        <th:block th:each="field : ${#dataset.getFields()}">
+            <div th:replace="~{ fragments/dataset :: field(${field})}"></div>
+        </th:block>
+    </div>
+    <ul th:if="${form.hasGroups()}" class="nav nav-tabs" role="tablist">
+        <li class="nav-item" th:each="group : ${form.getGroups()}">
+            <a class="nav-link" th:classappend="${group.getTabCssClass()}" data-bs-toggle="tab" th:attr="data-bs-target=${group.getDomId()}" type="button" th:text="${group.label}"></a>
+        </li>
+    </ul>
+    <div th:if="${form.hasGroups()}" class="tab-content p-2">
+        <div th:each="group : ${form.getGroups()}" th:remove="tag">
+            <div th:id="${group.getId()}" class="tab-pane fade" th:classappend="${group.getContentCssClass()}" >
+                <th:block th:each="field : ${group.getFields()}">
+                    <div th:replace="~{ fragments/dataset :: field(${field})}"></div>
+                </th:block>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div th:fragment="field(field)" class="mb-1 row">
+    <label th:attr="for=${field.name}" th:class="${#dataset.getInputLabelClass(field)}" th:text="${field.label}"></label>
+    <div th:class="${#dataset.getInputContainerClass(field)}">
+        <input th:if="${#dataset.isInputField(field)}" th:name="${field.name}"
+               th:type="${#dataset.getInputType(field)}" th:class="${#dataset.getInputFieldClass(field)}"
+               th:readonly="${#dataset.isReadOnly(field)}" th:checked="${#dataset.isChecked(model, field)}"
+               th:value="${#dataset.getValue(model, field)}" component:tooltip="${field}">
+        <input th:unless="${#dataset.isVisible(field)}" type="hidden" th:name="${field.name}"
+               th:value="${#dataset.getValue(model, field)}" component:tooltip="${field}">
+        <div th:if="${#dataset.isCheckboxField(field)}" class="form-check">
+            <input th:name="${field.name}" th:type="${#dataset.getInputType(field)}" th:class="${#dataset.getInputFieldClass(field)}"
+                   th:readonly="${#dataset.isReadOnly(field)}" th:checked="${#dataset.isChecked(model, field)}">
+        </div>
+        <textarea th:if="${#dataset.isTextAreaField(field)}" th:name="${field.name}"
+                  th:class="${#dataset.getInputFieldClass(field)}" th:readonly="${#dataset.isReadOnly(field)}"
+                  th:attr="rows=${#dataset.getInputRows(field)}"
+                  th:text="${#dataset.getValue(model, field)}" component:tooltip="${field}"></textarea>
+        <select th:if="${#dataset.isDropDownField(field)}" th:name="${field.name}"
+                th:readonly="${#dataset.isReadOnly(field)}" th:class="${#dataset.getInputFieldClass(field)}" th:multiple="${#dataset.isMultiSelect(field)}" component:tooltip="${field}">
+            <option th:each="lookup : ${#dataset.getDropDownValues(field)}" th:selected="${#dataset.isSelected(model, field, lookup)}" th:value="${lookup.id}" th:text="${lookup.name}"></option>
+        </select>
+    </div>
+</div>
+
+</body>
+</html>
+

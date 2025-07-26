@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="https://net.microfalx/xsd/navigation-1.0.xsd"
+           targetNamespace="https://net.microfalx/xsd/navigation-1.0.xsd"
+           elementFormDefault="unqualified"
+           attributeFormDefault="unqualified">
+
+    <xs:element name="navigations">
+        <xs:annotation>
+            <xs:documentation>
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:choice>
+                <xs:element ref="menu" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="menu">
+        <xs:annotation>
+            <xs:documentation>
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="menu" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="item" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="spacer" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
+            <xs:attribute name="id" use="required"/>
+            <xs:attribute name="text"/>
+            <xs:attribute name="action"/>
+            <xs:attribute name="token"/>
+            <xs:attribute name="roles"/>
+            <xs:attribute name="icon"/>
+            <xs:attribute name="position" type="xs:integer"/>
+            <xs:attribute name="parent"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="item">
+        <xs:complexType>
+            <xs:attribute name="id" use="required"/>
+            <xs:attribute name="text"/>
+            <xs:attribute name="action"/>
+            <xs:attribute name="token"/>
+            <xs:attribute name="roles"/>
+            <xs:attribute name="icon"/>
+            <xs:attribute name="position" type="xs:integer"/>
+            <xs:attribute name="parent"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="spacer">
+        <xs:complexType>
+            <xs:attribute name="position" type="xs:integer"/>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
+

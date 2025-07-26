@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
+<body>
+<div id="help-article" th:class="|modal fade modal-lg modal-help|" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header pb-0">
+                <div class="d-flex w-100">
+                    <h3 class="modal-title flex-grow-1">
+                        <span th:text="${title}"></span>
+                    </h3>
+                    <div class="p-2">
+                        <a href="#" component:tooltip-text="Navigates back one page within the current window"
+                           class="text-secondary icon-link" th:attr="onclick=|Help.back()|">
+                            <i class="fa-solid fa-arrow-left help-button"></i>
+                        </a>
+                        <a href="#" component:tooltip-text="Navigates forward one page within the current window"
+                           class="text-secondary icon-link" th:attr="onclick=|Help.forward()|">
+                            <i class="fa-solid fa-arrow-right help-button"></i>
+                        </a>
+                        <a href="#" component:tooltip-text="Navigates to the home page of the current window"
+                           class="text-secondary icon-link" th:attr="onclick=|Help.reload()|">
+                            <i class="fa-solid fa-house help-button"></i>
+                        </a>
+                        <span class="mx-2"></span>
+                        <a href="#" component:tooltip-text="Closes the current window" data-bs-dismiss="modal"
+                           class="text-secondary icon-link help-button">
+                            <i class="fa-regular fa-circle-xmark"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="ratio ratio-16x9">
+                    <iframe id="help_frame" th:src="${path}" th:attr="origSrc=${path}"></iframe>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

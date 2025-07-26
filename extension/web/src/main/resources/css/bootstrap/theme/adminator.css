@@ -1,0 +1,32 @@
+.sidebar-menu > li.dropdown ul.dropdown-menu > li > a {
+    padding: 5px 5px !important;
+}
+
+.sidebar-menu > li.dropdown ul.dropdown-menu ul.dropdown-menu {
+    padding-left: 30px !important;
+}
+
+.sidebar-menu > li > a .icon-holder {
+    margin-right: 2px !important;
+}
+
+.sidebar-menu li a.sidebar-link.active {
+    --bs-text-opacity: 1;
+    color: rgba(var(--bs-primary-rgb), var(--bs-text-opacity)) !important;
+}
+
+.header .search-input a.search-history {
+    display: block;
+    font-size: 20px;
+    height: 40px;
+    margin-top: 12px;
+    padding: 5px;
+    color: #72777a;
+    transition: all 0.2s ease-in-out;
+}
+
+.header .search-input a.search-history:hover {
+    color: #313435;
+    cursor: pointer;
+    text-decoration: none;
+}
