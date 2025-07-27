@@ -1,5 +1,5 @@
 /*
-* The LLM Chat Global Variables
+* The AI Chat Global Variables
  */
 window.Chat = window.Chat || {};
 
@@ -73,7 +73,7 @@ Chat.prompt = function (prompt, dataSet) {
 Chat.getCurrent = function (chatId, required) {
     if (Utils.isUndefined(required)) required = true;
     if (Utils.isEmpty(chatId)) {
-        chatId = $(".llm-chat").attr('id');
+        chatId = $(".ai-chat").attr('id');
     }
     if (Utils.isEmpty(chatId) && required) throw new Error("No chat is currently selected");
     return chatId;
@@ -132,9 +132,9 @@ Chat.send = function (chatId, message, options) {
     if (Utils.isEmpty(message)) return;
     chatId = me.getCurrent(chatId);
     Application.post(me.getPath("question", chatId), {}, function (data) {
-        $(".llm-chat-messages").append(data);
+        $(".ai-chat-messages").append(data);
         me.focusMessage();
-        let target = $('.llm-chat-messages .llm-chat-msg:last-child')
+        let target = $('.ai-chat-messages .ai-chat-msg:last-child')
         me.receive(chatId, target);
     }, options);
 
@@ -150,7 +150,7 @@ Chat.receive = function (chatId, target) {
     let me = Chat;
     chatId = me.getCurrent(chatId);
     target = $(target);
-    let textElement = target.find('.llm-chat-text');
+    let textElement = target.find('.ai-chat-text');
     let markdown = "";
     Application.Sse.start(me.getPath("tokens", chatId), function (data, event) {
         let json = JSON.parse(data);
@@ -167,7 +167,7 @@ Chat.receive = function (chatId, target) {
 Chat.focusMessage = function () {
     let me = Chat;
     if (!me._chatBody) {
-        me._chatBody = $(".llm-chat-body");
+        me._chatBody = $(".ai-chat-body");
     }
     me._chatBody.scrollTop(me._chatBody[0].scrollHeight);
 }
@@ -185,7 +185,7 @@ Chat.focusInput = function () {
  */
 Chat.askDefaultQuestion = function (id) {
     let me = Chat;
-    let questionElement = $(".llm-chat #chat-question");
+    let questionElement = $(".ai-chat #chat-question");
     if (questionElement.length === 0) return;
     let question = questionElement.text().trim();
     questionElement.remove();
