@@ -17,11 +17,12 @@ import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Node;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
-import net.microfalx.bootstrap.search.IndexService;
+import net.microfalx.bootstrap.search.*;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.FileUtils;
-import net.microfalx.resource.ClassPathResource;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
+import net.microfalx.threadpool.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -32,8 +33,16 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.AnnotatedElement;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import static net.microfalx.bootstrap.help.HelpUtilities.*;
+import static net.microfalx.bootstrap.search.Document.OWNER_FIELD;
+import static net.microfalx.bootstrap.search.Document.TYPE_FIELD;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.removeEndSlash;
@@ -49,11 +58,50 @@ public class HelpService implements InitializingBean {
     @Autowired
     private IndexService indexService;
 
-    @Autowired
-    private HelpProperties helpProperties;
+    @Autowired private SearchService searchService;
+
+    @Autowired(required = false) private HelpProperties properties = new HelpProperties();
+
+    @Autowired private ThreadPool threadPool;
 
     private String imagePath = "/help/image";
     private String articlePath = "/help/article";
+
+    private final Toc root = new Toc();
+    final AtomicBoolean indexed = new AtomicBoolean(false);
+
+    /**
+     * Returns the root Table of Contents (ToC) entry.
+     *
+     * @return a non-null instance
+     */
+    public Toc getRoot() {
+        return root;
+    }
+
+    /**
+     * Returns the Table of Contents (ToC) entry for a given path.
+     * <p>
+     * The path is relative to the root of the help documentation.
+     *
+     * @param path the path to find
+     * @return a non-null instance or null if not found
+     */
+    public Toc find(String path) {
+        requireNonNull(path);
+        return root.findByPath(path);
+    }
+
+    /**
+     * Returns whether the help service is ready.
+     * <p>
+     * The service is considered ready when the help content has been indexed.
+     *
+     * @return {@code true} if the service is ready, {@code false} otherwise
+     */
+    public boolean isReady() {
+        return indexed.get();
+    }
 
     /**
      * Returns the path where images can be resolved.
@@ -95,7 +143,8 @@ public class HelpService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        // empty for now
+        loadTocs();
+        indexHelp();
     }
 
     /**
@@ -121,6 +170,39 @@ public class HelpService implements InitializingBean {
     }
 
     /**
+     * Searches through the help pages and returns a page of results.
+     *
+     * @param query the query to search for (if empty, returns an empty list)
+     * @param page  the page number to return (0-based)
+     * @param size  the size of the page (number of results per page)
+     * @return a collection of Table of Contents (ToC) entries matching the query
+     */
+    public List<Toc> search(String query, int page, int size) {
+        if (StringUtils.isEmpty(query)) return Collections.emptyList();
+        LOGGER.info("Search help for '{}' at page {} with size {}", query, page, size);
+        String finalQuery = "(" + OWNER_FIELD + ": " + DOCUMENT_OWNER + " AND " + TYPE_FIELD + ": " + DOCUMENT_TYPE
+                + ") AND (" + query + ")";
+        SearchQuery searchQuery = new SearchQuery(finalQuery)
+                .setTimeless(true).setStart(page * size).setLimit(size);
+        SearchResult result = searchService.search(searchQuery);
+        LOGGER.info("Found {} TOC entries matching the query", result.getTotalHits());
+        List<Toc> tocs = new ArrayList<>();
+        for (Document document : result.getDocuments()) {
+            Attribute path = document.get(PATH_FIELD);
+            if (path == null) continue;
+            Toc toc = find((String) path.getValue());
+            if (toc != null) {
+                tocs.add(toc);
+            } else {
+                LOGGER.debug("A TOC entry found in index for path '{}' does not exist anymore", path);
+                indexService.remove(document.getId());
+            }
+        }
+        return tocs;
+
+    }
+
+    /**
      * Renders a document.
      * <p>
      * The path of the document is extracted from the annotated element.
@@ -136,6 +218,19 @@ public class HelpService implements InitializingBean {
             throw new HelpException("The annotated element '" + element + "' does not have an @Help annotation");
         }
         render(helpAnnot.value(), writer);
+    }
+
+    /**
+     * Renders the content of the whole help as a single page.
+     *
+     * @throws IOException if an I/O error occurs
+     */
+    public Resource renderAll() throws IOException {
+        Resource temporary = Resource.temporary("help", "md");
+        Writer writer = temporary.getWriter();
+        render(root, writer, root.getPath());
+        writer.close();
+        return temporary;
     }
 
     /**
@@ -161,8 +256,7 @@ public class HelpService implements InitializingBean {
         requireNonNull(path);
         LOGGER.info("Render help at '{}'", path);
         // resolve the Markdown file
-        path = resolveContent(path);
-        Resource resource = ClassPathResource.file(path);
+        Resource resource = HelpUtilities.resolve(path);
         render(resource, writer);
     }
 
@@ -174,6 +268,10 @@ public class HelpService implements InitializingBean {
      * @throws IOException if an I/O error occurs
      */
     public void render(Resource resource, Writer writer) throws IOException {
+        render(resource, writer, resource.getPath());
+    }
+
+    private void render(Resource resource, Writer writer, String path) throws IOException {
         requireNonNull(resource);
         LOGGER.debug("Render help content '{}'", resource.toURI());
 
@@ -194,6 +292,7 @@ public class HelpService implements InitializingBean {
         renderer.render(document, writer);
     }
 
+
     private void registerExtensions(MutableDataSet options, Resource resource) {
         String path = FileUtils.removeFileExtension(resource.getPath());
         options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create(),
@@ -212,4 +311,27 @@ public class HelpService implements InitializingBean {
         options.set(AnchorLinkExtension.ANCHORLINKS_ANCHOR_CLASS, "anchor");
         options.set(AnchorLinkExtension.ANCHORLINKS_SET_NAME, true);
     }
+
+    private void loadTocs() {
+        HelpLoader loader = new HelpLoader();
+        loader.load(root);
+    }
+
+    private void indexHelp() {
+        HelpIndexer indexer = new HelpIndexer(this, indexService, root);
+        threadPool.schedule(indexer, 2, TimeUnit.SECONDS);
+    }
+
+    private void render(Toc toc, Writer writer, String path) throws IOException {
+        writer.append("\n\n");
+        if (toc.getContent().exists()) {
+            render(toc.getContent(), writer);
+        } else {
+            writer.append("> No content available for '").append(toc.getPath()).append("'\n");
+        }
+        for (Toc child : toc.getChildren()) {
+            render(child, writer, toc.getPath());
+        }
+    }
+
 }

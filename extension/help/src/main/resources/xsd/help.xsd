@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="https://net.microfalx/xsd/help-1.0.xsd"
+           targetNamespace="https://net.microfalx/xsd/help-1.0.xsd"
+           elementFormDefault="unqualified"
+           attributeFormDefault="unqualified">
+
+    <xs:element name="help">
+        <xs:annotation>
+            <xs:documentation>
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="toc" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="toc">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="toc" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="id" use="required"/>
+            <xs:attribute name="name" use="required"/>
+            <xs:attribute name="path"/>
+            <xs:attribute name="order"/>
+            <xs:attribute name="inline" type="xs:boolean" default="false"/>
+            <xs:attribute name="theme"/>
+        </xs:complexType>
+    </xs:element>
+
+
+</xs:schema>
+

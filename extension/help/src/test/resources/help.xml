@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<help xmlns="https://net.microfalx/xsd/help-1.0.xsd">
+
+    <toc id="child3" path="complex" name="Child 3"/>
+
+    <toc id="simple" name="Simple"/>
+    <toc id="complex" name="Complex">
+        <toc id="child1" name="Child 1"/>
+        <toc id="child2" name="Child 2"/>
+    </toc>
+    <toc id="image" name="Image"/>
+    <toc id="table" name="Table"/>
+
+    <toc id="child4" path="complex" name="Child 4"/>
+
+</help>

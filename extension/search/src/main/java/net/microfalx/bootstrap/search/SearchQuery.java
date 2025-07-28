@@ -6,6 +6,7 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
 /**
  * Holds search parameters.
@@ -23,6 +24,7 @@ public class SearchQuery implements Serializable {
 
     private ZonedDateTime startTime;
     private ZonedDateTime endTime;
+    private boolean timeless;
 
     private boolean autoWildcard;
     private boolean allowLeadingWildcard;
@@ -80,7 +82,11 @@ public class SearchQuery implements Serializable {
     }
 
     public ZonedDateTime getStartTime() {
-        return startTime != null ? startTime : ZonedDateTime.now().minusHours(24);
+        if (timeless) {
+            return null;
+        } else {
+            return startTime != null ? startTime : ZonedDateTime.now().minusDays(7);
+        }
     }
 
     public SearchQuery setStartTime(ZonedDateTime startTime) {
@@ -89,11 +95,20 @@ public class SearchQuery implements Serializable {
     }
 
     public ZonedDateTime getEndTime() {
-        return endTime != null ? endTime : ZonedDateTime.now();
+        if (timeless) {
+            return null;
+        } else {
+            return endTime != null ? endTime : ZonedDateTime.now();
+        }
     }
 
     public SearchQuery setEndTime(ZonedDateTime endTime) {
         this.endTime = endTime;
+        return this;
+    }
+
+    public SearchQuery setTimeless(boolean timeless) {
+        this.timeless = timeless;
         return this;
     }
 
@@ -103,7 +118,6 @@ public class SearchQuery implements Serializable {
 
     public SearchQuery setAutoWildcard(boolean autoWildcard) {
         this.autoWildcard = autoWildcard;
-
         return this;
     }
 
@@ -113,18 +127,15 @@ public class SearchQuery implements Serializable {
 
     public SearchQuery setAllowLeadingWildcard(boolean allowLeadingWildcard) {
         this.allowLeadingWildcard = allowLeadingWildcard;
-
         return this;
     }
 
     public String getDescription() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("query: ").append(query)
-                .append(", filter: ").append(filter)
-                .append(", start: ").append(start)
-                .append(", limit: ").append(limit)
-                .append(", sort: ").append(sort.field);
-        return builder.toString();
+        return "query: " + query +
+                ", filter: " + filter +
+                ", start: " + start +
+                ", limit: " + limit +
+                ", sort: " + sort.field;
     }
 
     @Override
@@ -146,17 +157,20 @@ public class SearchQuery implements Serializable {
      */
     public static class Sort implements Serializable {
 
-        private static final long serialVersionUID = 3914382555374244394L;
+        @Serial private static final long serialVersionUID = 3914382555374244394L;
 
         private final Type type;
         private String field;
         private boolean reversed;
 
         public Sort(Type type) {
+            requireNonNull(type);
             this.type = type;
         }
 
         public Sort(Type type, String field, boolean reversed) {
+            requireNonNull(type);
+            requireNotEmpty(field);
             this.type = type;
             this.field = field;
             this.reversed = reversed;
