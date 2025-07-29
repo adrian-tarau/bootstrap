@@ -56,7 +56,7 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
     /**
      * An interface representing a request to execute a tool.
      */
-    public interface ExecutionRequest extends Identifiable<String>, Nameable {
+    public interface ExecutionRequest extends Identifiable<String> {
 
         /**
          * Returns the tool to be executed.
@@ -71,6 +71,23 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
          * @return a non-null
          */
         Map<String, Object> getArguments();
+
+        /**
+         * Returns the value of a specific argument by its name.
+         *
+         * @param name the name of the argument
+         * @return the value of the argument, or null if not found
+         */
+        <T> T getArgument(String name);
+
+        /**
+         * Returns the value of a specific argument by its name and type.
+         * @param name the name of the argument
+         * @param type the expected type of the argument
+         * @return the value
+         * @param <T> the type of the value
+         */
+        <T> T getArgument(String name, Class<T> type);
     }
 
     public interface Executor {
@@ -81,7 +98,7 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
          * @param request the execution request
          * @return a non-null object representing the result of the execution (usually a text or JSON response)
          */
-        Object execute(ExecutionRequest request);
+        String execute(ExecutionRequest request);
     }
 
     @ToString(callSuper = true)

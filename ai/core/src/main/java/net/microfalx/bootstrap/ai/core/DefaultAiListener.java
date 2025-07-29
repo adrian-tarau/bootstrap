@@ -1,5 +1,8 @@
 package net.microfalx.bootstrap.ai.core;
 
+import net.microfalx.bootstrap.ai.api.*;
+import net.microfalx.bootstrap.ai.core.tools.HelpTool;
+import net.microfalx.bootstrap.ai.core.tools.SearchTool;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.dataset.DataSet;
 import net.microfalx.bootstrap.dataset.DataSetRequest;
@@ -7,9 +10,6 @@ import net.microfalx.bootstrap.dataset.DataSetUtils;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.Sort;
-import net.microfalx.bootstrap.ai.api.*;
-import net.microfalx.bootstrap.ai.core.tools.HelpTool;
-import net.microfalx.bootstrap.ai.core.tools.SearchTool;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Provider;
@@ -34,12 +34,13 @@ public class DefaultAiListener extends ApplicationContextSupport implements AiLi
         aiService.registerTool((Tool) Tool.builder("search")
                 .executor(new SearchTool())
                 .parameter((Tool.Parameter) Tool.Parameter.builder("type").description("The type of event").build())
-                .description("Searches for events, alerts, and other information")
+                .parameter((Tool.Parameter) Tool.Parameter.builder("query").description("A full text search query, supports AND and OR operator").build())
+                .description("Searches for events, alerts, and other information. Only use this tool if the user asks for information about a specific event or alert.")
                 .build());
         aiService.registerTool((Tool) Tool.builder("help")
                 .executor(new HelpTool())
                 .parameter((Tool.Parameter) Tool.Parameter.builder("query").description("A full text search query, supports AND and OR operator").build())
-                .description("Searches the integrated help pages")
+                .description("Searches the integrated help pages. Only use this tool if the user asks for help about how to use the application.")
                 .build());
     }
 

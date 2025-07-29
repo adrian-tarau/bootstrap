@@ -9,6 +9,8 @@ import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import jakarta.annotation.PreDestroy;
 import lombok.AccessLevel;
 import lombok.Getter;
+import net.microfalx.bootstrap.ai.api.*;
+import net.microfalx.bootstrap.ai.lucene.LuceneEmbeddingStore;
 import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.dataset.DataSetExport;
@@ -18,8 +20,6 @@ import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.bootstrap.search.SearchService;
-import net.microfalx.bootstrap.ai.api.*;
-import net.microfalx.bootstrap.ai.lucene.LuceneEmbeddingStore;
 import net.microfalx.lang.*;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
@@ -267,6 +267,9 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         requireNonNull(tool);
         LOGGER.info("Registering tool {}", tool.getId());
         tools.put(toIdentifier(tool.getId()), tool);
+        if (tool.getExecutor() instanceof ApplicationContextAware applicationContextAware) {
+            applicationContextAware.setApplicationContext(getApplicationContext());
+        }
     }
 
     @Override
@@ -525,7 +528,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         net.microfalx.bootstrap.ai.api.Chat result = CREATE_CHAT_METRICS.time(model.getName(), () -> {
             Chat.Factory chatFactory = model.getProvider().getChatFactory();
             net.microfalx.bootstrap.ai.api.Chat chat = chatFactory.createChat(prompt, model);
-            activeChats.put(toIdentifier(chat.getId()), chat);
+            if (!internal) activeChats.put(toIdentifier(chat.getId()), chat);
             if (chat instanceof AbstractChat abstractChat) {
                 abstractChat.internal.set(internal);
                 abstractChat.initialize(this);
