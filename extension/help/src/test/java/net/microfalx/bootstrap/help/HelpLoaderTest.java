@@ -1,11 +1,13 @@
 package net.microfalx.bootstrap.help;
 
+import net.microfalx.lang.NamedIdentityAware;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HelpLoaderTest {
@@ -22,6 +24,7 @@ class HelpLoaderTest {
     @Test
     void loadCount() throws IOException {
         assertEquals(8, loader.tocCount);
+        assertEquals(0, root.getDepth());
     }
 
     @Test
@@ -29,6 +32,7 @@ class HelpLoaderTest {
         Toc toc = root.findById("simple");
         assertNotNull(toc);
         assertEquals("Simple", toc.getName());
+        assertEquals(1, toc.getDepth());
         Assertions.assertThat(toc.getContent().loadAsString())
                 .contains("Paragraphs are separated ").contains("* this one");
 
@@ -41,14 +45,23 @@ class HelpLoaderTest {
         Toc toc = root.findById("complex");
         assertNotNull(toc);
         assertEquals("Complex", toc.getName());
+        assertEquals(1, toc.getDepth());
         assertEquals(4, toc.getChildren().size());
 
         toc = root.findByPath("complex/child1");
         assertNotNull(toc);
         assertEquals("Child 1", toc.getName());
+        assertEquals(2, toc.getDepth());
 
         toc = root.findByPath("complex/not_found");
         assertNull(toc);
+    }
+
+    @Test
+    void loadBreadcrumb() {
+        Toc toc = root.findByPath("complex/child1");
+        assertEquals("Complex > Child 1", toc.getParents().stream().map(NamedIdentityAware::getName)
+                .collect(joining(" > ")));
     }
 
 }

@@ -1,4 +1,5 @@
 .help {
+
 }
 
 .help-icon {
@@ -76,18 +77,96 @@
     color: #6a737d !important;
 }
 
+.modal-help iframe {
+    border: 0;
+}
+
+/* TOC */
+
+.help .toc {
+    list-style: none;
+}
+
+.help .toc ol {
+    list-style: none;
+    padding-left: 0;
+}
+
+.help .toc ol ol {
+    padding-left: 1em;
+}
+
+.help .toc li {
+    counter-increment: item;
+    margin: 2px 0px 2px 0px;
+    position: relative;
+}
+
+.help .toc li span {
+    margin-right: 5px;
+}
+
+.help .toc h1 {
+    font-size: 1rem;
+}
+
+.help .toc li.span {
+}
+
+.help .toc a {
+    text-decoration: none;
+    cursor: pointer;
+}
+
 @media (min-width: 992px) {
 
-    .modal-help {
+    .modal-lg.modal-help,
+    .modal-xl.modal-help {
         --bs-modal-width: 800px !important;
+    }
+
+    .modal-lg.modal-help .modal-body,
+    .modal-xl.modal-help .modal-body {
+        height: 60vh !important;
     }
 
 }
 
-@media (min-width: 1600px) {
+@media (min-width: 1200px) {
 
-    .modal-help {
+    .modal-lg.modal-help {
+        --bs-modal-width: 800px;
+    }
+
+    .modal-lg.modal-help .modal-body {
+        height: 60vh !important;
+    }
+
+    .modal-xl.modal-help {
+        --bs-modal-width: 1100px;
+    }
+
+    .modal-xl.modal-help .modal-body {
+        height: 60vh !important;
+    }
+}
+
+@media (min-width: 1500px) {
+
+    .modal-lg.modal-help {
         --bs-modal-width: 1000px !important;
+    }
+
+    .modal-lg.modal-help .modal-body {
+        height: 60vh !important;
+    }
+
+    .modal-xl.modal-help {
+        --bs-modal-width: 1300px !important;
+    }
+
+    .modal-xl.modal-help .modal-body {
+        height: 60vh !important;
     }
 
 }

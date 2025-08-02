@@ -4,17 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
+import net.microfalx.bootstrap.ai.api.*;
+import net.microfalx.bootstrap.ai.core.MessageImpl;
 import net.microfalx.bootstrap.dataset.DataSetRequest;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.help.HelpService;
+import net.microfalx.bootstrap.help.HelpUtilities;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.security.SecurityContext;
 import net.microfalx.bootstrap.security.SecurityUtils;
 import net.microfalx.bootstrap.web.component.Item;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.controller.PageController;
-import net.microfalx.bootstrap.ai.api.*;
-import net.microfalx.bootstrap.ai.core.MessageImpl;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Name;
 import net.microfalx.resource.Resource;
@@ -170,7 +171,7 @@ public class ChatController extends PageController {
         try {
             return helpService.render(resource);
         } catch (IOException e) {
-            LOGGER.error("Failed to render markdown: " + resource.toURI(), e);
+            LOGGER.atError().setCause(e).log("Failed to render markdown: " + resource.toURI());
             return "#Error: content not available";
         }
     }
@@ -188,7 +189,7 @@ public class ChatController extends PageController {
     private void updateIntro(Model model) {
         StringWriter writer = new StringWriter();
         try {
-            helpService.render("ai/chat-intro", writer);
+            helpService.render(HelpUtilities.resolve("ai/chat-intro"), writer);
             model.addAttribute("chatIntro", writer.toString());
         } catch (IOException e) {
             LOGGER.error("Failed to render chat intro", e);

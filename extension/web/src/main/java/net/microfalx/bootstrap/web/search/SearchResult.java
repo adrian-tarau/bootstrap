@@ -31,7 +31,7 @@ public class SearchResult extends IdentityAware<String> {
     @Position(2)
     @Formattable(maximumLength = 300, maximumLines = 2)
     @Description("The name or description of the document")
-    @Width("60%")
+    @Width("50%")
     private String title;
 
     @Position(3)

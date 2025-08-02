@@ -1,8 +1,13 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component">
 <body>
-<div id="help-article" th:class="|modal fade modal-lg modal-help|" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+
+<iframe th:fragment="help_frame" id="help_frame" class="h-100 w-100 border-0" th:src="${path}" th:attr="origSrc=${path}">
+
+</iframe>
+
+<div id="help-article" th:class="|modal fade ${dialogClasses} modal-help|" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header pb-0">
                 <div class="d-flex w-100">
@@ -30,9 +35,20 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-body">
-                <div class="ratio ratio-16x9">
-                    <iframe id="help_frame" th:src="${path}" th:attr="origSrc=${path}"></iframe>
+            <div class="modal-body help">
+                <div class="container-fluid h-100" th:if="${root}">
+                    <div class="row h-100">
+                        <div class="col-lg-3 h-100 toc border-end border-box">
+                            <h1>Table of Contents</h1>
+                            <div class="overflow-x-hidden overflow-y-auto" th:utext="${toc}"></div>
+                        </div>
+                        <div class="col-lg-9 h-100">
+                            <div th:replace="~{help/article :: help_frame}"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-100" th:unless="${root}">
+                    <div th:replace="~{help/article :: help_frame}"></div>
                 </div>
             </div>
             <div class="modal-footer">

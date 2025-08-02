@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.help;
 
 import net.microfalx.lang.NamedIdentityAware;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.UriUtils;
 import net.microfalx.resource.Resource;
@@ -23,6 +24,7 @@ public class Toc extends NamedIdentityAware<String> {
     private List<Toc> children;
     String fileName;
     int order = -1;
+    private Resource content;
 
     public Toc() {
         this(Toc.ROOT_ID, "Root");
@@ -44,11 +46,55 @@ public class Toc extends NamedIdentityAware<String> {
     }
 
     /**
+     * Returns true if this TOC entry is the root TOC entry.
+     *
+     * @return true if this is the root TOC entry
+     */
+    public boolean isRoot() {
+        return parent == null;
+    }
+
+    /**
      * Returns the children of this TOC entry.
      * @return a non-null list
      */
     public List<Toc> getChildren() {
         return children != null ? unmodifiableList(children): Collections.emptyList();
+    }
+
+    /**
+     * Returns true if this TOC entry has no children.
+     *
+     * @return {@code true} if this TOC entry has no children
+     */
+    public boolean isLeaf() {
+        return ObjectUtils.isEmpty(children);
+    }
+
+    /**
+     * Returns true if this TOC entry has children.
+     *
+     * @return {@code true} if this TOC entry has children
+     */
+    public boolean hasChildren() {
+        return !isLeaf();
+    }
+
+    /**
+     * Returns the parents of this TOC entry, up to with the root TOC entry.
+     *
+     * @return a non-null list of TOC entries
+     */
+    public List<Toc> getParents() {
+        List<Toc> parents = new ArrayList<>();
+        Toc entry = this;
+        while (entry != null) {
+            if (ROOT_ID.equalsIgnoreCase(entry.getId())) break;
+            parents.add(entry);
+            entry = entry.parent;
+        }
+        Collections.reverse(parents);
+        return unmodifiableList(parents);
     }
 
     /**
@@ -66,6 +112,39 @@ public class Toc extends NamedIdentityAware<String> {
             entry = entry.parent;
         }
         return builder.toString();
+    }
+
+    /**
+     * Returns the path of the TOC to the class path resource.
+     *
+     * @return a non-null instance
+     */
+    public String getNumbering() {
+        StringBuilder builder = new StringBuilder();
+        Toc entry = this;
+        while (entry != null) {
+            if (ROOT_ID.equalsIgnoreCase(entry.getId())) break;
+            if (!builder.isEmpty()) builder.insert(0, '.');
+            builder.insert(0, entry.getPositionInParent());
+            entry = entry.parent;
+        }
+        return builder.toString() + ".";
+    }
+
+    /**
+     * Returns the depth of this TOC entry in the hierarchy.
+     *
+     * @return the depth, where 0 is the root TOC entry
+     */
+    public int getDepth() {
+        int depth = 0;
+        Toc entry = this;
+        while (entry != null) {
+            if (ROOT_ID.equalsIgnoreCase(entry.getId())) break;
+            depth++;
+            entry = entry.parent;
+        }
+        return depth;
     }
 
     /**
@@ -121,11 +200,33 @@ public class Toc extends NamedIdentityAware<String> {
      * @return a non-null instance
      */
     public Resource getContent() {
-        if (parent == null) {
+        if (content != null) {
+            return content;
+        } else if (parent == null) {
             return HelpUtilities.resolve("home");
         } else {
             return HelpUtilities.resolve(getPath());
         }
+    }
+
+    /**
+     * Creates a copy of this TOC entry and
+     *
+     * @param content the new content
+     * @return a new instance of Toc with the specified content
+     */
+    public Toc withContent(Resource content) {
+        requireNonNull(content);
+        Toc copy = copy();
+        copy.content = content;
+        return copy;
+    }
+
+    @Override
+    protected Toc copy() {
+        Toc toc = (Toc) super.copy();
+        if (this.parent != null) this.parent.removeChild(this);
+        return toc;
     }
 
     void addChild(Toc child) {
@@ -135,6 +236,26 @@ public class Toc extends NamedIdentityAware<String> {
         children.add(child);
         child.parent = this;
         children.sort(Comparator.comparing(Toc::getOrder));
+    }
+
+    void removeChild(Toc child) {
+        requireNonNull(child);
+        if (children != null) {
+            children.remove(child);
+            child.parent = null;
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Toc toc)) return false;
+        if (!super.equals(o)) return false;
+        return Objects.equals(parent, toc.parent);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), parent);
     }
 
     @Override
@@ -147,5 +268,14 @@ public class Toc extends NamedIdentityAware<String> {
                 .add("fileName='" + fileName + "'")
                 .add("order=" + order)
                 .toString();
+    }
+
+    private int getPositionInParent() {
+        if (parent == null) return 0;
+        if (parent.children == null) return 0;
+        for (int i = 0; i < parent.children.size(); i++) {
+            if (parent.children.get(i).equals(this)) return (i + 1);
+        }
+        return 0;
     }
 }

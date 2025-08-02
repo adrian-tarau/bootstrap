@@ -208,7 +208,7 @@ public class SearchService implements InitializingBean {
     /**
      * Triggers a reload of the index.
      * <p>
-     * Next search will see latests documents available in the index.
+     * Next search will see latest's documents available in the index.
      */
     public void reload() {
         releaseSearcher();

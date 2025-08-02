@@ -62,7 +62,7 @@ class HelpIndexer implements Runnable {
     private void doIndexContent(Toc toc) {
         Hashing hashing = Hashing.create();
         hashing.update(DOCUMENT_OWNER);
-        if (toc.getParent() != null) hashing.update(toc.getParent().getId());
+        if (!toc.isRoot()) hashing.update(toc.getParent().getId());
         hashing.update(toc.getPath());
         Document doc = Document.create(hashing.asString(), toc.getName());
         doc.setOwner(DOCUMENT_OWNER).setType(DOCUMENT_TYPE);

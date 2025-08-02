@@ -52,7 +52,12 @@ class HelpServiceTest {
 
     @Test
     void renderAll() throws IOException {
-        Assertions.assertThat(helpService.renderAll().loadAsString())
+        Assertions.assertThat(helpService.renderAll(RenderingOptions.DEFAULT).loadAsString())
+                .contains("Paragraphs are separated").contains("Quick, count to ten!")
+                .contains("table table-striped");
+
+        Assertions.assertThat(helpService.renderAll(RenderingOptions.builder().navigation(true).build()).loadAsString())
+                .contains("Navigation")
                 .contains("Paragraphs are separated").contains("Quick, count to ten!")
                 .contains("table table-striped");
     }
@@ -63,12 +68,17 @@ class HelpServiceTest {
     }
 
     private void render(String path) {
+        render(path, RenderingOptions.DEFAULT);
+    }
+
+    private void render(String path, RenderingOptions options) {
+        Toc toc = helpService.get(path);
         StringWriter writer = new StringWriter();
         try {
-            helpService.render(path, writer);
-            LOGGER.info("Rendered HTML for '{}'\n\n\n{}", path, writer);
+            helpService.render(toc, writer, options);
+            LOGGER.info("Rendered HTML for '{}'\n\n\n{}", toc.getPath(), writer);
         } catch (IOException e) {
-            LOGGER.error("Failed to render help '" + path + "'", e);
+            LOGGER.atError().setCause(e).log("Failed to render help '{}'", toc.getPath());
         }
     }
 

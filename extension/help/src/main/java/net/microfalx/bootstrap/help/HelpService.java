@@ -11,6 +11,7 @@ import com.vladsch.flexmark.ext.gitlab.GitLabExtension;
 import com.vladsch.flexmark.ext.media.tags.MediaTagsExtension;
 import com.vladsch.flexmark.ext.resizable.image.ResizableImageExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
+import com.vladsch.flexmark.ext.toc.TocExtension;
 import com.vladsch.flexmark.ext.typographic.TypographicExtension;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
@@ -21,6 +22,7 @@ import net.microfalx.bootstrap.search.*;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.FileUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.UriUtils;
 import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.ThreadPool;
 import org.slf4j.Logger;
@@ -89,7 +91,26 @@ public class HelpService implements InitializingBean {
      */
     public Toc find(String path) {
         requireNonNull(path);
-        return root.findByPath(path);
+        if (UriUtils.isRoot(path)) {
+            return root;
+        } else {
+            return root.findByPath(path);
+        }
+    }
+
+    /**
+     * Returns the Table of Contents (ToC) entry for a given path.
+     *
+     * @param path the to find
+     * @return a non-null instance
+     * @throws HelpNotFoundException if the help entry is not found
+     */
+    public Toc get(String path) {
+        Toc toc = find(path);
+        if (toc == null) {
+            throw new HelpNotFoundException("Help entry not found for path '" + path + "'");
+        }
+        return toc;
     }
 
     /**
@@ -212,25 +233,39 @@ public class HelpService implements InitializingBean {
      * @throws IOException if an I/O error occurs
      * @see Help
      */
-    public void render(AnnotatedElement element, Writer writer) throws IOException {
+    public void render(AnnotatedElement element, Writer writer, RenderingOptions options) throws IOException {
         Help helpAnnot = AnnotationUtils.getAnnotation(element, Help.class);
         if (helpAnnot == null) {
             throw new HelpException("The annotated element '" + element + "' does not have an @Help annotation");
         }
-        render(helpAnnot.value(), writer);
+        render(get(helpAnnot.value()), writer, options);
     }
 
     /**
      * Renders the content of the whole help as a single page.
      *
+     * @param options the options for rendering
      * @throws IOException if an I/O error occurs
      */
-    public Resource renderAll() throws IOException {
+    public Resource renderAll(RenderingOptions options) throws IOException {
+        requireNonNull(options);
+        options = options.copy().heading(true).build();
         Resource temporary = Resource.temporary("help", "md");
         Writer writer = temporary.getWriter();
-        render(root, writer, root.getPath());
+        render(root, writer, options, root.getPath());
         writer.close();
         return temporary;
+    }
+
+    /**
+     * Renders the Table of Contents (ToC) as for the whole help.
+     *
+     * @param options the rendering options
+     * @return the TOC as HTML
+     */
+    public Resource renderToc(RenderingOptions options) {
+        TocRenderer renderer = new TocRenderer(root, options);
+        return Resource.text(renderer.render());
     }
 
     /**
@@ -248,58 +283,71 @@ public class HelpService implements InitializingBean {
     /**
      * Renders a document.
      *
-     * @param path   the path in the file system, without extension
+     * @param toc   the toc to render
      * @param writer the writer to write the rendered content to
+     * @param options the options for rendering
      * @throws IOException if an I/O error occurs
      */
-    public void render(String path, Writer writer) throws IOException {
-        requireNonNull(path);
-        LOGGER.info("Render help at '{}'", path);
+    public void render(Toc toc, Writer writer, RenderingOptions options) throws IOException {
+        requireNonNull(toc);
+        LOGGER.info("Render TOC at '{}'", toc.getPath());
         // resolve the Markdown file
-        Resource resource = HelpUtilities.resolve(path);
-        render(resource, writer);
+        render(toc.getContent(), writer, options, toc);
     }
 
     /**
      * Renders a document.
      *
      * @param resource the resource to render
-     * @param writer the writer to write the rendered content to
+     * @param writer   the writer to write the rendered content to
      * @throws IOException if an I/O error occurs
      */
     public void render(Resource resource, Writer writer) throws IOException {
-        render(resource, writer, resource.getPath());
+        render(resource, writer, RenderingOptions.DEFAULT);
     }
 
-    private void render(Resource resource, Writer writer, String path) throws IOException {
+    /**
+     * Renders a document.
+     *
+     * @param resource the resource to render
+     * @param writer   the writer to write the rendered content to
+     * @param options  the options for rendering
+     * @throws IOException if an I/O error occurs
+     */
+    public void render(Resource resource, Writer writer, RenderingOptions options) throws IOException {
+        render(resource, writer, options, null);
+    }
+
+    private void render(Resource resource, Writer writer, RenderingOptions renderingOptions, Toc toc) throws IOException {
         requireNonNull(resource);
-        LOGGER.debug("Render help content '{}'", resource.toURI());
-
-        // initialize the HTML renderer
-        MutableDataSet options = new MutableDataSet();
-        registerExtensions(options, resource);
-        updateOptions(options);
-
-        Parser parser = Parser.builder(options).build();
-        HtmlRenderer renderer = HtmlRenderer.builder(options).build();
-
+        requireNonNull(writer);
         if (!resource.exists()) {
-            throw new HelpNotFoundException("A help entry at path '" + resource.toURI() + "' does not exist");
+            throw new HelpNotFoundException("The markdown resource '" + resource.toURI() + "' does not exist");
         }
-
+        LOGGER.debug("Render markdown content '{}'", resource.toURI());
+        // initialize the HTML renderer
+        MutableDataSet markdownOptions = new MutableDataSet();
+        registerExtensions(markdownOptions, resource, renderingOptions);
+        updateOptions(markdownOptions);
+        Parser parser = Parser.builder(markdownOptions).build();
+        HtmlRenderer renderer = HtmlRenderer.builder(markdownOptions).build();
+        // transforms the content
+        ContentTransformer transformer = new ContentTransformer(resource).setOptions(renderingOptions);
+        if (toc != null) transformer.setToc(toc);
+        resource = transformer.execute();
         // render the file
         Node document = parser.parse(resource.loadAsString());
+        addAnchor(toc, writer);
         renderer.render(document, writer);
     }
 
-
-    private void registerExtensions(MutableDataSet options, Resource resource) {
+    private void registerExtensions(MutableDataSet markdownOptions, Resource resource, RenderingOptions renderingOptions) {
         String path = FileUtils.removeFileExtension(resource.getPath());
-        options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create(),
+        markdownOptions.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create(),
                 AdmonitionExtension.create(), MediaTagsExtension.create(), FootnoteExtension.create(),
                 TaskListExtension.create(),ResizableImageExtension.create(), GitLabExtension.create(),
                 TypographicExtension.create(), AnchorLinkExtension.create(), DefinitionExtension.create(),
-                EmojiExtension.create(),
+                EmojiExtension.create(), TocExtension.create(),
                 new HelpExtension(this, path)));
     }
 
@@ -310,6 +358,9 @@ public class HelpService implements InitializingBean {
         options.set(HtmlRenderer.GENERATE_HEADER_ID, true);
         options.set(AnchorLinkExtension.ANCHORLINKS_ANCHOR_CLASS, "anchor");
         options.set(AnchorLinkExtension.ANCHORLINKS_SET_NAME, true);
+        // Optional TOC options
+        options.set(TocExtension.LEVELS, 255); // All levels
+        options.set(TocExtension.TITLE, "Table of Contents");
     }
 
     private void loadTocs() {
@@ -322,15 +373,22 @@ public class HelpService implements InitializingBean {
         threadPool.schedule(indexer, 2, TimeUnit.SECONDS);
     }
 
-    private void render(Toc toc, Writer writer, String path) throws IOException {
+    private void addAnchor(Toc toc, Writer writer) throws IOException {
+        if (toc == null) return;
+        writer.append("<a id='").append(HelpUtilities.getAnchorId(toc.getPath())).append("'></a>\n");
+    }
+
+    private void render(Toc toc, Writer writer, RenderingOptions options, String path) throws IOException {
         writer.append("\n\n");
         if (toc.getContent().exists()) {
-            render(toc.getContent(), writer);
+            render(toc.getContent(), writer, options, toc);
         } else {
-            writer.append("> No content available for '").append(toc.getPath()).append("'\n");
+            writer.append("> No content available for '").append(path).append("'\n");
         }
+        int nextLevel = Math.max(3, options.getLevel() + 1);
+        options = options.copy().level(nextLevel).build();
         for (Toc child : toc.getChildren()) {
-            render(child, writer, toc.getPath());
+            render(child, writer, options, toc.getPath());
         }
     }
 

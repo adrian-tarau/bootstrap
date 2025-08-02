@@ -13,7 +13,7 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.lang.XmlUtils.*;
 
 @Slf4j
-public class HelpLoader {
+class HelpLoader {
 
     private final static int PENDING_RESOLVE_LIMIT = 10;
 

@@ -1,5 +1,4 @@
-An h1 header
-============
+# An h1 header
 
 Paragraphs are separated by a blank line.
 
@@ -24,9 +23,7 @@ in chapters 12--14"). Three dots ... will be converted to an ellipsis.
 Unicode is supported. ☺
 
 
-
-An h2 header
-------------
+## An h2 header
 
 Here's a numbered list:
 
@@ -60,8 +57,6 @@ for i in range(10):
     time.sleep(0.5)
     print(i)
 ~~~
-
-
 
 ### An h3 header ###
 

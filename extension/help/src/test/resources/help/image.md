@@ -13,4 +13,4 @@ With a reference later in the document defining the URL location:
 
 Local image
 
-![Local Image](images/example-image.jpg.png)
+![Local Image](images/example-image.jpg)

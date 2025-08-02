@@ -27,8 +27,7 @@
             <xs:attribute name="name" use="required"/>
             <xs:attribute name="path"/>
             <xs:attribute name="order"/>
-            <xs:attribute name="inline" type="xs:boolean" default="false"/>
-            <xs:attribute name="theme"/>
+            <xs:attribute name="file-name"/>
         </xs:complexType>
     </xs:element>
 

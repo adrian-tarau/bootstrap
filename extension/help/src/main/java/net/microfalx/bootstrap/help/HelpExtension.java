@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.URI;
 import java.util.Set;
 
+import static net.microfalx.bootstrap.help.HelpUtilities.RESOURCE_PATH;
 import static net.microfalx.lang.StringUtils.removeStartSlash;
 
 /**
@@ -32,7 +33,7 @@ public class HelpExtension implements HtmlRenderer.HtmlRendererExtension {
 
     @Override
     public void rendererOptions(@NotNull MutableDataHolder options) {
-
+        // empty by design
     }
 
     @Override
@@ -45,6 +46,9 @@ public class HelpExtension implements HtmlRenderer.HtmlRendererExtension {
 
     private String resolveImagePath(String path) {
         String parentPath = FileUtils.getParentPath(this.path);
+        if (parentPath != null && parentPath.startsWith(RESOURCE_PATH)) {
+            parentPath = parentPath.substring(RESOURCE_PATH.length());
+        }
         StringBuilder builder = new StringBuilder(helpService.getImagePath());
         if (StringUtils.isNotEmpty(parentPath)) builder.append('/').append(removeStartSlash(parentPath));
         builder.append('/').append(removeStartSlash(path));
