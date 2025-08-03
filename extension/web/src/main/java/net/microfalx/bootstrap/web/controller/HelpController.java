@@ -1,12 +1,7 @@
 package net.microfalx.bootstrap.web.controller;
 
-import net.microfalx.bootstrap.help.HelpNotFoundException;
-import net.microfalx.bootstrap.help.HelpService;
-import net.microfalx.bootstrap.help.RenderingOptions;
-import net.microfalx.bootstrap.help.Toc;
-import net.microfalx.lang.IOUtils;
+import net.microfalx.bootstrap.help.*;
 import net.microfalx.lang.UriUtils;
-import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
-import java.io.StringWriter;
 
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.lang.StringUtils.removeStartSlash;
@@ -42,9 +36,8 @@ public class HelpController extends PageController {
 
     @GetMapping(value = "/image/{*path}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> image(@PathVariable("path") String path) {
-        String resourcePath = helpService.resolveImage(path);
         try {
-            Resource content = ClassPathResource.file(resourcePath);
+            Resource content = HelpUtilities.resolveImage(path);
             if (!content.exists()) return ResponseEntity.notFound().build();
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(content.getMimeType()))
                     .body(new InputStreamResource(content.getInputStream()));
@@ -86,18 +79,21 @@ public class HelpController extends PageController {
         return "help/layout";
     }
 
-    private String doRender(String path) throws IOException {
+    private String doRender(String path) {
         RenderingOptions options = RenderingOptions.DEFAULT;
-        StringWriter writer = new StringWriter();
-        Toc toc = helpService.get(path);
-        if (toc.isRoot()) {
-            Resource resource = helpService.renderAll(options);
-            IOUtils.appendStream(writer, resource.getReader());
-        } else {
-            helpService.render(toc, writer, options);
+        Resource resource;
+        try {
+            Toc toc = helpService.get(path);
+            if (toc.isRoot()) {
+                resource = helpService.renderAll(options);
+            } else {
+                resource = helpService.render(toc, options);
+            }
+            return resource.loadAsString();
+        } catch (Exception e) {
+            LOGGER.atError().setCause(e).log("Failed to render help '" + path + "'", e);
+            return "Failed to render help '" + path + "'";
         }
-        writer.close();
-        return writer.toString();
     }
 
     private String renderToc() {

@@ -35,7 +35,7 @@ class HelpIndexerTest {
     void indexTocs() {
         HelpIndexer indexer = new HelpIndexer(helpService, indexService, helpService.getRoot());
         indexer.run();
-        verify(indexService, times(6)).index(any(Document.class));
+        verify(indexService, times(7)).index(any(Document.class));
     }
 
 }

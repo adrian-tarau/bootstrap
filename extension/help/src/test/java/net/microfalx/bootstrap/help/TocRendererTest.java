@@ -18,7 +18,8 @@ class TocRendererTest {
     @Test
     void render() {
         TocRenderer renderer = new TocRenderer(root, RenderingOptions.DEFAULT);
-        Assertions.assertThat(renderer.render()).contains("xxx");
+        Assertions.assertThat(renderer.render()).contains("Help.select")
+                .contains("<a onclick").contains("_complex_child1");
     }
 
 }

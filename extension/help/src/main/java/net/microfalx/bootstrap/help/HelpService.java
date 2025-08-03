@@ -19,10 +19,7 @@ import com.vladsch.flexmark.util.ast.Node;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.search.*;
-import net.microfalx.lang.AnnotationUtils;
-import net.microfalx.lang.FileUtils;
-import net.microfalx.lang.StringUtils;
-import net.microfalx.lang.UriUtils;
+import net.microfalx.lang.*;
 import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.ThreadPool;
 import org.slf4j.Logger;
@@ -31,6 +28,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -48,14 +46,11 @@ import static net.microfalx.bootstrap.search.Document.TYPE_FIELD;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.removeEndSlash;
-import static net.microfalx.lang.StringUtils.removeStartSlash;
 
 @Service
 public class HelpService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HelpService.class);
-
-    public static final String RESOURCE_PATH = "/help";
 
     @Autowired
     private IndexService indexService;
@@ -159,35 +154,16 @@ public class HelpService implements InitializingBean {
      * @param articlePath the path
      */
     public void setArticlePath(String articlePath) {
-        this.articlePath = articlePath;
+        requireNotEmpty(articlePath);
+        this.articlePath = removeEndSlash(articlePath);
+        LOGGER.info("Article path changed to '{}'", articlePath);
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
         loadTocs();
         indexHelp();
-    }
-
-    /**
-     * Returns the class path to an image.
-     *
-     * @param path the image path
-     * @return a non-null instance
-     */
-    public String resolveImage(String path) {
-        requireNonNull(path);
-        return RESOURCE_PATH + "/" + removeStartSlash(path);
-    }
-
-    /**
-     * Returns the class path to a content file.
-     *
-     * @param path the content path
-     * @return a non-null instance
-     */
-    public String resolveContent(String path) {
-        requireNonNull(path);
-        return RESOURCE_PATH + "/" + removeStartSlash(removeEndSlash(path)) + ".md";
+        threadPool.schedule(this::cacheContent, 5, TimeUnit.SECONDS);
     }
 
     /**
@@ -220,7 +196,46 @@ public class HelpService implements InitializingBean {
             }
         }
         return tocs;
+    }
 
+    /**
+     * Transforms the help content.
+     * <p>
+     * The transformation includes parsing the Markdown content and applying content changes to
+     * match the target rendering options.
+     *
+     * @param options the rendering options to apply
+     * @return a Resource containing the transformed content
+     * @throws IOException if an I/O error occurs
+     */
+    public Resource transformAll(RenderingOptions options) throws IOException {
+        requireNonNull(options);
+        options = options.copy().heading(true).build();
+        Resource resource = Resource.file(getHelpCacheFile(options, MARKDOWN_EXTENSION));
+        if (!resource.exists()) {
+            Writer writer = resource.getWriter();
+            transform(root, writer, options, root.getPath());
+            writer.close();
+        }
+        return resource;
+    }
+
+    /**
+     * Transforms the content of a Table of Contents (ToC) entry.
+     * <p>
+     * The transformation includes parsing the Markdown content and applying content changes to
+     * match the target rendering options.
+     *
+     * @param toc     the Table of Contents (ToC) entry to transform
+     * @param options the rendering options to apply
+     * @return a Resource containing the transformed content
+     * @throws IOException if an I/O error occurs
+     */
+    public Resource transform(Toc toc, RenderingOptions options) throws IOException {
+        requireNonNull(toc);
+        requireNonNull(options);
+        ContentTransformer transformer = new ContentTransformer(toc.getContent()).setToc(toc).setOptions(options);
+        return transformer.execute();
     }
 
     /**
@@ -229,16 +244,16 @@ public class HelpService implements InitializingBean {
      * The path of the document is extracted from the annotated element.
      *
      * @param element the annotated element
-     * @param writer the writer to write the rendered content to
      * @throws IOException if an I/O error occurs
+     * @return the rendered content as a Resource
      * @see Help
      */
-    public void render(AnnotatedElement element, Writer writer, RenderingOptions options) throws IOException {
+    public Resource render(AnnotatedElement element, RenderingOptions options) throws IOException {
         Help helpAnnot = AnnotationUtils.getAnnotation(element, Help.class);
         if (helpAnnot == null) {
             throw new HelpException("The annotated element '" + element + "' does not have an @Help annotation");
         }
-        render(get(helpAnnot.value()), writer, options);
+        return render(get(helpAnnot.value()), options);
     }
 
     /**
@@ -246,15 +261,18 @@ public class HelpService implements InitializingBean {
      *
      * @param options the options for rendering
      * @throws IOException if an I/O error occurs
+     * @return the rendered content as a Resource
      */
     public Resource renderAll(RenderingOptions options) throws IOException {
         requireNonNull(options);
         options = options.copy().heading(true).build();
-        Resource temporary = Resource.temporary("help", "md");
-        Writer writer = temporary.getWriter();
-        render(root, writer, options, root.getPath());
-        writer.close();
-        return temporary;
+        Resource resource = Resource.file(getHelpCacheFile(options, HTML_EXTENSION));
+        if (!resource.exists()) {
+            Writer writer = resource.getWriter();
+            render(root, writer, options, root.getPath());
+            writer.close();
+        }
+        return resource;
     }
 
     /**
@@ -284,15 +302,20 @@ public class HelpService implements InitializingBean {
      * Renders a document.
      *
      * @param toc   the toc to render
-     * @param writer the writer to write the rendered content to
      * @param options the options for rendering
      * @throws IOException if an I/O error occurs
      */
-    public void render(Toc toc, Writer writer, RenderingOptions options) throws IOException {
+    public Resource render(Toc toc, RenderingOptions options) throws IOException {
         requireNonNull(toc);
         LOGGER.info("Render TOC at '{}'", toc.getPath());
-        // resolve the Markdown file
-        render(toc.getContent(), writer, options, toc);
+        Resource resource = Resource.file(getTocCacheFile(toc, options, HTML_EXTENSION));
+        if (!resource.exists()) {
+            // resolve the Markdown file
+            Writer writer = resource.getWriter();
+            render(toc.getContent(), writer, options, toc);
+            writer.close();
+        }
+        return resource;
     }
 
     /**
@@ -382,7 +405,7 @@ public class HelpService implements InitializingBean {
         writer.append("\n\n");
         if (toc.getContent().exists()) {
             render(toc.getContent(), writer, options, toc);
-        } else {
+        } else if (!toc.isRoot()) {
             writer.append("> No content available for '").append(path).append("'\n");
         }
         int nextLevel = Math.max(3, options.getLevel() + 1);
@@ -392,4 +415,58 @@ public class HelpService implements InitializingBean {
         }
     }
 
+    private void transform(Toc toc, Writer writer, RenderingOptions options, String path) throws IOException {
+        writer.append("\n\n");
+        if (toc.getContent().exists()) {
+            Resource content = transform(toc, options);
+            writer.append(content.loadAsString());
+        } else if (!toc.isRoot()) {
+            writer.append("> No content available for '").append(path).append("'\n");
+        }
+        int nextLevel = Math.max(3, options.getLevel() + 1);
+        options = options.copy().level(nextLevel).build();
+        for (Toc child : toc.getChildren()) {
+            transform(child, writer, options, toc.getPath());
+        }
+    }
+
+    private void removeOldFiles() {
+        FileUtils.remove(getCacheDirectory(), FileUtils.ALL_FILES, 1);
+    }
+
+    private void cacheContent() {
+        removeOldFiles();
+        LOGGER.info("Cache help content");
+        try {
+            renderAll(RenderingOptions.DEFAULT);
+        } catch (IOException e) {
+            LOGGER.warn("Failed to cache help's HTML content", e);
+        }
+        try {
+            transformAll(RenderingOptions.DEFAULT);
+        } catch (IOException e) {
+            LOGGER.warn("Failed to cache help's Markdown content", e);
+        }
+        try {
+            transformAll(RenderingOptions.builder().navigation(true).build());
+        } catch (IOException e) {
+            LOGGER.warn("Failed to cache help's Markdown with navigation content", e);
+        }
+    }
+
+    private String getCacheFileName(String id, RenderingOptions options, String extension) {
+        return StringUtils.toIdentifier(id) + "_" + options.getHash() + "." + extension;
+    }
+
+    private File getTocCacheFile(Toc toc, RenderingOptions options, String extension) {
+        return new File(getCacheDirectory(), getCacheFileName(toc.getPath(), options, extension));
+    }
+
+    private File getHelpCacheFile(RenderingOptions options, String extension) {
+        return new File(getCacheDirectory(), getCacheFileName("help", options, extension));
+    }
+
+    private File getCacheDirectory() {
+        return JvmUtils.getCacheDirectory("help");
+    }
 }

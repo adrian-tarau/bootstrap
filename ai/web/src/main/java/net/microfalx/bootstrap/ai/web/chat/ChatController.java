@@ -189,7 +189,7 @@ public class ChatController extends PageController {
     private void updateIntro(Model model) {
         StringWriter writer = new StringWriter();
         try {
-            helpService.render(HelpUtilities.resolve("ai/chat-intro"), writer);
+            helpService.render(HelpUtilities.resolveContent("ai/chat-intro"), writer);
             model.addAttribute("chatIntro", writer.toString());
         } catch (IOException e) {
             LOGGER.error("Failed to render chat intro", e);

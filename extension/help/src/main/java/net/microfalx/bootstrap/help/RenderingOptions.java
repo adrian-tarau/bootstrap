@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.help;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import net.microfalx.lang.Hashing;
 
 /**
  * Options for rendering TOCs.
@@ -42,5 +43,15 @@ public class RenderingOptions {
                 .heading(heading)
                 .navigation(navigation)
                 .level(level);
+    }
+
+    /**
+     * Returns a hash of the options.
+     *
+     * @return a non-null string
+     */
+    public String getHash() {
+        return Long.toString(Math.abs(Hashing.create().update(heading).update(navigation).update(level)
+                .asLong()), Character.MAX_RADIX);
     }
 }

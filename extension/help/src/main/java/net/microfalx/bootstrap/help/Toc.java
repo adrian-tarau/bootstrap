@@ -203,9 +203,9 @@ public class Toc extends NamedIdentityAware<String> {
         if (content != null) {
             return content;
         } else if (parent == null) {
-            return HelpUtilities.resolve("home");
+            return HelpUtilities.resolveContent("home");
         } else {
-            return HelpUtilities.resolve(getPath());
+            return HelpUtilities.resolveContent(getPath());
         }
     }
 

@@ -18,25 +18,49 @@ public class HelpUtilities {
     public static final String PATH_FIELD = "path";
     public static final String RESOURCE_PATH = "help";
 
+    public static final String MARKDOWN_EXTENSION = "md";
+    public static final String HTML_EXTENSION = "html";
+
+    /**
+     * Resolves the path to a help related resource
+     *
+     * @param path the path
+     * @return the resource
+     */
+    public static String resolvePath(String path) {
+        return "/" + RESOURCE_PATH + "/" + removeStartSlash(removeEndSlash(path));
+    }
+
     /**
      * Resolves the help path to a resource;
      *
      * @param path the path
      * @return the resource
      */
-    public static String resolveResourcePath(String path) {
-        return "/" + RESOURCE_PATH + "/" + removeStartSlash(removeEndSlash(path)) + ".md";
+    public static String resolveContentPath(String path) {
+        return resolvePath(path) + ".md";
     }
 
     /**
-     * Resolves the content behind the help path;
+     * Resolves the content behind the help path.
      *
      * @param path the path
      * @return the resource
      */
-    public static Resource resolve(String path) {
-        String fullPath = resolveResourcePath(path);
+    public static Resource resolveContent(String path) {
+        String fullPath = resolveContentPath(path);
         return ClassPathResource.file(fullPath).withMimeType(MimeType.TEXT_MARKDOWN);
+    }
+
+    /**
+     * Resolves the image behind the help path.
+     *
+     * @param path the path
+     * @return the resource
+     */
+    public static Resource resolveImage(String path) {
+        String fullPath = resolvePath(path);
+        return ClassPathResource.file(fullPath);
     }
 
     /**
