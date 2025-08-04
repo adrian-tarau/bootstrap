@@ -2,6 +2,6 @@
 <help xmlns="https://net.microfalx/xsd/help-1.0.xsd">
 
     <toc id="workspace" order="2" name="Workspace"/>
-    <toc id="search" order="4" name="Search"/>
+    <toc id="search" order="3" name="Search"/>
 
 </help>
