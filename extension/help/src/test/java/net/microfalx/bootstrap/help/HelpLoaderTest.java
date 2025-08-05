@@ -23,7 +23,7 @@ class HelpLoaderTest {
 
     @Test
     void loadCount() throws IOException {
-        assertEquals(8, loader.tocCount);
+        assertEquals(9, loader.tocCount);
         assertEquals(0, root.getDepth());
     }
 
