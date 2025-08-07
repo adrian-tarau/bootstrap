@@ -154,6 +154,31 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
     void disableTools();
 
     /**
+     * Adds an attribute to the chat session. Attributes can be used to store additional information
+     *
+     * @param name  the name of the attribute
+     * @param value the value of the attribute, can be null
+     */
+    void addAttribute(String name, Object value);
+
+    /**
+     * Returns an attribute by its name. If the attribute is not found, it will return null.
+     *
+     * @param name the name of the attribute
+     * @param <T>  the type of the attribute
+     * @return the value of the attribute, or null if not found
+     */
+    <T> T getAttribute(String name);
+
+    /**
+     * Returns whether an attribute with a given name exists in the chat session.
+     *
+     * @param name the name of the attribute to check
+     * @return {@code true} if the attribute exists, {@code false} otherwise
+     */
+    boolean hasAttribute(String name);
+
+    /**
      * Completes the chat session and records the chat in the history.
      */
     void close();

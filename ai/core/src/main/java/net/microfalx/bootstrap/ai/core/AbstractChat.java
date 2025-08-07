@@ -14,12 +14,12 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
-import net.microfalx.bootstrap.dataset.DataSetRequest;
-import net.microfalx.bootstrap.security.SecurityContext;
 import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.Message;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Prompt;
+import net.microfalx.bootstrap.dataset.DataSetRequest;
+import net.microfalx.bootstrap.security.SecurityContext;
 import net.microfalx.lang.NamedAndTaggedIdentifyAware;
 import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
@@ -75,6 +75,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     private final AtomicInteger inputTokenCount = new AtomicInteger();
     private final AtomicInteger outputTokenCount = new AtomicInteger();
     private final Set<Object> features = new CopyOnWriteArraySet<>();
+    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     final AtomicBoolean changed = new AtomicBoolean();
     final AtomicBoolean internal = new AtomicBoolean(false);
 
@@ -215,6 +216,25 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     @Override
     public void disableTools() {
         this.disableTools = true;
+    }
+
+    @Override
+    public void addAttribute(String name, Object value) {
+        requireNotEmpty(name);
+        attributes.put(name.toLowerCase(), value);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T getAttribute(String name) {
+        requireNotEmpty(name);
+        return (T) attributes.get(name.toLowerCase());
+    }
+
+    @Override
+    public boolean hasAttribute(String name) {
+        requireNotEmpty(name);
+        return attributes.containsKey(name.toLowerCase());
     }
 
     public void updateName(String name) {

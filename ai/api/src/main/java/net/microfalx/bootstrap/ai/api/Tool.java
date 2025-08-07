@@ -59,6 +59,13 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
     public interface ExecutionRequest extends Identifiable<String> {
 
         /**
+         * Returns the chat context in which the tool is being executed.
+         *
+         * @return a non-null instance
+         */
+        Chat getChat();
+
+        /**
          * Returns the tool to be executed.
          *
          * @return a non-null instance

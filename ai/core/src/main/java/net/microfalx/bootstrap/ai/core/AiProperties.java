@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import java.time.Duration;
 
 @Configuration
-@ConfigurationProperties("heimdall.ai")
+@ConfigurationProperties("bootstrap.ai")
 @Getter
 @Setter
 public class AiProperties {
@@ -49,6 +49,13 @@ public class AiProperties {
      * Indicates whether the AI service has access to the internet.
      */
     private boolean offline;
+
+    /**
+     * The name of the application using the AI service. This is used for welcoming message and identification.
+     * <p>
+     * It is usually borrowed from the application name.
+     */
+    private String applicationName;
 
     /**
      * The duration that models stay loaded in memory (default "5m")

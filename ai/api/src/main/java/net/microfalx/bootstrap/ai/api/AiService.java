@@ -15,6 +15,15 @@ import java.util.Map;
 public interface AiService {
 
     /**
+     * Returns the name of the AI service.
+     * <p>
+     * Most of the time it is the name of the application, but it can be overridden.
+     *
+     * @return a non-null instance
+     */
+    String getName();
+
+    /**
      * Creates a chat session with the default model and an empty prompt.
      *
      * @return a non-null instance

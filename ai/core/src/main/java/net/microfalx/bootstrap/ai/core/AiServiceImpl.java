@@ -116,6 +116,11 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     }
 
     @Override
+    public String getName() {
+        return defaultIfEmpty(properties.getApplicationName(), "Martin");
+    }
+
+    @Override
     public Chat createChat() {
         return createChat(getDefaultPrompt());
     }
@@ -375,6 +380,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         initListeners();
         initProviderFactories();
         registerProviders();
+        registerDefaultVariables();
         initializeChatStore();
         initializeEmbeddingStore();
         initResources();
@@ -685,6 +691,10 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         System.setProperty("ENGINE_CACHE_DIR", validateDirectoryExists(new File(djlCache, "engine")).getAbsolutePath());
         System.setProperty("DJL_CACHE_DIR", validateDirectoryExists(new File(djlCache, "cache")).getAbsolutePath());
         System.setProperty("DJL_OFFLINE", Boolean.toString(properties.isOffline()));
+    }
+
+    private void registerDefaultVariables() {
+        registerVariable("APP_NAME", getName());
     }
 
     private void processPendingChats() {

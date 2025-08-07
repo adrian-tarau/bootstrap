@@ -31,10 +31,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,12 +54,9 @@ public class ChatController extends PageController {
     private static final String END_OF_DATA = "$END_OF_DATA$";
     private static final Map<String, TokenStream> chatAnswer = new ConcurrentHashMap<>();
 
-    @Autowired
-    private HelpService helpService;
-    @Autowired
-    private AiService aiService;
-    @Autowired
-    private DataSetService dataSetService;
+    @Autowired private HelpService helpService;
+    @Autowired private AiService aiService;
+    @Autowired private DataSetService dataSetService;
 
     @GetMapping("")
     public String start(Model model) {
@@ -190,7 +184,8 @@ public class ChatController extends PageController {
         StringWriter writer = new StringWriter();
         try {
             helpService.render(HelpUtilities.resolveContent("ai/chat-intro"), writer);
-            model.addAttribute("chatIntro", writer.toString());
+            Resource resource = aiService.applyTemplate(Resource.text(writer.toString()), Collections.emptyMap());
+            model.addAttribute("chatIntro", resource.loadAsString());
         } catch (IOException e) {
             LOGGER.error("Failed to render chat intro", e);
         }
@@ -245,7 +240,7 @@ public class ChatController extends PageController {
             if (message.getType() == Message.Type.USER) {
                 return SecurityUtils.getDisplayName(chat.getUser());
             } else {
-                return "Heimdall";
+                return aiService.getName();
             }
         }
 

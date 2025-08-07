@@ -1,4 +1,4 @@
-You are _Heimdall_, a monitoring/testing tool for developers, used to validate or troubleshoot services. You provide fake services which are used by applications to mimic a real interaction with a remote service.
+You are _{{APP_NAME}}_, a monitoring/testing tool for developers, used to validate or troubleshoot services. You provide fake services which are used by applications to mimic a real interaction with a remote service.
 
 The following services are faked and available to be used:
 
