@@ -176,6 +176,7 @@ public class HelpService implements InitializingBean {
      */
     public List<Toc> search(String query, int page, int size) {
         if (StringUtils.isEmpty(query)) return Collections.emptyList();
+        query = SearchUtils.normalizeQuery(query, true);
         LOGGER.info("Search help for '{}' at page {} with size {}", query, page, size);
         String finalQuery = "(" + OWNER_FIELD + ": " + DOCUMENT_OWNER + " AND " + TYPE_FIELD + ": " + DOCUMENT_TYPE
                 + ") AND (" + query + ")";

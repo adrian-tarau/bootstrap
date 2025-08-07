@@ -113,55 +113,16 @@ public class SearchUtils {
     }
 
     /**
-     * Transforms the query to a wildcard query if the query is not already a specialized query.
+     * Transforms the query and escapes if requested.
      *
      * @param query                the query
-     * @param autoWildcard         true to create wildcard searches where possible
-     * @param allowLeadingWildcard <code>true</code>
+     * @param escape   {@code true} if the query should be escaped, {@code false} otherwise
      * @return a wildcard query or the original query
      */
-    public static String normalizeQuery(String query, boolean autoWildcard, boolean allowLeadingWildcard) {
-        requireNonNull(query);
-
-        if (query.contains("\"") || query.contains("(")) {
-            // do not handle phrases or groups
-            return query;
-        }
-
-        String[] parts = StringUtils.split(query, " ");
-        StringBuilder buffer = new StringBuilder();
-        for (String part : parts) {
-            String term = part;
-            int fieldNamePos = term.indexOf(':');
-            boolean leadingWildcardAdded = false;
-            if (fieldNamePos != -1) {
-                String fieldName = term.substring(0, fieldNamePos);
-                if (FIELD_NAMES.contains(fieldName)) {
-                    // it is a field
-                    buffer.append(fieldName).append(":");
-                } else {
-                    if (autoWildcard && allowLeadingWildcard) {
-                        leadingWildcardAdded = true;
-                        buffer.append("*");
-                    }
-                    buffer.append(fieldName).append("\\:");
-                }
-                term = term.substring(fieldNamePos + 1);
-            }
-            if (hasTermSpecialChars(term) || isOperator(term)) {
-                buffer.append(term);
-            } else {
-                if (autoWildcard && allowLeadingWildcard && !leadingWildcardAdded) {
-                    buffer.append("*");
-                }
-                buffer.append(term);
-                if (autoWildcard) {
-                    buffer.append("*");
-                }
-                buffer.append(' ');
-            }
-        }
-        return buffer.toString().trim();
+    public static String normalizeQuery(String query, boolean escape) {
+        if (StringUtils.isEmpty(query)) return query;
+        if (escape) query = net.microfalx.lang.StringUtils.replaceAll(query, "/", "\\/");
+        return query;
     }
 
     /**
