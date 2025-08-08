@@ -73,6 +73,11 @@ class ToolExecutor implements dev.langchain4j.service.tool.ToolExecutor {
         }
 
         @Override
+        public Chat getChat() {
+            return chat;
+        }
+
+        @Override
         public Tool getTool() {
             return tool;
         }
