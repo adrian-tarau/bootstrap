@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <help xmlns="https://net.microfalx/xsd/help-1.0.xsd">
 
-    <toc id="workspace" order="2" name="Workspace"/>
-    <toc id="search" order="10" name="Search"/>
+    <toc id="ask_ai" name="Ask AI" order="5"/>
 
 </help>

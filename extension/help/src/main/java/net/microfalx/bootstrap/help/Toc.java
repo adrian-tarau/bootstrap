@@ -152,7 +152,7 @@ public class Toc extends NamedIdentityAware<String> {
      * @return a non-null instance
      */
     public String getFileName() {
-        return isNotEmpty(fileName)?fileName:getId()+".md";
+        return (isNotEmpty(fileName) ? fileName : getId()) + ".md";
     }
 
     /**

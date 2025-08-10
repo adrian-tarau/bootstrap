@@ -62,6 +62,7 @@ class HelpLoader {
     private Toc loadToc(Element tocElement, Toc parent) {
         Toc toc = new Toc(getRequiredAttribute(tocElement, "id"), getRequiredAttribute(tocElement, "name"));
         toc.order = getAttribute(tocElement, "order", -1);
+        toc.fileName = getAttribute(tocElement, "file-name", (String) null);
         String path = getAttribute(tocElement, "path");
         if (isNotEmpty(path)) {
             Toc locatedParent = root.findByPath(path);
