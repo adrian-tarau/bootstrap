@@ -2,5 +2,6 @@
 <help xmlns="https://net.microfalx/xsd/help-1.0.xsd">
 
     <toc id="system" order="1000" name="System"/>
+    <toc id="support" order="2000" name="Support"/>
 
 </help>
