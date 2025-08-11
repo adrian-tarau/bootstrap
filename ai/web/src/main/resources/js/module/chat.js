@@ -90,6 +90,16 @@ Chat.showModel = function () {
 }
 
 /**
+ * Displays information about the tools.
+ */
+Chat.showTools = function () {
+    let me = Chat;
+    Application.get(me.getPath("info/tools", Chat.getCurrent()), {}, function (data) {
+        Application.loadModal(INFO_MODAL_ID, data);
+    }, {self: false});
+}
+
+/**
  * Displays information about the prompt.
  */
 Chat.showPrompt = function () {
@@ -211,4 +221,5 @@ Chat.start = function () {
 Application.bind("start", Chat.start);
 Application.bind("chat.prompt", Chat.prompt);
 Application.bind("chat.info.model", Chat.showModel);
+Application.bind("chat.info.tools", Chat.showTools);
 Application.bind("chat.info.prompt", Chat.showPrompt);

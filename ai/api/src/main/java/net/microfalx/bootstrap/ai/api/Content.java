@@ -26,6 +26,13 @@ public interface Content extends Nameable {
     Resource getResource();
 
     /**
+     * Returns the size of the content in bytes.
+     *
+     * @return the size of the content in bytes, or -1 if unknown
+     */
+    long getSize();
+
+    /**
      * An enumeration representing the type of content.
      */
     enum Type {

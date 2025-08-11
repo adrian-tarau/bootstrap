@@ -93,6 +93,16 @@ public class ChatController extends PageController {
         return "ai/chat :: info";
     }
 
+    @GetMapping("info/tools/{id}")
+    public String showTools(Model model, @PathVariable("id") String chatId) {
+        net.microfalx.bootstrap.ai.api.Chat chat = aiService.getChat(chatId);
+        updateModel(model, chat);
+        model.addAttribute("title", "Model");
+        model.addAttribute("modalClasses", "modal-lg");
+        model.addAttribute("content", renderMarkdown(chat.getToolsDescription())));
+        return "ai/chat :: info";
+    }
+
     @GetMapping("info/prompt/{id}")
     public String showPrompt(Model model, @PathVariable("id") String chatId) {
         net.microfalx.bootstrap.ai.api.Chat chat = aiService.getChat(chatId);
@@ -195,6 +205,8 @@ public class ChatController extends PageController {
         Menu menu = new Menu();
         menu.add(new Item().setAction("chat.info.model").setText("Model").setIcon("fa-solid fa-square-binary")
                 .setDescription("Displays information about the model"));
+        menu.add(new Item().setAction("chat.info.tools").setText("Tools").setIcon("fa-solid fa-hammer")
+                .setDescription("Displays information about the tools available for this chat and their usage"));
         menu.add(new Item().setAction("chat.info.prompt").setText("Prompt").setIcon("fa-solid fa-terminal")
                 .setDescription("Displays information about the prompt"));
         model.addAttribute("chatInfoMenu", menu);

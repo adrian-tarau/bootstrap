@@ -22,7 +22,7 @@ public class HelpTool extends AbstractToolExecutor {
     private static final String TOC_ATTR_PREFIX = "toc.";
 
     @Override
-    public String execute(Tool.ExecutionRequest request) {
+    public Tool.ExecutionResponse execute(Tool.ExecutionRequest request) {
         List<Toc> tocs = search(request);
         return render(request.getChat(), tocs);
     }
@@ -40,26 +40,27 @@ public class HelpTool extends AbstractToolExecutor {
         return query.trim();
     }
 
-    private String render(Chat chat, List<Toc> tocs) {
+    private Tool.ExecutionResponse render(Chat chat, List<Toc> tocs) {
         HelpService helpService = getBean(HelpService.class);
-        StringBuilder sb = new StringBuilder();
+        StringBuilder contentBuilder = new StringBuilder();
+        StringBuilder nameBuilder = new StringBuilder();
         tocs = tocs.stream().
                 filter(toc -> !chat.hasAttribute(TOC_ATTR_PREFIX + toc.getId()))
                 .toList();
         if (tocs.isEmpty()) {
-            sb.append("No help content found or help was already provided before.");
-            return sb.toString();
+            contentBuilder.append("No help content found or help was already provided before.");
         } else {
             for (Toc toc : tocs) {
                 try {
                     Resource resource = helpService.transform(toc, RenderingOptions.builder().navigation(true).build());
-                    sb.append(resource.loadAsString()).append("\n");
+                    contentBuilder.append(resource.loadAsString()).append("\n");
                     chat.addAttribute(TOC_ATTR_PREFIX + toc.getId(), Boolean.TRUE);
+                    StringUtils.append(nameBuilder, toc.getName());
                 } catch (IOException e) {
                     LOGGER.warn("Failed to load content for TOC '{}', root cause: {}", toc.getPath(), getRootCauseMessage(e));
                 }
             }
         }
-        return wrapResponse(sb.toString());
+        return createResponse(contentBuilder.toString(), tocs.size(), nameBuilder.toString());
     }
 }

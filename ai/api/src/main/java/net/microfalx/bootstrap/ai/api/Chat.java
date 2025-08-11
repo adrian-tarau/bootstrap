@@ -8,6 +8,7 @@ import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -132,6 +133,24 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
      * @return the feature of the specified type, or null if not found
      */
     <F> F getFeature(Class<F> featureType);
+
+    /**
+     * Returns the tools available to the chat session.
+     * @return a non-null collection
+     */
+    Collection<Tool> getTools();
+
+    /**
+     * Returns the tool executions performed during the chat session.
+     * @return a non-null map
+     */
+    Map<Tool.ExecutionRequest, Tool.ExecutionResponse> getToolExecutions();
+
+    /**
+     * Returns a markdown description of the tools available and their invocations in the chat session.
+     * @return a non-null string containing the description
+     */
+    String getToolsDescription();
 
     /**
      * Returns whether a tool with a given name is registered and enabled in the chat session.

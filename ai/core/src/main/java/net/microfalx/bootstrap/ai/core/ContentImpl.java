@@ -10,6 +10,7 @@ import net.microfalx.bootstrap.ai.api.Content;
 import net.microfalx.lang.UriUtils;
 import net.microfalx.resource.Resource;
 
+import java.io.IOException;
 import java.net.URL;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -26,7 +27,7 @@ public class ContentImpl implements Content {
         return new ContentImpl(getType(content), getResource(content));
     }
 
-    static Content from(String text) {
+    public static Content from(String text) {
         text = emptyIfNull(text);
         return new ContentImpl(Content.Type.TEXT, Resource.text(text));
     }
@@ -51,6 +52,15 @@ public class ContentImpl implements Content {
     @Override
     public Resource getResource() {
         return resource;
+    }
+
+    @Override
+    public long getSize() {
+        try {
+            return resource.length();
+        } catch (IOException e) {
+            return -1;
+        }
     }
 
     private static Type getType(dev.langchain4j.data.message.Content content) {

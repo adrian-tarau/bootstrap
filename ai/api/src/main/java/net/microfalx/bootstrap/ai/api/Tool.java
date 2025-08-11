@@ -56,7 +56,7 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
     /**
      * An interface representing a request to execute a tool.
      */
-    public interface ExecutionRequest extends Identifiable<String> {
+    public interface ExecutionRequest extends Identifiable<String>, Nameable, Descriptable {
 
         /**
          * Returns the chat context in which the tool is being executed.
@@ -97,6 +97,36 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
         <T> T getArgument(String name, Class<T> type);
     }
 
+    /**
+     * An interface representing a response from executing a tool.
+     */
+    public interface ExecutionResponse extends Nameable {
+
+        /**
+         * Returns the number of items resulted from the execution of the tool.
+         *
+         * @return a non-null instance
+         */
+        int getItemCount();
+
+        /**
+         * Returns the number of estimated tokens resulted from the execution of the tool.
+         *
+         * @return a non-null instance
+         */
+        int getTokenCount();
+
+        /**
+         * Returns the content resulted from the execution of the tool.
+         *
+         * @return a non-null instance
+         */
+        Content getContent();
+    }
+
+    /**
+     * An interface representing an executor that can execute a tool.
+     */
     public interface Executor {
 
         /**
@@ -105,7 +135,7 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
          * @param request the execution request
          * @return a non-null object representing the result of the execution (usually a text or JSON response)
          */
-        String execute(ExecutionRequest request);
+        ExecutionResponse execute(ExecutionRequest request);
     }
 
     @ToString(callSuper = true)

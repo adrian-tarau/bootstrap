@@ -14,10 +14,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
-import net.microfalx.bootstrap.ai.api.Chat;
-import net.microfalx.bootstrap.ai.api.Message;
-import net.microfalx.bootstrap.ai.api.Model;
-import net.microfalx.bootstrap.ai.api.Prompt;
+import net.microfalx.bootstrap.ai.api.*;
 import net.microfalx.bootstrap.dataset.DataSetRequest;
 import net.microfalx.bootstrap.security.SecurityContext;
 import net.microfalx.lang.NamedAndTaggedIdentifyAware;
@@ -41,6 +38,7 @@ import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.FormatterUtils.formatBytes;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
@@ -76,8 +74,10 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     private final AtomicInteger outputTokenCount = new AtomicInteger();
     private final Set<Object> features = new CopyOnWriteArraySet<>();
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
+    private final Map<Tool.ExecutionRequest, Tool.ExecutionResponse> toolExecutions = new ConcurrentHashMap<>();
     final AtomicBoolean changed = new AtomicBoolean();
     final AtomicBoolean internal = new AtomicBoolean(false);
+
 
     private static final Map<String, AtomicInteger> CHAT_COUNTERS = new ConcurrentHashMap<>();
 
@@ -198,6 +198,43 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     }
 
     @Override
+    public Collection<Tool> getTools() {
+        return service.getTools().stream().filter(tool -> !hasTool(tool.getName())).toList();
+    }
+
+    @Override
+    public Map<Tool.ExecutionRequest, Tool.ExecutionResponse> getToolExecutions() {
+        return Collections.unmodifiableMap(toolExecutions);
+    }
+
+    @Override
+    public String getToolsDescription() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("#### Tools\n\n");
+        for (Tool tool : getTools()) {
+            sb.append(tool.getName()).append("\n").append(": ").append(tool.getDescription()).append("\n\n");
+        }
+        if (!toolExecutions.isEmpty()) {
+            sb.append("""
+                    #### Requests
+                    
+                    | Invocation | Items | Tokens | Size |
+                    | ---------- | ----- | ------ | ---- |                    
+                    """);
+            for (Map.Entry<Tool.ExecutionRequest, Tool.ExecutionResponse> entry : toolExecutions.entrySet()) {
+                Tool.ExecutionRequest request = entry.getKey();
+                Tool.ExecutionResponse response = entry.getValue();
+                sb.append("|").append(request.getDescription())
+                        .append("|").append(response.getItemCount())
+                        .append("|").append(response.getTokenCount())
+                        .append("|").append(formatBytes(response.getContent().getSize()))
+                        .append("|\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    @Override
     public boolean hasTool(String name) {
         requireNotEmpty(name);
         if (disableTools) {
@@ -294,10 +331,17 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     }
 
     void streamCompleted(net.microfalx.bootstrap.ai.api.TokenStream tokenStream) {
+        requireNonNull(tokenStream);
         inputTokenCount.addAndGet(tokenStream.getInputTokenCount());
         outputTokenCount.addAndGet(tokenStream.getOutputTokenCount());
         updateDescription();
         changed.set(true);
+    }
+
+    void registerToolExecution(Tool.ExecutionRequest request, Tool.ExecutionResponse response) {
+        requireNonNull(request);
+        requireNonNull(response);
+        toolExecutions.put(request, response);
     }
 
     private void initializePrincipal() {
