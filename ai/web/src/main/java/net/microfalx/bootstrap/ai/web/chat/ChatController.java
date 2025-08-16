@@ -99,7 +99,7 @@ public class ChatController extends PageController {
         updateModel(model, chat);
         model.addAttribute("title", "Model");
         model.addAttribute("modalClasses", "modal-lg");
-        model.addAttribute("content", renderMarkdown(chat.getToolsDescription())));
+        model.addAttribute("content", renderMarkdown(chat.getToolsDescription()));
         return "ai/chat :: info";
     }
 
