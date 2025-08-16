@@ -157,10 +157,10 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
             return chatModel.chat(message);
         } else {
             StringBuilder builder = new StringBuilder();
-            Iterator<String> stream = chat(message);
+            net.microfalx.bootstrap.ai.api.TokenStream stream = chat(message);
             while (stream.hasNext()) {
-                String token = stream.next();
-                builder.append(token);
+                Token token = stream.next();
+                builder.append(token.getText());
             }
             return builder.toString();
         }
@@ -176,8 +176,9 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
             return handler;
         } else {
             String answer = ask(message);
-            String[] parts = StringUtils.split(answer, " ");
-            return new TokenStreamImpl(Arrays.asList(parts).iterator());
+            List<Token> parts = Arrays.stream(StringUtils.split(answer, " ")).map(p ->
+                    Token.create(Token.Type.ANSWER, p)).toList();
+            return new TokenStreamImpl(parts.iterator());
         }
     }
 

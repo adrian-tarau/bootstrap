@@ -1,8 +1,6 @@
 package net.microfalx.bootstrap.ai.openai;
 
-import net.microfalx.bootstrap.ai.api.Chat;
-import net.microfalx.bootstrap.ai.api.Model;
-import net.microfalx.bootstrap.ai.api.Provider;
+import net.microfalx.bootstrap.ai.api.*;
 import net.microfalx.bootstrap.ai.core.AiProperties;
 import net.microfalx.bootstrap.ai.core.AiServiceImpl;
 import org.assertj.core.api.Assertions;
@@ -43,10 +41,10 @@ class OpenAiChatTest {
     void chat() {
         Chat chat = llmService.createChat(loadChat("openai_gpt_4_1_nano"));
         int tokenCount = 0;
-        Iterator<String> stream = chat.chat("Tell me a joke about Java");
+        TokenStream stream = chat.chat("Tell me a joke about Java");
         while (stream.hasNext()) {
-            String token = stream.next();
-            System.out.print(token);
+            Token token = stream.next();
+            System.out.print(token.getText());
             System.out.flush();
             tokenCount++;
         }

@@ -1,8 +1,6 @@
 package net.microflax.bootstrap.ai.github;
 
-import net.microfalx.bootstrap.ai.api.Chat;
-import net.microfalx.bootstrap.ai.api.Model;
-import net.microfalx.bootstrap.ai.api.Provider;
+import net.microfalx.bootstrap.ai.api.*;
 import net.microfalx.bootstrap.ai.core.AiProperties;
 import net.microfalx.bootstrap.ai.core.AiServiceImpl;
 import org.assertj.core.api.Assertions;
@@ -42,10 +40,10 @@ class GithubChatTest {
     void chat() {
         Chat chat = llmService.createChat(loadChat("github_gpt_4o"));
         int tokenCount = 0;
-        Iterator<String> stream = chat.chat("Tell me a joke about Java");
+        TokenStream stream = chat.chat("Tell me a joke about Java");
         while (stream.hasNext()) {
-            String token = stream.next();
-            System.out.print(token);
+            Token token = stream.next();
+            System.out.print(token.getText());
             System.out.flush();
             tokenCount++;
         }

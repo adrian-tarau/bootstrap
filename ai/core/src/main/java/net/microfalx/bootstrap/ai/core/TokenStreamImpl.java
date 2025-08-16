@@ -1,14 +1,16 @@
 package net.microfalx.bootstrap.ai.core;
 
+import net.microfalx.bootstrap.ai.api.Token;
+
 import java.util.Iterator;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 public class TokenStreamImpl extends AbstractTokenStream {
 
-    private final Iterator<String> streams;
+    private final Iterator<Token> streams;
 
-    public TokenStreamImpl(Iterator<String> streams) {
+    public TokenStreamImpl(Iterator<Token> streams) {
         requireNonNull(streams);
         this.streams = streams;
     }
@@ -21,9 +23,9 @@ public class TokenStreamImpl extends AbstractTokenStream {
     }
 
     @Override
-    public String next() {
-        String token = streams.next();
-        builder.append(token);
+    public Token next() {
+        Token token = streams.next();
+        answerBuilder.append(token);
         return token;
     }
 }

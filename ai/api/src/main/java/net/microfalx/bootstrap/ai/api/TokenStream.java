@@ -5,14 +5,21 @@ import java.util.Iterator;
 /**
  * An interface representing a stream of tokens, typically used in language model processing.
  */
-public interface TokenStream extends Iterator<String>, TokenUsage {
+public interface TokenStream extends Iterator<Token>, TokenUsage {
 
     /**
-     * Returns the complete message associated with this stream.
+     * Returns the complete answered message associated with this stream.
      *
      * @return a non-null instance
      */
-    Message getMessage();
+    Message getAnswerMessage();
+
+    /**
+     * Returns the thinking message associated with this stream.
+     *
+     * @return a non-null instance
+     */
+    Message getThinkingMessage();
 
     /**
      * Returns the finish reason for the stream.

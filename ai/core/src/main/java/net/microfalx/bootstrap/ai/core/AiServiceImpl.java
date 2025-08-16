@@ -184,7 +184,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
                 String question = shortMessage ? properties.getSummaryWords() : properties.getSummarySentence();
                 question += "\n\nText to summarize:\n```\n" + text + "\n```";
                 TokenStream stream = chat.chat(question);
-                return stream.getMessage().getText();
+                return stream.getAnswerMessage().getText();
             } finally {
                 chat.close();
             }

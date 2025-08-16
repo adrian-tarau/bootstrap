@@ -1,8 +1,11 @@
 package net.microfalx.bootstrap.ai.core;
 
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.TokenStream;
 import net.microfalx.bootstrap.ai.api.FinishReason;
+import net.microfalx.bootstrap.ai.api.Message;
+import net.microfalx.bootstrap.ai.api.Token;
 import net.microfalx.lang.ThreadUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +25,7 @@ class TokenStreamHandler extends AbstractTokenStream {
     private final AbstractChat chat;
     private final AiServiceImpl service;
     private final TokenStream tokenStream;
-    private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Token> queue = new LinkedBlockingQueue<>();
 
     TokenStreamHandler(AiServiceImpl service, AbstractChat chat, TokenStream tokenStream) {
         requireNonNull(service);
@@ -46,7 +49,7 @@ class TokenStreamHandler extends AbstractTokenStream {
     }
 
     @Override
-    public String next() {
+    public Token next() {
         if (queue.isEmpty()) throw new IllegalStateException("Queue is empty");
         return queue.poll();
     }
@@ -62,13 +65,16 @@ class TokenStreamHandler extends AbstractTokenStream {
             this.completed.set(true);
         });
         tokenStream.onPartialResponse(r -> {
-            builder.append(r);
-            if (!queue.offer(r)) {
-                LOGGER.atError().log("Queue is full for chat {}: {}", chat.getName(), r);
-            }
+            answerBuilder.append(r);
+            enqueueToken(Token.create(Token.Type.ANSWER, r));
+        });
+        tokenStream.onPartialThinking(p -> {
+            thinkingBuilder.append(p.text());
+            enqueueToken(Token.create(Token.Type.THINKING, p.text()));
         });
         tokenStream.onCompleteResponse(r -> {
-            message = MessageImpl.create(r.aiMessage());
+            answerMessage = MessageImpl.create(r.aiMessage());
+            thinkingMessage = MessageImpl.create(Message.Type.MODEL, r.aiMessage().thinking());
             finishReason = toFinishReason(r.finishReason());
             TokenUsage tokenUsage = r.tokenUsage();
             if (tokenUsage != null) {
@@ -89,5 +95,11 @@ class TokenStreamHandler extends AbstractTokenStream {
             case TOOL_EXECUTION -> FinishReason.TOOL_EXECUTION;
             case OTHER -> FinishReason.OTHER;
         };
+    }
+
+    private void enqueueToken(Token token) {
+        if (!queue.offer(token)) {
+            LOGGER.atError().log("Queue is full for chat {}: {}", chat.getName(), token);
+        }
     }
 }

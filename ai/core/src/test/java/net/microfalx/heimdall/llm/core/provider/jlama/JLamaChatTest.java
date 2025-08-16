@@ -1,9 +1,7 @@
 package net.microfalx.bootstrap.ai.core.provider.jlama;
 
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
-import net.microfalx.bootstrap.ai.api.Chat;
-import net.microfalx.bootstrap.ai.api.Model;
-import net.microfalx.bootstrap.ai.api.Provider;
+import net.microfalx.bootstrap.ai.api.*;
 import net.microfalx.bootstrap.ai.core.AiServiceImpl;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,10 +42,10 @@ class JLamaChatTest {
     void chat() {
         Chat chat = llmService.createChat(loadModel("jlama_llama3_2_1b"));
         int tokenCount = 0;
-        Iterator<String> stream = chat.chat("Tell me a joke about Java");
+        TokenStream stream = chat.chat("Tell me a joke about Java");
         while (stream.hasNext()) {
-            String token = stream.next();
-            System.out.print(token);
+            Token token = stream.next();
+            System.out.print(token.getText());
             System.out.flush();
             tokenCount++;
         }

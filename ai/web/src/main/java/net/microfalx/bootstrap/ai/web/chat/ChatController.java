@@ -54,9 +54,12 @@ public class ChatController extends PageController {
     private static final String END_OF_DATA = "$END_OF_DATA$";
     private static final Map<String, TokenStream> chatAnswer = new ConcurrentHashMap<>();
 
-    @Autowired private HelpService helpService;
-    @Autowired private AiService aiService;
-    @Autowired private DataSetService dataSetService;
+    @Autowired
+    private HelpService helpService;
+    @Autowired
+    private AiService aiService;
+    @Autowired
+    private DataSetService dataSetService;
 
     @GetMapping("")
     public String start(Model model) {
@@ -326,8 +329,10 @@ public class ChatController extends PageController {
                 try {
                     while (!(stream.isComplete() || completed.get())) {
                         while (stream.hasNext()) {
-                            String token = stream.next();
-                            sendToken(token, false);
+                            net.microfalx.bootstrap.ai.api.Token token = stream.next();
+                            if (token.getType() == net.microfalx.bootstrap.ai.api.Token.Type.ANSWER) {
+                                sendToken(token.getText(), false);
+                            }
                         }
                         sleepMillis(20);
                     }

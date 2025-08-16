@@ -16,20 +16,31 @@ import static net.microfalx.lang.ExceptionUtils.rethrowException;
 public abstract class AbstractTokenStream implements TokenStream {
 
     final AtomicBoolean completed = new AtomicBoolean(false);
-    final StringBuilder builder = new StringBuilder();
+    final StringBuilder answerBuilder = new StringBuilder();
+    final StringBuilder thinkingBuilder = new StringBuilder();
     FinishReason finishReason = FinishReason.STOP;
     volatile Throwable throwable;
-    volatile Message message;
+    volatile Message answerMessage;
+    volatile Message thinkingMessage;
     volatile Integer inputTokenCount;
     volatile Integer outputTokenCount;
 
     @Override
-    public final Message getMessage() {
+    public final Message getAnswerMessage() {
         waitForCompletion();
-        if (message != null) {
-            return message;
+        if (answerMessage != null) {
+            return answerMessage;
         } else {
-            return MessageImpl.create(Message.Type.MODEL, builder.toString());
+            return MessageImpl.create(Message.Type.MODEL, answerBuilder.toString());
+        }
+    }
+
+    @Override
+    public final Message getThinkingMessage() {
+        if (thinkingMessage != null) {
+            return thinkingMessage;
+        } else {
+            return MessageImpl.create(Message.Type.MODEL, thinkingBuilder.toString());
         }
     }
 
