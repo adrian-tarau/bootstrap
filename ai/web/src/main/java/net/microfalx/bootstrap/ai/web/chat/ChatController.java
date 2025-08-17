@@ -127,7 +127,8 @@ public class ChatController extends PageController {
         List<Message> messages = new ArrayList<>();
         model.addAttribute("messages", messages);
         messages.add(MessageImpl.create(Message.Type.USER, message));
-        messages.add(MessageImpl.create(Message.Type.MODEL, "Thinking..."));
+        String waitingMessage = stream.isThinking() ? "Thinking..." : "Waiting for reply...";
+        messages.add(MessageImpl.create(Message.Type.MODEL, waitingMessage));
         return "ai/chat :: question";
     }
 
@@ -321,6 +322,18 @@ public class ChatController extends PageController {
             this.throwable = throwable;
         }
 
+        private String getPrefix(net.microfalx.bootstrap.ai.api.Token token) {
+            if (token.getType() == net.microfalx.bootstrap.ai.api.Token.Type.ANSWER) {
+                return "A:";
+            } else if (token.getType() == net.microfalx.bootstrap.ai.api.Token.Type.THINKING) {
+                return "T:";
+            } else if (token.getType() == net.microfalx.bootstrap.ai.api.Token.Type.QUESTION) {
+                return "Q:";
+            } else {
+                return EMPTY_STRING;
+            }
+        }
+
         @Override
         public void run() {
             if (stream == null) {
@@ -330,9 +343,7 @@ public class ChatController extends PageController {
                     while (!(stream.isComplete() || completed.get())) {
                         while (stream.hasNext()) {
                             net.microfalx.bootstrap.ai.api.Token token = stream.next();
-                            if (token.getType() == net.microfalx.bootstrap.ai.api.Token.Type.ANSWER) {
-                                sendToken(token.getText(), false);
-                            }
+                            sendToken(getPrefix(token) + token.getText(), false);
                         }
                         sleepMillis(20);
                     }

@@ -29,6 +29,13 @@ public interface TokenStream extends Iterator<Token>, TokenUsage {
     FinishReason getFinishReason();
 
     /**
+     * Returns whether the AI is currently thinking.
+     *
+     * @return @{code true} if the AI is thinking, {@code false} otherwise.
+     */
+    boolean isThinking();
+
+    /**
      * Returns when the stream is complete.
      *
      * @return {@code true} if the stream has been fully consumed, {@code false} otherwise.

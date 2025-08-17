@@ -231,7 +231,7 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
      * @return {@code true} if the model is thinking, {@code false} otherwise
      */
     public boolean isThinking() {
-        return thinking;
+        return thinking && getTags().contains(THINKING_TAG);
     }
 
     /**
@@ -289,7 +289,7 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
         private Integer topK;
         private Double frequencyPenalty;
         private Double presencePenalty;
-        private boolean thinking;
+        private boolean thinking = true;
         private int maximumContextLength = 64 * 1028; // 64K tokens
         private Integer maximumOutputTokens;
         private final Set<String> stopSequences = new HashSet<>();

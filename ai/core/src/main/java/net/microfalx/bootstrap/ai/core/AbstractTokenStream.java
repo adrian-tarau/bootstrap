@@ -16,6 +16,7 @@ import static net.microfalx.lang.ExceptionUtils.rethrowException;
 public abstract class AbstractTokenStream implements TokenStream {
 
     final AtomicBoolean completed = new AtomicBoolean(false);
+    final AtomicBoolean thinking = new AtomicBoolean(false);
     final StringBuilder answerBuilder = new StringBuilder();
     final StringBuilder thinkingBuilder = new StringBuilder();
     FinishReason finishReason = FinishReason.STOP;
@@ -47,6 +48,11 @@ public abstract class AbstractTokenStream implements TokenStream {
     @Override
     public final FinishReason getFinishReason() {
         return finishReason;
+    }
+
+    @Override
+    public final boolean isThinking() {
+        return thinking.get();
     }
 
     @Override

@@ -161,11 +161,22 @@ Chat.receive = function (chatId, target) {
     chatId = me.getCurrent(chatId);
     target = $(target);
     let textElement = target.find('.ai-chat-text');
-    let markdown = "";
+    let thinkingMarkdown = "Thinking...";
+    let answerMarkdown = "";
     Application.Sse.start(me.getPath("tokens", chatId), function (data, event) {
         let json = JSON.parse(data);
-        markdown += json.token;
-        let html = marked.parse(markdown);
+        let token = json.token;
+        if (Utils.isEmpty(token)) return;
+        let type = token.charAt(0);
+        token = token.substring(2);
+        let html;
+        if (type === "T") {
+            thinkingMarkdown += token;
+            html = marked.parse(thinkingMarkdown);
+        } else if (type === "A") {
+            answerMarkdown += token;
+            html = marked.parse(answerMarkdown);
+        }
         textElement.html(html);
         me.focusMessage();
     }, {}, {self: false});

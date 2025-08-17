@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.ai.core;
 
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.TokenStream;
 import net.microfalx.bootstrap.ai.api.FinishReason;
@@ -34,6 +33,7 @@ class TokenStreamHandler extends AbstractTokenStream {
         this.service = service;
         this.chat = chat;
         this.tokenStream = tokenStream;
+        this.thinking.set(chat.getModel().isThinking());
         initTokenStream();
     }
 
@@ -66,6 +66,7 @@ class TokenStreamHandler extends AbstractTokenStream {
         });
         tokenStream.onPartialResponse(r -> {
             answerBuilder.append(r);
+            thinking.set(false);
             enqueueToken(Token.create(Token.Type.ANSWER, r));
         });
         tokenStream.onPartialThinking(p -> {

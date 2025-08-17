@@ -2,8 +2,8 @@ package net.microfalx.bootstrap.ai.openai;
 
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
-import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.AiNotFoundException;
+import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Prompt;
 import net.microfalx.bootstrap.ai.core.AbstractChatFactory;
@@ -32,6 +32,7 @@ public class OpenAiChatFactory extends AbstractChatFactory {
                 .stop(new ArrayList<>(model.getStopSequences())).strictTools(true)
                 .topP(model.getTopP())
                 .timeout(getProperties().getChatRequestTimeout())
+                .returnThinking(true)
                 .build();
         return new OpenAiChat(prompt, model).setStreamingChatModel(chatModel);
     }
