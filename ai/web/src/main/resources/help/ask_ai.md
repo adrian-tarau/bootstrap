@@ -1,6 +1,6 @@
-The **Ask AI** dashboard provides an interactive, chat-style interface where you can directly query Heimdall’s integrated AI assistant. This feature is powered by an active Large Language Model (LLM) and is designed to help you get answers quickly without manually navigating through documentation or reports.
+The **Assistant** dashboard provides an interactive, chat-style interface where you can directly query Heimdall’s integrated AI assistant. This feature is powered by an active Large Language Model (LLM) and is designed to help you get answers quickly without manually navigating through documentation or reports.
 
-You can use _Ask AI_ to:
+You can use _Assistant_ to:
 
 * **Learn about Heimdall’s features** – Ask questions such as “What does the Producers dashboard do?” or “How do I configure a new scenario?” and receive clear, documentation-based answers.
 * **Get step-by-step guidance** – Ask how to perform specific tasks, and the AI will respond with instructions drawn from the application’s official help content.

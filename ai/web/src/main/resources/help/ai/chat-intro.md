@@ -1,7 +1,7 @@
 #### Welcome to {{APP_NAME}}'s Chat Interface!
 
-I'm a large language model (LLM) designed to assist you with a wide range of tasks. Here are some things I can help you with:
+I’m your built-in **assistant**, designed to support you in working with the system more effectively. I can help you with tasks such as:
 
-* Help you find relevant information from the application help pages
-* Summarize information from internal documents or events
-* Just chat with you about various topics
+* Locating relevant details from the application help and documentation
+* Summarizing logs, events, or internal reports for faster analysis
+* Providing context and guidance, including assistance in troubleshooting and identifying root causes

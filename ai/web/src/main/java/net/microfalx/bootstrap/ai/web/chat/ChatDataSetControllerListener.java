@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.ai.web.chat;
 
+import net.microfalx.bootstrap.ai.api.AiService;
+import net.microfalx.bootstrap.ai.api.Prompt;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.dataset.DataSet;
 import net.microfalx.bootstrap.dataset.DataSetRequest;
@@ -9,8 +11,6 @@ import net.microfalx.bootstrap.web.component.Item;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.component.Toolbar;
 import net.microfalx.bootstrap.web.dataset.DataSetControllerListener;
-import net.microfalx.bootstrap.ai.api.AiService;
-import net.microfalx.bootstrap.ai.api.Prompt;
 import net.microfalx.lang.annotation.Provider;
 
 import java.util.Collection;
@@ -24,8 +24,8 @@ public class ChatDataSetControllerListener<M, F extends Field<M>, ID> extends Ap
         if (!request.getDataSet().getTags().contains("ai")) return;
         Menu menu = getAiMenu(request);
         if (!menu.hasChildren()) return;
-        toolbar.add(new Button().setText("Ask AI").setIcon("fa-solid fa-robot").setPosition(1000)
-                .setDescription("Ask AI to help answer questions relate to this dashboard")
+        toolbar.add(new Button().setText("Ask Assistant").setIcon("fa-solid fa-robot").setPosition(1000)
+                .setDescription("Ask the integrated assistant to help answer questions relate to this dashboard")
                 .setMenu(menu));
     }
 
