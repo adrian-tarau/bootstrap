@@ -1099,7 +1099,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if the current value is selected, {@code false} otherwise
      */
     public boolean isSelected(M model, Field<M> field, Lookup<Object> lookup) {
-        requireNonNull(model);
+        if (model == null) return false;
         requireNonNull(field);
         Object value = field.get(model);
         if (value == null) {
