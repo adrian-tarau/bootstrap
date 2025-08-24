@@ -19,22 +19,27 @@
 
 .dataset-table th.index-field {
     max-width : 40px;
+    width: 30px;
 }
 
 .dataset-table th.date-time-field {
     max-width : 150px;
+    width: 150px;
 }
 
 .dataset-table th.date-field {
     max-width : 80px;
+    width: 80px;
 }
 
 .dataset-table th.time-field {
     max-width : 80px;
+    width: 80px;
 }
 
 .dataset-table th.enum-field {
     max-width : 80px;
+    width: 80px;
 }
 
 .dataset-table td {

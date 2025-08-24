@@ -29,10 +29,12 @@ public class Index extends NamedIdentityAware<String> {
     @Position(15)
     @Name
     @Description("The directory where the index is stored")
+    @Width("20%")
     private String directory;
 
     @Position(20)
     @Description("The analyzer used to tokenize the documents in the index")
+    @Width("20%")
     private String analyzer;
 
     @Position(30)
