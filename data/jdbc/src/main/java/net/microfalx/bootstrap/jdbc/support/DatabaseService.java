@@ -7,6 +7,7 @@ import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.lang.*;
+import net.microfalx.objectpool.ObjectPoolException;
 import net.microfalx.threadpool.AbstractCallable;
 import net.microfalx.threadpool.AbstractRunnable;
 import net.microfalx.threadpool.ThreadPool;
@@ -15,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -37,6 +37,7 @@ import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ConcurrencyUtils.*;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseName;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.millisSince;
@@ -175,7 +176,7 @@ public class DatabaseService implements InitializingBean {
             futures.add(coordinatorTaskExecutor.submit(new ExtractSnapshot(snapshot)));
         }
         int pendingTasks = METRICS.getTimer("Get Snapshots").record(() -> waitForFutures(futures, timeout));
-        if (pendingTasks > 0) LOGGER.warn("Incomplete list of snapshots, pending tasks: " + pendingTasks);
+        if (pendingTasks > 0) LOGGER.debug("Incomplete list of snapshots, pending tasks: {}", pendingTasks);
         return snapshots;
 
     }
@@ -344,7 +345,7 @@ public class DatabaseService implements InitializingBean {
         if (unwrapped instanceof HikariDataSource hikariDataSource) {
             dataSource = dataSource.withUri(URI.create(hikariDataSource.getJdbcUrl())).withUserName(hikariDataSource.getUsername());
         } else {
-            LOGGER.error("Unknown data source implementation: " + ClassUtils.getName(dataSource));
+            LOGGER.error("Unknown data source implementation: {}", ClassUtils.getName(dataSource));
         }
         return dataSource;
     }
@@ -415,7 +416,7 @@ public class DatabaseService implements InitializingBean {
         } else if (VERTICA_SCHEME.equals(scheme)) {
             return new VerticaDatabase(this, dataSource.getId(), dataSource.getName(), dataSource);
         } else {
-            LOGGER.error("Unknown JDBC scheme: " + scheme);
+            LOGGER.error("Unknown JDBC scheme: {}", scheme);
             return null;
         }
     }
@@ -426,8 +427,8 @@ public class DatabaseService implements InitializingBean {
             try {
                 registerStatement(entry.getStatement());
             } catch (Exception e) {
-                LOGGER.error("Failed to analyze statement " + org.apache.commons.lang3.StringUtils
-                        .abbreviate(entry.getStatement().getContent(), 80), e);
+                LOGGER.atError().setCause(e).log("Failed to analyze statement {}",
+                        TextUtils.abbreviate(entry.getStatement().getContent(), 80));
             }
         }
     }
@@ -473,7 +474,7 @@ public class DatabaseService implements InitializingBean {
         }
     }
 
-    class CloseDataSource extends AbstractRunnable {
+    static class CloseDataSource extends AbstractRunnable {
 
         private final DataSource dataSource;
 
@@ -486,12 +487,12 @@ public class DatabaseService implements InitializingBean {
             try {
                 dataSource.close();
             } catch (Exception e) {
-                LOGGER.warn("Failed to close data source '" + describe(dataSource) + "', root cause: " + ExceptionUtils.getRootCauseName(e));
+                LOGGER.warn("Failed to close data source '{}', root cause: {}", describe(dataSource), getRootCauseName(e));
             }
         }
     }
 
-    class CloseDatabase extends AbstractRunnable {
+    static class CloseDatabase extends AbstractRunnable {
 
         private final Database database;
 
@@ -504,12 +505,12 @@ public class DatabaseService implements InitializingBean {
             try {
                 ((AbstractDatabase) database).close();
             } catch (Exception e) {
-                LOGGER.warn("Failed to close data source '" + describe(database) + "', root cause: " + ExceptionUtils.getRootCauseName(e));
+                LOGGER.warn("Failed to close database '{}', root cause: {}", describe(database), getRootCauseName(e));
             }
         }
     }
 
-    class ValidateDatabase extends AbstractRunnable {
+    static class ValidateDatabase extends AbstractRunnable {
 
         private final Database database;
 
@@ -523,7 +524,7 @@ public class DatabaseService implements InitializingBean {
             try {
                 database.validate();
             } catch (Exception e) {
-                LOGGER.warn("Failed to validate database '" + describe(database) + "', root cause: " + ExceptionUtils.getRootCauseName(e));
+                LOGGER.warn("Failed to validate database '{}', root cause: {}", describe(database), getRootCauseName(e));
             }
         }
     }
@@ -558,7 +559,7 @@ public class DatabaseService implements InitializingBean {
                     futures.add(workerTaskExecutor.submit(new ExtractSessionsForDatabase(database)));
                 }
                 int pendingTasks = waitForFutures(futures, timeout);
-                if (pendingTasks > 0) LOGGER.warn("Incomplete list of sessions, pending tasks: " + pendingTasks);
+                if (pendingTasks > 0) LOGGER.debug("Incomplete list of sessions, pending tasks: {}", pendingTasks);
                 sessions.putAll(collectFutures(futures).stream().flatMap(Collection::stream)
                         .collect(toMap(Session::getId, session -> session)));
                 DatabaseService.this.lastSessions = sessions;
@@ -585,7 +586,7 @@ public class DatabaseService implements InitializingBean {
                     futures.add(workerTaskExecutor.submit(new ExtractTransactionsForDatabase(database)));
                 }
                 int pendingTasks = waitForFutures(futures, timeout);
-                if (pendingTasks > 0) LOGGER.warn("Incomplete list of transactions, pending tasks: " + pendingTasks);
+                if (pendingTasks > 0) LOGGER.debug("Incomplete list of transactions, pending tasks: {}", pendingTasks);
                 transactions.putAll(collectFutures(futures).stream().flatMap(Collection::stream)
                         .collect(toMap(Transaction::getId, transaction -> transaction)));
                 DatabaseService.this.lastTransactions = transactions;
@@ -614,7 +615,7 @@ public class DatabaseService implements InitializingBean {
                 futures.add(workerTaskExecutor.submit(new ExtractStatementsForDatabase(database, start, end)));
             }
             int pendingTasks = waitForFutures(futures, timeout.multipliedBy(5));
-            if (pendingTasks > 0) LOGGER.warn("Incomplete list of statements, pending tasks: " + pendingTasks);
+            if (pendingTasks > 0) LOGGER.debug("Incomplete list of statements, pending tasks: {}", pendingTasks);
             return collectFutures(futures).stream().flatMap(Collection::stream).toList();
         }
 
@@ -643,11 +644,11 @@ public class DatabaseService implements InitializingBean {
                 try {
                     sessions = database.getSessions();
                     registerAvailability(database);
-                } catch (CannotGetJdbcConnectionException e) {
+                } catch (ObjectPoolException e) {
                     registerFailure(database, e);
                 } catch (Exception e) {
                     registerFailure(database, e);
-                    LOGGER.error("Failed to extract sessions from " + describe(database), e);
+                    LOGGER.atError().setCause(e).log("Failed to extract sessions from {}", describe(database));
                 }
                 registerStatements(sessions);
                 return sessions;
@@ -678,11 +679,11 @@ public class DatabaseService implements InitializingBean {
                 try {
                     transactions = database.getTransactions();
                     registerAvailability(database);
-                } catch (CannotGetJdbcConnectionException e) {
+                } catch (ObjectPoolException e) {
                     registerFailure(database, e);
                 } catch (Exception e) {
                     registerFailure(database, e);
-                    LOGGER.error("Failed to extract statements from " + describe(database), e);
+                    LOGGER.atError().setCause(e).log("Failed to extract transactions from {}", describe(database));
                     transactions = Collections.emptyList();
                 }
                 registerStatements(transactions);
@@ -715,10 +716,10 @@ public class DatabaseService implements InitializingBean {
         public Collection<Statement> call() throws Exception {
             try {
                 return database.getStatements(start, end);
-            } catch (CannotGetJdbcConnectionException e) {
+            } catch (ObjectPoolException e) {
                 registerFailure(database, e);
             } catch (Exception e) {
-                LOGGER.error("Failed to extract statements from " + describe(database), e);
+                LOGGER.atError().setCause(e).log("Failed to extract statements from {}", describe(database));
             }
             return Collections.emptyList();
         }

@@ -4,8 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.Alert;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.model.IdentityAware;
+import net.microfalx.bootstrap.model.Field;
 import net.microfalx.lang.annotation.*;
 
 import java.time.LocalDateTime;
@@ -42,6 +44,7 @@ public class Node extends IdentityAware<String> {
 
     @Position(12)
     @Description("The state of the database node")
+    @Formattable(alert = AlertProvider.class)
     private net.microfalx.bootstrap.jdbc.support.Node.State state;
 
     @Position(100)
@@ -50,6 +53,7 @@ public class Node extends IdentityAware<String> {
 
     @Position(200)
     @Description("The description of the validation failure")
+    @Visible(false)
     private String validationError;
 
     /**
@@ -71,6 +75,20 @@ public class Node extends IdentityAware<String> {
         model.setPort(node.getDataSource().getPort());
         model.setStartedAt(node.getStartedAt());
         return model;
+    }
+
+    public static class AlertProvider implements Formattable.AlertProvider<Node, Field<Node>, net.microfalx.bootstrap.jdbc.support.Node.State> {
+
+        @Override
+        public Alert provide(net.microfalx.bootstrap.jdbc.support.Node.State value, Field<Node> field, Node model) {
+            Alert.Type type = switch (value) {
+                case UP -> Alert.Type.SUCCESS;
+                case DOWN -> Alert.Type.DANGER;
+                case STANDBY, RECOVERING -> Alert.Type.SECONDARY;
+                case UNKNOWN -> Alert.Type.LIGHT;
+            };
+            return Alert.builder().type(type).message(model.getValidationError()).build();
+        }
     }
 
 }

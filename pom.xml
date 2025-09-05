@@ -131,7 +131,7 @@
             <dependency>
                 <groupId>net.microfalx</groupId>
                 <artifactId>jdbcpool</artifactId>
-                <version>${object.pool.version}</version>
+                <version>${jdbcpool.version}</version>
             </dependency>
 
             <dependency>

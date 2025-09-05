@@ -1,12 +1,11 @@
 package net.microfalx.bootstrap.jdbc.support;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import net.microfalx.jdbcpool.ConnectionPool;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Metrics;
+import net.microfalx.objectpool.ObjectPoolException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.CannotGetJdbcConnectionException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -18,6 +17,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
+import static java.time.Duration.ofMillis;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Optional.ofNullable;
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.createJdbcUri;
@@ -67,10 +67,10 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
                         Collection<Node> extractedNodes = timeCallable("Extract Nodes", this::extractNodes);
                         copyNodeAttributes(extractedNodes);
                         nodes = extractedNodes.stream().collect(Collectors.toMap(node -> toIdentifier(node.getId()), node -> node));
-                    } catch (CannotGetJdbcConnectionException e) {
-                        LOGGER.debug("Failed to extract database nodes for " + describe(this) + ", database is not available, root cause: " + getRootCauseMessage(e));
+                    } catch (ObjectPoolException e) {
+                        LOGGER.debug("Failed to extract database nodes for {}, database is not available, root cause: {}", describe(this), getRootCauseMessage(e));
                     } catch (Exception e) {
-                        LOGGER.error("Failed to extract database nodes for " + describe(this), e);
+                        LOGGER.atError().setCause(e).log("Failed to extract database nodes for {}", describe(this));
                     }
                 }
             }
@@ -165,18 +165,12 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
         if (dataSource != null) return dataSource;
         URI uri = DatabaseUtils.getURI(getDataSource());
         uri = createJdbcUri(replaceHostAndPort(uri, hostname, port));
-        HikariConfig config = new HikariConfig();
-        config.setMinimumIdle(0);
-        config.setMaximumPoolSize(10);
-        config.setPoolName(hostname);
-        config.setJdbcUrl(uri.toASCIIString());
-        config.setUsername(getDataSource().getUserName());
-        config.setPassword(getDataSource().getPassword());
-        config.setConnectionTimeout(TEN_SECONDS);
-        config.setIdleTimeout(FIVE_MINUTE);
-        config.setInitializationFailTimeout(-1);
-        HikariDataSource hikariDataSource = new HikariDataSource(config);
-        dataSource = DataSource.create(id, hostname, hikariDataSource).withUri(uri)
+        ConnectionPool connectionPool = (ConnectionPool) ConnectionPool.create().uri(uri.toASCIIString())
+                .userName(getDataSource().getUserName()).password(getDataSource().getPassword())
+                .inactiveTimeout(ofMillis(FIVE_MINUTE)).connectionTimeout(ofMillis(TEN_SECONDS))
+                .maximum(10)
+                .id(id).name(hostname).build();
+        dataSource = DataSource.create(id, hostname, connectionPool.getDataSource()).withUri(uri)
                 .withUserName(getDataSource().getUserName())
                 .withPassword(getDataSource().getPassword())
                 .withNode(true);

@@ -17,6 +17,7 @@ import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 class DataSourceImpl implements DataSource, Cloneable {
@@ -69,12 +70,14 @@ class DataSourceImpl implements DataSource, Cloneable {
     @Override
     public String getHostname() {
         URI realUri = DatabaseUtils.getURI(this);
-        return StringUtils.defaultIfEmpty(realUri.getHost(), "localhost");
+        if (realUri == null) return "localhost";
+        return defaultIfEmpty(realUri.getHost(), "localhost");
     }
 
     @Override
     public int getPort() {
         URI realUri = DatabaseUtils.getURI(this);
+        if (realUri == null) return -1;
         int port = realUri.getPort();
         return port > 0 ? port : getDefaultPort(realUri);
     }
@@ -196,6 +199,8 @@ class DataSourceImpl implements DataSource, Cloneable {
     public void close() {
         if (dataSource instanceof HikariDataSource hikariDataSource) {
             hikariDataSource.close();
+        } else if (dataSource instanceof net.microfalx.jdbcpool.DataSource pooledDataSource) {
+            pooledDataSource.close();
         }
     }
 
