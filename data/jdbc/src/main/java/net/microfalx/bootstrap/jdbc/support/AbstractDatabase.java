@@ -277,7 +277,9 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
         if (hostname == null) return UNAVAILABLE_PORT;
         String[] parts = splitHostAndPort(hostname);
         try {
-            return parts.length == 2 ? Integer.parseInt(parts[1]) : UNAVAILABLE_PORT;
+            int port = parts.length == 2 ? Integer.parseInt(parts[1]) : UNAVAILABLE_PORT;
+            if (port <= 0 || port > 65535) port = UNAVAILABLE_PORT;
+            return port;
         } catch (NumberFormatException e) {
             return UNAVAILABLE_PORT;
         }

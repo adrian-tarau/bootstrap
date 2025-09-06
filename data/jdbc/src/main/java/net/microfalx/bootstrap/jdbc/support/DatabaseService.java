@@ -411,7 +411,7 @@ public class DatabaseService implements InitializingBean {
         URI uri = DatabaseUtils.getURI(dataSource);
         if (uri == null) return null;
         String scheme = uri.getScheme();
-        if (MYSQL_SCHEME.equals(scheme)) {
+        if (MYSQL_SCHEME.equals(scheme) || MARIADB_SCHEME.equals(scheme)) {
             return new MySqlDatabase(this, dataSource.getId(), dataSource.getName(), dataSource);
         } else if (VERTICA_SCHEME.equals(scheme)) {
             return new VerticaDatabase(this, dataSource.getId(), dataSource.getName(), dataSource);

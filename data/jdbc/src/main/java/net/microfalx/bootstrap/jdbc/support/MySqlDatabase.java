@@ -26,22 +26,24 @@ import static net.microfalx.lang.TimeUtils.toZonedDateTimeSameInstant;
 
 public class MySqlDatabase extends AbstractDatabase {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MySqlDatabase.class);
 
     private static final int TABLE_NOT_FOUND_ERROR = 1146;
     private static final int COMMAND_DENIED_ERROR = 1142;
     private static final int ACCESS_DENIED_ERROR = 1227;
     private static final String GARB_NODE_NAME = "garb";
 
+    private final Type type;
     private volatile boolean clustered = true;
 
     public MySqlDatabase(DatabaseService databaseService, String id, String name, DataSource dataSource) {
         super(databaseService, id, name, dataSource);
+        type = dataSource.getUri().toASCIIString().contains("mariadb") ? Type.MARIADB : Type.MYSQL;
     }
 
     @Override
     public Type getType() {
-        return Type.MYSQL;
+        return type;
     }
 
     @Override
