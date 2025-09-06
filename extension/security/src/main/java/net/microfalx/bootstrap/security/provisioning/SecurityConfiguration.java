@@ -101,6 +101,7 @@ public class SecurityConfiguration {
         allowPath(http, "image");
         allowPath(http, "font");
         allowPath(http, "login");
+        allowPath(http, "settings/session");
         configureMetrics(http);
         http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
     }
