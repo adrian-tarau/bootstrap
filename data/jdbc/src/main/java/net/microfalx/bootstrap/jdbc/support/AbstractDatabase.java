@@ -28,7 +28,7 @@ import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
-import static net.microfalx.lang.TimeUtils.TEN_SECONDS;
+import static net.microfalx.lang.TimeUtils.FIVE_SECONDS;
 
 /**
  * Base class for a database.
@@ -165,12 +165,12 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
         if (dataSource != null) return dataSource;
         URI uri = DatabaseUtils.getURI(getDataSource());
         uri = createJdbcUri(replaceHostAndPort(uri, hostname, port));
+        String dataSourceName = getName() + " (" + hostname + ")";
         ConnectionPool connectionPool = (ConnectionPool) ConnectionPool.create().uri(uri.toASCIIString())
                 .userName(getDataSource().getUserName()).password(getDataSource().getPassword())
-                .inactiveTimeout(ofMillis(FIVE_MINUTE)).connectionTimeout(ofMillis(TEN_SECONDS))
-                .maximum(10)
-                .id(id).name(hostname).build();
-        dataSource = DataSource.create(id, hostname, connectionPool.getDataSource()).withUri(uri)
+                .inactiveTimeout(ofMillis(FIVE_MINUTE)).connectionTimeout(ofMillis(FIVE_SECONDS))
+                .maximum(10).id(id).name(dataSourceName).build();
+        dataSource = DataSource.create(id, dataSourceName, connectionPool.getDataSource()).withUri(uri)
                 .withUserName(getDataSource().getUserName())
                 .withPassword(getDataSource().getPassword())
                 .withNode(true);
