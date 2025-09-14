@@ -102,6 +102,7 @@ public class SecurityConfiguration {
         allowPath(http, "font");
         allowPath(http, "login");
         allowPath(http, "settings/session");
+        allowPath(http, "ping");
         configureMetrics(http);
         http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
     }

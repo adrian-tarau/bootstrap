@@ -13,7 +13,9 @@ $(document).on({
             // ignore
         }
         if (!Utils.isDefined(json.errorCode)) json.errorCode = 0;
-        if (jqxhr.status === 400) {
+        if (jqxhr.status === 0) {
+            // communication problems, do not show any alert
+        } else if (jqxhr.status === 400) {
             if (json.errorCode === 24) {
                 Application.showWarnAlert("Abort", json.message);
             } else {

@@ -10,7 +10,8 @@ window.Logger = window.Logger || {};
  * @param {String} message the message
  */
 Logger.log = function (level, message) {
-    if (level === 'debug' && !this.traceEnabled) return;
+    if (level === 'trace' && !this.traceEnabled) return;
+    if (level === 'debug' && !this.debugEnabled) return;
     if (message && console) {
         if (!level || !(level in console)) {
             level = 'log';
@@ -18,6 +19,15 @@ Logger.log = function (level, message) {
         message = '[' + level.toUpperCase() + '] ' + message;
         console[level](message);
     }
+}
+
+/**
+ * Logs a message with a TRACE level.
+ *
+ * @param {String} message the message to log
+ */
+Logger.trace = function (message) {
+    this.log('trace', message);
 }
 
 /**
@@ -62,6 +72,15 @@ Logger.error = function (message) {
  * @param {boolean} enabled true to enable debug, false otherwise
  */
 Logger.setEnableDebug = function (enabled) {
+    Logger.debugEnabled = enabled;
+}
+
+/**
+ * Enables or disables logging with TRACE level.
+ *
+ * @param {boolean} enabled true to enable debug, false otherwise
+ */
+Logger.setTraceDebug = function (enabled) {
     Logger.traceEnabled = enabled;
 }
 

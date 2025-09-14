@@ -9,6 +9,11 @@ window.Application.MODAL_Z_INDEX = 1050;
  */
 const APP_AJAX_DEFAULT_OPTIONS = {self: true, params: false};
 const APP_AJAX_DEFAULT_TIMEOUT = 120 * 1000;
+const APP_AJAX_PING_DEFAULT_INTERVAL = 30000;
+const APP_AJAX_PING_CONNECTIVITY_THRESHOLD = 5;
+const APP_AJAX_PING_SESSION_THRESHOLD = 2;
+const APP_AJAX_MASK_NETWORK_MESSAGE = "<p style='font-size: 16px; font-weight: bold; padding-bottom: 10px;'>Server Communication Failure</p><p>Server stopped or communication with the server is not possible due to network failure.</p>";
+const APP_AJAX_MASK_AUTH_MESSAGE = "<p style='font-size: 16px; font-weight: bold; padding-bottom: 10px;'>Application Session</p><p>Application session was lost, please <a href='/login'>login</a> again.</p>";
 
 /**
  * Returns the path of the current request.
@@ -166,8 +171,10 @@ Application.delete = function (path, params, callback, options) {
  * @param {Boolean} [options.contentType] the content type of the request, defaults to "application/x-www-form-urlencoded; charset=UTF-8" for a POST
  * @param {String} [options.mask] an optional DOM selector, which will be masked while the request is running
  * @param {String} [options.maskMessage] an optional message to display while masking, defaults to no message
- * @param {Boolean} [options.error] an optional function, to be called if the request fails
- * @param {Boolean} [options.complete] an optional function, to be called when the request ends (successful or not)
+ * @param {Function} [options.error] an optional function, to be called if the request fails
+ * @param {Function} [options.complete] an optional function, to be called when the request ends (successful or not)
+ * @param {Boolean} [options.background] true if the request is a background request, false if triggered by users
+ * @param {Number} [options.timeout] an optional timeout in milliseconds, defaults to APP_AJAX_DEFAULT_TIMEOUT
  */
 Application.ajax = function (type, path, params, callback, options) {
     const me = this;
@@ -175,15 +182,16 @@ Application.ajax = function (type, path, params, callback, options) {
     options.self = Utils.isDefined(options.self) ? options.self : true;
     options.params = Utils.isDefined(options.params) ? options.params : false;
     options.error = Utils.defaultIfNotDefinedOrNull(options.error, function () {
-        // nothing to do for errors
     });
+    options.background = Utils.defaultIfNotDefinedOrNull(options.background, false);
     options.dataType = Utils.defaultIfNotDefinedOrNull(options.dataType, "text");
     params = options.params ? this.getQuery(params) : params;
     options.params = false;
     type = Utils.defaultIfNotDefinedOrNull(type, "GET");
+    let timeout = Utils.defaultIfNotDefinedOrNull(options.timeout, APP_AJAX_DEFAULT_TIMEOUT);
     let uri = this.getUri(path, {}, options);
     let data = type === 'POST' && Utils.isNotEmpty(options.data) ? options.data : params;
-    Logger.info("Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);
+    Logger.log(options.background ? "info" : "trace", "Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);
     if (options.mask) me.mask(options.mask, options.maskMessage);
     $.ajax({
         url: uri,
@@ -191,7 +199,7 @@ Application.ajax = function (type, path, params, callback, options) {
         data: data,
         dataType: options.dataType,
         contentType: Utils.defaultIfNotDefinedOrNull(options.contentType, "application/x-www-form-urlencoded; charset=UTF-8"),
-        timeout: APP_AJAX_DEFAULT_TIMEOUT,
+        timeout: timeout,
         headers: {"X-TimeZone": Application.getTimezoneOffset()},
         success: function (output, status, xhr) {
             if (options.complete) options.complete.apply(this, arguments);
@@ -377,19 +385,121 @@ Application.copyToClipboard = function (selector) {
 }
 
 /**
+ * Pings the backend to keep the session alive and detect if the server is still accessible.
+ */
+Application.ping = function () {
+    let me = this;
+    Application.get("/ping", {}, function (data) {
+        if (me.isConnectionLost()) {
+            Logger.info("Connection re-established");
+            me.unmask();
+            me.pingConnectionLostCount = 0;
+            me.pingSessionLostCount = 0;
+            me.checkServerStatusSent = false;
+        }
+        let sessionLost = !data.success && data.errorCode === 5;
+        if (sessionLost) {
+            me.pingSessionLostCount++;
+            me.checkServerStatus(APP_AJAX_PING_SESSION_THRESHOLD);
+            if (me.isSessionLost()) me.showSessionLost();
+        } else {
+            me.pingSessionLostCount = 0;
+            me.checkServerStatusSent = false;
+        }
+    }, {
+        self: false,
+        timeout: 2000,
+        dataType: 'json',
+        error: function (xhr) {
+            if (xhr.status === 0) {
+                Logger.trace("Failed to executed ping, connection lost");
+                me.pingConnectionLostCount++;
+                me.checkServerStatus(APP_AJAX_PING_CONNECTIVITY_THRESHOLD);
+                if (me.isConnectionLost()) me.showConnectionLost();
+            }
+        }
+    });
+}
+
+/**
+ * Returns whether the session is lost.
+ * @return {boolean} true if lost, false otherwise
+ */
+Application.isSessionLost = function () {
+    this.pingSessionLostCount = this.pingSessionLostCount || 0;
+    return this.pingSessionLostCount >= APP_AJAX_PING_SESSION_THRESHOLD;
+}
+
+/**
+ * Shows an application mask to inform the user that the session was lost.
+ */
+Application.showSessionLost = function () {
+    let messageElement = $("<div>", {
+        "class": "app-mask",
+        "html": APP_AJAX_MASK_AUTH_MESSAGE
+    });
+    this.mask(null, {
+        size: false,
+        custom: messageElement
+    });
+}
+
+/**
+ * Returns whether the connection with the server is lost.
+ * @return {boolean} true if lost, false otherwise
+ */
+Application.isConnectionLost = function () {
+    this.pingConnectionLostCount = this.pingConnectionLostCount || 0;
+    return this.pingConnectionLostCount >= APP_AJAX_PING_CONNECTIVITY_THRESHOLD;
+}
+
+/**
+ * Shows an application mask to inform the user that the connection was lost.
+ */
+Application.showConnectionLost = function () {
+    let messageElement = $("<div>", {
+        "class": "app-mask",
+        "html": APP_AJAX_MASK_NETWORK_MESSAGE
+    });
+    this.mask(null, {
+        size: false,
+        custom: messageElement
+    });
+}
+
+/**
+ * Fires a few extra pings to validate if the server is still there.
+ *
+ * @param {Number} pings the number of pings to execute for validation
+ */
+Application.checkServerStatus = function (pings) {
+    if (this.checkServerStatusSent) return;
+    Logger.trace("Check server status");
+    let interval = 1000;
+    for (let i = 1; i <= pings; i++) {
+        Utils.defer(this.ping, interval, this);
+        interval *= 2;
+    }
+    this.checkServerStatusSent = true;
+}
+
+/**
  * Masks the element with a given selector.
  *
- * @param {String} [selector] the DOM selector to mask, if not provided the whole body will be masked
- * @param {String} [message] the message to display while masking, defaults to no message
+ * @param {String} [selector] the DOM selector to mask, if not provided the whole body will be masked *
+ * @param {Object} [options] additional options passed to the overlay library (see https://gasparesganga.com/labs/jquery-loading-overlay/#options-and-defaults-values)
  */
-Application.mask = function (selector, message) {
-    let options = {
-        image: false,
-        //text: message,
-        fontawesome: "fa-solid fa-arrows-rotate",
-        fontawesomeAnimation: 'rotate_right',
-        minSize: 20,
-        maxSize: 40
+Application.mask = function (selector, options) {
+    options = Utils.applyIf(options || {}, {
+        image: ""
+    });
+    if (Utils.isEmpty(options.custom) && Utils.isEmpty(options.message)) {
+        options = Utils.applyIf(options, {
+            fontawesome: "fa-solid fa-arrows-rotate",
+            fontawesomeAnimation: 'rotate_right',
+            minSize: 20,
+            maxSize: 40
+        });
     }
     $.LoadingOverlaySetup(options);
     if (selector) {
@@ -401,9 +511,15 @@ Application.mask = function (selector, message) {
 
 /**
  * Unmasks the element with a given selector.
+ *
+ * @param {String} [selector] the DOM selector to mask, if not provided the whole body will be masked
  */
 Application.unmask = function (selector) {
-    if (selector) $(selector).LoadingOverlay("hide", true);
+    if (selector) {
+        $(selector).LoadingOverlay("hide", true);
+    } else {
+        $.LoadingOverlay("hide", true);
+    }
 }
 
 /**
@@ -531,6 +647,7 @@ Application.initialize = function () {
 Application.start = function () {
     Logger.debug("Start application");
     this.fire("start");
+    Utils.schedule(this.ping, APP_AJAX_PING_DEFAULT_INTERVAL, this)
 }
 
 // initialize application

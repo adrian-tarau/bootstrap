@@ -39,6 +39,11 @@ public class JsonResponse<T extends JsonResponse<T>> implements Serializable {
     public static final int INTERNAL_ERROR = 4;
 
     /**
+     * Error code indicating that the user is not authorized
+     */
+    public static final int NOT_AUTHORIZED = 5;
+
+    /**
      * Error code indicating that the request resource failed to be validated.
      */
     public static final int VALIDATION_ERROR = 20;

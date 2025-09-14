@@ -185,13 +185,32 @@ Utils.requireNonNull = function (reference) {
 /**
  * Defers the execution of the callback by a number of milliseconds.
  *
- * @param {Function} callback the callback
+ * @param {Function} callback the callback function
  * @param {Number} [delay] the delay in milliseconds
  * @param {Object} [self] the self
  */
 Utils.defer = function (callback, delay, self) {
     if (!this.isDefined(delay)) delay = 0;
-    setTimeout(callback, delay);
+    if (self) {
+        setTimeout(callback.bind(self), delay);
+    } else {
+        setTimeout(callback, delay);
+    }
+}
+
+/**
+ * Schedules the execution of the callback at regular intervals.
+ * @param {Function} callback the callback function
+ * @param {Number} [interval=5000] the interval in milliseconds
+ * @param {Object} [self] the self
+ */
+Utils.schedule = function (callback, interval, self) {
+    if (!this.isDefined(interval)) interval = 5000;
+    if (self) {
+        setInterval(callback.bind(self), interval);
+    } else {
+        setTimeout(callback, interval);
+    }
 }
 
 /**
@@ -357,6 +376,42 @@ Utils.intercept = function (value, interceptor) {
         return value;
     }
 }
+
+/**
+ * Copies all the properties of `source` to the specified `target`.
+ *
+ * @param {Object} target The receiver of the properties.
+ * @param {Object} source The source of the properties.
+ * @return {Object} returns the target.
+ */
+Utils.apply = function (target, source) {
+    if (target) {
+        if (source && this.isObject(source)) {
+            for (let property in source) {
+                target[property] = source[property];
+            }
+        }
+    }
+    return target;
+};
+
+/**
+ * Copies all the properties of `source` to the specified `target` only if they are undefined.
+ *
+ * @param {Object} target The receiver of the properties.
+ * @param {Object} source The source of the properties.
+ * @return {Object} returns the target.
+ */
+Utils.applyIf = function (target, source) {
+    if (target) {
+        if (source && this.isObject(source)) {
+            for (let property in source) {
+                if (this.isUndefined(target[property])) target[property] = source[property];
+            }
+        }
+    }
+    return target;
+};
 
 /**
  * Returns a unique identifier.
