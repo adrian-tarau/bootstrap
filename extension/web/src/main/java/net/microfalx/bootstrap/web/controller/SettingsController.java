@@ -14,7 +14,7 @@ import java.time.ZoneId;
 @Controller
 public class SettingsController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HomeController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SettingsController.class);
 
     @PostMapping("session/time-zone")
     @ResponseBody()

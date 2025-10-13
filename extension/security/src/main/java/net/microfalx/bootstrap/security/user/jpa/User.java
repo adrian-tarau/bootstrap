@@ -74,15 +74,15 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
     private String description;
 
     @Override
+    public String getId() {
+        return getUserName();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User user)) return false;
         return Objects.equals(userName, user.userName);
-    }
-
-    @Override
-    public String getId() {
-        return getUserName();
     }
 
     @Override
