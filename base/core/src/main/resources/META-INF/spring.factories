@@ -1,1 +1,2 @@
 org.springframework.context.ApplicationListener=net.microfalx.bootstrap.core.InitializeListener
+org.springframework.boot.diagnostics.FailureAnalyzer=net.microfalx.bootstrap.core.InitializeFailureAnalyzer
