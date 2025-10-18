@@ -1,11 +1,10 @@
-package net.microfalx.bootstrap.security.group;
+package net.microfalx.bootstrap.security.group.jpa;
 
 import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.security.group.jpa.Group;
-import net.microfalx.bootstrap.security.group.jpa.GroupRepository;
+import net.microfalx.bootstrap.security.group.GroupService;
 import net.microfalx.bootstrap.security.util.SecurityDataSetController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

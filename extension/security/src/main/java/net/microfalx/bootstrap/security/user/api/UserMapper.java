@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.security.user.api;
 
-import net.microfalx.bootstrap.restapi.RestApiMapper;
+import net.microfalx.bootstrap.restapi.AbstractRestApiMapper;
 import net.microfalx.bootstrap.security.user.jpa.User;
 
-public interface UserMapper extends RestApiMapper<User, UserDto> {
+public class UserMapper extends AbstractRestApiMapper<User, UserDto> {
 }
