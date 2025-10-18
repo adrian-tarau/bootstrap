@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.security.group.api;
 
 import net.microfalx.bootstrap.restapi.AbstractRestApiMapper;
+import net.microfalx.bootstrap.restapi.RestApiMapper;
 import net.microfalx.bootstrap.security.group.jpa.Group;
 import net.microfalx.bootstrap.security.user.Role;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GroupMapperTest {
 
-    private AbstractRestApiMapper<Group, GroupDTO> mapper;
+    private RestApiMapper<Group, GroupDTO> mapper;
 
     @BeforeEach
     void setUp() {
