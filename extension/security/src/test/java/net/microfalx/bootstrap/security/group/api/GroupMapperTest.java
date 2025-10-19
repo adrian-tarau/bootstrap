@@ -4,12 +4,14 @@ import net.microfalx.bootstrap.restapi.AbstractRestApiMapper;
 import net.microfalx.bootstrap.restapi.RestApiMapper;
 import net.microfalx.bootstrap.security.group.jpa.Group;
 import net.microfalx.bootstrap.security.user.Role;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GroupMapperTest {
@@ -28,7 +30,7 @@ class GroupMapperTest {
         assertEquals(groupDTO.getName(), group.getName());
         assertEquals(groupDTO.getDescription(), group.getDescription());
         assertEquals(groupDTO.isEnabled(), group.isEnabled());
-        assertIterableEquals(groupDTO.getRoles(), group.getRoles());
+        assertThat(group.getRoles()).containsExactlyInAnyOrder(Role.ADMIN, Role.create("12345").build());
     }
 
     @Test
@@ -38,7 +40,7 @@ class GroupMapperTest {
         assertEquals(group.getName(), groupDTO.getName());
         assertEquals(group.getDescription(), groupDTO.getDescription());
         assertEquals(group.isEnabled(), groupDTO.isEnabled());
-        assertIterableEquals(group.getRoles(), groupDTO.getRoles());
+        assertThat(group.getRoles()).containsExactlyInAnyOrder(Role.GUEST, Role.create("67890").build());
     }
 
     private GroupDTO createGroupDTO() {
