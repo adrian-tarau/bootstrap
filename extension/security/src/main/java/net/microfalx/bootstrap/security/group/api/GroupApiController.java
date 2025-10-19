@@ -13,6 +13,7 @@ import net.microfalx.bootstrap.restapi.RestApiDataSetController;
 import net.microfalx.bootstrap.restapi.RestApiMapper;
 import net.microfalx.bootstrap.security.group.GroupService;
 import net.microfalx.bootstrap.security.group.jpa.Group;
+import net.microfalx.bootstrap.security.group.jpa.GroupRepository;
 import net.microfalx.bootstrap.security.user.api.UserDto;
 import net.microfalx.bootstrap.security.user.jpa.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ import java.util.List;
 @DataSet(model = Group.class, timeFilter = false)
 @Tag(name = "Groups", description = "Group Management API")
 public class GroupApiController extends RestApiDataSetController<Group, GroupDTO, Long> {
+
+    @Autowired
+    private GroupRepository userRepository;
 
     @Autowired
     private GroupService groupService;
