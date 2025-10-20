@@ -18,7 +18,8 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  */
 public abstract class RestApiModelController<ENTITY, DTO, ID> extends RestApiController {
 
-    @Autowired private ApplicationContext applicationContext;
+    @Autowired
+    private ApplicationContext applicationContext;
 
     private RestApiMapper<ENTITY, DTO> mapper;
 
@@ -68,8 +69,8 @@ public abstract class RestApiModelController<ENTITY, DTO, ID> extends RestApiCon
         if (mapper == null) {
             mapper = ClassUtils.create(getMapperClass());
             if (mapper instanceof AbstractRestApiMapper<?, ?> abstractRestApiMapper) {
-                abstractRestApiMapper.configureMapper(abstractRestApiMapper.modelMapper);
                 abstractRestApiMapper.setApplicationContext(applicationContext);
+                abstractRestApiMapper.afterPropertiesSet();
             }
         }
         return mapper;
