@@ -14,6 +14,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
@@ -23,6 +24,7 @@ import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 import static net.microfalx.lang.StringUtils.toLowerCase;
 import static net.microfalx.lang.TimeUtils.toZonedDateTimeSameInstant;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 public class MySqlDatabase extends AbstractDatabase {
 
@@ -35,6 +37,7 @@ public class MySqlDatabase extends AbstractDatabase {
 
     private final Type type;
     private volatile boolean clustered = true;
+    private final Set<String> transactionExtractedFailure = new CopyOnWriteArraySet<>();
 
     public MySqlDatabase(DatabaseService databaseService, String id, String name, DataSource dataSource) {
         super(databaseService, id, name, dataSource);
@@ -56,7 +59,9 @@ public class MySqlDatabase extends AbstractDatabase {
                 if (rootCause instanceof SQLException sqlException) {
                     int errorCode = sqlException.getErrorCode();
                     clustered = !(errorCode == TABLE_NOT_FOUND_ERROR || errorCode == COMMAND_DENIED_ERROR);
-                    if (clustered) LOGGER.error("Could not extract nodes from " + getName(), e);
+                    if (clustered) {
+                        LOGGER.error("Could not extract nodes from {}, root cause: {}", getName(), getRootCauseMessage(e));
+                    }
                 } else {
                     return rethrowExceptionAndReturn(e);
                 }
@@ -84,7 +89,14 @@ public class MySqlDatabase extends AbstractDatabase {
                 transactions.addAll(time("Extract Transactions - " + node.getName(), () -> extractTransactionsFromNode(node)));
             } catch (BadSqlGrammarException e) {
                 int errorCode = net.microfalx.lang.ExceptionUtils.getSQLErrorCode(e);
-                if (errorCode != ACCESS_DENIED_ERROR) LOGGER.error("Failed to extract transactions", e);
+                if (errorCode == ACCESS_DENIED_ERROR) {
+                    if (transactionExtractedFailure.add(node.getId())) {
+                        LOGGER.warn("Failed to extract transactions from {} due to insufficient privileges", node.getName());
+                    }
+                } else {
+                    LOGGER.error("Failed to extract transactions", e);
+
+                }
             }
         }
         return transactions;
