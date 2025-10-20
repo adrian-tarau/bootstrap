@@ -31,16 +31,16 @@ public class UserApiController extends RestApiDataSetController<User, UserDto, L
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserDto.class)))
     @GetMapping
     public List<UserDto> list(
-            @Parameter(description = "The query used to filter by various model fields", example = "name ~ john")
+            @Parameter(description = "The query used to filter by various model fields", name = "name")
             @RequestParam(name = "query", required = false) String query,
 
-            @Parameter(description = "The sorting desired for the result set", example = "jane")
+            @Parameter(description = "The sorting desired for the result set", name = "name=asc")
             @RequestParam(name = "sort", required = false) String sort,
 
             @Parameter(description = "The page to return for the result set", example = "0")
             @RequestParam(name = "page", required = false) int page,
 
-            @Parameter(description = "The page size for the result set", example = "20")
+            @Parameter(description = "The page size for the result set", name = "20")
             @RequestParam(name = "page-size", required = false) int pageSize
     ) {
         return doList(null, query, sort, page, pageSize);

@@ -38,10 +38,10 @@ public class GroupApiController extends RestApiDataSetController<Group, GroupDTO
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GroupDTO.class)))
     @GetMapping
     public List<GroupDTO> list(
-            @Parameter(description = "The query used to filter by various model fields", example = "name ~ john")
+            @Parameter(description = "The query used to filter by various model fields", name = "name")
             @RequestParam(name = "query", required = false) String query,
 
-            @Parameter(description = "The sorting desired for the result set", example = "jane")
+            @Parameter(description = "The sorting desired for the result set", name = "name=asc")
             @RequestParam(name = "sort", required = false) String sort,
 
             @Parameter(description = "The page to return for the result set", example = "0")

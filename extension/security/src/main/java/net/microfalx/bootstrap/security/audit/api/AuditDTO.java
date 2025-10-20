@@ -21,9 +21,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @ToString
-@Schema(example = "Audit", description = "An audit record")
+@Schema(name = "Audit", description = "An audit record")
 public class AuditDTO {
 
+    private int id;
     private String action;
     private String module;
     private String category;

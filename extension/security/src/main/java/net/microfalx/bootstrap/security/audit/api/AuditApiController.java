@@ -26,10 +26,10 @@ public class AuditApiController extends RestApiDataSetController<Audit, AuditDTO
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AuditDTO.class)))
     @GetMapping
     public List<AuditDTO> list(
-            @Parameter(description = "The query used to filter by various model fields", example = "name ~ john")
+            @Parameter(description = "The query used to filter by various model fields", name = "action")
             @RequestParam(name = "query", required = false) String query,
 
-            @Parameter(description = "The sorting desired for the result set", example = "jane")
+            @Parameter(description = "The sorting desired for the result set", name = "createdAt=desc")
             @RequestParam(name = "sort", required = false) String sort,
 
             @Parameter(description = "The page to return for the result set", example = "0")

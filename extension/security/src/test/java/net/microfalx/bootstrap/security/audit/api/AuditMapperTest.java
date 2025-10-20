@@ -28,6 +28,7 @@ class AuditMapperTest {
     void toEntity() {
         AuditDTO auditDTO = createAuditDTO();
         Audit audit = mapper.toEntity(auditDTO);
+        assertEquals(auditDTO.getId(), audit.getId());
         assertEquals(auditDTO.getAction(), audit.getAction());
         assertEquals(auditDTO.getModule(), audit.getModule());
         assertEquals(auditDTO.getCategory(), audit.getCategory());
@@ -41,6 +42,7 @@ class AuditMapperTest {
     void toDTO() {
         Audit audit = createAudit();
         AuditDTO auditDTO = mapper.toDto(audit);
+        assertEquals(audit.getId(), auditDTO.getId());
         assertEquals(audit.getAction(), auditDTO.getAction());
         assertEquals(audit.getModule(), auditDTO.getModule());
         assertEquals(audit.getCategory(), auditDTO.getCategory());
@@ -52,6 +54,7 @@ class AuditMapperTest {
 
     private AuditDTO createAuditDTO() {
         AuditDTO auditDTO = new AuditDTO();
+        auditDTO.setId(1);
         auditDTO.setAction("Sample Action");
         auditDTO.setModule("Sample Module");
         auditDTO.setCategory("Sample Category");
@@ -64,6 +67,7 @@ class AuditMapperTest {
 
     private Audit createAudit() {
         Audit audit = new Audit();
+        audit.setId(1);
         audit.setAction("Sample Action");
         audit.setModule("Sample Module");
         audit.setCategory("Sample Category");
