@@ -1,9 +1,12 @@
 package net.microfalx.bootstrap.security.audit;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.security.user.UserService;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.annotation.Action;
+import net.microfalx.lang.annotation.Module;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.HandlerMethod;
@@ -15,7 +18,7 @@ import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.*;
 
 @Configuration
 public class AuditMvcConfig implements WebMvcConfigurer {
@@ -37,21 +40,36 @@ public class AuditMvcConfig implements WebMvcConfigurer {
     private void audit(HttpServletRequest request, HttpServletResponse response, Method method) {
         String path = request.getRequestURI();
         if (shouldExclude(path)) return;
-        String action = StringUtils.capitalize(method.getName());
-        Action nameAnnot = method.getAnnotation(Action.class);
-        if (nameAnnot != null) action = nameAnnot.value();
         AuditContext context = AuditContext.get();
         context.setReference(path);
         context.setErrorCode(Integer.toString(response.getStatus()));
         String clientInfo = request.getRemoteHost();
-        if (StringUtils.isNotEmpty(request.getRemoteUser())) clientInfo = request.getRemoteUser() + "@" + clientInfo;
+        if (isNotEmpty(request.getRemoteUser())) clientInfo = request.getRemoteUser() + "@" + clientInfo;
         context.setClientInfo(clientInfo);
-        if (isEmpty(context.getAction())) context.setAction(action);
+        if (isEmpty(context.getAction())) context.setAction(getAction(method));
+        if (isEmpty(context.getModule())) context.setModule(getModule(method));
         userService.audit(context);
     }
 
+    private String getAction(Method method) {
+        String action = StringUtils.capitalize(method.getName());
+        Action nameAnnot = method.getAnnotation(Action.class);
+        if (nameAnnot != null) action = nameAnnot.value();
+        Operation operationAnnot = method.getAnnotation(Operation.class);
+        if (operationAnnot != null) action = operationAnnot.summary();
+        return action;
+    }
+
+    private String getModule(Method method) {
+        String module = method.getDeclaringClass().getSimpleName();
+        module = replaceFirst(module, "Controller", StringUtils.EMPTY_STRING);
+        Module nameAnnot = method.getAnnotation(Module.class);
+        if (nameAnnot != null) module = nameAnnot.value();
+        return module;
+    }
+
     private void registerExclusion(String path) {
-        excludedPaths.add(StringUtils.removeStartSlash(path).toLowerCase());
+        excludedPaths.add(removeStartSlash(path).toLowerCase());
     }
 
     private void registerDefaultPaths() {
@@ -61,7 +79,7 @@ public class AuditMvcConfig implements WebMvcConfigurer {
     }
 
     private boolean shouldExclude(String path) {
-        path = StringUtils.removeStartSlash(path).toLowerCase();
+        path = removeStartSlash(path).toLowerCase();
         for (String excludedPath : excludedPaths) {
             if (path.startsWith(excludedPath)) return true;
         }

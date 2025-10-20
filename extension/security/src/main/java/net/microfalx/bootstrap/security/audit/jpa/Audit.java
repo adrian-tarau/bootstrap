@@ -22,12 +22,6 @@ import java.time.LocalDateTime;
 @ToString
 public class Audit extends IdentityAware<Integer> {
 
-    public static String OPEN = "Open";
-    public static String ADD = "Add";
-    public static String EDIT = "Edit";
-    public static String DELETE = "Delete";
-    public static String EXECUTE = "Execute";
-
     @JoinColumn(name = "username", nullable = false)
     @NotNull
     @ManyToOne

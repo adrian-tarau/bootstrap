@@ -8,12 +8,18 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
  */
 public class AuditContext {
 
+    public static final String ACTION_OPEN = "Open";
+    public static final String ACTION_ADD = "Add";
+    public static final String ACTION_EDIT = "Edit";
+    public static final String ACTION_DELETE = "Delete";
+    public static final String ACTION_EXECUTE = "Execute";
+
     private static final ThreadLocal<AuditContext> CONTEXT = ThreadLocal.withInitial(AuditContext::new);
 
     private static final String NA = "-";
 
     private String action;
-    private String module = "Core";
+    private String module;
     private String category = "System";
     private String clientInfo;
     private String errorCode;

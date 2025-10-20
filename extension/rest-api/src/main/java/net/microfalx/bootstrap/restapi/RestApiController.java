@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import net.microfalx.bootstrap.dataset.DataSetService;
+import net.microfalx.lang.annotation.Module;
 import net.microfalx.threadpool.ThreadPool;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @ApiResponse(responseCode = "429", description = "Too Many Requests", content = @Content(schema = @Schema(implementation = RestApiError.class)))
 @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = RestApiError.class)))
 @ApiResponse(responseCode = "503", description = "Service Unavailable", content = @Content(schema = @Schema(implementation = RestApiError.class)))
+@Module("REST API")
 public abstract class RestApiController {
 
     @Autowired

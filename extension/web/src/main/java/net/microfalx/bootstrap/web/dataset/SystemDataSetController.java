@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.web.dataset;
 
 import jakarta.annotation.security.RolesAllowed;
 import net.microfalx.bootstrap.web.application.annotation.SystemTheme;
+import net.microfalx.lang.annotation.Module;
 
 /**
  * Base class for all data set used for system administration.
@@ -14,5 +15,6 @@ import net.microfalx.bootstrap.web.application.annotation.SystemTheme;
  */
 @SystemTheme
 @RolesAllowed("admin")
+@Module("System")
 public abstract class SystemDataSetController<M, ID> extends DataSetController<M, ID> {
 }
