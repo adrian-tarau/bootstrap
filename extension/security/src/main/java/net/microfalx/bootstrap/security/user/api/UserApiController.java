@@ -11,9 +11,12 @@ import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.restapi.RestApiDataSetController;
 import net.microfalx.bootstrap.restapi.RestApiMapper;
+import net.microfalx.bootstrap.security.group.jpa.GroupRepository;
 import net.microfalx.bootstrap.security.user.jpa.User;
+import net.microfalx.bootstrap.security.user.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,13 +25,18 @@ import java.util.List;
 @RequestMapping("/api/v1/users")
 @DataSet(model = net.microfalx.bootstrap.security.user.jpa.User.class, timeFilter = false)
 @Tag(name = "Users", description = "User Management API")
+@Transactional
 public class UserApiController extends RestApiDataSetController<User, UserDto, Long> {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Operation(summary = "List users", description = "Returns a list of users with search and paging.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserDto.class)))
+    @Transactional(readOnly = true)
     @GetMapping
     public List<UserDto> list(
             @Parameter(description = "The query used to filter by various model fields", name = "name")
@@ -48,6 +56,7 @@ public class UserApiController extends RestApiDataSetController<User, UserDto, L
 
     @Operation(summary = "Get user", description = "Returns a single user by its unique identifier.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserDto.class)))
+    @Transactional(readOnly = true)
     @GetMapping("/{id}")
     public UserDto get(@Parameter(description = "The user identifier", example = "42") @PathVariable Long id) {
         return doFind(id);
@@ -76,6 +85,20 @@ public class UserApiController extends RestApiDataSetController<User, UserDto, L
     @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
     public void delete(@Parameter(description = "The user identifier", example = "42") @PathVariable Long id) {
         doDeleteById(id);
+    }
+
+    @Operation(summary = "Add user to group", description = "Add a user to a group.")
+    @ApiResponse(responseCode = "204", description = "User updated with new group")
+    @PostMapping("/{userId}/groups/{groupId}")
+    public void addUserToGroup(@PathVariable("userId") String userName, @PathVariable int groupId) {
+        userRepository.addUserToGroup(userName, groupId);
+    }
+
+    @Operation(summary = "Remove user from group", description = "Remove a user from a group.")
+    @ApiResponse(responseCode = "204", description = "User updated without the group")
+    @DeleteMapping("/{userId}/groups/{groupId}")
+    public void removeUserFromGroup(@PathVariable("userId") String userName, @PathVariable int groupId) {
+        userRepository.removeUserToGroup(userName, groupId);
     }
 
     @Override

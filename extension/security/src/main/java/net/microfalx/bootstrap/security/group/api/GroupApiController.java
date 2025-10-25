@@ -18,6 +18,7 @@ import net.microfalx.bootstrap.security.user.api.UserDto;
 import net.microfalx.bootstrap.security.user.jpa.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.List;
 @RequestMapping("/api/v1/groups")
 @DataSet(model = Group.class, timeFilter = false)
 @Tag(name = "Groups", description = "Group Management API")
+@Transactional
 public class GroupApiController extends RestApiDataSetController<Group, GroupDTO, Long> {
 
     @Autowired
@@ -36,6 +38,7 @@ public class GroupApiController extends RestApiDataSetController<Group, GroupDTO
 
     @Operation(summary = "List groups", description = "Returns a list of groups with search and paging.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GroupDTO.class)))
+    @Transactional(readOnly = true)
     @GetMapping
     public List<GroupDTO> list(
             @Parameter(description = "The query used to filter by various model fields", name = "name")
@@ -55,6 +58,7 @@ public class GroupApiController extends RestApiDataSetController<Group, GroupDTO
 
     @Operation(summary = "Get group", description = "Returns a single group by its unique identifier.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GroupDTO.class)))
+    @Transactional(readOnly = true)
     @GetMapping("/{id}")
     public GroupDTO get(@Parameter(description = "The user identifier", example = "42") @PathVariable Long id) {
         return doFind(id);
@@ -83,6 +87,20 @@ public class GroupApiController extends RestApiDataSetController<Group, GroupDTO
     @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
     public void delete(@Parameter(description = "The group identifier", example = "42") @PathVariable Long id) {
         doDeleteById(id);
+    }
+
+    @Operation(summary = "Add member", description = "Add a user to this group.")
+    @ApiResponse(responseCode = "200", description = "Member added")
+    @PostMapping("/{groupId}/members/{userId}")
+    public void addMember(@PathVariable int groupId, @PathVariable("userId") String username) {
+        userRepository.addUser(groupId, username);
+    }
+
+    @Operation(summary = "Remove member", description = "Remove a user from this group.")
+    @ApiResponse(responseCode = "204", description = "Member removed")
+    @DeleteMapping("/{groupId}/members/{userId}")
+    public void removeMember(@PathVariable int groupId, @PathVariable("userId") String username) {
+        userRepository.removeUser(groupId, username);
     }
 
     @Override

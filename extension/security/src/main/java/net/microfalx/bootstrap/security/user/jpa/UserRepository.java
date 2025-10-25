@@ -1,9 +1,11 @@
 package net.microfalx.bootstrap.security.user.jpa;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -34,4 +36,14 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
     @Modifying
     @Query("update User u set u.enabled = true where u.enabled = false and id = ?1")
     void activate(int id);
+
+    @Modifying
+    @Transactional
+    @Query(value = "insert into security_group_members(username,group_id) values(:username,:groupId)", nativeQuery = true)
+    void addUserToGroup(@Param("username") String username, @Param("groupId") int groupId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "delete from security_group_members where username=:username and group_id=:groupId", nativeQuery = true)
+    void removeUserToGroup(@Param("username") String username, @Param("groupId") int groupId);
 }
