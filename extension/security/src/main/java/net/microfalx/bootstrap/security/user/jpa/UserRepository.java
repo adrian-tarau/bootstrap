@@ -20,6 +20,14 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
     User findByUserName(String userName);
 
     /**
+     * Locates a user by its token.
+     *
+     * @param token the token
+     * @return the user, null if it does not exist
+     */
+    User findByToken(String token);
+
+    /**
      * Disables a user with a given id.
      *
      * @param id the primary key of the user

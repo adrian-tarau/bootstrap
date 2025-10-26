@@ -12,10 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * Base class for all REST API controllers.
  */
-
 @SecurityRequirement(name = "bearer")
-@SecurityRequirement(name = "basicAuth")
-@SecurityRequirement(name = "apiKeyAuth")
+@SecurityRequirement(name = "apiKey")
 @ApiResponse(responseCode = "200", description = "OK")
 @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = RestApiError.class)))
 @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = RestApiError.class)))

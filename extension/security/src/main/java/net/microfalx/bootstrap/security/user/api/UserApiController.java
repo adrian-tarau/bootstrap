@@ -11,7 +11,6 @@ import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.restapi.RestApiDataSetController;
 import net.microfalx.bootstrap.restapi.RestApiMapper;
-import net.microfalx.bootstrap.security.group.jpa.GroupRepository;
 import net.microfalx.bootstrap.security.user.jpa.User;
 import net.microfalx.bootstrap.security.user.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +41,7 @@ public class UserApiController extends RestApiDataSetController<User, UserDto, L
             @Parameter(description = "The query used to filter by various model fields", name = "name")
             @RequestParam(name = "query", required = false) String query,
 
-            @Parameter(description = "The sorting desired for the result set", name = "name=asc")
+            @Parameter(description = "The sorting desired for the result set", name = "name=asc" )
             @RequestParam(name = "sort", required = false) String sort,
 
             @Parameter(description = "The page to return for the result set", example = "0")

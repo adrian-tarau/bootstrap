@@ -1,7 +1,11 @@
 package net.microfalx.bootstrap.security.user;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
+import net.microfalx.bootstrap.restapi.ApiCredentialService;
 import net.microfalx.bootstrap.security.SecurityConstants;
 import net.microfalx.bootstrap.security.SecurityContext;
 import net.microfalx.bootstrap.security.audit.AuditContext;
@@ -32,6 +36,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +57,7 @@ import static net.microfalx.lang.StringUtils.toIdentifier;
  * A service around user management.
  */
 @Service
-public class UserService extends ApplicationContextSupport implements InitializingBean, ApplicationListener<LogoutSuccessEvent> {
+public class UserService extends ApplicationContextSupport implements ApiCredentialService, InitializingBean, ApplicationListener<LogoutSuccessEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
@@ -87,6 +92,9 @@ public class UserService extends ApplicationContextSupport implements Initializi
 
     private final Map<String, Role> roles = new ConcurrentHashMap<>();
     private final Map<String, SecurityContext> securityContexts = new ConcurrentHashMap<>();
+    private final Cache<String, UserDetails> tokenCache = CacheBuilder.newBuilder()
+            .maximumSize(100).expireAfterWrite(Duration.ofSeconds(30))
+            .build(new TokenCacheLoader());
 
     /**
      * Returns the roles registered with the application.
@@ -120,6 +128,18 @@ public class UserService extends ApplicationContextSupport implements Initializi
         requireNonNull(role);
         LOGGER.info("Register role '{}', name '{}", role.getId(), role.getName());
         this.roles.put(StringUtils.toIdentifier(role.getId()), role);
+    }
+
+    @Override
+    public UserDetails authenticateBearer(String token) {
+        requireNotEmpty(token);
+        return tokenCache.getIfPresent(token);
+    }
+
+    @Override
+    public UserDetails authenticateApiKey(String apiKey) {
+        requireNotEmpty(apiKey);
+        return tokenCache.getIfPresent(apiKey);
     }
 
     /**
@@ -237,7 +257,8 @@ public class UserService extends ApplicationContextSupport implements Initializi
             Audit audit = createAudit(context);
             auditRepository.saveAndFlush(audit);
         } catch (Exception e) {
-            LOGGER.error("Failed to audit action '" + context.getAction() + "' for user '" + getCurrentUserName() + "', details: " + context.getDescription(), e);
+            LOGGER.atError().setCause(e).log("Failed to audit action '{}' for user '{}', details: {}",
+                    context.getAction(), getCurrentUserName(), context.getDescription());
         }
     }
 
@@ -376,6 +397,16 @@ public class UserService extends ApplicationContextSupport implements Initializi
         public byte[] load(String userName, String name) {
             User user = findUser(true, userName);
             return getSetting(user, name);
+        }
+    }
+
+    private class TokenCacheLoader extends CacheLoader<String, UserDetails> {
+
+        @Override
+        public UserDetails load(String key) throws Exception {
+            User user = userRepository.findByToken(key);
+            if (user == null) return null;
+            return userDetailsManager.loadUserByUsername(user.getUserName());
         }
     }
 }

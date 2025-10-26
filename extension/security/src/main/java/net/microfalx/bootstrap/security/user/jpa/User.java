@@ -44,6 +44,10 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
     @Component(Component.Type.PASSWORD)
     private String password;
 
+    @Column(name = "token")
+    @Visible(false)
+    private String token;
+
     @Transient
     @Visible(modes = Visible.Mode.ADD)
     @Label("Retype Password")

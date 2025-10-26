@@ -57,6 +57,7 @@ public class AuditMvcConfig implements WebMvcConfigurer {
         if (nameAnnot != null) action = nameAnnot.value();
         Operation operationAnnot = method.getAnnotation(Operation.class);
         if (operationAnnot != null) action = operationAnnot.summary();
+        action = StringUtils.defaultIfEmpty(action, AuditContext.ACTION_OPEN);
         return action;
     }
 

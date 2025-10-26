@@ -3,6 +3,7 @@ create table security_users
     username    varchar(50)          not null primary key,
     name        varchar(100)         not null,
     password    varchar(500)         not null,
+    token       varchar(500),
     `enabled`   boolean default true not null,
     email       varchar(200),
     created_at  datetime             not null,
