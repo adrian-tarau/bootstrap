@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutor<User> {
+public interface UserRepository extends JpaRepository<User, String>, JpaSpecificationExecutor<User> {
 
     /**
      * Locates a user by its username.
@@ -35,6 +35,10 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
     @Modifying
     @Query("update User u set u.enabled = false where u.enabled = true and id = ?1")
     void disable(int id);
+
+    @Modifying
+    @Query(value = "update security_users set token = :token where username = :username", nativeQuery = true)
+    void updateToken(@Param("token") String token, @Param("username") String username);
 
     /**
      * Enables a user with a given id.

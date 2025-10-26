@@ -5,12 +5,20 @@ import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.MetadataService;
+import net.microfalx.bootstrap.security.SecurityUtils;
+import net.microfalx.bootstrap.security.user.UserService;
 import net.microfalx.bootstrap.security.util.SecurityDataSetController;
+import net.microfalx.bootstrap.web.component.Item;
+import net.microfalx.bootstrap.web.component.Menu;
+import net.microfalx.bootstrap.web.component.Separator;
 import net.microfalx.bootstrap.web.util.JsonFormResponse;
+import net.microfalx.bootstrap.web.util.JsonResponse;
 import net.microfalx.lang.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
@@ -21,6 +29,9 @@ public class UserController extends SecurityDataSetController<User, Integer> {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -39,6 +50,24 @@ public class UserController extends SecurityDataSetController<User, Integer> {
             }
         }
     }
+
+    @Override
+    protected void updateActions(Menu menu) {
+        super.updateActions(menu);
+        menu.add(new Separator());
+        menu.add(new Item().setAction("user.generate_token").setText("Generate token")
+                .setIcon("fa-solid fa-key").setDescription("Generates a new API key for the user"));
+    }
+
+    @PostMapping("{id}/generate_token")
+    public JsonResponse<?> generateToken(@PathVariable("id") String id) {
+        if (!userService.exists(id)) throw new SecurityException("User with id " + id + " not found");
+        String token = SecurityUtils.getRandomPassword(100);
+        userRepository.updateToken(token, id);
+        return JsonResponse.success("Token generated successfully: " + token
+                + ". Make sure to store it securely as it won't be shown again.");
+    }
+
 
     @Override
     protected void beforePersist(net.microfalx.bootstrap.dataset.DataSet<User, Field<User>, Integer> dataSet, User model, State state) {

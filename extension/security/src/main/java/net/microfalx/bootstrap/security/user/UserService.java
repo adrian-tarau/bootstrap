@@ -159,6 +159,17 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     }
 
     /**
+     * Checks whether a user with a given username exists.
+     *
+     * @param userName the username
+     * @return true if such a user exists, false otherwise
+     */
+    public boolean exists(String userName) {
+        requireNonNull(userName);
+        return findUser(false, userName) != null;
+    }
+
+    /**
      * Returns the entity which contains the user information for the user attached to the web session.
      *
      * @return a non-null instance

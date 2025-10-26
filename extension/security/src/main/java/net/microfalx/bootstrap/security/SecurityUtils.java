@@ -26,7 +26,20 @@ public class SecurityUtils {
      * @return a non-null instance
      */
     public static String getRandomPassword() {
-        return randomLong() + randomLong();
+        return getRandomPassword(20);
+    }
+
+    /**
+     * Returns a random generated password.
+     *
+     * @return a non-null instance
+     */
+    public static String getRandomPassword(int size) {
+        StringBuilder builder= new StringBuilder();
+        while (builder.length() < size) {
+            builder.append(randomLong());
+        }
+        return builder.toString();
     }
 
     /**
