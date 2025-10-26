@@ -41,16 +41,16 @@ public class GroupApiController extends RestApiDataSetController<Group, GroupDTO
     @Transactional(readOnly = true)
     @GetMapping
     public List<GroupDTO> list(
-            @Parameter(description = "The query used to filter by various model fields", name = "name")
+            @Parameter(description = "The query used to filter by various model fields", name = "query",example = "name")
             @RequestParam(name = "query", required = false) String query,
 
-            @Parameter(description = "The sorting desired for the result set", name = "name=asc")
+            @Parameter(description = "The sorting desired for the result set", name = "sort",example = "name=asc" )
             @RequestParam(name = "sort", required = false) String sort,
 
-            @Parameter(description = "The page to return for the result set", example = "0")
+            @Parameter(description = "The page to return for the result set", name = "page", example = "0")
             @RequestParam(name = "page", required = false) int page,
 
-            @Parameter(description = "The page size for the result set", example = "20")
+            @Parameter(description = "The page size for the result set", name = "pageSize", example = "20")
             @RequestParam(name = "page-size", required = false) int pageSize
     ) {
         return doList(null, query, sort, page, pageSize);
@@ -93,7 +93,11 @@ public class GroupApiController extends RestApiDataSetController<Group, GroupDTO
     @ApiResponse(responseCode = "200", description = "Member added")
     @PostMapping("/{groupId}/members/{userId}")
     public void addMember(@PathVariable int groupId, @PathVariable("userId") String username) {
-        userRepository.addUser(groupId, username);
+        try {
+            userRepository.addUser(groupId, username);
+        } catch (Exception e) {
+            // The user is already a member of the group, ignore
+        }
     }
 
     @Operation(summary = "Remove member", description = "Remove a user from this group.")

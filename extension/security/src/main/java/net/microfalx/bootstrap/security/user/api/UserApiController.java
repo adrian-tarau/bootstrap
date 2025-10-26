@@ -38,16 +38,16 @@ public class UserApiController extends RestApiDataSetController<User, UserDto, L
     @Transactional(readOnly = true)
     @GetMapping
     public List<UserDto> list(
-            @Parameter(description = "The query used to filter by various model fields", name = "name")
+            @Parameter(description = "The query used to filter by various model fields", name = "query", example = "username")
             @RequestParam(name = "query", required = false) String query,
 
-            @Parameter(description = "The sorting desired for the result set", name = "name=asc" )
+            @Parameter(description = "The sorting desired for the result set", name = "sort", example = "modifiedAt=desc")
             @RequestParam(name = "sort", required = false) String sort,
 
-            @Parameter(description = "The page to return for the result set", example = "0")
+            @Parameter(description = "The page to return for the result set", name = "page", example = "0")
             @RequestParam(name = "page", required = false) int page,
 
-            @Parameter(description = "The page size for the result set", name = "20")
+            @Parameter(description = "The page size for the result set", name = "page size", example = "20")
             @RequestParam(name = "page-size", required = false) int pageSize
     ) {
         return doList(null, query, sort, page, pageSize);
@@ -90,7 +90,11 @@ public class UserApiController extends RestApiDataSetController<User, UserDto, L
     @ApiResponse(responseCode = "204", description = "User updated with new group")
     @PostMapping("/{userId}/groups/{groupId}")
     public void addUserToGroup(@PathVariable("userId") String userName, @PathVariable int groupId) {
-        userRepository.addUserToGroup(userName, groupId);
+        try{
+            userRepository.addUserToGroup(userName, groupId);
+        }catch (Exception e){
+            // the user is probably already in the group, ignore
+        }
     }
 
     @Operation(summary = "Remove user from group", description = "Remove a user from a group.")

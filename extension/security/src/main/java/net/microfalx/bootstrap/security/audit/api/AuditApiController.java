@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.security.audit.api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,16 +27,16 @@ public class AuditApiController extends RestApiDataSetController<Audit, AuditDTO
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AuditDTO.class)))
     @GetMapping
     public List<AuditDTO> list(
-            @Parameter(description = "The query used to filter by various model fields", name = "action")
+            @Parameter(description = "The query used to filter by various model fields", name = "query",example = "action")
             @RequestParam(name = "query", required = false) String query,
 
-            @Parameter(description = "The sorting desired for the result set", name = "createdAt=desc")
+            @Parameter(description = "The sorting desired for the result set", name = "sort",example = "createdAt=desc")
             @RequestParam(name = "sort", required = false) String sort,
 
-            @Parameter(description = "The page to return for the result set", example = "0")
+            @Parameter(description = "The page to return for the result set", name = "page", example = "0")
             @RequestParam(name = "page", required = false) int page,
 
-            @Parameter(description = "The page size for the result set", example = "20")
+            @Parameter(description = "The page size for the result set", name = "page size", example = "20")
             @RequestParam(name = "page-size", required = false) int pageSize
     ) {
         return doList(null, query, sort, page, pageSize);
