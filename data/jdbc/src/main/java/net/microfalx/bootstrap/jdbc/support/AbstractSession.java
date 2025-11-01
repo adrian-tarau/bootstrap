@@ -48,7 +48,7 @@ public abstract class AbstractSession implements Session {
         return userName;
     }
 
-    protected void setUserName(String userName) {
+    public void setUserName(String userName) {
         this.userName = userName;
     }
 
@@ -57,7 +57,7 @@ public abstract class AbstractSession implements Session {
         return schema;
     }
 
-    protected void setSchema(String schema) {
+    public void setSchema(String schema) {
         this.schema = schema;
     }
 
@@ -66,7 +66,7 @@ public abstract class AbstractSession implements Session {
         return state;
     }
 
-    protected void setState(State state) {
+    public void setState(State state) {
         this.state = state;
     }
 
@@ -75,7 +75,7 @@ public abstract class AbstractSession implements Session {
         return statement;
     }
 
-    protected void setStatement(Statement statement) {
+    public void setStatement(Statement statement) {
         this.statement = statement;
         if (statement != null) this.statementId = statement.getId();
     }
@@ -85,7 +85,7 @@ public abstract class AbstractSession implements Session {
         return transactionId;
     }
 
-    protected void setTransactionId(String transactionId) {
+    public void setTransactionId(String transactionId) {
         this.transactionId = transactionId;
     }
 
@@ -94,7 +94,7 @@ public abstract class AbstractSession implements Session {
         return clientHostname;
     }
 
-    protected void setClientHostname(String clientHostname) {
+    public void setClientHostname(String clientHostname) {
         this.clientHostname = clientHostname;
     }
 
@@ -107,7 +107,7 @@ public abstract class AbstractSession implements Session {
         }
     }
 
-    protected void setElapsed(Duration elapsed) {
+    public void setElapsed(Duration elapsed) {
         this.elapsed = elapsed;
     }
 
@@ -116,7 +116,7 @@ public abstract class AbstractSession implements Session {
         return info;
     }
 
-    protected void setInfo(String info) {
+    public void setInfo(String info) {
         this.info = info;
     }
 
@@ -124,7 +124,7 @@ public abstract class AbstractSession implements Session {
         return startedAt;
     }
 
-    protected void setStartedAt(ZonedDateTime startedAt) {
+    public void setStartedAt(ZonedDateTime startedAt) {
         this.startedAt = startedAt;
     }
 
@@ -133,7 +133,7 @@ public abstract class AbstractSession implements Session {
         return createdAt;
     }
 
-    protected void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(ZonedDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -142,7 +142,7 @@ public abstract class AbstractSession implements Session {
         return system;
     }
 
-    protected void setSystem(boolean system) {
+    public void setSystem(boolean system) {
         this.system = system;
     }
 

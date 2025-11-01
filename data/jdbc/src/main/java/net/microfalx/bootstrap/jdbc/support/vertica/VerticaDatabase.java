@@ -1,6 +1,7 @@
-package net.microfalx.bootstrap.jdbc.support;
+package net.microfalx.bootstrap.jdbc.support.vertica;
 
 import net.microfalx.bootstrap.core.utils.HostnameUtils;
+import net.microfalx.bootstrap.jdbc.support.*;
 import net.microfalx.bootstrap.metrics.util.SimpleStatisticalSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,10 @@ public class VerticaDatabase extends AbstractDatabase {
 
     private volatile Collection<Node> cachedNodes = Collections.emptyList();
 
+    public VerticaDatabase(DataSource dataSource) {
+        super(dataSource);
+    }
+
     public VerticaDatabase(DatabaseService databaseService, String id, String name, DataSource dataSource) {
         super(databaseService, id, name, dataSource);
     }
@@ -31,6 +36,16 @@ public class VerticaDatabase extends AbstractDatabase {
     @Override
     public Type getType() {
         return Type.VERTICA;
+    }
+
+    @Override
+    public Schema getSchema() {
+        return new VerticaSchema(this);
+    }
+
+    @Override
+    protected String doGetSchemaName() {
+        return getClient().sql(GET_SCHEMA_SQL).query(String.class).single();
     }
 
     @Override
@@ -160,6 +175,7 @@ public class VerticaDatabase extends AbstractDatabase {
         return nodes.stream().filter(node -> node.getName().equals(nodeName)).findFirst().orElse(null);
     }
 
+    private static final String GET_SCHEMA_SQL = "SELECT CURRENT_SCHEMA()";
     private static final String GET_NODES_SQL = "select * from v_catalog.nodes order by node_name";
     private static final String GET_SESSIONS_SQL = "select * from v_monitor.sessions where CURRENT_SESSION() <> session_id";
     private static final String GET_TRANSACTIONS_SQL = "select t.* from v_monitor.sessions s\n" +

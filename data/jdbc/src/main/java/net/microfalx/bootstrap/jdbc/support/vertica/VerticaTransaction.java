@@ -1,4 +1,7 @@
-package net.microfalx.bootstrap.jdbc.support;
+package net.microfalx.bootstrap.jdbc.support.vertica;
+
+import net.microfalx.bootstrap.jdbc.support.AbstractTransaction;
+import net.microfalx.bootstrap.jdbc.support.Node;
 
 public class VerticaTransaction extends AbstractTransaction {
 

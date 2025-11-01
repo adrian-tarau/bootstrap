@@ -45,6 +45,11 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
     private volatile long lastNodesUpdate = 0;
     private volatile Map<String, Node> nodes = Collections.emptyMap();
     private volatile Metrics metrics;
+    private volatile String schemaName;
+
+    public AbstractDatabase(DataSource dataSource) {
+        super(null, dataSource.getId(), dataSource.getName(), dataSource);
+    }
 
     public AbstractDatabase(DatabaseService databaseService, String id, String name, DataSource dataSource) {
         super(null, id, name, dataSource);
@@ -55,6 +60,15 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
     @Override
     public Database getDatabase() {
         return this;
+    }
+
+    @Override
+    public final String getSchemaName() {
+        if (schemaName == null) {
+            schemaName = doGetSchemaName();
+            if (isEmpty(schemaName)) throw new DatabaseException("Schema name not specified");
+        }
+        return schemaName;
     }
 
     @Override
@@ -101,6 +115,13 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
     }
 
     /**
+     * Returns the schema associated with this database.
+     *
+     * @return a non-null instance
+     */
+    protected abstract String doGetSchemaName();
+
+    /**
      * Returns the nodes from the database.
      *
      * @return a non-null instance
@@ -140,7 +161,7 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
      * @return the data source, null if it does not exist
      */
     protected final DataSource findDataSource(String id) {
-        return databaseService.findDataSource(id).orElse(null);
+        return getOrFailDatabaseService().findDataSource(id).orElse(null);
     }
 
     /**
@@ -149,7 +170,7 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
      * @param dataSource the data source
      */
     protected final void registerDataSource(DataSource dataSource) {
-        databaseService.registerDataSource(dataSource);
+        getOrFailDatabaseService().registerDataSource(dataSource);
     }
 
     /**
@@ -319,6 +340,11 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
                 ((AbstractNode) node).copyFrom((AbstractNode) node);
             }
         }
+    }
+
+    private DatabaseService getOrFailDatabaseService() {
+        if (databaseService == null) throw new IllegalStateException("Database service has not been initialised");
+        return databaseService;
     }
 
     private boolean shouldUpdateNodes() {

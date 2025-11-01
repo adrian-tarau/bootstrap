@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.jdbc.support;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -48,11 +49,25 @@ public interface Node extends Identifiable<String>, Nameable, Descriptable {
     Database getDatabase();
 
     /**
+     * Returns the client used to communicate with the node.
+     *
+     * @return a non-null instance
+     */
+    JdbcClient getClient();
+
+    /**
      * Returns the hostname of the node.
      *
      * @return a non-null instance
      */
     String getHostname();
+
+    /**
+     * Returns the schema name used by default when connecting to the node.
+     *
+     * @return a non-null instance
+     */
+    String getSchemaName();
 
     /**
      * Returns the port of the service running at the {@link #getHostname()}.

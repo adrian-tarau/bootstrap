@@ -12,11 +12,27 @@ import java.util.Optional;
 public interface Database extends Node {
 
     /**
+     * Creates a database instance based on the provided data source.
+     *
+     * @param dataSource the data source.
+     * @return a non-null instance
+     */
+    static Database create(DataSource dataSource) {
+        return DatabaseUtils.create(dataSource);
+    }
+
+    /**
      * Returns the type of database (vendor).
      *
      * @return a non-null instance
      */
     Type getType();
+
+    /**
+     * Returns the schema of this database.
+     * @return a non-null instance
+     */
+    Schema getSchema();
 
     /**
      * Returns the nodes supporting this database.

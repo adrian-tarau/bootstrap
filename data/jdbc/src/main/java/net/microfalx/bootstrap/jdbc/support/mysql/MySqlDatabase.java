@@ -1,6 +1,7 @@
-package net.microfalx.bootstrap.jdbc.support;
+package net.microfalx.bootstrap.jdbc.support.mysql;
 
 import net.microfalx.bootstrap.core.utils.HostnameUtils;
+import net.microfalx.bootstrap.jdbc.support.*;
 import net.microfalx.bootstrap.jdbc.support.Transaction.IsolationLevel;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -39,14 +40,29 @@ public class MySqlDatabase extends AbstractDatabase {
     private volatile boolean clustered = true;
     private final Set<String> transactionExtractedFailure = new CopyOnWriteArraySet<>();
 
+    public MySqlDatabase(DataSource dataSource) {
+        super(dataSource);
+        type = initType(dataSource);
+    }
+
     public MySqlDatabase(DatabaseService databaseService, String id, String name, DataSource dataSource) {
         super(databaseService, id, name, dataSource);
-        type = dataSource.getUri().toASCIIString().contains("mariadb") ? Type.MARIADB : Type.MYSQL;
+        type = initType(dataSource);
     }
 
     @Override
     public Type getType() {
         return type;
+    }
+
+    @Override
+    public Schema getSchema() {
+        return new MySqlSchema(this);
+    }
+
+    @Override
+    protected String doGetSchemaName() {
+        return getClient().sql(GET_SCHEMA_SQL).query(String.class).single();
     }
 
     @Override
@@ -225,6 +241,11 @@ public class MySqlDatabase extends AbstractDatabase {
         });
     }
 
+    private Type initType(DataSource dataSource) {
+        return dataSource.getUri().toASCIIString().contains("mariadb") ? Type.MARIADB : Type.MYSQL;
+    }
+
+    private static final String GET_SCHEMA_SQL = "select DATABASE()";
     private static final String GET_NODES_SQL = "select * from mysql.wsrep_cluster_members order by node_name";
     private static final String GET_SESSIONS_SQL = "select * from information_schema.processlist where CONNECTION_ID() <> id";
     private static final String GET_TRANSACTIONS_SQL = "SELECT t.*, p.`USER` FROM information_schema.innodb_trx t" +

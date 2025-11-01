@@ -4,6 +4,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.zaxxer.hikari.HikariDataSource;
 import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
+import net.microfalx.bootstrap.jdbc.support.mysql.MySqlDatabase;
+import net.microfalx.bootstrap.jdbc.support.vertica.VerticaDatabase;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.lang.*;

@@ -1,0 +1,2 @@
+org.springframework.boot.sql.init.dependency.DatabaseInitializerDetector=\
+net.microfalx.bootstrap.jdbc.migration.MigrationInitializerDetector

@@ -1,14 +1,21 @@
 package net.microfalx.bootstrap.jdbc.support;
 
+import net.microfalx.bootstrap.jdbc.support.mysql.MySqlDatabase;
+import net.microfalx.bootstrap.jdbc.support.vertica.VerticaDatabase;
+import net.microfalx.lang.IOUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.metrics.Metrics;
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.time.Duration;
 
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
+import static net.microfalx.lang.StringUtils.isEmpty;
 import static net.microfalx.lang.TimeUtils.ONE_MINUTE;
 
 public class DatabaseUtils {
@@ -37,8 +44,8 @@ public class DatabaseUtils {
     public static URI getURI(DataSource dataSource) {
         URI uri = dataSource.getUri();
         String scheme = uri.getScheme();
-        if (StringUtils.isEmpty(scheme) || !"jdbc".equals(scheme)
-                || StringUtils.isEmpty(uri.getSchemeSpecificPart())) return null;
+        if (isEmpty(scheme) || !"jdbc".equals(scheme)
+                || isEmpty(uri.getSchemeSpecificPart())) return null;
         return URI.create(uri.getSchemeSpecificPart());
     }
 
@@ -55,6 +62,54 @@ public class DatabaseUtils {
             return uri;
         } else {
             return URI.create("jdbc:" + uri.toASCIIString());
+        }
+    }
+
+    /**
+     * Creates a database instance based on the provided data source.
+     *
+     * @param dataSource the data source
+     * @return a non-null instance
+     */
+    public static Database create(DataSource dataSource) {
+        Database.Type databaseType = detectDatabaseType(dataSource);
+        return switch (databaseType) {
+            case MYSQL, MARIADB -> new MySqlDatabase(dataSource);
+            case VERTICA -> new VerticaDatabase(dataSource);
+            default -> throw new DatabaseException("Unsupported database type: " + databaseType);
+        };
+    }
+
+    /**
+     * Returns an enumeration representing the database type.
+     *
+     * @param dataSource the data source
+     * @return a non-null instance
+     */
+    public static Database.Type detectDatabaseType(DataSource dataSource) {
+        Connection connection = null;
+        try {
+            connection = dataSource.getConnection();
+            DatabaseMetaData metaData = connection.getMetaData();
+            String databaseProductName = metaData.getDatabaseProductName();
+            String databaseProductVersion = metaData.getDatabaseProductVersion();
+            if (isEmpty(databaseProductName)) {
+                throw new DatabaseException("Database type cannot be detected, empty product name");
+            }
+            databaseProductName = databaseProductName.toLowerCase();
+            if (databaseProductName.contains("mysql")) {
+                return Database.Type.MYSQL;
+            } else if (databaseProductName.contains("mariadb")) {
+                return Database.Type.MARIADB;
+            } else if (databaseProductName.contains("vertica")) {
+                return Database.Type.VERTICA;
+            } else {
+                throw new DatabaseException("Unsupported database type: " + databaseProductName + " " + databaseProductVersion);
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error detecting database type", e);
+        } finally {
+            IOUtils.closeQuietly(connection);
         }
     }
 

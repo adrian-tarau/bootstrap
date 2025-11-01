@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<schema xmlns="https://net.microfalx/xsd/schema-1.0.xsd" id="demo2" name="Demo 2">
+    <depends-on>demo1</depends-on>
+    <definition name="Demo 3" type="mysql" path="01_demo1.sql">
+        <table>demo1</table>
+        <table>demo1_custom</table>
+        <migration path="01_add_column.sql" condition="column A not exists"/>
+        <migration path="02_remove_column.sql" condition="column A exists"/>
+    </definition>
+    <definition name="Demo 3" type="mysql" path="02_demo2.sql">
+        <table>demo2</table>
+        <migration path="03_drop_table.sql" condition="table A exists"/>
+    </definition>
+</schema>

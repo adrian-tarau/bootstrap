@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.jdbc.support;
 
 import net.microfalx.lang.TimeUtils;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 import java.net.InetAddress;
 import java.sql.Connection;
@@ -67,13 +68,18 @@ public abstract class AbstractNode implements Node {
         return defaultIfEmpty(displayName, name);
     }
 
-    protected final void setDisplayName(String displayName) {
+    public final void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
     @Override
     public final String getDescription() {
         return dataSource.getDescription();
+    }
+
+    @Override
+    public String getSchemaName() {
+        return database.getSchemaName();
     }
 
     @Override
@@ -84,6 +90,11 @@ public abstract class AbstractNode implements Node {
     @Override
     public Database getDatabase() {
         return database;
+    }
+
+    @Override
+    public JdbcClient getClient() {
+        return JdbcClient.create(getDataSource().unwrap());
     }
 
     @Override
@@ -231,9 +242,10 @@ public abstract class AbstractNode implements Node {
 
     void close() {
         DatabaseService databaseService = ((AbstractDatabase) getDatabase()).databaseService;
+        if (databaseService == null) return;
         databaseService.releaseDataSource(dataSource);
-        if (this instanceof Database database) {
-            for (Node node : database.getNodes()) {
+        if (this instanceof Database databaseNode) {
+            for (Node node : databaseNode.getNodes()) {
                 databaseService.releaseDataSource(node.getDataSource());
             }
         }
