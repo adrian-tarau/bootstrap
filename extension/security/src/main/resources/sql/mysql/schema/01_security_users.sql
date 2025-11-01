@@ -12,6 +12,17 @@ create table security_users
     constraint fk$security_users$email unique key (email)
 ) ENGINE = InnoDB;
 
+create table security_authorities
+(
+    username   varchar(50) not null,
+    authority  varchar(50) not null,
+    created_at datetime    default CURRENT_TIMESTAMP not null,
+    constraint pk$security_authorities primary key (username, authority),
+    constraint fk$security_authorities$user foreign key (username) references security_users (username)
+) ENGINE = InnoDB;
+
+create unique index ix$security_authorities$username on security_authorities (username, authority);
+
 create table security_users_settings
 (
     username    varchar(50)  not null,

@@ -8,16 +8,6 @@ create table security_groups
     description varchar(1000)
 ) ENGINE = InnoDB;
 
-create table security_authorities
-(
-    username   varchar(50) not null,
-    authority  varchar(50) not null,
-    created_at datetime    default CURRENT_TIMESTAMP not null,
-    constraint fk$security_authorities$user foreign key (username) references security_users (username)
-) ENGINE = InnoDB;
-
-create unique index ix$security_authorities$username on security_authorities (username, authority);
-
 create table security_group_authorities
 (
     group_id   integer     not null,
