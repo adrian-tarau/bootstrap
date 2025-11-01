@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<schema xmlns="https://net.microfalx/xsd/schema-1.0.xsd" id="ai" name="AI">
+    <depends-on>security</depends-on>
+    <definition name="Providers" type="mysql" path="01_ai_providers.sql">
+        <table>ai_providers</table>
+    </definition>
+    <definition name="Models" type="mysql" path="02_ai_models.sql">
+        <table>ai_models</table>
+    </definition>
+    <definition name="Chats" type="mysql" path="03_ai_chats.sql">
+        <table>ai_chats</table>
+    </definition>
+    <definition name="Prompts" type="mysql" path="04_ai_prompts.sql">
+        <table>ai_prompts</table>
+    </definition>
+</schema>

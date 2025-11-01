@@ -10,7 +10,7 @@ import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.NaturalId;
 
 @Entity(name = "CoreProvider")
-@Table(name = "ai_provider")
+@Table(name = "ai_providers")
 @Name("Providers")
 @Getter
 @Setter

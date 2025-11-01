@@ -11,7 +11,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity(name = "CoreChatModel")
-@Table(name = "ai_chat")
+@Table(name = "ai_chats")
 @Name("Chats")
 @Getter
 @Setter

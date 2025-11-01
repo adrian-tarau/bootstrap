@@ -9,7 +9,7 @@ import net.microfalx.lang.annotation.Name;
 import net.microfalx.lang.annotation.NaturalId;
 
 @Entity(name = "CorePrompt")
-@Table(name = "ai_prompt")
+@Table(name = "ai_prompts")
 @Name("Prompts")
 @Getter
 @Setter
