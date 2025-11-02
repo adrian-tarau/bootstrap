@@ -8,6 +8,7 @@ import net.microfalx.lang.Hashing;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.resource.Resource;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -247,7 +248,8 @@ public final class Session implements Identifiable<String> {
             id = currentDefinition.getId();
             path = currentDefinition.getPath();
         }
-        Query query = schema.getQuery("migration.update.sql").parameters(id, name, module.getName(), path, LocalDateTime.now(), duration.toMillis(), status.name(), checksum, scriptLogger.toString());
+        Query query = schema.getQuery("migration.update.sql").parameters(id, name, module.getName(), path,
+                LocalDateTime.now(), duration.toMillis(), status.name(), checksum, scriptLogger.toString());
         query.update();
     }
 
@@ -261,7 +263,11 @@ public final class Session implements Identifiable<String> {
 
     private String getChecksum() {
         Script script = getScript();
-        return Hashing.create().update(script.getResource().toString()).asString();
+        try {
+            return Hashing.create().update(script.getResource().loadAsString()).asString();
+        } catch (IOException e) {
+            throw new MigrationException("Failed to load checksum for script " + script.getResource().getPath(), e);
+        }
     }
 
     private boolean wasApplied(Definition definition) {

@@ -15,8 +15,7 @@ import java.util.*;
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.toIdentifier;
-import static net.microfalx.lang.XmlUtils.getRequiredAttribute;
-import static net.microfalx.lang.XmlUtils.loadDocument;
+import static net.microfalx.lang.XmlUtils.*;
 
 /**
  * Loads schema definitions from <code>schema.xml</code>.
@@ -27,6 +26,7 @@ public class DefinitionLoader {
     private final Map<String, Definition> definitions = new HashMap<>();
     private final Map<String, Module> modules = new HashMap<>();
     private Module currentModule;
+    private int loadOrder = 100;
 
     public Collection<Module> getModules() {
         return unmodifiableCollection(modules.values());
@@ -112,6 +112,9 @@ public class DefinitionLoader {
 
     private void loadModule(Element root) {
         currentModule = new Module(getRequiredAttribute(root, "id"), getRequiredAttribute(root, "name"));
+        currentModule.order = getAttribute(root, "order", -1);
+        if (currentModule.order < 0) currentModule.order = loadOrder;
+        loadOrder += 1;
         modules.put(currentModule.getId(), currentModule);
         List<Element> dependsOnElements = root.elements("depends-on");
         for (Element dependsOnElement : dependsOnElements) {
