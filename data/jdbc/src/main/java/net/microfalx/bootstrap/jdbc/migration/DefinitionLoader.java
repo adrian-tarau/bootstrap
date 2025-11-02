@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.jdbc.migration;
 
 import lombok.extern.slf4j.Slf4j;
-import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.lang.XmlUtils;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.UrlResource;
@@ -13,6 +12,7 @@ import java.net.URL;
 import java.util.*;
 
 import static java.util.Collections.unmodifiableCollection;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 import static net.microfalx.lang.XmlUtils.*;
@@ -78,7 +78,7 @@ public class DefinitionLoader {
         try {
             descriptors = getDescriptors();
             for (URL descriptor : descriptors) {
-                load(UrlResource.create(descriptor));
+                doLoad(UrlResource.create(descriptor), false);
             }
         } catch (IOException e) {
             LOGGER.error("Failed to discover schema descriptors", e);
@@ -93,21 +93,21 @@ public class DefinitionLoader {
      * @param resource the resource
      */
     public void load(Resource resource) {
+        doLoad(resource, true);
+    }
+
+    private void doLoad(Resource resource, boolean reorderModules) {
+        requireNonNull(resource);
+        LOGGER.debug("Load resources from {}", resource);
         try {
-            doLoad(resource);
+            Document document = loadDocument(resource.getReader());
+            Element rootElement = document.getRootElement();
+            loadModule(rootElement);
+            loadDefinitions(rootElement);
+            if (reorderModules) reorderModules();
         } catch (Exception e) {
             LOGGER.atError().setCause(e).log("Failed to load schema from descriptor {}", resource);
         }
-    }
-
-    private void doLoad(Resource resource) throws IOException {
-        ArgumentUtils.requireNonNull(resource);
-        LOGGER.debug("Load resources from {}", resource);
-        Document document = loadDocument(resource.getReader());
-        Element rootElement = document.getRootElement();
-        loadModule(rootElement);
-        loadDefinitions(rootElement);
-        reorderModules();
     }
 
     private void loadModule(Element root) {
