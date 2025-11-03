@@ -17,9 +17,7 @@ import net.microfalx.lang.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("security/users")
@@ -60,6 +58,7 @@ public class UserController extends SecurityDataSetController<User, Integer> {
     }
 
     @PostMapping("{id}/generate_token")
+    @ResponseBody
     public JsonResponse<?> generateToken(@PathVariable("id") String id) {
         if (!userService.exists(id)) throw new SecurityException("User with id " + id + " not found");
         String token = SecurityUtils.getRandomPassword(100);
