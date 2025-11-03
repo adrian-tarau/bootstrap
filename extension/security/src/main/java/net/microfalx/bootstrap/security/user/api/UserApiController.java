@@ -24,7 +24,6 @@ import java.util.List;
 @RequestMapping("/api/v1/users")
 @DataSet(model = net.microfalx.bootstrap.security.user.jpa.User.class, timeFilter = false)
 @Tag(name = "Users", description = "User Management API")
-@Transactional
 public class UserApiController extends RestApiDataSetController<User, UserDto, Long> {
 
     @Autowired
@@ -35,7 +34,6 @@ public class UserApiController extends RestApiDataSetController<User, UserDto, L
 
     @Operation(summary = "List users", description = "Returns a list of users with search and paging.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserDto.class)))
-    @Transactional(readOnly = true)
     @GetMapping
     public List<UserDto> list(
             @Parameter(description = "The query used to filter by various model fields", name = "query", example = "username")
@@ -55,7 +53,6 @@ public class UserApiController extends RestApiDataSetController<User, UserDto, L
 
     @Operation(summary = "Get user", description = "Returns a single user by its unique identifier.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserDto.class)))
-    @Transactional(readOnly = true)
     @GetMapping("/{id}")
     public UserDto get(@Parameter(description = "The user identifier", example = "42") @PathVariable Long id) {
         return doFind(id);

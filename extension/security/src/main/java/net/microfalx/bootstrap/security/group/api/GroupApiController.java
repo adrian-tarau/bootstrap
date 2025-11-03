@@ -27,7 +27,6 @@ import java.util.List;
 @RequestMapping("/api/v1/groups")
 @DataSet(model = Group.class, timeFilter = false)
 @Tag(name = "Groups", description = "Group Management API")
-@Transactional
 public class GroupApiController extends RestApiDataSetController<Group, GroupDTO, Long> {
 
     @Autowired
@@ -38,7 +37,6 @@ public class GroupApiController extends RestApiDataSetController<Group, GroupDTO
 
     @Operation(summary = "List groups", description = "Returns a list of groups with search and paging.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GroupDTO.class)))
-    @Transactional(readOnly = true)
     @GetMapping
     public List<GroupDTO> list(
             @Parameter(description = "The query used to filter by various model fields", name = "query",example = "name")
@@ -58,7 +56,6 @@ public class GroupApiController extends RestApiDataSetController<Group, GroupDTO
 
     @Operation(summary = "Get group", description = "Returns a single group by its unique identifier.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GroupDTO.class)))
-    @Transactional(readOnly = true)
     @GetMapping("/{id}")
     public GroupDTO get(@Parameter(description = "The user identifier", example = "42") @PathVariable Long id) {
         return doFind(id);
