@@ -43,6 +43,7 @@
         <module>web</module>
 		<module>rest-api</module>
         <module>security</module>
+        <module>mail</module>
     </modules>
 
 </project>
