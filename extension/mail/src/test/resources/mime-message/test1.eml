@@ -1,0 +1,21 @@
+From: Sender Name <sender@example.com>
+To: Recipient Name <recipient@example.com>
+Subject: MIME Message Example
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="----=_Part_123_4567890.1234567890"
+
+------=_Part_123_4567890.1234567890
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+This is the plain text body of the email.
+It can contain multiple lines and special characters.
+
+------=_Part_123_4567890.1234567890
+Content-Type: text/plain; name="attachment.txt"
+Content-Disposition: attachment; filename="attachment.txt"
+Content-Transfer-Encoding: base64
+
+VGhpcyBpcyB0aGUgY29udGVudCBvZiB0aGUgYXR0YWNobWVudCBmaWxlLg==
+
+------=_Part_123_4567890.1234567890--

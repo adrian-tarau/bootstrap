@@ -1,10 +1,9 @@
 package net.microfalx.bootstrap.mail;
 
 import jakarta.mail.internet.MimeMessage;
+import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.MemoryResource;
-import net.microfalx.resource.Resource;
 import net.microfalx.resource.TemporaryFileResource;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -40,6 +40,14 @@ class MailServiceTest {
     }
 
     @Test
+    void sendFromResource() throws IOException {
+        MimeMessage mimeMessage = createMockMessage();
+        when(mailSender.createMimeMessage(any(InputStream.class))).thenReturn(mimeMessage);
+        mailService.send(ClassPathResource.file("mime-message/test1.eml"));
+        verify(mailSender).send(any(MimeMessage.class));
+    }
+
+    @Test
     void sendWithAttachment() {
         mockMessageCreation();
         mailService.send("test@company.com", "Test Subject", MemoryResource.create("Test Body"),
@@ -48,7 +56,11 @@ class MailServiceTest {
     }
 
     private void mockMessageCreation() {
-        MimeMessage mimeMessage = mock(MimeMessage.class);
-        when(mailSender.createMimeMessage(any(InputStream.class))).thenReturn(mimeMessage);
+        MimeMessage mimeMessage = createMockMessage();
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+    }
+
+    private MimeMessage createMockMessage() {
+        return mock(MimeMessage.class);
     }
 }
