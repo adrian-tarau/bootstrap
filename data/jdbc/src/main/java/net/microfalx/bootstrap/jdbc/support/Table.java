@@ -18,7 +18,16 @@ public interface Table<T extends Table<T>> extends SchemaObject<T> {
      * Returns a column by its name.
      *
      * @param name the column name
+     * @return the column instance, null if it does not exist
+     */
+    Column<?> findColumn(String name);
+
+    /**
+     * Returns a column by its name.
+     *
+     * @param name the column name
      * @return the column instance
+     * @throws SchemaObjectNotFoundException if the column does not exist
      */
     Column<?> getColumn(String name);
 

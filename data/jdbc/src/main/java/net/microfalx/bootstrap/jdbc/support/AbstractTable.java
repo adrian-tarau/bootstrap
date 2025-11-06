@@ -27,10 +27,16 @@ public abstract class AbstractTable<T extends AbstractTable<T>> extends Abstract
     }
 
     @Override
-    public Column<?> getColumn(String name) {
+    public Column<?> findColumn(String name) {
         requireNonNull(name);
         checkIfColumnsLoaded();
-        Column<?> column = columns.columnByName.get(name.toLowerCase());
+        return columns.columnByName.get(name.toLowerCase());
+    }
+
+    @Override
+    public Column<?> getColumn(String name) {
+        checkIfColumnsLoaded();
+        Column<?> column = findColumn(name);
         if (column == null) {
             throw new SchemaObjectNotFoundException("Column with name " + name + " not found in table " + getName());
         }

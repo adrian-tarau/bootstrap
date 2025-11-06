@@ -18,6 +18,11 @@ public class MySqlSchema extends AbstractSchema {
     }
 
     @Override
+    protected Set<String> doGetViewNames() {
+        return Set.of();
+    }
+
+    @Override
     protected Set<String> doGetIndexNames() {
         return getDatabase().getClient().sql(GET_INDEX_NAMES_SQL)
                 .param(getName()).query(String.class).set();
@@ -26,6 +31,11 @@ public class MySqlSchema extends AbstractSchema {
     @Override
     protected Table<?> doGetTable(String name) {
         return new MySqlTable(MySqlSchema.this, name);
+    }
+
+    @Override
+    protected View<?> doGetView(String name) {
+        return new MySqlView(MySqlSchema.this, name);
     }
 
     @Override

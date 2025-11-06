@@ -16,7 +16,7 @@ public final class Migration implements Identifiable<String>, Nameable {
     private final Definition definition;
     private final String id;
     private final String path;
-    String condition;
+    Condition condition;
 
     Migration(Definition definition, String path) {
         requireNotEmpty(definition);

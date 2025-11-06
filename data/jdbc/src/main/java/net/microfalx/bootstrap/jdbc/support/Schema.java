@@ -26,6 +26,13 @@ public interface Schema extends Identifiable<String>, Nameable {
     Set<String> getTableNames();
 
     /**
+     * Returns the names of all views in this schema.
+     *
+     * @return a non-null instance
+     */
+    Set<String> getViewNames();
+
+    /**
      * Returns the names of all tables in this schema.
      *
      * @return a non-null instance
@@ -39,6 +46,14 @@ public interface Schema extends Identifiable<String>, Nameable {
      * @return a non-null instance
      */
     Table<?> getTable(String name);
+
+    /**
+     * Returns a view by its name.
+     *
+     * @param name the name of the table
+     * @return a non-null instance
+     */
+    View<?> getView(String name);
 
     /**
      * Returns the names of all indexes in this schema.

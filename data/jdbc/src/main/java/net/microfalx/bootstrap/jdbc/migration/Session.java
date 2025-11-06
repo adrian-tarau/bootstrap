@@ -207,15 +207,13 @@ public final class Session implements Identifiable<String> {
         currentDefinition = definition;
         logger.append("Executing definition ").append(definition.getName()).append(" from module ").append(definition.getModule()).append('\n');
         Script script = getScript();
-        scriptCount++;
         executeScript(script);
         applyMigrations(definition);
     }
 
     private void executeMigrations(Definition definition) {
         for (Migration migration : definition.getMigrations()) {
-            executeMigration(definition, migration);
-            scriptCount++;
+            executeMigration(migration);
         }
         currentMigration = null;
     }
@@ -224,15 +222,15 @@ public final class Session implements Identifiable<String> {
         for (Migration migration : definition.getMigrations()) {
             currentMigration = migration;
             updateRegistry(Status.APPLIED, Duration.ZERO);
-            scriptCount++;
         }
         currentMigration = null;
     }
 
-    private void executeMigration(Definition definition, Migration migration) {
+    private void executeMigration(Migration migration) {
         currentMigration = migration;
         Script script = getScript();
-        executeScript(script);
+        boolean valid = migration.getCondition().evaluate(schema);
+        if (!valid) executeScript(script);
     }
 
     private void updateRegistry(Status status, Duration duration) {
@@ -292,6 +290,7 @@ public final class Session implements Identifiable<String> {
             execute(query);
             if (status == Status.FAILED) break;
         }
+        scriptCount++;
         if (!logger.isEmpty()) logger.append('\n');
         logger.append(scriptLogger);
         updateRegistry(status, ofMillis(currentTimeMillis() - startTime));

@@ -32,6 +32,8 @@ public abstract class AbstractSchema implements Schema {
 
     private volatile Set<String> tableNames;
     private final Map<String, Table<?>> tables = new ConcurrentHashMap<>();
+    private volatile Set<String> viewNames;
+    private final Map<String, View<?>> views = new ConcurrentHashMap<>();
     private volatile Set<String> indexNames;
     private final Map<String, Index<?>> indexes = new ConcurrentHashMap<>();
 
@@ -80,6 +82,14 @@ public abstract class AbstractSchema implements Schema {
     }
 
     @Override
+    public final Set<String> getViewNames() {
+        if (ObjectUtils.isEmpty(viewNames)) {
+            viewNames = METRICS.time("Get View Names", this::doGetViewNames);
+        }
+        return unmodifiableSet(viewNames);
+    }
+
+    @Override
     public final Set<String> getIndexNames() {
         if (ObjectUtils.isEmpty(indexNames)) {
             indexNames = METRICS.time("Get Index Names", this::doGetIndexNames);
@@ -90,6 +100,11 @@ public abstract class AbstractSchema implements Schema {
     @Override
     public final Table<?> getTable(String name) {
         return tables.computeIfAbsent(name, s -> METRICS.time("Get Table", () -> doGetTable(name)));
+    }
+
+    @Override
+    public final View<?> getView(String name) {
+        return views.computeIfAbsent(name, s -> METRICS.time("Get View", () -> doGetView(name)));
     }
 
     @Override
@@ -153,7 +168,11 @@ public abstract class AbstractSchema implements Schema {
 
     protected abstract Set<String> doGetTableNames();
 
+    protected abstract Set<String> doGetViewNames();
+
     protected abstract Table<?> doGetTable(String name);
+
+    protected abstract View<?> doGetView(String name);
 
     protected abstract Set<String> doGetIndexNames();
 

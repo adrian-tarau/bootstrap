@@ -3,8 +3,8 @@
     <definition name="Demo 1" type="mysql" path="01_demo1.sql">
         <table>demo1</table>
         <table>demo1_custom</table>
-        <migration path="01_add_column.sql" condition="column A not exists"/>
-        <migration path="02_remove_column.sql" condition="column A exists"/>
+        <migration path="01_add_column.sql" condition="column demo1_custom.A not exists"/>
+        <migration path="02_remove_column.sql" condition="column demo1.A exists"/>
     </definition>
     <definition name="Demo 2" type="mysql" path="02_demo2.sql">
         <table>demo2</table>

@@ -12,7 +12,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Getter
 @ToString
-public class Module implements Identifiable<String>, Nameable {
+public final class Module implements Identifiable<String>, Nameable {
 
     private final String id;
     private final String name;

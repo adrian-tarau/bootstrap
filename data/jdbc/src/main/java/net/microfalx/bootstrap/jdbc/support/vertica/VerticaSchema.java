@@ -17,13 +17,23 @@ public class VerticaSchema extends AbstractSchema {
     }
 
     @Override
+    protected Set<String> doGetViewNames() {
+        return Set.of();
+    }
+
+    @Override
     protected Table<?> doGetTable(String name) {
-        return null;
+        return new VerticaTable(this, name);
     }
 
     @Override
     protected Set<String> doGetIndexNames() {
         return Set.of();
+    }
+
+    @Override
+    protected View<?> doGetView(String name) {
+        return new VerticaView(this, name);
     }
 
     @Override
