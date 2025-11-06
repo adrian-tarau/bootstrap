@@ -1,8 +1,8 @@
 package net.microfalx.bootstrap.security.user;
 
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.restapi.ApiCredentialService;
@@ -92,7 +92,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
 
     private final Map<String, Role> roles = new ConcurrentHashMap<>();
     private final Map<String, SecurityContext> securityContexts = new ConcurrentHashMap<>();
-    private final Cache<String, UserDetails> tokenCache = CacheBuilder.newBuilder()
+    private final LoadingCache<String, UserDetails> tokenCache = CacheBuilder.newBuilder()
             .maximumSize(100).expireAfterWrite(Duration.ofSeconds(30))
             .build(new TokenCacheLoader());
 
@@ -133,13 +133,13 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     @Override
     public UserDetails authenticateBearer(String token) {
         requireNotEmpty(token);
-        return tokenCache.getIfPresent(token);
+        return tokenCache.getUnchecked(token);
     }
 
     @Override
     public UserDetails authenticateApiKey(String apiKey) {
         requireNotEmpty(apiKey);
-        return tokenCache.getIfPresent(apiKey);
+        return tokenCache.getUnchecked(apiKey);
     }
 
     /**
