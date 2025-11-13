@@ -21,6 +21,7 @@ Application.Sse.start = function (path, callback, params, options) {
     if (!Utils.isFunction(callback)) {
         throw new Error("A callback function is required to handle the events from the server");
     }
+    params.applicationId = Application.getId();
     let uri = Application.getUri(path, params, options);
     const events = new EventSource(uri, {});
     events.onmessage = (event) => {
@@ -34,9 +35,26 @@ Application.Sse.start = function (path, callback, params, options) {
         }
     };
     events.onopen = (event) => {
-        Logger.debug("The connection has been established to '" + event.uri + "'");
+        Logger.debug("The connection has been established to '" + event.target.uri + "'");
     };
     events.onerror = (event) => {
-        Logger.warn("Received a failure from '" + event.uri + "'");
+        Logger.warn("Received a failure from '" + event.target.uri + "'");
     };
 }
+
+/**
+ * Initialize the SSE channel.
+ */
+Application.Sse.initialize = function () {
+    Application.Sse.start("/event/out", function (data, event) {
+        let json = JSON.parse(data);
+        let name = json.name;
+        delete json.name;
+        delete json.application;
+        Logger.debug("Received SSE event '" + name + "', data: " + data);
+        Application.fire(name, json);
+    }, {}, {self: false});
+}
+
+// initialize application
+Application.Sse.initialize();

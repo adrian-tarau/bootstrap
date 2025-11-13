@@ -16,8 +16,19 @@ const APP_AJAX_MASK_NETWORK_MESSAGE = "<p style='font-size: 16px; font-weight: b
 const APP_AJAX_MASK_AUTH_MESSAGE = "<p style='font-size: 16px; font-weight: bold; padding-bottom: 10px;'>Application Session</p><p>Application session was lost, please <a href='/login'>login</a> again.</p>";
 
 /**
+ * Returns the identifier of the current application.
+ *
+ * @return {string} the application ID
+ */
+Application.getId = function () {
+    if (Utils.isEmpty(APP_ID)) throw new Error("Application ID is not defined");
+    return APP_ID;
+}
+
+/**
  * Returns the path of the current request.
- * @return {string}
+ *
+ * @return {string} the application root path
  */
 Application.getPath = function () {
     return APP_REQUEST_PATH || "/";
@@ -200,7 +211,10 @@ Application.ajax = function (type, path, params, callback, options) {
         dataType: options.dataType,
         contentType: Utils.defaultIfNotDefinedOrNull(options.contentType, "application/x-www-form-urlencoded; charset=UTF-8"),
         timeout: timeout,
-        headers: {"X-TimeZone": Application.getTimezoneOffset()},
+        headers: {
+            "X-Application-Id": Application.getId(),
+            "X-TimeZone": Application.getTimezoneOffset()
+        },
         success: function (output, status, xhr) {
             if (options.complete) options.complete.apply(this, arguments);
             if (options.mask) me.unmask(options.mask);

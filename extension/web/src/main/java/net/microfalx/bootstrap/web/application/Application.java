@@ -5,6 +5,8 @@ import lombok.ToString;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Nameable;
 
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+
 /**
  * A class which holds information about current (web) application.
  */
@@ -21,5 +23,14 @@ public final class Application implements Nameable, Descriptable {
 
     Theme theme;
     Theme systemTheme;
+
+    /**
+     * Returns the current application identifier.
+     *
+     * @return a non-null instance
+     */
+    public static String current() {
+        return defaultIfEmpty(ApplicationService.APPLICATION.get(), "na");
+    }
 
 }

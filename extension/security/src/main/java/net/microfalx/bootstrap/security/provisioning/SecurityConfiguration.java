@@ -126,6 +126,7 @@ public class SecurityConfiguration {
         allowPath(httpSecurity, "login");
         allowPath(httpSecurity, "settings/session");
         allowPath(httpSecurity, "ping");
+        allowPath(httpSecurity, "event");
         allowPath(httpSecurity, "api");
         configureMetrics(httpSecurity);
         httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());

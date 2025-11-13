@@ -46,6 +46,7 @@ public final class ApplicationService implements InitializingBean {
     private final Application application = new Application();
 
     static ThreadLocal<Theme> THEME = new ThreadLocal<>();
+    static ThreadLocal<String> APPLICATION = new ThreadLocal<>();
 
     /**
      * Returns the theme associated with this thread.

@@ -73,6 +73,7 @@ public class ApplicationMvcConfig implements WebMvcConfigurer {
                     LOGGER.error("Failed to extract theme with identifier '" + themeId + "' from controller '" + ClassUtils.getName(handler), e);
                 }
             }
+            ApplicationService.APPLICATION.set(StringUtils.defaultIfEmpty(request.getHeader("X-Application-Id"), "na"));
             return true;
         }
 

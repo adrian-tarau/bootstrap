@@ -9,6 +9,7 @@ import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.container.WebContainerRequest;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.template.tools.LinkTool;
+import net.microfalx.lang.IdGenerator;
 import net.microfalx.lang.TextUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
@@ -39,6 +40,8 @@ public class ApplicationDialect extends AbstractProcessorDialect {
     private static final String DIALECT_PREFIX = "application";
     private static final String DIALECT_NAME = "Bootstrap Application";
     private static final int PRECEDENCE = 1000;
+
+    private static final IdGenerator APP_ID_GENERATOR = IdGenerator.get("web.application");
 
     private final ApplicationService applicationService;
     private final DataSetService dataSetService;
@@ -106,6 +109,7 @@ public class ApplicationDialect extends AbstractProcessorDialect {
             DataSetTool dataSetTool = new DataSetTool(context, applicationContext);
             StringBuilder builder = new StringBuilder();
             builder.append(SCRIPT_START_TAG);
+            builder.append("\nconst APP_ID=\"").append(APP_ID_GENERATOR.nextAsString()).append("\";");
             builder.append("\nconst APP_REQUEST_PATH=\"").append(linkTool.getSelf()).append("\";");
             builder.append("\nconst APP_REQUEST_QUERY=").append(linkTool.toJson(linkTool.getQuery())).append(";");
             String timeZone = containerRequest.hasTimeZone() ? containerRequest.getTimeZone().getId() : EMPTY_STRING;
