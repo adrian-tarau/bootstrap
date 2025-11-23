@@ -43,9 +43,7 @@ public class AuditMvcConfig implements WebMvcConfigurer {
         AuditContext context = AuditContext.get();
         context.setReference(path);
         context.setErrorCode(Integer.toString(response.getStatus()));
-        String clientInfo = request.getRemoteHost();
-        if (isNotEmpty(request.getRemoteUser())) clientInfo = request.getRemoteUser() + "@" + clientInfo;
-        context.setClientInfo(clientInfo);
+        context.setClientInfo(getClientIp(request));
         if (isEmpty(context.getAction())) context.setAction(getAction(method));
         if (isEmpty(context.getModule())) context.setModule(getModule(method));
         userService.audit(context);
@@ -69,12 +67,30 @@ public class AuditMvcConfig implements WebMvcConfigurer {
         return module;
     }
 
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (isEmpty(ip)) {
+            ip = request.getRemoteAddr();
+        } else {
+            int commaIndex = ip.indexOf(',');
+            if (commaIndex != -1) {
+                ip = ip.substring(0, commaIndex);
+            }
+        }
+        if (isNotEmpty(request.getRemoteUser())) ip = request.getRemoteUser() + "@" + ip;
+        return ip;
+    }
+
     private void registerExclusion(String path) {
         excludedPaths.add(removeStartSlash(path).toLowerCase());
     }
 
     private void registerDefaultPaths() {
+        registerExclusion("ping");
+        registerExclusion("status");
+        registerExclusion("event");
         registerExclusion("asset");
+        registerExclusion("image");
         registerExclusion("error");
         registerExclusion("favicon.ico");
     }
