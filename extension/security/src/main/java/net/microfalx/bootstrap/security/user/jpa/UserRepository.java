@@ -42,6 +42,11 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
     @Query(value = "update security_users set token = :token where username = :username", nativeQuery = true)
     void updateToken(@Param("token") String token, @Param("username") String username);
 
+    @Modifying
+    @Transactional
+    @Query(value = "update security_users set password = :password, reset_password = :reset where username = :username", nativeQuery = true)
+    void updatePassword(@Param("password") String password, @Param("reset") boolean reset, @Param("username") String username);
+
     /**
      * Enables a user with a given id.
      *

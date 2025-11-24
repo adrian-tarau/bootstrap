@@ -1,0 +1,1 @@
+alter table security_users add column reset_password boolean default false not null;

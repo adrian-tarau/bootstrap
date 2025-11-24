@@ -5,6 +5,7 @@ create table security_users
     password    varchar(500)         not null,
     token       varchar(500),
     `enabled`   boolean default true not null,
+    reset_password boolean default false not null,
     email       varchar(200),
     created_at  datetime             not null,
     modified_at datetime,

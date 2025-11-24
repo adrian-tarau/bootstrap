@@ -93,11 +93,16 @@ Application.question = function (title, message, callback) {
  *
  * @param {String} title the title
  * @param {String} message the message to display, it can contain HTML tags
- * @param {String|Boolean} type the type of alert or a boolean indicating whether to
- * show an information alert (true) or a warning alert (false).
+ * @param {String|Object} type the type of alert or an object with settings for the toast component.
  */
 Application.showAlert = function (title, message, type) {
-    if (Utils.isBoolean(type)) type = type ? ALERT_TYPE_INFO : ALERT_TYPE_WARN;
+    let options;
+    if (Utils.isObject(type)) {
+        options = type;
+        type = options.type || ALERT_TYPE_INFO;
+    } else {
+        options = {};
+    }
     type = type || "INFO";
     let icon = "fa-solid fa-circle-info";
     let color = "green";
@@ -112,8 +117,9 @@ Application.showAlert = function (title, message, type) {
             break
     }
     message = Utils.isEmpty(message) ? "N/A" : message;
-    iziToast.show({
+    options = Utils.applyIf(options, {
         title: title,
+        titleSize: 14,
         message: message,
         icon: icon,
         close: true,
@@ -122,6 +128,7 @@ Application.showAlert = function (title, message, type) {
         position: 'topRight',
         color: color
     });
+    iziToast.show(options);
 }
 
 /**
