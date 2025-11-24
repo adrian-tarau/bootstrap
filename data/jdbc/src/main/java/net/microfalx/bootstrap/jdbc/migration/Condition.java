@@ -6,10 +6,12 @@ import net.microfalx.bootstrap.jdbc.support.*;
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.StringUtils;
 
-import java.util.Arrays;
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
+import static java.util.Arrays.asList;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.split;
 
 @Getter
 @ToString
@@ -39,10 +41,15 @@ public final class Condition implements Nameable {
 
     public boolean evaluate(Schema schema) {
         if (StringUtils.isEmpty(value)) return true;
-        Stack<String> conditionStack = new Stack<>();
-        conditionStack.addAll(Arrays.asList(StringUtils.split(value, StringUtils.SPACE, true)));
-        String objectType = conditionStack.pop();
-        String name = conditionStack.pop();
+        Queue<String> conditionStack = new ArrayDeque<>(asList(split(value, StringUtils.SPACE, true)));
+        String objectType = conditionStack.poll();
+        if (objectType == null) {
+            throw new MigrationException("Invalid condition '" + value + "', object type is missing");
+        }
+        String name = conditionStack.poll();
+        if (name == null) {
+            throw new MigrationException("Invalid condition '" + value + "', object name is missing");
+        }
         SchemaObject<?> schemaObject = getSchemaObject(schema, objectType, name);
         Operator operator = getOperator(conditionStack);
         Expression expression = new Expression(schemaObject, operator);
@@ -53,9 +60,9 @@ public final class Condition implements Nameable {
         return switch (objectType.toLowerCase()) {
             case "table" -> schema.getTable(name);
             case "column" -> {
-                String[] parts = StringUtils.split(value, ".", true);
+                String[] parts = split(name, ".", true);
                 if (parts.length != 2) {
-                    throw new IllegalArgumentException("Invalid column specification, requires TABLE_NAME.COLUMN_NAME, got:  " + value);
+                    throw new MigrationException("Invalid column specification, requires TABLE_NAME.COLUMN_NAME, got:  " + value);
                 }
                 Table<?> table = schema.getTable(parts[0]);
                 Column<?> column = table.findColumn(parts[1]);
@@ -63,14 +70,14 @@ public final class Condition implements Nameable {
             }
             case "view" -> schema.getView(name);
             case "index" -> schema.getIndex(name);
-            default -> throw new IllegalArgumentException("Unknown schema object type: " + objectType);
+            default -> throw new MigrationException("Unknown schema object type: " + objectType);
         };
     }
 
-    private Operator getOperator(Stack<String> stack) {
-        String token = stack.pop();
+    private Operator getOperator(Queue<String> stack) {
+        String token = stack.poll();
         boolean not = token.equals("not");
-        if (not) token = stack.pop();
+        if (not) token = stack.poll();
         return switch (token) {
             case "exists" -> {
                 if (not) {
@@ -79,7 +86,7 @@ public final class Condition implements Nameable {
                     yield Operator.EXISTS;
                 }
             }
-            default -> throw new IllegalArgumentException("Unknown operator: " + token);
+            default -> throw new MigrationException("Unknown operator: " + token);
         };
     }
 
@@ -113,8 +120,8 @@ public final class Condition implements Nameable {
         public boolean evaluate() {
             boolean exists = schemaObject.exists();
             return switch (operator) {
-                case EXISTS -> exists;
-                case NOT_EXISTS -> !exists;
+                case EXISTS -> !exists;
+                case NOT_EXISTS -> exists;
             };
         }
     }

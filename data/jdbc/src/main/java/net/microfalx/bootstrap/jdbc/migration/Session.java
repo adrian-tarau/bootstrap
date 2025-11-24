@@ -212,9 +212,11 @@ public final class Session implements Identifiable<String> {
     }
 
     private void executeMigrations(Definition definition) {
+        currentDefinition = definition;
         for (Migration migration : definition.getMigrations()) {
             executeMigration(migration);
         }
+        currentDefinition = null;
         currentMigration = null;
     }
 
