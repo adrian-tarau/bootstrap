@@ -15,16 +15,14 @@ import net.microfalx.bootstrap.web.component.Separator;
 import net.microfalx.bootstrap.web.util.JsonFormResponse;
 import net.microfalx.bootstrap.web.util.JsonResponse;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -45,13 +43,13 @@ public class UserController extends SecurityDataSetController<User, Integer> {
     private UserService userService;
 
     @Autowired
+    private MailService mailService;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private MetadataService metadataService;
-
-    @Autowired
-    private MailService mailService;
 
     @Override
     protected void validate(User model, State state, JsonFormResponse<?> response) {
@@ -98,8 +96,27 @@ public class UserController extends SecurityDataSetController<User, Integer> {
         if (!userService.exists(id)) throw new SecurityException("User with id " + id + " not found");
         String token = SecurityUtils.getRandomPassword(100);
         userRepository.updateToken(token, id);
-        return JsonResponse.success("Token generated successfully: " + token
-                + ". Make sure to store it securely as it won't be shown again.");
+        boolean showToken = ObjectUtils.equals(id, userService.getCurrentUser().getUserName());
+        User user = userRepository.findByUserName(id);
+        if (showToken) {
+            return JsonResponse.success("Token generated successfully: " + token
+                    + ". Make sure to store it securely as it won't be shown again.");
+        } else {
+            mailService.send(user.getEmail(), "REST API Key was changed",
+                    MemoryResource.create(createAPIKeyEmail(user)));
+        }
+        return JsonResponse.success("Token generated successfully");
+    }
+
+    private String createAPIKeyEmail(User user) {
+        try {
+            String body = ClassPathResource.file("templates/security/api_key_email.txt").loadAsString();
+            body = StringUtils.replaceFirst(body, "${USER]", user.getName());
+            body = StringUtils.replaceFirst(body, "${API_KEY]", user.getToken());
+            return body;
+        } catch (IOException e) {
+            return rethrowExceptionAndReturn(e);
+        }
     }
 
 
