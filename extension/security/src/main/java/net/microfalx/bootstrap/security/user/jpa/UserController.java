@@ -15,14 +15,16 @@ import net.microfalx.bootstrap.web.component.Separator;
 import net.microfalx.bootstrap.web.util.JsonFormResponse;
 import net.microfalx.bootstrap.web.util.JsonResponse;
 import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.IOException;
 
@@ -80,43 +82,43 @@ public class UserController extends SecurityDataSetController<User, Integer> {
         User user = userRepository.findByUserName(id);
             String password = SecurityUtils.getRandomPassword(12);
         userRepository.updatePassword(passwordEncoder.encode(password), true, id);
-        String message = "Password was reset successfully.";
-        if (isNotEmpty(user.getEmail())) {
-            Resource body = getResetPasswordMessage(user, password);
-            mailService.send(user.getEmail(), "Password Reset", body);
-        } else {
-            message += "<br><br>The user has no email address, please forward the new password:<br><i>" + password + "</i>";
+        boolean showToken = ObjectUtils.equals(id, userService.getCurrentUser().getUserName());
+        String message = "Password was updated successfully.";
+        if (showToken) {
+            message += "Make sure to store it securely as it won't be shown again. You will be forced to changed it on next login.";
         }
-        return JsonResponse.success(message);
+        if (isNotEmpty(user.getEmail())) {
+            mailService.send(user.getEmail(), "Password Reset", createPasswordChangeEmail(user, password));
+        } else {
+            showToken = true;
+            message += "<br><br>The user has no email address, please forward the new password";
+        }
+        JsonResponse<?> response = JsonResponse.success(message);
+        if (showToken) response.addAttribute("password", password);
+        return response;
     }
 
     @PostMapping("{id}/generate_token")
     @ResponseBody
     public JsonResponse<?> generateToken(@PathVariable("id") String id) {
         if (!userService.exists(id)) throw new SecurityException("User with id " + id + " not found");
-        String token = SecurityUtils.getRandomPassword(100);
+        String token = SecurityUtils.getRandomPassword(60);
         userRepository.updateToken(token, id);
         boolean showToken = ObjectUtils.equals(id, userService.getCurrentUser().getUserName());
         User user = userRepository.findByUserName(id);
+        String message = "Token was updated successfully.";
         if (showToken) {
-            return JsonResponse.success("Token generated successfully: " + token
-                    + ". Make sure to store it securely as it won't be shown again.");
+            message += "Make sure to store it securely as it won't be shown again.";
+        }
+        if (isNotEmpty(user.getEmail())) {
+            mailService.send(user.getEmail(), "API Key Reset", createAPIKeyChangeEmail(user, token));
         } else {
-            mailService.send(user.getEmail(), "REST API Key was changed",
-                    MemoryResource.create(createAPIKeyEmail(user)));
+            showToken = true;
+            message += "<br><br>The user has no email address, please forward the new token";
         }
-        return JsonResponse.success("Token generated successfully");
-    }
-
-    private String createAPIKeyEmail(User user) {
-        try {
-            String body = ClassPathResource.file("templates/security/api_key_email.txt").loadAsString();
-            body = StringUtils.replaceFirst(body, "${USER]", user.getName());
-            body = StringUtils.replaceFirst(body, "${API_KEY]", user.getToken());
-            return body;
-        } catch (IOException e) {
-            return rethrowExceptionAndReturn(e);
-        }
+        JsonResponse<?> response = JsonResponse.success(message);
+        if (showToken) response.addAttribute("apiKey", token);
+        return response;
     }
 
 
@@ -125,11 +127,23 @@ public class UserController extends SecurityDataSetController<User, Integer> {
         if (state == State.ADD) model.setPassword(passwordEncoder.encode(model.getPassword()));
     }
 
-    private Resource getResetPasswordMessage(User user, String password) {
+    private Resource createAPIKeyChangeEmail(User user, String token) {
         try {
-            Resource resource = ClassPathResource.file("templates/security/reset_password.txt");
-            String text = replaceFirst(resource.loadAsString(), "${name}", user.getName());
-            return MemoryResource.create(replaceFirst(text, "${password}", password));
+            String body = ClassPathResource.file("templates/security/api_key_email.txt").loadAsString();
+            body = replaceFirst(body, "${USER}", user.getName());
+            body = replaceFirst(body, "${API_KEY}", token);
+            return MemoryResource.create(body);
+        } catch (IOException e) {
+            return rethrowExceptionAndReturn(e);
+        }
+    }
+
+    private Resource createPasswordChangeEmail(User user, String password) {
+        try {
+            String body = ClassPathResource.file("templates/security/reset_password.txt").loadAsString();
+            body = replaceFirst(body, "${USER}", user.getName());
+            body = replaceFirst(body, "${PASSWORD}", password);
+            return MemoryResource.create(body);
         } catch (IOException e) {
             return rethrowExceptionAndReturn(e);
         }

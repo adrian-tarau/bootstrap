@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -49,7 +50,7 @@ public class RestApiConfiguration {
     public SecurityFilterChain apiChain(HttpSecurity http, ApiCredentialService credentialService) throws Exception {
         String apiPathAll = addMatchAll("api");
         HttpSecurity httpSecurity = http.securityMatcher(apiPathAll);
-        updateCsrf(httpSecurity);
+        updateOther(httpSecurity);
         updateSecurity(httpSecurity, credentialService);
         updateExceptionHandling(httpSecurity);
         return http.build();
@@ -75,8 +76,9 @@ public class RestApiConfiguration {
         return result + "**";
     }
 
-    private void updateCsrf(HttpSecurity httpSecurity) throws Exception {
+    private void updateOther(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
+        httpSecurity.cors(Customizer.withDefaults());
     }
 
     private void updateSecurity(HttpSecurity httpSecurity, ApiCredentialService credentialService) throws Exception {

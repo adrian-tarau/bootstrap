@@ -1,10 +1,13 @@
-Hi ${USER},
+Hello ${USER},
 
-Your new API key has been successfully created. Below is the key associated with your account:
-API Key: ${API_KEY}
+Your new API key has been successfully changed to "${API_KEY}".
 
 Please store this key securely. For security reasons:
- - This is the only time we will display the full key.
- - Do not share it with anyone.
+ - This is the only time we will email the key to you.
+ - Remove the email containing the key after you have stored it.
+ - Keep it in a safe place Do not share it with anyone.
 
 If you believe it has been exposed, contact us immediately so we can revoke and regenerate it. If you have any questions or need further assistance, feel free to reach out.
+
+Best regards,
+The Team
