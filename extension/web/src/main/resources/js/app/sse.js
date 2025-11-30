@@ -8,6 +8,11 @@ window.Application.Sse = window.Application.Sse || {};
  * @type {string}
  */
 const SSE_END_OF_DATA = "$END_OF_DATA$";
+// SSE connection broke, browser is auto-retrying
+const SSE_READY_STATE_CONNECTING = 0;
+// SSE connection was open but broke
+const SSE_READY_STATE_OPEN = 1;
+const SSE_READY_STATE_CLOSED = 2;
 
 /**
  * Starts a Server-Sent Events (SSE) connection.
@@ -34,25 +39,57 @@ Application.Sse.start = function (path, callback, params, options) {
             callback.call(callback, data, event);
         }
     };
+    this.events = this.events || [];
+    this.events.push(events);
+    events.addEventListener("error-event", (event) => {
+        Logger.warn("Received a server side failure from SSO connection '" + event.target.url + "', error: " + event.data);
+    });
     events.onopen = (event) => {
-        Logger.debug("The connection has been established to '" + event.target.uri + "'");
+        Logger.debug("SSE connection has been established to '" + event.target.url + "'");
     };
     events.onerror = (event) => {
-        Logger.warn("Received a failure from '" + event.target.uri + "'");
+        if (event.readyState === SSE_READY_STATE_CONNECTING) {
+            Logger.debug("SSE connection for '" + event.target.url + "' is reconnecting");
+        } else {
+            Logger.debug("Received a failure from '" + event.target.url + "', state: " + event.readyState);
+        }
     };
+}
+
+/**
+ * Changes whether SSE is enabled or not.
+ *
+ * @param {boolean} enabled true if SSE is enabled, false otherwise
+ */
+Application.Sse.setEnabled = function (enabled) {
+    Application.Sse.enabled = enabled;
+}
+
+/**
+ * Returns whether SSE is enabled or not.
+ *
+ * @return {boolean} the true if SSE is enabled, false otherwise
+ */
+Application.Sse.isEnabled = function () {
+    return Application.Sse.enabled !== false;
 }
 
 /**
  * Initialize the SSE channel.
  */
 Application.Sse.initialize = function () {
+    Application.Sse.setEnabled(true);
     Application.Sse.start("/event/out", function (data, event) {
         let json = JSON.parse(data);
         let name = json.name;
         delete json.name;
         delete json.application;
-        Logger.debug("Received SSE event '" + name + "', data: " + data);
-        Application.fire(name, json);
+        if ("close" === name) {
+            Logger.debug("SSE channel is being closed by the server");
+        } else {
+            Logger.debug("Received SSE event '" + name + "', data: " + data);
+            Application.fire(name, json);
+        }
     }, {}, {self: false});
 }
 

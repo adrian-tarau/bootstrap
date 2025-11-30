@@ -26,7 +26,6 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ClassUtils.isSubClassOf;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
-import static net.microfalx.lang.TimeUtils.TEN_SECONDS;
 
 /**
  * A service which manages events.
@@ -35,7 +34,7 @@ import static net.microfalx.lang.TimeUtils.TEN_SECONDS;
 @Slf4j
 public class EventService implements InitializingBean {
 
-    public static final long SSE_TIMEOUT = TEN_SECONDS;
+    public static final long SSE_TIMEOUT = FIVE_MINUTE;
     public static final long APPLICATION_TIMEOUT = FIVE_MINUTE;
 
     private final Map<String, ApplicationQueue> events = new ConcurrentHashMap<>();
@@ -207,7 +206,7 @@ public class EventService implements InitializingBean {
     }
 
     private void initWorkers() {
-        threadPool.scheduleAtFixedRate(new MaintenanceTask(), ofSeconds(60));
+        threadPool.scheduleAtFixedRate(new MaintenanceTask(), ofSeconds(30));
     }
 
     private void initObjectMapper() {

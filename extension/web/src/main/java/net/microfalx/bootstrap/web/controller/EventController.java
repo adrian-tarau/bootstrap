@@ -5,9 +5,11 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.web.event.*;
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.threadpool.ThreadPool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -46,7 +48,7 @@ public class EventController {
 
     @GetMapping(path = "/out", produces = TEXT_EVENT_STREAM_VALUE)
     public SseEmitter outEvent() {
-        SseEmitter emitter = new SseEmitter();
+        SseEmitter emitter = new SseEmitter(0L);
         ThreadPool threadPool = eventService.getThreadPool();
         threadPool.execute(new EventsTask(emitter, application, eventService));
         return emitter;
@@ -104,6 +106,12 @@ public class EventController {
             this.throwable = throwable;
         }
 
+        private boolean isFatalError(Throwable e) {
+            Throwable rootCause = ExceptionUtils.getRootCause(e);
+            // TODO still not clear what it means? However, do not log as error since it does not seem to affect functionality
+            return !(rootCause instanceof AsyncRequestNotUsableException);
+        }
+
         @Override
         public void run() {
             try {
@@ -121,7 +129,7 @@ public class EventController {
             } catch (IllegalStateException e) {
                 throwable = e;
             } catch (Exception e) {
-                throwable = e;
+                if (isFatalError(e)) throwable = e;
                 emitter.completeWithError(e);
             } finally {
                 emitter.complete();

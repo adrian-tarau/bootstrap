@@ -440,7 +440,7 @@ Application.copyElementToClipboard = async function (selector, title) {
     Utils.requireNonNull(selector);
     title = Utils.requireNonNull(title, "Copy");
     let text = $(selector).text();
-    this.copyToClipboard(text, title);
+    await this.copyToClipboard(text, title);
 }
 
 /**
@@ -451,6 +451,7 @@ Application.ping = function () {
     Application.get("/ping", {}, function (data) {
         if (me.isConnectionLost()) {
             Logger.info("Connection re-established");
+            Application.Sse.setEnabled(true);
             me.unmask();
             me.pingConnectionLostCount = 0;
             me.pingSessionLostCount = 0;
@@ -474,7 +475,10 @@ Application.ping = function () {
                 Logger.trace("Failed to executed ping, connection lost");
                 me.pingConnectionLostCount++;
                 me.checkServerStatus(APP_AJAX_PING_CONNECTIVITY_THRESHOLD);
-                if (me.isConnectionLost()) me.showConnectionLost();
+                if (me.isConnectionLost()) {
+                    me.showConnectionLost();
+                    Application.Sse.setEnabled(false);
+                }
             }
         }
     });

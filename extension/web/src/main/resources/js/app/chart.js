@@ -68,7 +68,7 @@ Chart.render = function (selector, options) {
  * @param {String|Element} [parent] the element where to search for charts.
  */
 Chart.process = function (parent) {
-    Logger.info("Process charts in " + parent);
+    Logger.debug("Process charts in " + (parent? "'" + parent + "'" : "ROOT"));
     $(".chart-container").each(function (index, element) {
         let renderedAttr = $(element).attr(CHART_RENDERED_ATTR);
         if (!Utils.isDefined(renderedAttr)) Chart.load(element.id);
