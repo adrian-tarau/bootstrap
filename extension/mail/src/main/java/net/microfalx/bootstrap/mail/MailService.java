@@ -2,18 +2,17 @@ package net.microfalx.bootstrap.mail;
 
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamSource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.sqlite.Collation;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -24,9 +23,11 @@ import java.util.Properties;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.SecretUtils.maskSecret;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 @Service
+@Slf4j
 public class MailService implements InitializingBean {
 
     @Autowired(required = false)
@@ -128,8 +129,10 @@ public class MailService implements InitializingBean {
         } else {
             props.put("mail.smtp.auth", "false");
         }
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.starttls.enable", properties.isTls());
+        props.put("mail.smtp.ssl.enable", properties.isTls());
+        props.put("mail.smtp.starttls.enable", !properties.isTls());
+        LOGGER.info("SMTP settings: {}, port: {}, user: {}", properties.getHost(), properties.getPort(),
+                maskSecret(properties.getUserName()));
     }
 
 }
