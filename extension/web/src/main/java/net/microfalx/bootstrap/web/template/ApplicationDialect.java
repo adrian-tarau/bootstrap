@@ -16,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.DefaultCsrfToken;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.IProcessor;
@@ -105,13 +107,18 @@ public class ApplicationDialect extends AbstractProcessorDialect {
         @Override
         protected void doProcess(ITemplateContext context, IProcessableElementTag tag, IElementTagStructureHandler structureHandler) {
             WebContainerRequest containerRequest = WebContainerRequest.get();
+            CsrfToken csrf = (CsrfToken) containerRequest.getRequest().getAttribute("_csrf");
             LinkTool linkTool = new LinkTool(context, applicationContext);
-            DataSetTool dataSetTool = new DataSetTool(context, applicationContext);
+            DataSetTool<?, ?, ?> dataSetTool = new DataSetTool<>(context, applicationContext);
             StringBuilder builder = new StringBuilder();
             builder.append(SCRIPT_START_TAG);
             builder.append("\nconst APP_ID=\"").append(APP_ID_GENERATOR.nextAsString()).append("\";");
             builder.append("\nconst APP_REQUEST_PATH=\"").append(linkTool.getSelf()).append("\";");
             builder.append("\nconst APP_REQUEST_QUERY=").append(linkTool.toJson(linkTool.getQuery())).append(";");
+            if (csrf != null) {
+                csrf = new DefaultCsrfToken(csrf.getHeaderName(), csrf.getParameterName(), csrf.getToken());
+                builder.append("\nconst APP_CSRF=").append(linkTool.toJson(csrf)).append(";");
+            }
             String timeZone = containerRequest.hasTimeZone() ? containerRequest.getTimeZone().getId() : EMPTY_STRING;
             builder.append("\nconst APP_TIME_ZONE=\"").append(timeZone).append("\";");
             builder.append("\nconst APP_USER=").append(getCurrentUserAsJson()).append(";");

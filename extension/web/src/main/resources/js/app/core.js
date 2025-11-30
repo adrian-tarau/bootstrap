@@ -204,6 +204,11 @@ Application.ajax = function (type, path, params, callback, options) {
     let data = type === 'POST' && Utils.isNotEmpty(options.data) ? options.data : params;
     Logger.log(options.background ? "info" : "trace", "Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);
     if (options.mask) me.mask(options.mask, options.maskMessage);
+    let headers = {
+        "X-Application-Id": Application.getId(),
+        "X-TimeZone": Application.getTimezoneOffset()
+    };
+    if (Utils.isDefined(APP_CSRF)) headers[APP_CSRF.headerName] = APP_CSRF.token;
     $.ajax({
         url: uri,
         type: type,
@@ -211,10 +216,7 @@ Application.ajax = function (type, path, params, callback, options) {
         dataType: options.dataType,
         contentType: Utils.defaultIfNotDefinedOrNull(options.contentType, "application/x-www-form-urlencoded; charset=UTF-8"),
         timeout: timeout,
-        headers: {
-            "X-Application-Id": Application.getId(),
-            "X-TimeZone": Application.getTimezoneOffset()
-        },
+        headers: headers,
         success: function (output, status, xhr) {
             if (options.complete) options.complete.apply(this, arguments);
             if (options.mask) me.unmask(options.mask);

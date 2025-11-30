@@ -21,7 +21,7 @@ public class SecurityProperties {
     private String loginMessage = "Sign in to start your session";
 
     private String adminUserName = "admin";
-    private String adminPassword = "WhfAeDkf8857";
+    private String adminPassword = "pQrxHzF6k4eC08j55jab";
     private String guestUserName = "guest";
-    private String guestPassword = "ZWqHAE7at542";
+    private String guestPassword = "No6b3l8hU1upco4jfpMI";
 }

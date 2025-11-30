@@ -1,17 +1,22 @@
 package net.microfalx.bootstrap.security.provisioning;
 
+import jakarta.servlet.Filter;
+import jakarta.servlet.SessionCookieConfig;
 import net.microfalx.bootstrap.restapi.RestApiAccessDeniedHandler;
 import net.microfalx.bootstrap.restapi.RestApiAuthenticationEntryPoint;
 import net.microfalx.lang.annotation.Order;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -26,6 +31,7 @@ import javax.sql.DataSource;
 import static net.microfalx.lang.StringUtils.addEndSlash;
 import static net.microfalx.lang.StringUtils.addStartSlash;
 import static org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices.RememberMeTokenAlgorithm.SHA256;
+import static org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER;
 
 @Configuration
 @EnableWebSecurity
@@ -63,6 +69,20 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> sessionCookieCustomizer() {
+        return factory -> factory.addInitializers(servletContext -> {
+            SessionCookieConfig sessionCookieConfig = servletContext.getSessionCookieConfig();
+            sessionCookieConfig.setHttpOnly(true);
+            sessionCookieConfig.setSecure(true);
+        });
+    }
+
+    @Bean
+    public Filter sameSiteCookieFilter() {
+        return new SecurityFilter();
+    }
+
+    @Bean
     @Order(10)
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
         if (settings.isEnabled()) {
@@ -80,7 +100,8 @@ public class SecurityConfiguration {
     }
 
     private void updateCommon(HttpSecurity httpSecurity) throws Exception {
-        updateCsrf(httpSecurity);
+        updateSessionManagement(httpSecurity);
+        updateOther(httpSecurity);
         updateHeaders(httpSecurity);
         updateAnonymous(httpSecurity);
     }
@@ -89,12 +110,20 @@ public class SecurityConfiguration {
         httpSecurity.rememberMe(rememberMe -> rememberMe.rememberMeServices(rememberMeServices));
     }
 
-    private void updateCsrf(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);
+    private void updateSessionManagement(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
+    }
+
+    private void updateOther(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.csrf(Customizer.withDefaults());
     }
 
     private void updateHeaders(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.headers((headers) -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+        httpSecurity.headers(headers -> {
+            headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::deny);
+            headers.xssProtection(Customizer.withDefaults());
+            headers.referrerPolicy(rp -> rp.policy(NO_REFERRER));
+        });
     }
 
     private void updateAnonymous(HttpSecurity httpSecurity) throws Exception {
