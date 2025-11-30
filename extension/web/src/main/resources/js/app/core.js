@@ -384,18 +384,61 @@ Application.getTimezoneOffset = function () {
 }
 
 /**
- * Copies the content of an element to the clipboard.
- * @param {String|Element} selector the DOM selector or the element to copy
+ * Copies the content to the clipboard.
+ *
+ * @param {String} text the text to copy
+ * @param {String} [title=Copy] title the title of the post-copy notification
  */
-Application.copyToClipboard = function (selector) {
-    Utils.requireNonNull(selector);
-    let text = $(selector).text();
-    try {
-        navigator.clipboard.writeText(text);
-        Application.showWarnAlert("Copy", "Text copied to clipboard");
-    } catch (e) {
-        Application.showWarnAlert("Copy", "Failed to copy text to clipboard, reason " + e.message);
+Application.copyToClipboard = async function (text, title) {
+    Utils.requireNonNull(text);
+    title = Utils.defaultIfNotDefinedOrNull(title, "Copy");
+    if (!document.hasFocus()) {
+        Application.showWarnAlert(title, "Failed to copy text to clipboard, document is not focused");
+        return;
     }
+    let copied = true;
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                Logger.info("Failed to copy text using navigator.clipboard, reason: " + e.message);
+                copied = false;
+            }
+        }
+        if (!copied) {
+            const input = document.createElement("input");
+            input.value = text;
+            input.style.position = "fixed";
+            input.style.opacity = 0;
+            document.body.appendChild(input);
+            input.focus();
+            input.select();
+            copied = document.execCommand("copy");
+            document.body.removeChild(input);
+        }
+
+    } catch (e) {
+        copied = false;
+    }
+    if (copied) {
+        Application.showWarnAlert(title, "Text copied to clipboard");
+    } else {
+        Application.showWarnAlert(title, "Failed to copy text to clipboard, reason " + e.message);
+    }
+}
+
+/**
+ * Copies the content of an element to the clipboard.
+ *
+ * @param {String|Element} selector the DOM selector or the element to copy
+ * @param {String} [title=Copy] title the title of the post-copy notification
+ */
+Application.copyElementToClipboard = async function (selector, title) {
+    Utils.requireNonNull(selector);
+    title = Utils.requireNonNull(title, "Copy");
+    let text = $(selector).text();
+    this.copyToClipboard(text, title);
 }
 
 /**
