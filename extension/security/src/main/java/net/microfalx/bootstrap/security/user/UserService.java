@@ -18,6 +18,7 @@ import net.microfalx.bootstrap.security.user.jpa.User;
 import net.microfalx.bootstrap.security.user.jpa.UserRepository;
 import net.microfalx.bootstrap.web.preference.PreferenceService;
 import net.microfalx.bootstrap.web.preference.PreferenceStorage;
+import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
 import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
@@ -50,8 +54,7 @@ import static net.microfalx.bootstrap.security.SecurityUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
-import static net.microfalx.lang.StringUtils.capitalizeWords;
-import static net.microfalx.lang.StringUtils.toIdentifier;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * A service around user management.
@@ -89,6 +92,9 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
 
     @Autowired
     private JdbcClient jdbcClient;
+
+    @Autowired(required = false)
+    private OAuth2AuthorizedClientService authorizedClientService;
 
     private final Map<String, Role> roles = new ConcurrentHashMap<>();
     private final Map<String, SecurityContext> securityContexts = new ConcurrentHashMap<>();
@@ -189,12 +195,12 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
      */
     public SecurityContext getCurrentSecurityContext() {
         String currentUserName = getCurrentUserName();
-        SecurityContext securityContext = securityContexts.get(currentUserName.toLowerCase());
+        SecurityContext securityContext = securityContexts.get(normalizeUserName(currentUserName));
         if (securityContext != null) return securityContext;
         if (!SecurityConstants.ANONYMOUS_USER.equals(currentUserName)) {
             User currentUser = findUser(false);
             if (currentUser != null) {
-                securityContext = securityContexts.computeIfAbsent(currentUser.getUserName().toLowerCase(),
+                securityContext = securityContexts.computeIfAbsent(normalizeUserName(currentUser.getUserName()),
                         userName -> new SecurityContextImpl(currentUser, SecurityContextHolder.getContext()));
             }
         }
@@ -221,7 +227,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     public byte[] getSetting(User user, String name) {
         requireNonNull(user);
         requireNotEmpty(name);
-        Optional<UserSetting> setting = userSettingRepository.findById(new UserSetting.Id(user.getUserName().toLowerCase(), name.toLowerCase()));
+        Optional<UserSetting> setting = userSettingRepository.findById(new UserSetting.Id(normalizeUserName(user.getUserName()), name.toLowerCase()));
         return setting.map(UserSetting::getValue).orElseGet(() -> null);
     }
 
@@ -246,7 +252,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
         requireNonNull(user);
         requireNotEmpty(name);
         UserSetting setting = new UserSetting();
-        setting.setUserName(user.getUserName().toLowerCase());
+        setting.setUserName(normalizeUserName(user.getUserName()));
         setting.setName(name.toLowerCase());
         setting.setValue(value);
         setting.setCreatedAt(LocalDateTime.now());
@@ -303,6 +309,9 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
 
     @EventListener
     public void onSuccess(AuthenticationSuccessEvent success) {
+        if (success.getAuthentication() instanceof OAuth2LoginAuthenticationToken) {
+            createExternalUser(success.getAuthentication());
+        }
         AuditContext context = AuditContext.get().setAction(LOGIN_ACTION)
                 .setModule(SECURITY_MODULE).setErrorCode("200")
                 .setDescription("User '" + success.getAuthentication().getName() + "' was authenticated successfully");
@@ -314,7 +323,8 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     public void onFailure(AbstractAuthenticationFailureEvent failures) {
         AuditContext context = AuditContext.get().setAction(LOGIN_ACTION)
                 .setModule(SECURITY_MODULE).setErrorCode("403")
-                .setDescription("User '" + failures.getAuthentication().getName() + "' failed to authenticate, root cause: " + getRootCauseMessage(failures.getException()));
+                .setDescription("User '" + failures.getAuthentication().getName() + "' failed to authenticate, root cause: "
+                        + getRootCauseMessage(failures.getException()));
         context = updateAuditContext(context, failures.getAuthentication());
         audit(context);
     }
@@ -324,7 +334,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
         String userName = getUserName(event.getAuthentication());
         if (userName != null) {
             LOGGER.info("Logged out user '{}'", userName);
-            securityContexts.remove(userName.toLowerCase());
+            securityContexts.remove(normalizeUserName(userName));
         }
     }
 
@@ -348,7 +358,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     }
 
     private User findUser(boolean create, String userName) {
-        User user = userRepository.findByUserName(userName.toLowerCase());
+        User user = userRepository.findByUserName(normalizeUserName(userName));
         if (user == null && create) {
             user = createUser(userName, getRandomPassword(), capitalizeWords(userName),
                     null, "A generated user with no permissions for auditing purposes", null);
@@ -356,20 +366,44 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
         return user;
     }
 
+    private void createExternalUser(Authentication authentication) {
+        User user = findUser(false, authentication.getName());
+        if (user != null || authentication.getPrincipal() == null) return;
+        if (authentication instanceof OAuth2LoginAuthenticationToken token) {
+            user = new User();
+            OAuth2User principal = token.getPrincipal();
+            user.setUserName(normalizeUserName(principal.getName()));
+            if (principal instanceof ExtendedUserDetails extendedUserDetails) {
+                user.setName(extendedUserDetails.getDisplayName());
+                user.setEmail(extendedUserDetails.getEmail());
+            } else {
+                user.setName(user.getUserName());
+            }
+            user.setPassword(passwordEncoder.encode(getRandomPassword(30)));
+            user.setCreatedAt(LocalDateTime.now());
+            user.setExternal(true);
+            user.setEnabled(true);
+            userRepository.saveAndFlush(user);
+        }
+    }
+
     private User createUser(String userName, String password, String name, String email, String description, String groupName) {
+        if (isEmpty(password)) password = getRandomPassword();
         User user = new User();
-        user.setUserName(userName.toLowerCase());
+        user.setUserName(normalizeUserName(userName));
         user.setName(name);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setDescription(description);
         user.setCreatedAt(LocalDateTime.now());
         user.setEnabled(true);
+        user.setResetPassword(true);
         if (groupName != null) {
             Group group = groupService.findByName(groupName);
             if (group != null) user.setGroups(List.of(group));
         }
         userRepository.saveAndFlush(user);
+        LOGGER.info("Created user '{}', temporary password is '{}'", userName, password);
         return user;
     }
 
@@ -382,9 +416,9 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     private void createDefaultUsers() {
         try {
             if (userRepository.count() >= DEFAULT_USER_COUNT) return;
-            createUser(settings.getAdminUserName(), settings.getAdminPassword(), capitalizeWords(settings.getAdminUserName()),
+            createUser(settings.getAdminUserName(), null, capitalizeWords(settings.getAdminUserName()),
                     null, "A default administrator", ADMINISTRATORS_GROUP);
-            createUser(settings.getGuestUserName(), settings.getGuestPassword(), capitalizeWords(settings.getGuestUserName()),
+            createUser(settings.getGuestUserName(), null, capitalizeWords(settings.getGuestUserName()),
                     null, "A user with no permissions to access public resources", null);
         } catch (Exception e) {
             LOGGER.error("Failed to create default users", e);

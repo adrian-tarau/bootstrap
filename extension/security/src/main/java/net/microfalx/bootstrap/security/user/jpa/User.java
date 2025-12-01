@@ -11,9 +11,13 @@ import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.jdbc.entity.surrogate.TimestampAware;
 import net.microfalx.bootstrap.security.group.jpa.Group;
 import net.microfalx.lang.annotation.*;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+
+import static net.microfalx.bootstrap.security.SecurityUtils.normalizeUserName;
 
 @Entity
 @Table(name = "security_users")
@@ -59,6 +63,19 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
     @Description("Indicates whether the {name} is enabled or disabled")
     private boolean enabled;
 
+    @Column(name = "external", nullable = false)
+    @ReadOnly
+    @Position(11)
+    @Description("Indicates whether the user name is external (managed outside the system by an identity provider)")
+    private boolean external;
+
+    @Column(name = "reset_password", nullable = false)
+    @ReadOnly
+    @Position(11)
+    @Description("Indicates whether the user is required to change the password at next login (only applicable for non-external users)")
+    @Visible(false)
+    private boolean resetPassword;
+
     @Column(name = "email")
     @Position(20)
     @Description("The email associated with a {name}")
@@ -68,6 +85,10 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
     @JoinTable(name = "security_group_members", joinColumns = @JoinColumn(name = "username"), inverseJoinColumns = @JoinColumn(name = "group_id"))
     @Position(30)
     private Collection<Group> groups;
+
+    @Transient
+    @Visible()
+    private String imageUrl;
 
     @Column(name = "description")
     @Position(1000)
@@ -79,7 +100,7 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
 
     @Override
     public String getId() {
-        return getUserName();
+        return normalizeUserName(userName);
     }
 
     @Override
@@ -92,5 +113,10 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
     @Override
     public int hashCode() {
         return Objects.hash(userName);
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
     }
 }

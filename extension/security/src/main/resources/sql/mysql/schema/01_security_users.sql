@@ -4,13 +4,14 @@ create table security_users
     name        varchar(100)         not null,
     password    varchar(500)         not null,
     token       varchar(500),
+    email       varchar(200),
     `enabled`   boolean default true not null,
     reset_password boolean default false not null,
-    email       varchar(200),
+    external    boolean default false not null,
+    provider_id varchar(100),
     created_at  datetime             not null,
     modified_at datetime,
-    description varchar(1000),
-    constraint fk$security_users$email unique key (email)
+    description varchar(1000)
 ) ENGINE = InnoDB;
 
 create table security_authorities

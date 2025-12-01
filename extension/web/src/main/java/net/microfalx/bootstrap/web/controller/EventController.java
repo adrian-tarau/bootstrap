@@ -93,7 +93,7 @@ public class EventController {
             } catch (IllegalStateException e) {
                 rethrowException(e);
             } catch (Exception e) {
-                LOGGER.error("Failed to send event: {}", event.getName(), e);
+                throw new EventException("Failed to send event '" + event.getName() + "'", e);
             }
         }
 

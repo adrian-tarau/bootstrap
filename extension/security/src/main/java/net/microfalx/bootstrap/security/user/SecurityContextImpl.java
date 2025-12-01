@@ -116,9 +116,9 @@ public class SecurityContextImpl implements SecurityContext {
     }
 
     private void initializeUser() {
-        this.user = UserImpl.builder().name(this.user.getUserName())
+        this.user = UserImpl.builder().name(this.user.getUsername())
                 .displayName(this.user.getName())
-                .userName(this.user.getUserName())
+                .userName(this.user.getUsername())
                 .email(this.user.getEmail())
                 .enabled(this.user.isEnabled())
                 .description(this.user.getDescription()).build();

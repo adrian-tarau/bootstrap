@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.microfalx.bootstrap.security.user.Role;
 import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
+import net.microfalx.lang.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -55,7 +56,8 @@ public class SecurityUserDetailsManager extends JdbcUserDetailsManager {
         ExtendedUserDetailsImpl user = new ExtendedUserDetailsImpl(userFromUserQuery.getUsername(), userFromUserQuery.getPassword(), userFromUserQuery.isEnabled(),
                 userFromUserQuery.isAccountNonExpired(), userFromUserQuery.isCredentialsNonExpired(),
                 userFromUserQuery.isAccountNonLocked(), combinedAuthorities);
-        user.setName(extendedUserFromUserQuery.getName());
+        user.setName(extendedUserFromUserQuery.getUsername());
+        user.setDisplayName(extendedUserFromUserQuery.getName());
         user.setEmail(extendedUserFromUserQuery.getEmail());
         return user;
     }
@@ -115,16 +117,27 @@ public class SecurityUserDetailsManager extends JdbcUserDetailsManager {
     @Getter
     static class ExtendedUserDetailsImpl extends User implements ExtendedUserDetails {
 
+        private String displayName;
         private String name;
         private String email;
         private String imageUrl;
 
-        public ExtendedUserDetailsImpl(String username, String password, Collection<? extends GrantedAuthority> authorities) {
-            super(username, password, authorities);
-        }
-
         public ExtendedUserDetailsImpl(String username, String password, boolean enabled, boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection<? extends GrantedAuthority> authorities) {
             super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
+        }
+
+        public String getDisplayName() {
+            return StringUtils.defaultIfEmpty(displayName, getName());
+        }
+
+        public ExtendedUserDetailsImpl setDisplayName(String displayName) {
+            this.displayName = displayName;
+            return this;
+        }
+
+        @Override
+        public String getDescription() {
+            return null;
         }
     }
 

@@ -33,8 +33,9 @@
             </form>
             <div th:if="${settings.social}" class="social-auth-links text-center mb-3 d-grid gap-2">
                 <p>- OR -</p>
-                <a href="#" class="btn btn-danger"> <i class="bi bi-google me-2"></i> Sign in using Google</a>
-                <a href="#" class="btn btn-primary"> <i class="bi bi-microsoft me-2"></i> Sign in using Microsoft</a>
+                <a href="/oauth2/authorization/google" class="btn btn-danger"> <i class="bi bi-google me-2"></i> Sign in using Google</a>
+                <a href="/oauth2/authorization/azure" class="btn btn-primary"> <i class="bi bi-microsoft me-2"></i> Sign in using Microsoft</a>
+                <a href="/oauth2/authorization/github" class="btn btn-secondary"> <i class="bi bi-github me-2"></i> Sign in using Github</a>
             </div>
             <p class="mb-1"> <a th:href="@{/login/forgot-password}">I forgot my password</a> </p>
             <p th:if="${settings.register}" class="mb-0"> <a th:href="@{/login/register}" class="text-center">

@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.security;
 
-import net.microfalx.bootstrap.security.user.User;
+import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,6 +43,16 @@ public class SecurityUtils {
     }
 
     /**
+     * Returns a normalized version of the username (trimmed and lower-cased).
+     *
+     * @param userName the user name
+     * @return a non-null instance
+     */
+    public static String normalizeUserName(String userName) {
+        return userName != null ? userName.trim().toLowerCase() : null;
+    }
+
+    /**
      * Returns whether the username identifies the {@link SecurityConstants#ANONYMOUS_USER}
      *
      * @param userName the username
@@ -60,7 +70,7 @@ public class SecurityUtils {
      * @return a non-null instance
      */
     public static String getDisplayName(Principal principal) {
-        if (principal instanceof User user) {
+        if (principal instanceof ExtendedUserDetails user) {
             return user.getDisplayName();
         } else {
             return principal.getName();

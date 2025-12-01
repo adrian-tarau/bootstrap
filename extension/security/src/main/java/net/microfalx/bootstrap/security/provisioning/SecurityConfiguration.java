@@ -1,14 +1,10 @@
 package net.microfalx.bootstrap.security.provisioning;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.SessionCookieConfig;
 import net.microfalx.bootstrap.restapi.RestApiAccessDeniedHandler;
 import net.microfalx.bootstrap.restapi.RestApiAuthenticationEntryPoint;
+import net.microfalx.bootstrap.security.user.UserService;
 import net.microfalx.lang.annotation.Order;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.WebServerFactoryCustomizer;
-import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -17,20 +13,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.RememberMeServices;
-import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
-
-import javax.sql.DataSource;
 
 import static net.microfalx.lang.StringUtils.addEndSlash;
 import static net.microfalx.lang.StringUtils.addStartSlash;
-import static org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices.RememberMeTokenAlgorithm.SHA256;
 import static org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER;
 
 @Configuration
@@ -38,54 +26,19 @@ import static org.springframework.security.web.header.writers.ReferrerPolicyHead
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    private static final String REMEMBER_ME_KEY = "remember-me";
+    @Autowired
+    private SecurityProperties properties;
 
     @Autowired
-    private DataSource dataSource;
+    private OAuth2AuthorizedClientService authorizedClientService;
 
     @Autowired
-    private SecurityProperties settings;
-
-    @Bean
-    public UserDetailsManager createUserDetailsManager() {
-        SecurityUserDetailsManager manager = new SecurityUserDetailsManager(dataSource);
-        manager.setUserCache(new SpringCacheBasedUserCache(new ConcurrentMapCache("security_user")));
-        manager.setEnableAuthorities(false);
-        manager.setEnableGroups(true);
-        return manager;
-    }
-
-    @Bean
-    public RememberMeServices createRememberMeServices(UserDetailsService userDetailsService) {
-        TokenBasedRememberMeServices.RememberMeTokenAlgorithm encodingAlgorithm = SHA256;
-        TokenBasedRememberMeServices rememberMe = new TokenBasedRememberMeServices(REMEMBER_ME_KEY, userDetailsService, encodingAlgorithm);
-        rememberMe.setMatchingAlgorithm(encodingAlgorithm);
-        return rememberMe;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-    }
-
-    @Bean
-    public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> sessionCookieCustomizer() {
-        return factory -> factory.addInitializers(servletContext -> {
-            SessionCookieConfig sessionCookieConfig = servletContext.getSessionCookieConfig();
-            sessionCookieConfig.setHttpOnly(true);
-            sessionCookieConfig.setSecure(true);
-        });
-    }
-
-    @Bean
-    public Filter sameSiteCookieFilter() {
-        return new SecurityFilter();
-    }
+    private UserService userService;
 
     @Bean
     @Order(10)
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
-        if (settings.isEnabled()) {
+        if (properties.isEnabled()) {
             allowStandardPaths(httpSecurity);
             updateLogin(httpSecurity);
             updateRememberMe(httpSecurity, rememberMeServices);
@@ -100,6 +53,7 @@ public class SecurityConfiguration {
     }
 
     private void updateCommon(HttpSecurity httpSecurity) throws Exception {
+        updateOAuth2(httpSecurity);
         updateSessionManagement(httpSecurity);
         updateOther(httpSecurity);
         updateHeaders(httpSecurity);
@@ -112,6 +66,16 @@ public class SecurityConfiguration {
 
     private void updateSessionManagement(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
+    }
+
+    private void updateOAuth2(HttpSecurity httpSecurity) throws Exception {
+        if (properties.isSocial()) {
+            httpSecurity.oauth2Login(oauth2 -> oauth2.loginPage("/login")
+                    .userInfoEndpoint(userInfo -> userInfo
+                            .oidcUserService(new OidcUserService())
+                            .userService(new OAuth2UserService())
+                    ));
+        }
     }
 
     private void updateOther(HttpSecurity httpSecurity) throws Exception {

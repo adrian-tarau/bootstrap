@@ -3,6 +3,10 @@ package net.microfalx.bootstrap.security.user;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Simple implementation of the {@link User} interface.
@@ -19,5 +23,16 @@ class UserImpl implements User {
     private final boolean enabled;
     private final String email;
     private final String description;
+    private final String imageUrl;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
+    public String getPassword() {
+        return null;
+    }
 
 }

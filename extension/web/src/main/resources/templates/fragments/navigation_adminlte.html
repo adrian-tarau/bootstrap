@@ -40,12 +40,12 @@
 <li id = "user" class="nav-item dropdown user-menu" th:fragment="user">
     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
         <img th:src="${#security.imageUrl}" class="user-image rounded-circle shadow" alt="User Image">
-        <span class="d-none d-md-inline" th:text="${#security.getName()}"></span>
+        <span class="d-none d-md-inline" th:text="${#security.getDisplayName()}"></span>
     </a>
     <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
         <li class="user-header text-bg-primary"> <img th:src="${#security.imageUrl}" class="rounded-circle shadow" alt="User Image">
             <p>
-                <span th:text="${#security.getName()}"></span>
+                <span th:text="${#security.getDisplayName()}"></span>
             </p>
             <p>
                 <small th:text="${#security.getEmail()}"></small>

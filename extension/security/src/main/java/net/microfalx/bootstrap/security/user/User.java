@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.security.user;
 
+import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
@@ -13,7 +14,7 @@ import java.security.Principal;
  * It extends several interfaces to provide additional information about the user,
  * such as their name, description, and principal identity.
  */
-public interface User extends Identifiable<String>, Nameable, Descriptable, Principal {
+public interface User extends Identifiable<String>, ExtendedUserDetails, Nameable, Descriptable, Principal {
 
     /**
      * Returns the display name of the user.
@@ -32,7 +33,7 @@ public interface User extends Identifiable<String>, Nameable, Descriptable, Prin
      * @return a non-null instance
      * @see #getId()
      */
-    default String getUserName() {
+    default String getUsername() {
         return getId();
     }
 

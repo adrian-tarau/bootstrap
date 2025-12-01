@@ -21,7 +21,10 @@ public class SecurityProperties {
     private String loginMessage = "Sign in to start your session";
 
     private String adminUserName = "admin";
-    private String adminPassword = "pQrxHzF6k4eC08j55jab";
+    private String adminEMail = "admin@localhost";
     private String guestUserName = "guest";
-    private String guestPassword = "No6b3l8hU1upco4jfpMI";
+
+    public boolean isSocial() {
+        return enabled && social;
+    }
 }

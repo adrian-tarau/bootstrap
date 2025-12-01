@@ -58,6 +58,16 @@ public class SecurityTool extends AbstractTool implements Authentication {
         return authentication.getName();
     }
 
+    public String getDisplayName() {
+        UserDetails userDetails = getUserDetails();
+        if (userDetails instanceof ExtendedUserDetails extendedUserDetails) {
+            return extendedUserDetails.getDisplayName();
+        } else {
+            return getName();
+        }
+
+    }
+
     public String getEmail() {
         UserDetails userDetails = getUserDetails();
         if (userDetails instanceof ExtendedUserDetails extendedUserDetails) {
