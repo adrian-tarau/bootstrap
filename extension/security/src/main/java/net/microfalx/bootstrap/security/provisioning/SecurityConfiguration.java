@@ -27,7 +27,10 @@ import static org.springframework.security.web.header.writers.ReferrerPolicyHead
 public class SecurityConfiguration {
 
     @Autowired
-    private SecurityProperties properties;
+    private SecurityProperties securityProperties;
+
+    @Autowired
+    private OAuth2Properties oauth2Properties;
 
     @Autowired
     private OAuth2AuthorizedClientService authorizedClientService;
@@ -38,7 +41,7 @@ public class SecurityConfiguration {
     @Bean
     @Order(10)
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
-        if (properties.isEnabled()) {
+        if (securityProperties.isEnabled()) {
             allowStandardPaths(httpSecurity);
             updateLogin(httpSecurity);
             updateRememberMe(httpSecurity, rememberMeServices);
@@ -69,7 +72,7 @@ public class SecurityConfiguration {
     }
 
     private void updateOAuth2(HttpSecurity httpSecurity) throws Exception {
-        if (properties.isSocial()) {
+        if (oauth2Properties.isEnabled()) {
             httpSecurity.oauth2Login(oauth2 -> oauth2.loginPage("/login")
                     .userInfoEndpoint(userInfo -> userInfo
                             .oidcUserService(new OidcUserService())
@@ -130,7 +133,9 @@ public class SecurityConfiguration {
         httpSecurity.formLogin(login -> login.loginPage("/login").loginProcessingUrl("/login/auth")
                 //.successForwardUrl("/").failureForwardUrl("/login?error")
                 .usernameParameter("username").passwordParameter("password").permitAll());
-        httpSecurity.logout(logout -> logout.clearAuthentication(true).invalidateHttpSession(true).logoutUrl("/logout").permitAll());
+        httpSecurity.logout(logout -> logout.clearAuthentication(true)
+                .invalidateHttpSession(true).logoutUrl("/logout")
+                .logoutSuccessUrl("/").permitAll());
     }
 
     private void configureMetrics(HttpSecurity http) throws Exception {

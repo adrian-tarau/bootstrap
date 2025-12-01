@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Configuration;
 public class SecurityProperties {
 
     private boolean enabled = false;
-    private boolean social = false;
     private boolean register = false;
     private boolean terms = false;
 
@@ -24,7 +23,6 @@ public class SecurityProperties {
     private String adminEMail = "admin@localhost";
     private String guestUserName = "guest";
 
-    public boolean isSocial() {
-        return enabled && social;
-    }
+    private OAuth2Properties oauth2 = new OAuth2Properties();
+
 }

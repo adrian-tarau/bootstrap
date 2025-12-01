@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.security.provisioning.OAuth2Properties;
 import net.microfalx.bootstrap.security.provisioning.SecurityProperties;
 import net.microfalx.bootstrap.web.controller.PageController;
 import net.microfalx.lang.StringUtils;
@@ -24,7 +25,10 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 public class LoginController extends PageController {
 
     @Autowired
-    private SecurityProperties properties;
+    private SecurityProperties securityProperties;
+
+    @Autowired
+    private OAuth2Properties oauth2Properties;
 
     @Autowired
     private UserService userService;
@@ -55,7 +59,7 @@ public class LoginController extends PageController {
     @GetMapping("/login/register")
     public String registerPage(Model model) {
         updateModel(model);
-        if (properties.isRegister()) {
+        if (securityProperties.isRegister()) {
             return "security/register";
         } else {
             return REDIRECT_LOGIN;
@@ -65,7 +69,7 @@ public class LoginController extends PageController {
     @PostMapping(path = "/login/register", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public String registerAccount(Model model, AccountInfo accountInfo) {
         updateModel(model);
-        if (properties.isRegister()) {
+        if (securityProperties.isRegister()) {
             requireNotEmpty(accountInfo.getName());
             requireNotEmpty(accountInfo.getEmail());
             requireNotEmpty(accountInfo.getPassword());
@@ -77,7 +81,8 @@ public class LoginController extends PageController {
     }
 
     private void updateModel(Model model) {
-        model.addAttribute("settings", properties);
+        model.addAttribute("securityProperties", securityProperties);
+        model.addAttribute("oauth2Properties", oauth2Properties);
     }
 
     @Getter

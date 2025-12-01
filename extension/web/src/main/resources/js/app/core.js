@@ -14,6 +14,7 @@ const APP_AJAX_PING_CONNECTIVITY_THRESHOLD = 5;
 const APP_AJAX_PING_SESSION_THRESHOLD = 2;
 const APP_AJAX_MASK_NETWORK_MESSAGE = "<p style='font-size: 16px; font-weight: bold; padding-bottom: 10px;'>Server Communication Failure</p><p>Server stopped or communication with the server is not possible due to network failure.</p>";
 const APP_AJAX_MASK_AUTH_MESSAGE = "<p style='font-size: 16px; font-weight: bold; padding-bottom: 10px;'>Application Session</p><p>Application session was lost, please <a href='/login'>login</a> again.</p>";
+const APP_AJAX_MASK_LOGOUT_MESSAGE = "<p style='font-size: 16px; font-weight: bold; padding-bottom: 10px;'>Application Session</p><p>Logging out and redirect to login page.</p>";
 
 /**
  * Returns the identifier of the current application.
@@ -110,6 +111,34 @@ Application.isReady = function () {
  */
 Application.reload = function () {
     this.openSelf("", {});
+}
+
+/**
+ * Goes to the home page.
+ */
+Application.home = function () {
+    this.open("", {});
+}
+
+/**
+ * Logs out the current session.
+ */
+Application.logout = function () {
+    let me = this;
+    let messageElement = $("<div>", {
+        "class": "app-mask",
+        "html": APP_AJAX_MASK_LOGOUT_MESSAGE
+    });
+    this.mask(null, {
+        size: false,
+        custom: messageElement
+    });
+    Utils.defer(function () {
+        me.post("/logout", {}, function () {
+            me.home();
+        }, {self: false});
+    }, 1000)
+
 }
 
 /**

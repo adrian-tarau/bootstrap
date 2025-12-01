@@ -42,25 +42,30 @@
                     </div>
                 </form>
             </div>
-            <th:block th:if="${settings.social}">
+            <th:block th:if="${oauth2Properties.enabled}">
                 <div class="hr-text">or</div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            <a href="/oauth2/authorization/google" class="btn btn-4 btn-google w-100">
+                            <a th:if="${oauth2Properties.googleEnabled}" href="/oauth2/authorization/google" class="btn btn-4 btn-google w-100">
                                 <i class="bi bi-google me-2"></i> Google
                             </a>
                         </div>
                         <div class="col">
-                            <a href="/oauth2/authorization/azure" class="btn btn-4 btn-facebook w-100">
+                            <a th:if="${oauth2Properties.azureEnabled}" href="/oauth2/authorization/azure" class="btn btn-4 btn-facebook w-100">
                                 <i class="bi bi-microsoft me-2"></i> Microsoft
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a th:if="${oauth2Properties.githubEnabled}" href="/oauth2/authorization/github" class="btn btn-4 btn-facebook w-100">
+                                <i class="bi bi-github me-2"></i> Microsoft
                             </a>
                         </div>
                     </div>
                 </div>
             </th:block>
         </div>
-        <div th:if="${settings.register}" class="text-center text-secondary mt-3">Don't have account yet? <a th:href="@{/login/register}" tabindex="-1">Sign up</a></div>
+        <div th:if="${securityProperties.register}" class="text-center text-secondary mt-3">Don't have account yet? <a th:href="@{/login/register}" tabindex="-1">Sign up</a></div>
     </div>
 </div>
 <div th:replace="~{fragments/page :: code}"/>

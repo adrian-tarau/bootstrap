@@ -59,7 +59,7 @@
             </div>
         </li>
         <li class="user-footer">
-            <a th:if="${#security.isAuthenticated()}" href="/logout" class="btn btn-default btn-flat float-end">Sign out</a>
+            <a th:if="${#security.isAuthenticated()}" onclick="Application.logout()" class="btn btn-default btn-flat float-end">Sign out</a>
         </li>
     </ul>
 </li>

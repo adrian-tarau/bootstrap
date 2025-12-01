@@ -26,6 +26,18 @@ public class OAuth2Properties {
     private String azureClientSecret;
 
     public boolean isEnabled() {
-        return isNotEmpty(googleClientId) || isNotEmpty(githubClientId) || isNotEmpty(azureClientId);
+        return isGoogleEnabled() || isGithubEnabled() || isAzureEnabled();
+    }
+
+    public boolean isGoogleEnabled() {
+        return isNotEmpty(googleClientId);
+    }
+
+    public boolean isGithubEnabled() {
+        return isNotEmpty(githubClientId);
+    }
+
+    public boolean isAzureEnabled() {
+        return isNotEmpty(azureClientId);
     }
 }
