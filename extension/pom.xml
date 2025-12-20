@@ -42,6 +42,7 @@
         <module>template</module>
         <module>web</module>
 		<module>rest-api</module>
+		<module>rest-api-client</module>
         <module>security</module>
         <module>mail</module>
     </modules>
