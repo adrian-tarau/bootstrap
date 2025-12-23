@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.security.provisioning;
 
+import net.microfalx.bootstrap.security.SecurityUtils;
 import net.microfalx.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +39,7 @@ public class OAuth2ClientConfiguration {
         if (settings.isEnabled() && isNotEmpty(properties.getAzureClientId())) {
             registrations.add(azure());
         }
+        if (registrations.isEmpty()) registrations.add(noop());
         return new InMemoryClientRegistrationRepository(registrations);
     }
 
@@ -77,6 +79,15 @@ public class OAuth2ClientConfiguration {
                 .userInfoUri("https://graph.microsoft.com/oidc/userinfo")
                 .userNameAttributeName(IdTokenClaimNames.SUB)
                 .clientName("Microsoft")
+                .build();
+    }
+
+    private ClientRegistration noop() {
+        return CommonOAuth2Provider.GOOGLE
+                .getBuilder("noop")
+                .clientId(SecurityUtils.getRandomPassword())
+                .clientSecret(SecurityUtils.getRandomPassword())
+                .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
                 .build();
     }
 }
