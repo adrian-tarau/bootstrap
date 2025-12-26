@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.restapi.client;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.Collection;
@@ -15,6 +16,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 /**
  * A service which tracks REST client interactions.
  */
+@Service
 public class RestClientService implements InitializingBean {
 
     @Autowired(required = false)
