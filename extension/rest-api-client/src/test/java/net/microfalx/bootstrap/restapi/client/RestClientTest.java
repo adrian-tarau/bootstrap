@@ -27,7 +27,7 @@ class RestClientTest {
     @BeforeEach
     void setup() throws Exception {
         restClientService.afterPropertiesSet();
-        restClient = restClientService.register(URI.create("https://jsonplaceholder.typicode.com/"), "sasasa");
+        restClient = restClientService.register(URI.create("https://jsonplaceholder.typicode.com/"), "dummy");
     }
 
     @Test

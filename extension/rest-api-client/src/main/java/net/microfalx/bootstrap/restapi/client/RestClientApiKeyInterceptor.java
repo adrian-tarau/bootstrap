@@ -8,7 +8,10 @@ import java.io.IOException;
 
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
-public class RestClientApiKeyInterceptor implements Interceptor {
+/**
+ * An OkHttp interceptor which adds an API key to the request headers.
+ */
+class RestClientApiKeyInterceptor implements Interceptor {
 
     private static final String DEFAULT_HEADER_NAME = "X-API-Key";
 

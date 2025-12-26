@@ -15,6 +15,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Proxy;
 import java.net.URI;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -130,8 +131,10 @@ public class RestClient {
      * @return the API wrapper
      * @see #execute(Call)
      */
+    @SuppressWarnings("unchecked")
     public <A> A create(Class<A> apiClass) {
-        return getWrapper().create(apiClass);
+        A wrapper = getWrapper().create(apiClass);
+        return (A) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{apiClass}, new RestApiWrapper<>(this, apiClass, wrapper));
     }
 
     private ApiException map(retrofit2.Response<?> response) {
