@@ -66,7 +66,6 @@ public class SecurityConfiguration {
         }
     }
 
-
     private void updateCommon(HttpSecurity httpSecurity) throws Exception {
         updateOAuth2(httpSecurity);
         updateSessionManagement(httpSecurity);
@@ -153,11 +152,10 @@ public class SecurityConfiguration {
 
     private void updateLogin(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.formLogin(login -> login.loginPage("/login").loginProcessingUrl("/login/auth")
-                //.successForwardUrl("/").failureForwardUrl("/login?error")
                 .usernameParameter("username").passwordParameter("password").permitAll());
         httpSecurity.logout(logout -> logout.clearAuthentication(true)
                 .invalidateHttpSession(true).logoutUrl("/logout")
-                .logoutSuccessUrl("/").permitAll());
+                .logoutSuccessUrl("/"));
     }
 
     private void allowPath(HttpSecurity httpSecurity, String path) throws Exception {
