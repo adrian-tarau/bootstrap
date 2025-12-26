@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.restapi.client;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -221,6 +222,7 @@ public class RestClient {
             JsonMapper.Builder builder = JsonMapper.builder().addModule(new JavaTimeModule());
             builder.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
             builder.enable(SerializationFeature.INDENT_OUTPUT);
+            builder.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
             objectMapper = builder.build();
         }
         return objectMapper;
