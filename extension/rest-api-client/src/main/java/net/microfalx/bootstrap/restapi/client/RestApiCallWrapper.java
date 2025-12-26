@@ -37,13 +37,13 @@ class RestApiCallWrapper<A, R> implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         final String name = method.getName();
         if ("toString".equals(name)) {
-            return "REST API Call for " + ClassUtils.getName(apiWrapper.getApiType()) + "." + method.getName() + " [" + getClient().getUri() + "]";
+            return "REST API Call for " + ClassUtils.getName(apiWrapper.getApiType()) + "." + this.method.getName() + " [" + getClient().getUri() + "]";
         } else {
-            RestClientApiKeyInterceptor.API_KEY.set(getClient().getApiKey());
+            RestClientApiKeyInterceptor.CLIENT.set(getClient());
             try {
                 return method.invoke(call, args);
             } finally {
-                RestClientApiKeyInterceptor.API_KEY.remove();
+                RestClientApiKeyInterceptor.CLIENT.remove();
             }
         }
     }

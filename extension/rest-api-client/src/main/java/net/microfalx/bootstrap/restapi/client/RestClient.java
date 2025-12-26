@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import net.microfalx.bootstrap.restapi.client.exception.*;
+import net.microfalx.lang.SecretUtils;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
@@ -17,6 +18,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.net.URI;
+import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -35,7 +37,9 @@ public class RestClient {
     private URI uri;
     private Retrofit retrofit;
 
+    private String apiKeyHeaderName = "X-API-Key";
     private String apiKey;
+    private boolean useHeader = true;
 
     /**
      * Returns the underlying HTTP client.
@@ -89,6 +93,49 @@ public class RestClient {
     }
 
     /**
+     * Returns the name of the header used to pass the API key
+     *
+     * @return a non-null instance
+     */
+    public String getApiKeyHeaderName() {
+        return apiKeyHeaderName;
+    }
+
+    /**
+     * Changes the name of the header used to pass the API key.
+     * <p>
+     * By default, the header name is "X-API-Key".
+     *
+     * @param apiKeyHeaderName the new header name
+     * @return self
+     */
+    public RestClient setApiKeyHeaderName(String apiKeyHeaderName) {
+        this.apiKeyHeaderName = apiKeyHeaderName;
+        return this;
+    }
+
+    /**
+     * Returns whether the API key should be passed as a header.
+     *
+     * @return {@code true} if the API key should be passed as a header, {@code false} if it should be passed as a Bearer token
+     * @see #getApiKeyHeaderName()
+     */
+    public boolean isUseHeader() {
+        return useHeader;
+    }
+
+    /**
+     * Changes whether the API key should be passed as a header.
+     *
+     * @param useHeader {@code true} if the API key should be passed as a header, {@code false} if it should be passed as a Bearer token
+     * @return self
+     */
+    public RestClient setUseHeader(boolean useHeader) {
+        this.useHeader = useHeader;
+        return this;
+    }
+
+    /**
      * Return the Retrofit instance used to create API wrappers.
      *
      * @return a non-null instance
@@ -135,6 +182,16 @@ public class RestClient {
     public <A> A create(Class<A> apiClass) {
         A wrapper = getWrapper().create(apiClass);
         return (A) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{apiClass}, new RestApiWrapper<>(this, apiClass, wrapper));
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", RestClient.class.getSimpleName() + "[", "]")
+                .add("uri=" + uri)
+                .add("useHeader=" + useHeader)
+                .add("apiKeyHeaderName='" + apiKeyHeaderName + "'")
+                .add("apiKey='" + SecretUtils.maskSecret(apiKey) + "'")
+                .toString();
     }
 
     private ApiException map(retrofit2.Response<?> response) {
