@@ -46,14 +46,13 @@ public class RestApiConfiguration {
     }
 
     @Bean
-    @Order(1)
-    public SecurityFilterChain apiChain(HttpSecurity http, ApiCredentialService credentialService) throws Exception {
-        String apiPathAll = addMatchAll("api");
-        HttpSecurity httpSecurity = http.securityMatcher(apiPathAll);
+    @Order(Order.HIGH)
+    public SecurityFilterChain apiChain(HttpSecurity httpSecurity, ApiCredentialService credentialService) throws Exception {
+        httpSecurity = httpSecurity.securityMatcher(addMatchAll("api"));
         updateOther(httpSecurity);
         updateSecurity(httpSecurity, credentialService);
         updateExceptionHandling(httpSecurity);
-        return http.build();
+        return httpSecurity.build();
     }
 
     private Info getInfo() {

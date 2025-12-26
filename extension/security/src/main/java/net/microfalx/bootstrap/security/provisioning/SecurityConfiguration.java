@@ -5,6 +5,8 @@ import net.microfalx.bootstrap.restapi.RestApiAuthenticationEntryPoint;
 import net.microfalx.bootstrap.security.user.UserService;
 import net.microfalx.lang.annotation.Order;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -39,14 +41,23 @@ public class SecurityConfiguration {
     private UserService userService;
 
     @Bean
-    @Order(10)
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
+    public SecurityFilterChain healthChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
+        httpSecurity.securityMatcher(EndpointRequest.to(HealthEndpoint.class));
+        return httpSecurity.build();
+    }
+
+    @Bean
+    @Order(Order.AFTER)
+    public SecurityFilterChain webChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
         if (securityProperties.isEnabled()) {
+            httpSecurity = httpSecurity.securityMatcher(addMatchAll("/"));
             allowStandardPaths(httpSecurity);
             updateLogin(httpSecurity);
             updateRememberMe(httpSecurity, rememberMeServices);
             updateCommon(httpSecurity);
             updateExceptionHandling(httpSecurity);
+            // everything else requires authentication
+            httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
             return httpSecurity.build();
         } else {
             httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
@@ -54,6 +65,7 @@ public class SecurityConfiguration {
             return httpSecurity.build();
         }
     }
+
 
     private void updateCommon(HttpSecurity httpSecurity) throws Exception {
         updateOAuth2(httpSecurity);
@@ -113,20 +125,30 @@ public class SecurityConfiguration {
     }
 
     private void allowStandardPaths(HttpSecurity httpSecurity) throws Exception {
+        allowAssertPaths(httpSecurity);
+        allowAuthPaths(httpSecurity);
+        allowOtherPaths(httpSecurity);
+    }
+
+    private void allowAssertPaths(HttpSecurity httpSecurity) throws Exception {
         allowPath(httpSecurity, "asset");
         allowPath(httpSecurity, "css");
         allowPath(httpSecurity, "js");
         allowPath(httpSecurity, "image");
         allowPath(httpSecurity, "favicon.ico");
         allowPath(httpSecurity, "font");
+    }
+
+    private void allowAuthPaths(HttpSecurity httpSecurity) throws Exception {
         allowPath(httpSecurity, "login");
+    }
+
+    private void allowOtherPaths(HttpSecurity httpSecurity) throws Exception {
         allowPath(httpSecurity, "settings/session");
         allowPath(httpSecurity, "ping");
         allowPath(httpSecurity, "status");
         allowPath(httpSecurity, "event");
-        allowPath(httpSecurity, "api");
-        configureMetrics(httpSecurity);
-        httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
+        //allowPath(httpSecurity, "api");
     }
 
     private void updateLogin(HttpSecurity httpSecurity) throws Exception {
@@ -138,12 +160,13 @@ public class SecurityConfiguration {
                 .logoutSuccessUrl("/").permitAll());
     }
 
-    private void configureMetrics(HttpSecurity http) throws Exception {
-        //http.securityMatcher(EndpointRequest.to(HealthEndpoint.class));
+    private void allowPath(HttpSecurity httpSecurity, String path) throws Exception {
+        httpSecurity.authorizeHttpRequests(auth -> auth.requestMatchers(addMatchAll(path)).permitAll());
     }
 
-    private void allowPath(HttpSecurity http, String path) throws Exception {
-        http.authorizeHttpRequests(auth -> auth.requestMatchers(addEndSlash(addStartSlash(path)) + "**").permitAll());
+    private String addMatchAll(String path) {
+        String result = addStartSlash(addEndSlash(path));
+        return result + "**";
     }
 
 
