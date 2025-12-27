@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 
@@ -31,16 +32,32 @@ class RestClientTest {
     }
 
     @Test
-    void getPosts() {
+    void getPosts() throws IOException {
         PostApi api = restClient.create(PostApi.class);
-        Collection<Post> posts = restClient.execute(api.list());
+        Collection<Post> posts = api.list().execute().body();
         assertThat(posts.size()).isGreaterThan(50);
     }
 
     @Test
-    void getPost() {
+    void getPostsDirect() {
         PostApi api = restClient.create(PostApi.class);
-        Post post = restClient.execute(api.get(1));
+        Collection<Post> posts = api.listDirect();
+        assertThat(posts.size()).isGreaterThan(50);
+    }
+
+    @Test
+    void getPost() throws IOException {
+        PostApi api = restClient.create(PostApi.class);
+        Post post = api.get(1).execute().body();
+        assertNotNull(post);
+        assertEquals(1, post.getUserId());
+        assertThat(post.getTitle()).contains("occaecati");
+    }
+
+    @Test
+    void getPostDirect() {
+        PostApi api = restClient.create(PostApi.class);
+        Post post = api.getDirect(1);
         assertNotNull(post);
         assertEquals(1, post.getUserId());
         assertThat(post.getTitle()).contains("occaecati");
@@ -49,31 +66,31 @@ class RestClientTest {
     @Test
     void getPostNotFound() {
         PostApi api = restClient.create(PostApi.class);
-        assertThatThrownBy(() -> restClient.execute(api.get(11111)))
+        assertThatThrownBy(() -> api.get(11111).execute().body())
                 .isInstanceOf(NotFoundException.class);
     }
 
     @Test
-    void create() {
+    void create() throws IOException {
         PostApi api = restClient.create(PostApi.class);
-        Post post = restClient.execute(api.create(new Post().setTitle("abc").setBody("cde").setUserId(1)));
+        Post post = api.create(new Post().setTitle("abc").setBody("cde").setUserId(1)).execute().body();
         assertNotNull(post);
         assertEquals(101, post.getId());
     }
 
     @Test
-    void update() {
+    void update() throws IOException {
         PostApi api = restClient.create(PostApi.class);
-        Post post = restClient.execute(api.update(1, new Post().setTitle("abc").setBody("cde").setUserId(1)));
+        Post post = api.update(1, new Post().setTitle("abc").setBody("cde").setUserId(1)).execute().body();
         assertNotNull(post);
         assertEquals(1, post.getId());
         assertEquals("abc", post.getTitle());
     }
 
     @Test
-    void delete() {
+    void delete() throws IOException {
         PostApi api = restClient.create(PostApi.class);
-        restClient.execute(api.delete(1));
+        api.delete(1).execute();
     }
 
 

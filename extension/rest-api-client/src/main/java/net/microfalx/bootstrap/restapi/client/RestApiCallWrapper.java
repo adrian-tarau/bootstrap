@@ -1,7 +1,11 @@
 package net.microfalx.bootstrap.restapi.client;
 
+import net.microfalx.bootstrap.restapi.client.exception.ApiError;
+import net.microfalx.bootstrap.restapi.client.exception.ApiException;
+import net.microfalx.bootstrap.restapi.client.exception.ServerErrorException;
 import net.microfalx.lang.ClassUtils;
 import retrofit2.Call;
+import retrofit2.Response;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -41,10 +45,29 @@ class RestApiCallWrapper<A, R> implements InvocationHandler {
         } else {
             RestClientApiKeyInterceptor.CLIENT.set(getClient());
             try {
-                return method.invoke(call, args);
+                return doInvoke(method, args);
             } finally {
                 RestClientApiKeyInterceptor.CLIENT.remove();
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object doInvoke(Method method, Object[] args) throws Throwable {
+        final String name = method.getName();
+        try {
+            if ("execute".equals(name)) {
+                Response<Object> response = (Response<Object>) method.invoke(call, args);
+                if (!response.isSuccessful()) throw getClient().map(response);
+                return response;
+            } else {
+                return method.invoke(call, args);
+            }
+        } catch (ApiException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new ServerErrorException(500, new ApiError().setStatus(500).setMessage(e.getMessage()));
+        }
+
     }
 }

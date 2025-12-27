@@ -10,8 +10,14 @@ public interface PostApi {
     @GET("/posts")
     Call<Collection<Post>> list();
 
+    @GET("/posts")
+    Collection<Post> listDirect();
+
     @GET("/posts/{id}")
     Call<Post> get(@Path("id") int id);
+
+    @GET("/posts/{id}")
+    Post getDirect(@Path("id") int id);
 
     @POST("/posts")
     Call<Post> create(@Body Post post);

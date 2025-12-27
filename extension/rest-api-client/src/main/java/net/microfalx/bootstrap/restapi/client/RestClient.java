@@ -146,6 +146,7 @@ public class RestClient {
             try {
                 Retrofit.Builder builder = new Retrofit.Builder().baseUrl(uri.toURL()).client(client);
                 builder.addConverterFactory(JacksonConverterFactory.create(getObjectMapper()));
+                builder.addCallAdapterFactory(new RestApiCallAdapter.Factory(this));
                 retrofit = builder.build();
             } catch (Exception e) {
                 throw new RestClientException("Failed to create Rest API wrapper", e);
@@ -161,13 +162,16 @@ public class RestClient {
      * @param <T>  the response type
      * @return the response body
      */
-    public <T> T execute(Call<T> call) {
+    <T> T execute(Call<T> call) {
+        RestClientApiKeyInterceptor.CLIENT.set(this);
         try {
             Response<T> response = call.execute();
             if (!response.isSuccessful()) throw map(response);
             return response.body();
         } catch (IOException e) {
             throw new ServerErrorException(500, new ApiError().setStatus(500).setMessage(e.getMessage()));
+        } finally {
+            RestClientApiKeyInterceptor.CLIENT.remove();
         }
     }
 
@@ -195,7 +199,13 @@ public class RestClient {
                 .toString();
     }
 
-    private ApiException map(retrofit2.Response<?> response) {
+    /**
+     * Maps a Retrofit response to an exception.
+     *
+     * @param response the response
+     * @return the exception
+     */
+    ApiException map(retrofit2.Response<?> response) {
         ApiError apiError = null;
         try (ResponseBody body = response.errorBody()) {
             if (body != null & JSON_MEDIA_TYPE.equals(body.contentType())) {
