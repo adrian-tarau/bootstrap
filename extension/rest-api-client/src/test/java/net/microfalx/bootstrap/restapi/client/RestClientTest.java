@@ -1,12 +1,16 @@
 package net.microfalx.bootstrap.restapi.client;
 
 import net.microfalx.bootstrap.restapi.client.exception.NotFoundException;
+import net.microfalx.bootstrap.restapi.client.jpa.AuditRepository;
+import net.microfalx.bootstrap.restapi.client.jpa.ClientRepository;
 import net.microfalx.bootstrap.restapi.client.jsonplaceholder.Post;
 import net.microfalx.bootstrap.restapi.client.jsonplaceholder.PostApi;
+import net.microfalx.threadpool.ThreadPool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
@@ -21,14 +25,26 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ExtendWith(MockitoExtension.class)
 class RestClientTest {
 
-    @InjectMocks
-    private RestClientService restClientService;
+    @Mock private ThreadPool threadPool;
+    @Mock private AuditRepository auditRepository;
+    @Mock private ClientRepository clientRepository;
+    @Mock private RestApiAuditPersister persister;
+
+    @InjectMocks private RestClientService restClientService;
     private RestClient restClient;
 
     @BeforeEach
     void setup() throws Exception {
         restClientService.afterPropertiesSet();
         restClient = restClientService.register(URI.create("https://jsonplaceholder.typicode.com/"), "dummy");
+    }
+
+    @Test
+    void audit() throws IOException {
+        PostApi api = restClient.create(PostApi.class);
+        assertNotNull(api.listDirect());
+        assertEquals(1, restClientService.getCompleted().size());
+        assertEquals(1, restClient.getCompleted().size());
     }
 
     @Test

@@ -22,6 +22,10 @@ class RestClientLogger {
     }
 
     private void log(String message) {
-        LOGGER.info(message);
+        if (level == HttpLoggingInterceptor.Level.BODY) {
+            LOGGER.trace(message);
+        } else {
+            LOGGER.debug(message);
+        }
     }
 }

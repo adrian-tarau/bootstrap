@@ -13,11 +13,9 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
  */
 class RestClientApiKeyInterceptor implements Interceptor {
 
-    static ThreadLocal<RestClient> CLIENT = new ThreadLocal<>();
-
     @Override
     public Response intercept(Chain chain) throws IOException {
-        RestClient restClient = CLIENT.get();
+        RestClient restClient = RestClient.CLIENT.get();
         String apiKey = restClient.getApiKey();
         if (isNotEmpty(apiKey)) {
             Request.Builder builder = chain.request().newBuilder();

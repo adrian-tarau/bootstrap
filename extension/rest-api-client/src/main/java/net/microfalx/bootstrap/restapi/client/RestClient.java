@@ -5,9 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.RequiredArgsConstructor;
 import net.microfalx.bootstrap.restapi.client.exception.*;
-import net.microfalx.lang.SecretUtils;
+import net.microfalx.lang.*;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
@@ -19,8 +18,13 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.net.URI;
+import java.util.Collection;
+import java.util.Queue;
 import java.util.StringJoiner;
+import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
 
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
@@ -29,18 +33,76 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * Behind the scenes, it uses <a href="https://square.github.io/retrofit/">Retrofit</a> and
  * <a href="https://square.github.io/okhttp/">OkHttp</a>.
  */
-@RequiredArgsConstructor
-public class RestClient {
+public class RestClient implements Identifiable<String>, Nameable, Descriptable {
 
+    private final RestClientService restClientService;
     private final OkHttpClient client;
-    private ObjectMapper objectMapper;
 
+    private ObjectMapper objectMapper;
+    private static final String DEFAULT_NAME = "RestClient";
+
+    private String id = UUID.randomUUID().toString();
+    private String name = DEFAULT_NAME;
+    private String description;
     private URI uri;
     private Retrofit retrofit;
 
     private String apiKeyHeaderName = "X-API-Key";
     private String apiKey;
     private boolean useHeader = true;
+    private final Queue<RestApiAudit> audits = new ArrayBlockingQueue<>(100);
+
+    static ThreadLocal<RestClient> CLIENT = new ThreadLocal<>();
+
+    RestClient(RestClientService restClientService, OkHttpClient client) {
+        requireNonNull(restClientService);
+        requireNonNull(client);
+        this.restClientService = restClientService;
+        this.client = client;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Changes the name of the client.
+     * <p>
+     * By default, the client name is the hostname of the base URI.
+     *
+     * @param name the new name
+     * @return self
+     */
+    public RestClient setName(String name) {
+        ArgumentUtils.requireNotEmpty(name);
+        this.name = name;
+        return this;
+    }
+
+    /**
+     * Returns the description of the client.
+     *
+     * @return a non-null instance
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * Changes the description of the client.
+     *
+     * @param description the new description
+     */
+    public RestClient setDescription(String description) {
+        this.description = description;
+        return this;
+    }
 
     /**
      * Returns the underlying HTTP client.
@@ -70,6 +132,8 @@ public class RestClient {
     public RestClient setUri(URI uri) {
         requireNonNull(uri);
         this.uri = uri;
+        this.name = StringUtils.defaultIfEmpty(uri.getHost(), DEFAULT_NAME);
+        updateId();
         return this;
     }
 
@@ -137,6 +201,15 @@ public class RestClient {
     }
 
     /**
+     * Returns the last N audit entries.
+     *
+     * @return a non-null instance
+     */
+    public Collection<RestApiAudit> getCompleted() {
+        return unmodifiableCollection(audits);
+    }
+
+    /**
      * Return the Retrofit instance used to create API wrappers.
      *
      * @return a non-null instance
@@ -163,7 +236,7 @@ public class RestClient {
      * @return the response body
      */
     <T> T execute(Call<T> call) {
-        RestClientApiKeyInterceptor.CLIENT.set(this);
+        CLIENT.set(this);
         try {
             Response<T> response = call.execute();
             if (!response.isSuccessful()) throw map(response);
@@ -171,8 +244,19 @@ public class RestClient {
         } catch (IOException e) {
             throw new ServerErrorException(500, new ApiError().setStatus(500).setMessage(e.getMessage()));
         } finally {
-            RestClientApiKeyInterceptor.CLIENT.remove();
+            CLIENT.remove();
         }
+    }
+
+    /**
+     * Logs an audit entry.
+     *
+     * @param audit the entry
+     */
+    void auditEnd(RestApiAudit audit) {
+        requireNonNull(audit);
+        // Remove the oldest entry until there is space
+        while (!audits.offer(audit)) audits.poll();
     }
 
     /**
@@ -220,14 +304,15 @@ public class RestClient {
         }
         apiError.setStatus(status);
         return switch (status) {
-            case 400 -> new BadRequestException(status, apiError);
+            case 400, 405, 406, 422 -> new BadRequestException(status, apiError);
+            case 409 -> new ConflictException(status, apiError);
             case 401, 403 -> new UnauthorizedException(status, apiError);
             case 404 -> new NotFoundException(status, apiError);
             default -> new ServerErrorException(status, apiError);
         };
     }
 
-    public ObjectMapper getObjectMapper() {
+    private ObjectMapper getObjectMapper() {
         if (objectMapper == null) {
             JsonMapper.Builder builder = JsonMapper.builder().addModule(new JavaTimeModule());
             builder.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -236,6 +321,10 @@ public class RestClient {
             objectMapper = builder.build();
         }
         return objectMapper;
+    }
+
+    private void updateId() {
+        this.id = Hashing.hash(uri.toASCIIString().toLowerCase());
     }
 
     private static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json");

@@ -43,11 +43,11 @@ class RestApiCallWrapper<A, R> implements InvocationHandler {
         if ("toString".equals(name)) {
             return "REST API Call for " + ClassUtils.getName(apiWrapper.getApiType()) + "." + this.method.getName() + " [" + getClient().getUri() + "]";
         } else {
-            RestClientApiKeyInterceptor.CLIENT.set(getClient());
+            RestClient.CLIENT.set(getClient());
             try {
                 return doInvoke(method, args);
             } finally {
-                RestClientApiKeyInterceptor.CLIENT.remove();
+                RestClient.CLIENT.remove();
             }
         }
     }
@@ -66,7 +66,7 @@ class RestApiCallWrapper<A, R> implements InvocationHandler {
         } catch (ApiException e) {
             throw e;
         } catch (Throwable e) {
-            throw new ServerErrorException(500, new ApiError().setStatus(500).setMessage(e.getMessage()));
+            throw new ServerErrorException(500, new ApiError().setStatus(500).setMessage(e.getMessage()), e);
         }
 
     }

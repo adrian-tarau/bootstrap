@@ -16,11 +16,11 @@ import static java.time.Duration.ofSeconds;
 @Setter
 public class RestClientProperties {
 
-    private Duration connectTimeout = ofSeconds(5);
-    private Duration readTimeout = ofSeconds(5);
-    private Duration writeTimeout = ofSeconds(5);
+    private Duration connectTimeout = ofSeconds(10);
+    private Duration readTimeout = ofSeconds(30);
+    private Duration writeTimeout = ofSeconds(30);
     private Duration callTimeout = ofSeconds(30);
     private int threadCount = 10;
     private int maximumRetries = 3;
-    private HttpLoggingInterceptor.Level loggingLevel = HttpLoggingInterceptor.Level.BODY;
+    private HttpLoggingInterceptor.Level loggingLevel = HttpLoggingInterceptor.Level.BASIC;
 }
