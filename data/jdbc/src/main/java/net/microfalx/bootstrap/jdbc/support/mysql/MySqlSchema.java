@@ -40,7 +40,7 @@ public class MySqlSchema extends AbstractSchema {
 
     @Override
     protected Index<?> doGetIndex(String name) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new MySqlIndex(MySqlSchema.this, name);
     }
 
     @Override
@@ -50,6 +50,9 @@ public class MySqlSchema extends AbstractSchema {
 
     private static final String GET_TABLE_NAMES_SQL = "select table_name from information_schema.tables where table_schema = ?";
     private static final String GET_INDEX_NAMES_SQL = """
+            select constraint_name from information_schema.TABLE_CONSTRAINTS
+            \twhere CONSTRAINT_SCHEMA = ?""";
+    private static final String GET_INDEX_NAMES_FOR_TABLE_SQL = """
             select constraint_name from information_schema.TABLE_CONSTRAINTS
             \twhere CONSTRAINT_SCHEMA = ? and table_name = ?""";
 }

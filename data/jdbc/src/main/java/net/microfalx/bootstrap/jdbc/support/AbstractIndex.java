@@ -2,15 +2,19 @@ package net.microfalx.bootstrap.jdbc.support;
 
 public abstract class AbstractIndex<I extends AbstractIndex<I>> extends AbstractSchemaObject<I> implements Index<I> {
 
-    private final Table<?> table;
+    private Table<?> table;
 
-    public AbstractIndex(Table<?> table, String name) {
-        super(table.getSchema(), name, Type.INDEX);
-        this.table = table;
+    public AbstractIndex(Schema schema, String name) {
+        super(schema, name, Type.INDEX);
     }
 
     @Override
     public final Table<?> getTable() {
         return table;
+    }
+
+    @Override
+    public boolean exists() {
+        return getSchema().getIndexNames().contains(getName());
     }
 }

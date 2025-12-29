@@ -150,7 +150,8 @@ public final class Session implements Identifiable<String> {
     }
 
     private void doExecute() {
-        LOGGER.info("Discovered {} schema descriptors, in {} modules", definitions.size(), modules.size());
+        long migrations = definitions.stream().mapToLong(definition -> definition.getMigrations().size()).sum();
+        LOGGER.info("Discovered {} schema descriptors (with {} migrations), in {} modules", definitions.size(), migrations, modules.size());
         for (Definition definition : definitions) {
             executeDefinition(definition);
         }
@@ -162,19 +163,18 @@ public final class Session implements Identifiable<String> {
         }
     }
 
-    private void execute(Query query) {
+    private Status execute(Query query) {
         statementCount++;
         try {
             executor.execute(query);
+            return Status.SUCCESSFUL;
         } catch (Exception e) {
             throwable = e;
             failedStatementCount++;
             status = Status.FAILED;
             logWarn("Migration failed while executing:\nStatement:\n" + insertSpacesWithBlock(query.getSql(), 5)
-                    + "\nStack Trace:\n" + insertSpacesWithBlock(getRootCauseMessage(e), 5));
-        }
-        if (status == Status.FAILED && failOnError) {
-            throw new MigrationException("Migration failed while executing definition " + currentDefinition.getName(), throwable);
+                    + "\nRoot Cause:\n" + insertSpacesWithBlock(getRootCauseMessage(e), 5));
+            return Status.FAILED;
         }
     }
 
@@ -184,39 +184,46 @@ public final class Session implements Identifiable<String> {
     }
 
     private void logWarn(String message) {
-        LOGGER.warn(message);
-        scriptLogger.append(message).append("\n");
-    }
-
-    private void logError(String message) {
-        LOGGER.error(message);
+        if (failOnError) {
+            LOGGER.debug(message);
+        } else {
+            LOGGER.warn(message);
+        }
         scriptLogger.append(message).append("\n");
     }
 
     private void executeDefinition(Definition definition) {
+        currentDefinition = definition;
         if (!wasApplied(definition)) {
             executeDefinitionScript(definition);
-        } else if (getStatus(definition.getId()) == Status.SUCCESSFUL) {
+        } else {
             executeMigrations(definition);
         }
-        if (!logger.isEmpty()) logger.append('\n');
-        logger.append(scriptLogger);
+        if (!scriptLogger.isEmpty()) {
+            logger.append(scriptLogger);
+            scriptLogger.setLength(0);
+        }
+        if (status == Status.FAILED && failOnError) {
+            throw new MigrationException("Migration failed during definition '" + currentDefinition.getName()
+                    + "' from module '" + currentDefinition.getModule().getName() + "', log:\n" + insertSpacesWithBlock(logger.toString(), 5));
+        }
+        currentDefinition = null;
     }
 
     private void executeDefinitionScript(Definition definition) {
-        currentDefinition = definition;
-        logger.append("Executing definition ").append(definition.getName()).append(" from module ").append(definition.getModule()).append('\n');
+        logInfo("Executing definition '" + definition.getName() + "' from module '" + definition.getModule() + "'");
         Script script = getScript();
         executeScript(script);
         applyMigrations(definition);
     }
 
     private void executeMigrations(Definition definition) {
-        currentDefinition = definition;
+        logInfo("Apply migrations for '" + definition.getName() + "' from module '" + definition.getModule().getName() + "'");
         for (Migration migration : definition.getMigrations()) {
+            Status status = getStatus(migration.getId());
+            if (status.shouldSkip()) continue;
             executeMigration(migration);
         }
-        currentDefinition = null;
         currentMigration = null;
     }
 
@@ -285,22 +292,30 @@ public final class Session implements Identifiable<String> {
     }
 
     private void executeScript(Script script) {
-        logInfo("Executing script '" + script.getResource().getFileName() + "')");
-        status = Status.SUCCESSFUL;
+        logInfo("Executing script '" + script.getResource().getFileName() + "'");
+        Status status = Status.SUCCESSFUL;
         long startTime = currentTimeMillis();
         for (Query query : script.getQueries()) {
-            execute(query);
+            status = execute(query);
             if (status == Status.FAILED) break;
         }
         scriptCount++;
-        if (!logger.isEmpty()) logger.append('\n');
-        logger.append(scriptLogger);
+        if (!scriptLogger.isEmpty()) logger.append(scriptLogger);
         updateRegistry(status, ofMillis(currentTimeMillis() - startTime));
         scriptLogger.setLength(0);
+        if (this.status == Status.NA) {
+            this.status = status;
+        } else if (status.ordinal() >= this.status.ordinal()) {
+            this.status = status;
+        }
     }
 
     public enum Status {
-        NA, SUCCESSFUL, FAILED, APPLIED
+        NA, SUCCESSFUL, FAILED, APPLIED;
+
+        public boolean shouldSkip() {
+            return this == SUCCESSFUL || this == APPLIED;
+        }
     }
 
     private static class ExecutorImpl implements Executor {
