@@ -10,5 +10,6 @@
     </definition>
     <definition name="Audit" type="mysql" path="03_security_audit.sql">
         <table>security_audit</table>
+        <migration path="03_audit_add_index_on_created.sql" condition="index ix$security_audit$created not exists"/>
     </definition>
 </schema>

@@ -12,3 +12,5 @@ create table security_audit
     description varchar(1000),
     constraint fk$security_audit$user foreign key (username) references security_users (username)
 ) ENGINE = InnoDB;
+
+create index ix$security_audit$created on security_audit (created_at);

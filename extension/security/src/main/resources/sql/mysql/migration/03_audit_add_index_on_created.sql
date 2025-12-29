@@ -1,0 +1,1 @@
+create index ix$security_audit$created on security_audit (created_at);
