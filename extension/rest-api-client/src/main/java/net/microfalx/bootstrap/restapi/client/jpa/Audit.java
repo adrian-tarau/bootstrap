@@ -16,7 +16,7 @@ import net.microfalx.lang.annotation.*;
 
 import java.time.LocalDateTime;
 
-@Entity
+@Entity(name = "RestApiClientAudit")
 @Table(name = "rest_api_client_audits")
 @Getter
 @Setter

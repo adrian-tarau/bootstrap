@@ -10,7 +10,7 @@ import lombok.ToString;
 import net.microfalx.bootstrap.jdbc.entity.surrogate.NamedAndTimestampedIdentityAware;
 import net.microfalx.lang.annotation.*;
 
-@Entity
+@Entity(name = "RestApiClient")
 @Table(name = "rest_api_clients")
 @Getter
 @Setter
