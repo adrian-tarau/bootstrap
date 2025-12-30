@@ -38,7 +38,7 @@ class RestApiWrapper<A> implements InvocationHandler {
         if ("toString".equals(name)) {
             return "REST API for " + ClassUtils.getName(apiType) + " [" + client.getUri() + "]";
         } else {
-            RestClient.CLIENT.set(client);
+            client.attach();
             try {
                 Object result = method.invoke(api, args);
                 if (result instanceof Call<?>) {
@@ -47,7 +47,8 @@ class RestApiWrapper<A> implements InvocationHandler {
                     return result;
                 }
             } finally {
-                RestClient.CLIENT.remove();
+                client.detach();
+                ;
             }
         }
     }

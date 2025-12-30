@@ -1,16 +1,17 @@
 create table rest_api_client_audits
 (
-    id            integer                                        not null,
+    id              integer                                        not null auto_increment,
     client_id     integer                                        not null,
     name          varchar(100)                                   not null,
-    http_method   ENUM ('GET', 'POST', 'PUT', 'DELETE', 'PATCH') not null,
-    http_status   integer                                        not null,
+    request_method  ENUM ('GET', 'POST', 'PUT', 'DELETE', 'PATCH') not null,
+    response_status integer                                        not null,
+    response_length integer                                        not null,
     success       boolean                                        not null,
     started_at    datetime                                       not null,
     ended_at      datetime                                       not null,
     duration      int                                            not null,
     request_path  varchar(1000)                                  not null,
-    query_params  varchar(1000),
+    request_query   varchar(1000),
 
     error_message varchar(1000),
 

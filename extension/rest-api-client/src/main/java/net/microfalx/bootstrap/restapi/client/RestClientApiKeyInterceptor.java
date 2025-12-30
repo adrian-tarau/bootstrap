@@ -15,7 +15,11 @@ class RestClientApiKeyInterceptor implements Interceptor {
 
     @Override
     public Response intercept(Chain chain) throws IOException {
-        RestClient restClient = RestClient.CLIENT.get();
+        RestClient restClient = RestClient.current();
+        if (restClient == null) {
+            throw new IllegalStateException("A RestClient is not attached to the current thread: "
+                    + Thread.currentThread().getName());
+        }
         String apiKey = restClient.getApiKey();
         if (isNotEmpty(apiKey)) {
             Request.Builder builder = chain.request().newBuilder();

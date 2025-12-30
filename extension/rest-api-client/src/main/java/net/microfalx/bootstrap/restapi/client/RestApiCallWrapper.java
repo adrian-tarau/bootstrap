@@ -40,14 +40,15 @@ class RestApiCallWrapper<A, R> implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         final String name = method.getName();
+        RestClient restClient = getClient();
         if ("toString".equals(name)) {
-            return "REST API Call for " + ClassUtils.getName(apiWrapper.getApiType()) + "." + this.method.getName() + " [" + getClient().getUri() + "]";
+            return "REST API Call for " + ClassUtils.getName(apiWrapper.getApiType()) + "." + this.method.getName() + " [" + restClient.getUri() + "]";
         } else {
-            RestClient.CLIENT.set(getClient());
+            restClient.attach();
             try {
                 return doInvoke(method, args);
             } finally {
-                RestClient.CLIENT.remove();
+                restClient.detach();
             }
         }
     }

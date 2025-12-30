@@ -2,6 +2,7 @@
 <schema xmlns="https://net.microfalx/xsd/schema-1.0.xsd" id="security" name="Security" order="0">
     <definition name="Clients" type="mysql" path="01_rest_api_client.sql">
         <table>rest_api_clients</table>
+        <migration path="01_rest_api_client_add_api_key.sql" condition="column rest_api_clients.api_key not exists"/>
     </definition>
     <definition name="Audits" type="mysql" path="02_rest_api_client_audit.sql">
         <table>rest_api_client_audits</table>

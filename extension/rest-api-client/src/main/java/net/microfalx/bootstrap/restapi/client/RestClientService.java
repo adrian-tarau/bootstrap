@@ -6,6 +6,9 @@ import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.encrypt.RsaAlgorithm;
+import org.springframework.security.crypto.encrypt.RsaSecretEncryptor;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -17,14 +20,17 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.TimeUtils.millisSince;
 
 /**
  * A service which tracks REST client interactions.
  */
 @Service
-public class RestClientService implements InitializingBean {
+public class RestClientService implements InitializingBean, TextEncryptor {
 
     @Autowired(required = false) private RestClientProperties properties = new RestClientProperties();
 
@@ -32,9 +38,15 @@ public class RestClientService implements InitializingBean {
 
     private OkHttpClient httpClient;
     private final Map<URI, RestClient> clients = new ConcurrentHashMap<>();
+    private final Map<String, Long> clientLastReload = new ConcurrentHashMap<>();
     private final Map<String, RestApiAudit> auditsPending = new ConcurrentHashMap<>();
     private final Queue<RestApiAudit> audits = new ArrayBlockingQueue<>(100);
     private final Queue<RestApiAudit> auditsForPersistence = new ConcurrentLinkedQueue<>();
+
+    private TextEncryptor textEncryptor;
+
+    private static final String ENCRYPTION_PREFIX = "{rsa}";
+    private static final String ENCRYPTION_SALT = "jc1Ynhul3q5kyMU8j7cY9RRrD43CI3cg";
 
     @Autowired private RestApiAuditPersister persister;
 
@@ -51,12 +63,11 @@ public class RestClientService implements InitializingBean {
      * Registers a client for the given URI and API key.
      *
      * @param uri    the base URI
-     * @param apiKey the API key
+     * @param apiKey the API key, can be null
      * @return the registered client
      */
     public RestClient register(URI uri, String apiKey) {
         requireNonNull(uri);
-        requireNonNull(apiKey);
         RestClient restClient = new RestClient(this, httpClient).setUri(uri);
         restClient.setApiKey(apiKey);
         clients.put(uri, restClient);
@@ -81,8 +92,24 @@ public class RestClientService implements InitializingBean {
         return unmodifiableCollection(audits);
     }
 
+    @Override
+    public String encrypt(String text) {
+        if (isEmpty(text)) return null;
+        return ENCRYPTION_PREFIX + textEncryptor.encrypt(text);
+    }
+
+    @Override
+    public String decrypt(String encryptedText) {
+        if (isEmpty(encryptedText)) return null;
+        if (encryptedText.startsWith(ENCRYPTION_PREFIX)) {
+            return textEncryptor.decrypt(encryptedText.substring(ENCRYPTION_PREFIX.length()));
+        } else {
+            throw new IllegalArgumentException("Invalid encrypted text: " + encryptedText);
+        }
+    }
+
     /**
-     * Logs an audit entry.
+     * Registers an audit entry in progress.
      *
      * @param audit the entry
      */
@@ -92,7 +119,7 @@ public class RestClientService implements InitializingBean {
     }
 
     /**
-     * Logs an audit entry.
+     * Tracks a completed audit entry.
      *
      * @param audit the entry
      */
@@ -101,20 +128,23 @@ public class RestClientService implements InitializingBean {
         auditsPending.remove(audit.getRequestId());
         // Remove the oldest entry until there is space
         while (!audits.offer(audit)) audits.poll();
-        RestClient client = RestClient.CLIENT.get();
-        if (client != null) client.auditEnd(audit);
-        auditsForPersistence.offer(audit);
+        RestClient client = audit.getClient();
+        if (client != null) {
+            client.auditEnd(audit);
+            auditsForPersistence.offer(audit);
+        }
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        initEncryptor();
         initPersister();
         initThreadPool();
         initHttpClient();
     }
 
     private void initPersister() {
-        persister.init();
+        persister.init(this);
     }
 
     private void initThreadPool() {
@@ -141,6 +171,40 @@ public class RestClientService implements InitializingBean {
                 .build();
         builder.dispatcher(new Dispatcher(threadPool));
         httpClient = builder.build();
+    }
+
+    void reloadIfRequired(RestClient restClient) {
+        String clientId = restClient.getId();
+        long lastReload = clientLastReload.getOrDefault(clientId, currentTimeMillis());
+        if (millisSince(lastReload) > properties.getReloadInterval().toMillis()) {
+            synchronized (clientLastReload) {
+                if (millisSince(lastReload) > properties.getReloadInterval().toMillis()) {
+                    clientLastReload.put(clientId, currentTimeMillis());
+                    threadPool.execute(new ReloadApiKeyTask(restClient));
+                }
+            }
+        }
+    }
+
+    private void initEncryptor() {
+        textEncryptor = new RsaSecretEncryptor(RsaAlgorithm.DEFAULT, ENCRYPTION_SALT);
+    }
+
+    private class ReloadApiKeyTask implements Runnable {
+
+        private final RestClient restClient;
+
+        public ReloadApiKeyTask(RestClient restClient) {
+            this.restClient = restClient;
+        }
+
+        @Override
+        public void run() {
+            String apiKey = persister.getApiKey(restClient);
+            if (apiKey != null) {
+                restClient.setApiKey(textEncryptor.decrypt(apiKey));
+            }
+        }
     }
 
     private class PersistAuditsTask implements Runnable {

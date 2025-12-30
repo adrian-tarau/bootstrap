@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 @Configuration
@@ -20,6 +21,7 @@ public class RestClientProperties {
     private Duration readTimeout = ofSeconds(30);
     private Duration writeTimeout = ofSeconds(30);
     private Duration callTimeout = ofSeconds(30);
+    private Duration reloadInterval = ofMinutes(5);
     private int threadCount = 10;
     private int maximumRetries = 3;
     private HttpLoggingInterceptor.Level loggingLevel = HttpLoggingInterceptor.Level.BASIC;

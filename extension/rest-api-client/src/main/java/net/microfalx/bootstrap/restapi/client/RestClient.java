@@ -48,11 +48,20 @@ public class RestClient implements Identifiable<String>, Nameable, Descriptable 
     private Retrofit retrofit;
 
     private String apiKeyHeaderName = "X-API-Key";
-    private String apiKey;
+    private volatile String apiKey;
     private boolean useHeader = true;
     private final Queue<RestApiAudit> audits = new ArrayBlockingQueue<>(100);
 
-    static ThreadLocal<RestClient> CLIENT = new ThreadLocal<>();
+    private static final ThreadLocal<RestClient> CLIENT = new ThreadLocal<>();
+
+    /**
+     * Returns the current client associated with the executing thread.
+     *
+     * @return the current client or {@code null} if no client is associated
+     */
+    static RestClient current() {
+        return CLIENT.get();
+    }
 
     RestClient(RestClientService restClientService, OkHttpClient client) {
         requireNonNull(restClientService);
@@ -257,6 +266,21 @@ public class RestClient implements Identifiable<String>, Nameable, Descriptable 
         requireNonNull(audit);
         // Remove the oldest entry until there is space
         while (!audits.offer(audit)) audits.poll();
+    }
+
+    /**
+     * Attaches the client to the executing thread.
+     */
+    void attach() {
+        restClientService.reloadIfRequired(this);
+        CLIENT.set(this);
+    }
+
+    /**
+     * Detaches the client from the executing thread.
+     */
+    void detach() {
+        CLIENT.remove();
     }
 
     /**

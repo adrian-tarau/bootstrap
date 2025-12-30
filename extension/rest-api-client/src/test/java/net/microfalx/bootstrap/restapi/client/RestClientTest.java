@@ -40,6 +40,13 @@ class RestClientTest {
     }
 
     @Test
+    void encryptor() {
+        // just to initialize the encryptor
+        String encrypted = restClientService.encrypt("abc");
+        assertEquals("abc", restClientService.decrypt(encrypted));
+    }
+
+    @Test
     void audit() throws IOException {
         PostApi api = restClient.create(PostApi.class);
         assertNotNull(api.listDirect());

@@ -1,13 +1,13 @@
 package net.microfalx.bootstrap.restapi.client;
 
 import lombok.Data;
-import net.microfalx.lang.FileUtils;
-import net.microfalx.lang.StringUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.FileUtils.getFileName;
+import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.UriUtils.SLASH;
 
 /**
  * Holds information about a REST client audit entry.
@@ -22,6 +22,7 @@ public class RestApiAudit {
     private String requestPath;
     private String requestQuery;
     private int responseStatus;
+    private int responseLength;
     private String errorMessage;
 
     private LocalDateTime startedAt;
@@ -30,9 +31,13 @@ public class RestApiAudit {
 
     public String getName() {
         if (isEmpty(name)) {
-            name = StringUtils.capitalizeWords(FileUtils.getFileName(requestQuery));
+            name = defaultIfEmpty(capitalizeWords(getFileName(requestPath)), SLASH);
         }
         return name;
+    }
+
+    public String getRequestPath() {
+        return defaultIfEmpty(requestPath, SLASH);
     }
 
     public boolean isSuccess() {

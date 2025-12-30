@@ -35,23 +35,21 @@ public class Audit extends IdentityAware<Integer> {
     @Width("200px")
     private String name;
 
-    @Column(name = "http_method", nullable = false)
+    @Column(name = "request_method", nullable = false)
     @NotBlank
     @Position(10)
     @Description("The HTTP method used for the request")
     @Width("80px")
-    private String httpMethod;
+    private String requestMethod;
 
-    @Column(name = "http_status", nullable = false)
-    @NotBlank
+    @Column(name = "response_status", nullable = false)
     @Position(11)
     @Formattable(alert = HttpStatusProvider.class)
     @Description("The HTTP status code returned by the server")
     @Width("80px")
-    private int httpStatus;
+    private int responseStatus;
 
     @Column(name = "success", nullable = false)
-    @NotBlank
     @Position(12)
     @Description("Indicates whether the request was successful")
     @Width("80px")
@@ -64,12 +62,18 @@ public class Audit extends IdentityAware<Integer> {
     @Width("150px")
     private String requestPath;
 
-    @Column(name = "query_params", nullable = false)
-    @NotBlank
+    @Column(name = "request_query", nullable = false)
     @Position(10)
     @Description("The query parameters for the request")
     @Width("150px")
-    private String queryParams;
+    private String requestQuery;
+
+    @Column(name = "response_length", nullable = false)
+    @Position(11)
+    @Formattable(unit = Formattable.Unit.BYTES)
+    @Description("The response length returned by the server")
+    @Width("80px")
+    private int responseLength;
 
     @Column(name = "started_at", nullable = false, updatable = false)
     @NotNull
@@ -81,6 +85,7 @@ public class Audit extends IdentityAware<Integer> {
     private LocalDateTime startedAt;
 
     @Column(name = "ended_at")
+    @NotNull
     @Position(501)
     @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the request has ended")
