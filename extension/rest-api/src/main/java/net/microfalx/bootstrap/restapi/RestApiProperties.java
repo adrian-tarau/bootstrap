@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
+
 @Configuration
 @ConfigurationProperties("bootstrap.rest.api")
 @Getter
@@ -26,4 +28,7 @@ public class RestApiProperties {
 
     private String packagesToScan = "net.microfalx.bootstrap";
     private String pathsToMatch = "/api/v*/**";
+
+    private Duration validationInterval = Duration.ofMinutes(5);
+    private String publicUrl = null;
 }
