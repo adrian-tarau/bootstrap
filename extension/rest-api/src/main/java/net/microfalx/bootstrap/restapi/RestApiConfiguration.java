@@ -46,7 +46,7 @@ public class RestApiConfiguration {
     }
 
     @Bean
-    @Order(Order.HIGH)
+    @Order(1)
     public SecurityFilterChain apiChain(HttpSecurity httpSecurity, ApiCredentialService credentialService) throws Exception {
         httpSecurity = httpSecurity.securityMatcher(addMatchAll("api"));
         updateOther(httpSecurity);
@@ -70,20 +70,17 @@ public class RestApiConfiguration {
         return components;
     }
 
-    private String addMatchAll(String path) {
-        String result = addStartSlash(addEndSlash(path));
-        return result + "**";
-    }
-
     private void updateOther(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
         httpSecurity.cors(Customizer.withDefaults());
     }
 
     private void updateSecurity(HttpSecurity httpSecurity, ApiCredentialService credentialService) throws Exception {
-        String apiPathAll = addMatchAll("api");
+        String apiPathAll = addMatchAll("");
+        String apiPathStatusAll = addMatchAll("/v*/status", false);
         httpSecurity.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(apiPathStatusAll).permitAll()
                         .requestMatchers(properties.getPathsToMatch()).authenticated()
                         .requestMatchers(apiPathAll).permitAll()
                 );
@@ -96,6 +93,16 @@ public class RestApiConfiguration {
                 .authenticationEntryPoint(new RestApiAuthenticationEntryPoint())
                 .accessDeniedHandler(new RestApiAccessDeniedHandler())
         );
+    }
+
+    private String addMatchAll(String path) {
+        return addMatchAll(path, true);
+    }
+
+    private String addMatchAll(String path, boolean matchSubPaths) {
+        String result = addStartSlash(path);
+        if (matchSubPaths) result = addEndSlash(path);
+        return result + "**";
     }
 
 }

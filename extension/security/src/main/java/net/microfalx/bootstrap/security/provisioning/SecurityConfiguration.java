@@ -41,13 +41,14 @@ public class SecurityConfiguration {
     private UserService userService;
 
     @Bean
+    @Order(5)
     public SecurityFilterChain healthChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
         httpSecurity.securityMatcher(EndpointRequest.to(HealthEndpoint.class));
         return httpSecurity.build();
     }
 
     @Bean
-    @Order(Order.AFTER)
+    @Order(10)
     public SecurityFilterChain webChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
         if (securityProperties.isEnabled()) {
             httpSecurity = httpSecurity.securityMatcher(addMatchAll("/"));

@@ -48,6 +48,10 @@ public class OAuth2ClientConfiguration {
                 .getBuilder("google")
                 .clientId(properties.getGoogleClientId())
                 .clientSecret(properties.getGoogleClientSecret())
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .tokenUri("https://oauth2.googleapis.com/token")
+                .jwkSetUri("https://www.googleapis.com/oauth2/v3/certs")
+                .userInfoUri("https://openidconnect.googleapis.com/v1/userinfo")
                 .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
                 .build();
     }
