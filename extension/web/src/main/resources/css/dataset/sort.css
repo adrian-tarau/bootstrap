@@ -4,7 +4,7 @@ th.sortable {
 }
 
 th.sortable::after {
-    font-family: "Font Awesome 6 Free";
+    font-family: "Font Awesome 7 Free";
     content: "\f0dc";
     position: absolute;
     right: 8px;
@@ -12,13 +12,13 @@ th.sortable::after {
 }
 
 th.sortable.asc::after {
-    font-family: "Font Awesome 6 Free";
+    font-family: "Font Awesome 7 Free";
     content: "\f0d8";
     color: #333;
 }
 
 th.sortable.desc::after {
-    font-family: "Font Awesome 6 Free";
+    font-family: "Font Awesome 7 Free";
     content: "\f0d7";
     color: #333;
 }
