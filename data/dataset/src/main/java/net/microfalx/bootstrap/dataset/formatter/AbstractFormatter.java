@@ -48,4 +48,9 @@ public abstract class AbstractFormatter<M, F extends Field<M>, T> implements For
         if (annotation == null) annotation = AnnotationUtils.getAnnotation(this, Formattable.class);
         return annotation;
     }
+
+    @Override
+    public T parse(String text, F field) {
+        throw new UnsupportedOperationException();
+    }
 }

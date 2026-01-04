@@ -8,7 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.jdbc.entity.surrogate.NamedAndTimestampedIdentityAware;
-import net.microfalx.lang.annotation.*;
+import net.microfalx.lang.annotation.NaturalId;
+import net.microfalx.lang.annotation.Visible;
 
 @Entity(name = "RestApiClient")
 @Table(name = "rest_api_clients")
@@ -24,14 +25,8 @@ public class Client extends NamedAndTimestampedIdentityAware<Integer> {
     private String naturalId;
 
     @Column(name = "uri")
-    @Position(20)
-    @Description("The base URI of the REST API")
-    @Width("300px")
     private String uri;
 
     @Column(name = "api_key")
-    @Position(21)
-    @Description("The API Key (or bearer token) used to access the REST API")
-    @Width("100")
     private String apiKey;
 }
