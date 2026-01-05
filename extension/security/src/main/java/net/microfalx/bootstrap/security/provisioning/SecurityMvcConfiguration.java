@@ -34,7 +34,7 @@ public class SecurityMvcConfiguration implements WebMvcConfigurer {
 
     private boolean applySecurity(HttpServletRequest request, HttpServletResponse response, HandlerMethod handlerMethod) {
         Rule rule = findRule(handlerMethod);
-        LOGGER.info("Request '{}' mapped to method '{}' with security rule: {}", request.getRequestURI(), describe(handlerMethod), rule);
+        LOGGER.debug("Request '{}' mapped to method '{}' with security rule: {}", request.getRequestURI(), describe(handlerMethod), rule);
         if (!rule.authenticated) return true;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         requireAuthenticated(authentication, handlerMethod);
