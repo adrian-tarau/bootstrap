@@ -76,14 +76,8 @@ public class RestApiConfiguration {
     }
 
     private void updateSecurity(HttpSecurity httpSecurity, ApiCredentialService credentialService) throws Exception {
-        String apiPathAll = addMatchAll("");
-        String apiPathStatusAll = addMatchAll("/v*/status", false);
-        httpSecurity.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(apiPathStatusAll).permitAll()
-                        .requestMatchers(properties.getPathsToMatch()).authenticated()
-                        .requestMatchers(apiPathAll).permitAll()
-                );
+        httpSecurity.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         httpSecurity.addFilterBefore(new ApiKeyOrBearerFilter(credentialService),
                 org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
     }

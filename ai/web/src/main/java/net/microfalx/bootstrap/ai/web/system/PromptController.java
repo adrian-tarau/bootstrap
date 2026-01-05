@@ -1,16 +1,16 @@
 package net.microfalx.bootstrap.ai.web.system;
 
 import lombok.extern.slf4j.Slf4j;
+import net.microfalx.bootstrap.ai.api.AiService;
+import net.microfalx.bootstrap.ai.web.system.jpa.Prompt;
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.help.HelpService;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.web.dataset.SystemDataSetController;
-import net.microfalx.bootstrap.ai.api.AiService;
-import net.microfalx.bootstrap.ai.web.system.jpa.Prompt;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,10 +23,14 @@ import java.io.IOException;
 @Slf4j
 public class PromptController extends SystemDataSetController<Prompt, Integer> {
 
-    @Autowired
-    private AiService aiService;
-    @Autowired
-    private HelpService helpService;
+    private final AiService aiService;
+    private final HelpService helpService;
+
+    public PromptController(DataSetService dataSetService, AiService aiService, HelpService helpService) {
+        super(dataSetService);
+        this.aiService = aiService;
+        this.helpService = helpService;
+    }
 
     @Override
     protected void beforePersist(net.microfalx.bootstrap.dataset.DataSet<Prompt, Field<Prompt>, Integer> dataSet, Prompt model, State state) {

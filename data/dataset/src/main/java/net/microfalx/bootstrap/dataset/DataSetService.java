@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.dataset;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import jakarta.persistence.Entity;
+import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
@@ -14,6 +15,7 @@ import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.Hashing;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.threadpool.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -56,11 +58,9 @@ public final class DataSetService extends ApplicationContextSupport implements I
     private final Map<Class<?>, Repository<?, ?>> repositories = new ConcurrentHashMap<>();
     private final Map<String, DataSetRequest> dataSetRequests = new ConcurrentHashMap<>();
 
-    @Autowired
-    private MetadataService metadataService;
-
-    @Autowired
-    private I18nService i18nService;
+    @Autowired private MetadataService metadataService;
+    @Autowired private I18nService i18nService;
+    private ThreadPool threadPool;
 
     /**
      * Returns the metadata associated with a model.
@@ -69,6 +69,17 @@ public final class DataSetService extends ApplicationContextSupport implements I
      */
     public <M, F extends Field<M>, ID> Metadata<M, F, ID> getMetadata(Class<M> modelClass) {
         return metadataService.getMetadata(modelClass);
+    }
+
+    /**
+     * Returns the thread pool associated with the service.
+     * <p>
+     * All database related operations are executed in this thread pool.
+     *
+     * @return a non-null instance
+     */
+    public ThreadPool getThreadPool() {
+        return threadPool;
     }
 
     /**
@@ -444,9 +455,14 @@ public final class DataSetService extends ApplicationContextSupport implements I
     }
 
     private void initialize() {
+        initThreadPool();
         discoverStaticFactories();
         discoverDynamicFactories();
         discoverDynamicLookups();
+    }
+
+    private void initThreadPool() {
+        threadPool = ThreadPoolFactory.create("DataSet").setRatio(0.5f).create();
     }
 
     @SuppressWarnings("rawtypes")

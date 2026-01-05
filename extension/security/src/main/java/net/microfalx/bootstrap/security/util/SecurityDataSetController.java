@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.security.util;
 
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.web.dataset.SystemDataSetController;
 
 /**
@@ -9,4 +10,8 @@ import net.microfalx.bootstrap.web.dataset.SystemDataSetController;
  * @param <ID> the model identifier type
  */
 public abstract class SecurityDataSetController<M, ID> extends SystemDataSetController<M, ID> {
+
+    public SecurityDataSetController(DataSetService dataSetService) {
+        super(dataSetService);
+    }
 }

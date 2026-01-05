@@ -16,8 +16,8 @@ import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
- * Base class for all objects which need to be aware of their environment and colaborate with other
- * related beans.
+ * Base class for all objects which need to be aware of their environment and collaborate with other
+ * related beans with the need for specific injections.
  */
 public abstract class ApplicationContextSupport implements ApplicationContextAware, BeanFactoryAware {
 
@@ -65,7 +65,7 @@ public abstract class ApplicationContextSupport implements ApplicationContextAwa
      *
      * @return the context
      */
-    protected final ApplicationContext getApplicationContext() {
+    public final ApplicationContext getApplicationContext() {
         if (applicationContext == null) throwIllegalState();
         return applicationContext;
     }
@@ -75,7 +75,7 @@ public abstract class ApplicationContextSupport implements ApplicationContextAwa
      *
      * @return a non-null instance
      */
-    protected final ListableBeanFactory getBeanFactory() {
+    public final ListableBeanFactory getBeanFactory() {
         if (beanFactory == null) throwIllegalState();
         return beanFactory;
     }

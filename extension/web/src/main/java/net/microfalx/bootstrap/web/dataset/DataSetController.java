@@ -32,13 +32,10 @@ import net.microfalx.metrics.Matrix;
 import net.microfalx.metrics.Series;
 import net.microfalx.resource.Resource;
 import net.microfalx.resource.StreamResource;
-import net.microfalx.threadpool.ThreadPool;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
@@ -67,6 +64,7 @@ import java.util.stream.Collectors;
 
 import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_DEFAULT_POINTS;
 import static net.microfalx.bootstrap.dataset.DataSetUtils.TREND_MAXIMUM_POINTS;
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ObjectUtils.isNotEmpty;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
@@ -89,21 +87,16 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private static final String BROWSE_VIEW = "dataset/browse";
     private static final int TREND_MAX_LANES = 20;
 
-    @Autowired
-    private DataSetService dataSetService;
-
-    @Autowired
-    private PreferenceService preferenceService;
-
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    @Autowired
-    private ThreadPool threadPool;
+    private final DataSetService dataSetService;
 
     private static final ThreadLocal<Map<String, Boolean>> READ_ONLY_FIELDS = new ThreadLocal<>();
     private static final ThreadLocal<Model> MODEL = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> CANCELED = ThreadLocal.withInitial(() -> Boolean.FALSE);
+
+    public DataSetController(DataSetService dataSetService) {
+        requireNonNull(dataSetService);
+        this.dataSetService = dataSetService;
+    }
 
     @GetMapping()
     public final String browse(Model model,
@@ -319,7 +312,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Page<M> page = processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         DataSetExport.Format parsedFormat = EnumUtils.fromName(DataSetExport.Format.class, format);
         DataSetExport<M, Field<M>, ID> exporter = DataSetExport.create(parsedFormat);
-        exporter.initialize(applicationContext);
+        exporter.initialize(dataSetService.getApplicationContext());
         if ("split".equalsIgnoreCase(mode)) exporter.setMultipleFiles(true);
         Resource resource = dataSetService.doWithDataSet(dataSet, ds -> exporter.export(dataSet, page));
         ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
@@ -581,6 +574,15 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     @Override
     protected String getTitle() {
         return getDataSet().getName();
+    }
+
+    /**
+     * Returns the preference service.
+     *
+     * @return a non-null instance
+     */
+    protected final PreferenceService getPreferenceService() {
+        return dataSetService.getApplicationContext().getBean(PreferenceService.class);
     }
 
     /**
@@ -938,7 +940,8 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     private List<String> getHistory(DataSet<M, Field<M>, ID> dataSet, String queryParameter) {
-        FieldHistory fieldHistory = new FieldHistory(preferenceService, dataSet.getId(), "query");
+        dataSetService.getApplicationContext().getBean(PreferenceService.class);
+        FieldHistory fieldHistory = new FieldHistory(getPreferenceService(), dataSet.getId(), "query");
         fieldHistory.add(queryParameter);
         List<String> values = fieldHistory.get();
         return values;
@@ -1058,7 +1061,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         net.microfalx.lang.ClassUtils.resolveProviderInstances(DataSetControllerListener.class)
                 .forEach(l -> {
                     if (l instanceof ApplicationContextAware applicationContextAware) {
-                        applicationContextAware.setApplicationContext(applicationContext);
+                        applicationContextAware.setApplicationContext(dataSetService.getApplicationContext());
                     }
                     listeners.add(l);
                 });
@@ -1163,7 +1166,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Collection<Chart> getFieldTrends(DataSet<M, Field<M>, ID> dataSet, Filter filter) {
         Set<String> trendFields = dataSet.getTrendFields();
-        Future<Map<String, HeatMap>> future = threadPool.submit(new TrendCallable<>(dataSet, filter, trendFields));
+        Future<Map<String, HeatMap>> future = dataSetService.getThreadPool().submit(new TrendCallable<>(dataSet, filter, trendFields));
         Collection<Chart> charts = new ArrayList<>();
         for (String trendField : trendFields) {
             int trendTermCount = dataSet.getTrendTermCount(trendField);

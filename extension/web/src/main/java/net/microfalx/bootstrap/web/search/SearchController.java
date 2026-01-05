@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.search;
 import net.microfalx.bootstrap.content.Content;
 import net.microfalx.bootstrap.content.ContentLocator;
 import net.microfalx.bootstrap.content.ContentService;
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.model.AbstractAttribute;
@@ -11,7 +12,6 @@ import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.search.Attribute;
 import net.microfalx.bootstrap.search.SearchService;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,13 +32,16 @@ import static net.microfalx.bootstrap.search.SearchUtils.DEFAULT_FILTER_QUOTE_CH
         viewClasses = "modal-xl", filterOperator = DEFAULT_FILTER_OPERATOR, filterQuoteChar = DEFAULT_FILTER_QUOTE_CHAR,
         queryHelp = "/help/dataset/search_engine.html", tags = {"ai"})
 @Help("search")
-public final class SearchController extends DataSetController<SearchResult, String> {
+public class SearchController extends DataSetController<SearchResult, String> {
 
-    @Autowired
-    private SearchService searchService;
+    private final SearchService searchService;
+    private final ContentService contentService;
 
-    @Autowired
-    private ContentService contentService;
+    public SearchController(DataSetService dataSetService, SearchService searchService, ContentService contentService) {
+        super(dataSetService);
+        this.searchService = searchService;
+        this.contentService = contentService;
+    }
 
     @Override
     protected void beforeView(net.microfalx.bootstrap.dataset.DataSet<SearchResult, Field<SearchResult>, String> dataSet,

@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.web.controller;
 
-import jakarta.annotation.security.PermitAll;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.annotation.Name;
@@ -9,9 +8,10 @@ import org.springframework.ui.Model;
 
 /**
  * A controller for an application page.
+ *
+ * By default, all pages require authentication. Use {@link @PermitAll} to allow anonymous access.
  */
-@PermitAll
-public abstract class PageController {
+public abstract class PageController implements AuthenticatedController {
 
     public static final String HOME = "index";
     public static final String REDIRECT_HOME = "redirect:/";

@@ -34,7 +34,7 @@ public class AuditMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new AuditInterceptor());
+        registry.addInterceptor(new Interceptor());
     }
 
     private void audit(HttpServletRequest request, HttpServletResponse response, Method method) {
@@ -103,7 +103,7 @@ public class AuditMvcConfig implements WebMvcConfigurer {
         return false;
     }
 
-    private class AuditInterceptor implements HandlerInterceptor {
+    private class Interceptor implements HandlerInterceptor {
 
         @Override
         public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {

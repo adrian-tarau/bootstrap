@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.controller.admin.database;
 
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.web.dataset.SystemDataSetController;
@@ -11,4 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @DataSet(model = Transaction.class, defaultQuery = "state = 'Running'")
 @Help("admin/database/transaction")
 public class TransactionController extends SystemDataSetController<Transaction, String> {
+
+    public TransactionController(DataSetService dataSetService) {
+        super(dataSetService);
+    }
 }

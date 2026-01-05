@@ -1,10 +1,11 @@
 package net.microfalx.bootstrap.ai.web.system;
 
+import net.microfalx.bootstrap.ai.web.system.jpa.Chat;
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.web.component.Button;
 import net.microfalx.bootstrap.web.component.Toolbar;
 import net.microfalx.bootstrap.web.dataset.SystemDataSetController;
-import net.microfalx.bootstrap.ai.web.system.jpa.Chat;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -12,6 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/system/ai/chat")
 @DataSet(model = Chat.class)
 public class ChatController extends SystemDataSetController<Chat,Integer> {
+
+    public ChatController(DataSetService dataSetService) {
+        super(dataSetService);
+    }
 
     @Override
     protected void updateToolbar(Toolbar toolbar) {

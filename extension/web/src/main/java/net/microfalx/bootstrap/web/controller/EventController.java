@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.web.event.*;
@@ -28,8 +27,7 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
 @RestController("sse")
 @RequestMapping("/event")
 @Slf4j
-@PermitAll
-public class EventController {
+public class EventController implements AnonymousController {
 
     @Autowired private EventService eventService;
 

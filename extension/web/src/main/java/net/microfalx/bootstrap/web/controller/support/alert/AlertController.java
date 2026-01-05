@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.controller.support.alert;
 
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.logger.AlertEvent;
@@ -10,7 +11,6 @@ import net.microfalx.bootstrap.web.component.Button;
 import net.microfalx.bootstrap.web.component.Toolbar;
 import net.microfalx.bootstrap.web.dataset.DataSetController;
 import net.microfalx.bootstrap.web.util.JsonResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,8 +23,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Help("support/alert")
 public class AlertController extends DataSetController<Alert, String> {
 
-    @Autowired
-    private LoggerService loggerService;
+    private final LoggerService loggerService;
+
+    public AlertController(DataSetService dataSetService, LoggerService loggerService) {
+        super(dataSetService);
+        this.loggerService = loggerService;
+    }
 
     @GetMapping("acknowledge")
     @ResponseBody()

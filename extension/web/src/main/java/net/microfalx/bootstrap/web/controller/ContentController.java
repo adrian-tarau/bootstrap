@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,7 @@ import static org.springframework.http.MediaType.parseMediaType;
 
 @RequestMapping("/content")
 @Controller
+@PreAuthorize("isAuthenticated()")
 public class ContentController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContentController.class);

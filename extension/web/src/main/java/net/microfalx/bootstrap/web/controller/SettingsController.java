@@ -12,7 +12,7 @@ import java.time.ZoneId;
 
 @RequestMapping("/settings")
 @Controller
-public class SettingsController {
+public class SettingsController implements AnonymousController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SettingsController.class);
 

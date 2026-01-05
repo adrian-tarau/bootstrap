@@ -10,10 +10,8 @@ import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,11 +19,9 @@ import org.springframework.security.web.authentication.RememberMeServices;
 
 import static net.microfalx.lang.StringUtils.addEndSlash;
 import static net.microfalx.lang.StringUtils.addStartSlash;
-import static org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 public class SecurityConfiguration {
 
     @Autowired
@@ -52,13 +48,13 @@ public class SecurityConfiguration {
     public SecurityFilterChain webChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
         if (securityProperties.isEnabled()) {
             httpSecurity = httpSecurity.securityMatcher(addMatchAll("/"));
-            allowStandardPaths(httpSecurity);
+            // everything else requires authentication
+            httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             updateLogin(httpSecurity);
+            updateOAuth2(httpSecurity);
             updateRememberMe(httpSecurity, rememberMeServices);
             updateCommon(httpSecurity);
             updateExceptionHandling(httpSecurity);
-            // everything else requires authentication
-            httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
             return httpSecurity.build();
         } else {
             httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
@@ -68,7 +64,6 @@ public class SecurityConfiguration {
     }
 
     private void updateCommon(HttpSecurity httpSecurity) throws Exception {
-        updateOAuth2(httpSecurity);
         updateSessionManagement(httpSecurity);
         updateOther(httpSecurity);
         updateHeaders(httpSecurity);
@@ -99,9 +94,9 @@ public class SecurityConfiguration {
 
     private void updateHeaders(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.headers(headers -> {
-            headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::deny);
-            headers.xssProtection(Customizer.withDefaults());
-            headers.referrerPolicy(rp -> rp.policy(NO_REFERRER));
+            //headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::deny);
+            //headers.xssProtection(Customizer.withDefaults());
+            //headers.referrerPolicy(rp -> rp.policy(NO_REFERRER));
         });
     }
 
@@ -124,32 +119,6 @@ public class SecurityConfiguration {
         );
     }
 
-    private void allowStandardPaths(HttpSecurity httpSecurity) throws Exception {
-        allowAssertPaths(httpSecurity);
-        allowAuthPaths(httpSecurity);
-        allowOtherPaths(httpSecurity);
-    }
-
-    private void allowAssertPaths(HttpSecurity httpSecurity) throws Exception {
-        allowPath(httpSecurity, "asset");
-        allowPath(httpSecurity, "css");
-        allowPath(httpSecurity, "js");
-        allowPath(httpSecurity, "image");
-        allowPath(httpSecurity, "favicon.ico");
-        allowPath(httpSecurity, "font");
-    }
-
-    private void allowAuthPaths(HttpSecurity httpSecurity) throws Exception {
-        allowPath(httpSecurity, "login");
-    }
-
-    private void allowOtherPaths(HttpSecurity httpSecurity) throws Exception {
-        allowPath(httpSecurity, "settings/session");
-        allowPath(httpSecurity, "ping");
-        allowPath(httpSecurity, "status");
-        allowPath(httpSecurity, "event");
-        //allowPath(httpSecurity, "api");
-    }
 
     private void updateLogin(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.formLogin(login -> login.loginPage("/login").loginProcessingUrl("/login/auth")

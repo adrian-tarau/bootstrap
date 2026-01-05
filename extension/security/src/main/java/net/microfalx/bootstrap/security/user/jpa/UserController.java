@@ -1,11 +1,11 @@
 package net.microfalx.bootstrap.security.user.jpa;
 
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.mail.MailService;
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.security.SecurityUtils;
 import net.microfalx.bootstrap.security.user.UserService;
 import net.microfalx.bootstrap.security.util.SecurityDataSetController;
@@ -18,8 +18,6 @@ import net.microfalx.lang.ObjectUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,20 +36,14 @@ import static net.microfalx.lang.StringUtils.replaceFirst;
 @Help("admin/security/user")
 public class UserController extends SecurityDataSetController<User, Integer> {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserService userService;
+    private final MailService mailService;
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private MailService mailService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private MetadataService metadataService;
+    public UserController(DataSetService dataSetService, UserService userService, MailService mailService) {
+        super(dataSetService);
+        this.userService = userService;
+        this.mailService = mailService;
+    }
 
     @Override
     protected void validate(User model, State state, JsonFormResponse<?> response) {
@@ -79,9 +71,10 @@ public class UserController extends SecurityDataSetController<User, Integer> {
     @ResponseBody
     public JsonResponse<?> resetPassword(@PathVariable("id") String id) {
         if (!userService.exists(id)) throw new SecurityException("User with id " + id + " not found");
+        UserRepository userRepository = userService.getUserRepository();
         User user = userRepository.findByUserName(id);
             String password = SecurityUtils.getRandomPassword(12);
-        userRepository.updatePassword(passwordEncoder.encode(password), true, id);
+        userRepository.updatePassword(userService.getPasswordEncoder().encode(password), true, id);
         boolean showToken = ObjectUtils.equals(id, userService.getCurrentUser().getUserName());
         String message = "Password was updated successfully.";
         if (showToken) {
@@ -103,6 +96,7 @@ public class UserController extends SecurityDataSetController<User, Integer> {
     public JsonResponse<?> generateToken(@PathVariable("id") String id) {
         if (!userService.exists(id)) throw new SecurityException("User with id " + id + " not found");
         String token = SecurityUtils.getRandomPassword(60);
+        UserRepository userRepository = userService.getUserRepository();
         userRepository.updateToken(token, id);
         boolean showToken = ObjectUtils.equals(id, userService.getCurrentUser().getUserName());
         User user = userRepository.findByUserName(id);
@@ -124,7 +118,7 @@ public class UserController extends SecurityDataSetController<User, Integer> {
 
     @Override
     protected void beforePersist(net.microfalx.bootstrap.dataset.DataSet<User, Field<User>, Integer> dataSet, User model, State state) {
-        if (state == State.ADD) model.setPassword(passwordEncoder.encode(model.getPassword()));
+        if (state == State.ADD) model.setPassword(userService.getPasswordEncoder().encode(model.getPassword()));
     }
 
     private Resource createAPIKeyChangeEmail(User user, String token) {

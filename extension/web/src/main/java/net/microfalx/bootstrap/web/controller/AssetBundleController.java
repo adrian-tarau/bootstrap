@@ -25,12 +25,11 @@ import static net.microfalx.lang.StringUtils.removeStartSlash;
 
 @Controller
 @RequestMapping(value = "/asset")
-public final class AssetBundleController {
+public class AssetBundleController implements AnonymousController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AssetBundleController.class);
 
-    @Autowired
-    private ApplicationService applicationService;
+    @Autowired private ApplicationService applicationService;
 
     @GetMapping(value = "/css/{id}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> stylesheet(@PathVariable("id") String id) {

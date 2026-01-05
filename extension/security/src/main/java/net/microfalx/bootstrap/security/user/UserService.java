@@ -102,6 +102,14 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
             .maximumSize(100).expireAfterWrite(Duration.ofSeconds(30))
             .build(new TokenCacheLoader());
 
+    public UserRepository getUserRepository() {
+        return userRepository;
+    }
+
+    public PasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
+    }
+
     /**
      * Returns the roles registered with the application.
      *

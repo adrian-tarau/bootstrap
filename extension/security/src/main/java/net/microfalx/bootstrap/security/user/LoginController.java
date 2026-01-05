@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.security.user;
 
+import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
 @RequestMapping("/")
 @Controller
+@PermitAll
 public class LoginController extends PageController {
 
     @Autowired

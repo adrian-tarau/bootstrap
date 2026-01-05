@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.security.group.jpa;
 
+import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.State;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.security.group.GroupService;
 import net.microfalx.bootstrap.security.util.SecurityDataSetController;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,11 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Help("admin/security/group")
 public class GroupController extends SecurityDataSetController<Group, Integer> {
 
-    @Autowired
-    private GroupRepository userRepository;
+    private final GroupService groupService;
 
-    @Autowired
-    private GroupService groupService;
+    public GroupController(DataSetService dataSetService, GroupService groupService) {
+        super(dataSetService);
+        this.groupService = groupService;
+    }
 
     @Override
     protected void beforeEdit(net.microfalx.bootstrap.dataset.DataSet<Group, Field<Group>, Integer> dataSet, Model controllerModel, Group dataSetModel) {

@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.web.controller;
 
-import jakarta.annotation.security.PermitAll;
 import net.microfalx.bootstrap.web.util.JsonResponse;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -12,8 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("/ping")
 @Controller("ApplicationPingController")
-@PermitAll
-public class PingController {
+public class PingController implements AnonymousController {
 
     @GetMapping("")
     @ResponseBody()
