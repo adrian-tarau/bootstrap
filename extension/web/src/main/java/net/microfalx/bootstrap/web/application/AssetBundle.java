@@ -232,7 +232,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
         }
 
         public Builder theme(String theme) {
-            this.theme = theme;
+            this.theme = theme != null ? StringUtils.toIdentifier(theme) : null;
             return this;
         }
 

@@ -100,10 +100,20 @@ Application.open = function (path, params, newWindow) {
 
 /**
  * Returns whether the application is ready.
+ *
  * @returns true if ready, false otherwise
  */
 Application.isReady = function () {
     return true;
+}
+
+/**
+ * Returns whether the application (current page) is authenticated (has a security context).
+ *
+ * @returns true if authenticated, false otherwise
+ */
+Application.isAuthenticated = function () {
+    return APP_AUTHENTICATED || false;
 }
 
 /**
@@ -526,6 +536,7 @@ Application.isSessionLost = function () {
  * Shows an application mask to inform the user that the session was lost.
  */
 Application.showSessionLost = function () {
+    if (!this.isAuthenticated()) return;
     let messageElement = $("<div>", {
         "class": "app-mask",
         "html": APP_AJAX_MASK_AUTH_MESSAGE
