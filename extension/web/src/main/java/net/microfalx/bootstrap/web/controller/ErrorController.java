@@ -9,7 +9,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Controller("/error")
 //@ControllerAdvice
-public class ErrorController {
+public class ErrorController implements AnonymousController {
 
     @ExceptionHandler(Exception.class)
     public ModelAndView handleException(HttpServletRequest request, Exception exception) {
