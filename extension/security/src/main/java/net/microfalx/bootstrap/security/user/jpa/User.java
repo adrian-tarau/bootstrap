@@ -11,20 +11,16 @@ import net.microfalx.bootstrap.dataset.annotation.Filterable;
 import net.microfalx.bootstrap.jdbc.entity.surrogate.TimestampAware;
 import net.microfalx.bootstrap.security.group.jpa.Group;
 import net.microfalx.lang.annotation.*;
-import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
-
-import static net.microfalx.bootstrap.security.SecurityUtils.normalizeUserName;
 
 @Entity
 @Table(name = "security_users")
 @Getter
 @Setter
 @ToString(exclude = "groups", callSuper = true)
-public class User extends TimestampAware implements net.microfalx.bootstrap.security.user.User {
+public class User extends TimestampAware {
 
     @Id
     @Column(name = "username", nullable = false)
@@ -67,6 +63,7 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
     @ReadOnly
     @Position(11)
     @Description("Indicates whether the user name is external (managed outside the system by an identity provider)")
+    @Visible(modes = Visible.Mode.BROWSE)
     private boolean external;
 
     @Column(name = "reset_password", nullable = false)
@@ -79,16 +76,14 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
     @Column(name = "email")
     @Position(20)
     @Description("The email associated with a {name}")
+    @Width("200px")
     private String email;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "security_group_members", joinColumns = @JoinColumn(name = "username"), inverseJoinColumns = @JoinColumn(name = "group_id"))
     @Position(30)
+    @Width("200px")
     private Collection<Group> groups;
-
-    @Transient
-    @Visible()
-    private String imageUrl;
 
     @Column(name = "description")
     @Position(1000)
@@ -97,11 +92,6 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
     @Width("300px")
     @Filterable()
     private String description;
-
-    @Override
-    public String getId() {
-        return normalizeUserName(userName);
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -113,10 +103,5 @@ public class User extends TimestampAware implements net.microfalx.bootstrap.secu
     @Override
     public int hashCode() {
         return Objects.hash(userName);
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
     }
 }

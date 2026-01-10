@@ -40,7 +40,7 @@ public class ApplicationMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(new RequestInterceptor());
     }
 
-    @Order()
+    @Order
     private class RequestInterceptor implements HandlerInterceptor {
 
         @Override

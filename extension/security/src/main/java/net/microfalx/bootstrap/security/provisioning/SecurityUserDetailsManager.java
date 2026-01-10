@@ -68,19 +68,23 @@ public class SecurityUserDetailsManager extends JdbcUserDetailsManager {
         String name = rs.getString(3);
         String email = rs.getString(4);
         boolean enabled = rs.getBoolean(5);
+        boolean external = rs.getBoolean(6);
+        boolean resetPassword = rs.getBoolean(7);
         boolean accLocked = false;
         boolean accExpired = false;
         boolean credsExpired = false;
-        if (rs.getMetaData().getColumnCount() > 5) {
+        if (rs.getMetaData().getColumnCount() > 8) {
             // NOTE: acc_locked, acc_expired and creds_expired are also to be loaded
-            accLocked = rs.getBoolean(6);
-            accExpired = rs.getBoolean(7);
-            credsExpired = rs.getBoolean(8);
+            accLocked = rs.getBoolean(8);
+            accExpired = rs.getBoolean(9);
+            credsExpired = rs.getBoolean(10);
         }
         ExtendedUserDetailsImpl user = new ExtendedUserDetailsImpl(userName, password, enabled, !accExpired, !credsExpired, !accLocked,
                 AuthorityUtils.NO_AUTHORITIES);
         user.setName(name);
         user.setEmail(email);
+        user.setExternal(external);
+        user.setResetPassword(resetPassword);
         return user;
     }
 
@@ -121,6 +125,8 @@ public class SecurityUserDetailsManager extends JdbcUserDetailsManager {
         private String name;
         private String email;
         private String imageUrl;
+        private boolean external;
+        private boolean resetPassword;
 
         public ExtendedUserDetailsImpl(String username, String password, boolean enabled, boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection<? extends GrantedAuthority> authorities) {
             super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
@@ -149,7 +155,7 @@ public class SecurityUserDetailsManager extends JdbcUserDetailsManager {
     private static final String DEF_USER_EXISTS_SQL = "select username from security_users where username = ?";
     private static final String DEF_CHANGE_PASSWORD_SQL = "update security_users set password = ? where username = ?";
 
-    private static final String DEF_USERS_BY_USERNAME_QUERY = "select username, password, name, email, enabled "
+    private static final String DEF_USERS_BY_USERNAME_QUERY = "select username, password, name, email, enabled, external, reset_password "
             + "from security_users where username = ? or lower(email) = ?";
     private static final String DEF_AUTHORITIES_BY_USERNAME_QUERY = "select username, authority "
             + "from security_authorities where username = ? or lower(email) = ?";

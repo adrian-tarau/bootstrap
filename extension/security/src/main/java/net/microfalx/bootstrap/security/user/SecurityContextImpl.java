@@ -18,7 +18,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 @ToString
 public class SecurityContextImpl implements SecurityContext {
 
-    private static final User ANONYMOUS = new net.microfalx.bootstrap.security.user.jpa.User().setUserName("anonymous").setName("Anonymous").setGroups(Collections.emptyList());
+    private static final User ANONYMOUS = UserImpl.builder().userName("anonymous").name("Anonymous").build();
 
     private static final String id = UUID.randomUUID().toString();
     private User user = ANONYMOUS;

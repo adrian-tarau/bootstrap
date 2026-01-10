@@ -23,11 +23,6 @@ import static net.microfalx.lang.StringUtils.addStartSlash;
 @PropertySource("classpath:swagger.properties")
 public class RestApiConfiguration {
 
-    private static final String[] SWAGGER_WHITELIST = {
-            "/swagger-ui.html",
-            "/swagger-ui/**"
-    };
-
     @Autowired private RestApiProperties properties;
 
     @Bean

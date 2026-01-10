@@ -22,6 +22,7 @@ public class SecurityProperties {
     private String adminUserName = "admin";
     private String adminEMail = "admin@localhost";
     private String guestUserName = "guest";
+    private boolean resetAdmin;
 
     private OAuth2Properties oauth2 = new OAuth2Properties();
 

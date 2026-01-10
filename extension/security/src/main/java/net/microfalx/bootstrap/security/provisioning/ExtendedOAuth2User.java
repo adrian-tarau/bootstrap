@@ -54,4 +54,14 @@ class ExtendedOAuth2User extends DefaultOAuth2User implements ExtendedUserDetail
     public String getUsername() {
         return getName();
     }
+
+    @Override
+    public boolean isExternal() {
+        return true;
+    }
+
+    @Override
+    public boolean isResetPassword() {
+        return false;
+    }
 }

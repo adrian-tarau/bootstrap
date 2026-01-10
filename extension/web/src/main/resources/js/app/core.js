@@ -243,11 +243,7 @@ Application.ajax = function (type, path, params, callback, options) {
     let data = type === 'POST' && Utils.isNotEmpty(options.data) ? options.data : params;
     Logger.log(options.background ? "info" : "trace", "Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);
     if (options.mask) me.mask(options.mask, options.maskMessage);
-    let headers = {
-        "X-Application-Id": Application.getId(),
-        "X-TimeZone": Application.getTimezoneOffset()
-    };
-    if (Utils.isDefined(APP_CSRF)) headers[APP_CSRF.headerName] = APP_CSRF.token;
+    let headers = me.getHeaders();
     $.ajax({
         url: uri,
         type: type,
@@ -267,6 +263,18 @@ Application.ajax = function (type, path, params, callback, options) {
             if (options.mask) me.unmask(options.mask);
         }
     });
+}
+
+/**
+ * Returns an object with application required headers.
+ */
+Application.getHeaders = function() {
+    let headers = {
+        "X-Application-Id": Application.getId(),
+        "X-TimeZone": Application.getTimezoneOffset()
+    };
+    if (Utils.isDefined(APP_CSRF)) headers[APP_CSRF.headerName] = APP_CSRF.token;
+    return headers;
 }
 
 /**

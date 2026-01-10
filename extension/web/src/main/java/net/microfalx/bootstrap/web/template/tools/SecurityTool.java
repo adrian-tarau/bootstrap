@@ -6,7 +6,6 @@ import net.microfalx.bootstrap.web.component.Container;
 import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
 import net.microfalx.bootstrap.web.util.Gravatar;
 import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.Authentication;
@@ -24,6 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
  * A tools which gives access to security context.
@@ -83,7 +83,7 @@ public class SecurityTool extends AbstractTool implements Authentication {
         if (userDetails instanceof ExtendedUserDetails extendedUserDetails) {
             url = extendedUserDetails.getImageUrl();
         }
-        if (StringUtils.isNotEmpty(url)) {
+        if (isNotEmpty(url)) {
             return url;
         } else {
             return new Gravatar(getEmail()).getUrl();

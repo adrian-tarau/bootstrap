@@ -2,6 +2,8 @@ package net.microfalx.bootstrap.web.template;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.ToString;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.search.SearchUtils;
 import net.microfalx.bootstrap.web.application.ApplicationService;
@@ -9,6 +11,8 @@ import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.container.WebContainerRequest;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.template.tools.LinkTool;
+import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
+import net.microfalx.bootstrap.web.util.Gravatar;
 import net.microfalx.lang.IdGenerator;
 import net.microfalx.lang.TextUtils;
 import org.springframework.context.ApplicationContext;
@@ -31,8 +35,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
-import static net.microfalx.lang.StringUtils.EMPTY_STRING;
-import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+import static net.microfalx.lang.StringUtils.*;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeEcmaScript;
 
 /**
@@ -78,6 +81,15 @@ public class ApplicationDialect extends AbstractProcessorDialect {
                 userInfo.name = authentication.getName();
                 userInfo.roles.addAll(authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority).collect(Collectors.toSet()));
+            }
+            if (principal instanceof ExtendedUserDetails userDetails) {
+                userInfo.email = userDetails.getEmail();
+                userInfo.external = userDetails.isExternal();
+                userInfo.resetPassword = userDetails.isResetPassword();
+                userInfo.imageUrl = userDetails.getImageUrl();
+                if (isEmpty(userInfo.imageUrl) && isNotEmpty(userInfo.email)) {
+                    userInfo.imageUrl =  new Gravatar(userInfo.email).getUrl();
+                }
             }
         }
         return userInfo;
@@ -138,35 +150,20 @@ public class ApplicationDialect extends AbstractProcessorDialect {
         }
     }
 
-    private static String SCRIPT_START_TAG = "<script type=\"text/javascript\">";
-    private static String SCRIPT_START_END = "</script>";
+    private static final String SCRIPT_START_TAG = "<script type=\"text/javascript\">";
+    private static final String SCRIPT_START_END = "</script>";
 
+    @Getter
+    @ToString
     private static final class UserInfo {
 
         private String userName;
         private String name;
         private String email;
         private boolean authenticated;
-        private Set<String> roles = new HashSet<>();
-
-        public boolean isAuthenticated() {
-            return authenticated;
-        }
-
-        public String getUserName() {
-            return userName;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public Set<String> getRoles() {
-            return roles;
-        }
+        private boolean external;
+        private boolean resetPassword;
+        private String imageUrl;
+        private final Set<String> roles = new HashSet<>();
     }
 }

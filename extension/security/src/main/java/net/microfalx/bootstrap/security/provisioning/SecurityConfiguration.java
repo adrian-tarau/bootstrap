@@ -12,6 +12,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.web.SecurityFilterChain;
@@ -19,6 +20,7 @@ import org.springframework.security.web.authentication.RememberMeServices;
 
 import static net.microfalx.lang.StringUtils.addEndSlash;
 import static net.microfalx.lang.StringUtils.addStartSlash;
+import static org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER;
 
 @Configuration
 @EnableWebSecurity
@@ -94,9 +96,9 @@ public class SecurityConfiguration {
 
     private void updateHeaders(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.headers(headers -> {
-            //headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::deny);
+            headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin);
             //headers.xssProtection(Customizer.withDefaults());
-            //headers.referrerPolicy(rp -> rp.policy(NO_REFERRER));
+            headers.referrerPolicy(rp -> rp.policy(NO_REFERRER));
         });
     }
 

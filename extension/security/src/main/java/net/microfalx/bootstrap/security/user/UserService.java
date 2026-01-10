@@ -19,20 +19,24 @@ import net.microfalx.bootstrap.security.user.jpa.UserRepository;
 import net.microfalx.bootstrap.web.preference.PreferenceService;
 import net.microfalx.bootstrap.web.preference.PreferenceStorage;
 import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.authentication.event.LogoutSuccessEvent;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationToken;
@@ -60,7 +64,7 @@ import static net.microfalx.lang.StringUtils.*;
  * A service around user management.
  */
 @Service
-public class UserService extends ApplicationContextSupport implements ApiCredentialService, InitializingBean, ApplicationListener<LogoutSuccessEvent> {
+public class UserService extends ApplicationContextSupport implements ApiCredentialService, InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
@@ -209,7 +213,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
             User currentUser = findUser(false);
             if (currentUser != null) {
                 securityContext = securityContexts.computeIfAbsent(normalizeUserName(currentUser.getUserName()),
-                        userName -> new SecurityContextImpl(currentUser, SecurityContextHolder.getContext()));
+                        userName -> new SecurityContextImpl(fromJpa(currentUser), SecurityContextHolder.getContext()));
             }
         }
         return securityContext != null ? securityContext : new SecurityContextImpl();
@@ -303,6 +307,25 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
         createUser(userName, password, name, email, null, USERS_GROUP);
     }
 
+    /**
+     * Resets the password of a given user.
+     *
+     * @param userName the user name
+     * @return the new temporary password
+     */
+    public String resetPassword(String userName) {
+        requireNotEmpty(userName);
+        User user = findUser(false, userName);
+        if (user == null) throw new SecurityException("A user with user name '" + userName + "' could not be located");
+        String newPassword = getRandomPassword();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetPassword(true);
+        user.setModifiedAt(LocalDateTime.now());
+        userRepository.saveAndFlush(user);
+        LOGGER.info("Reset password for user '{}', new temporary password is '{}'", userName, newPassword);
+        return newPassword;
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         createDefaultUsers();
@@ -325,19 +348,35 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
                 .setDescription("User '" + success.getAuthentication().getName() + "' was authenticated successfully");
         context = updateAuditContext(context, success.getAuthentication());
         audit(context);
+        LOGGER.info("Authenticated user '{}'", success.getAuthentication().getName());
     }
 
     @EventListener
     public void onFailure(AbstractAuthenticationFailureEvent failures) {
+        AuthenticationException exception = failures.getException();
         AuditContext context = AuditContext.get().setAction(LOGIN_ACTION)
                 .setModule(SECURITY_MODULE).setErrorCode("403")
                 .setDescription("User '" + failures.getAuthentication().getName() + "' failed to authenticate, root cause: "
-                        + getRootCauseMessage(failures.getException()));
+                        + getRootCauseMessage(exception));
         context = updateAuditContext(context, failures.getAuthentication());
         audit(context);
+        if (exception instanceof BadCredentialsException) {
+            LOGGER.warn("Bad credentials provided for user '{}'", failures.getAuthentication().getName());
+        } else if (exception instanceof UsernameNotFoundException) {
+            LOGGER.warn("User '{}' could not be found", failures.getAuthentication().getName());
+        } else if (exception instanceof AuthenticationException) {
+            LOGGER.warn("Authentication exception for user '{}': {}", failures.getAuthentication().getName(), ExceptionUtils.getRootCauseMessage(exception));
+        } else {
+            LOGGER.atWarn().setCause(exception).log("Unknown authentication failure, user '{}'", failures.getAuthentication().getName());
+        }
     }
 
-    @Override
+    @EventListener
+    public void onApplicationEvent(ApplicationStartedEvent event) {
+        resetAdminPassword();
+    }
+
+    @EventListener
     public void onApplicationEvent(LogoutSuccessEvent event) {
         String userName = getUserName(event.getAuthentication());
         if (userName != null) {
@@ -359,6 +398,13 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
         audit.setClientInfo(context.getClientInfo());
         audit.setCreatedAt(LocalDateTime.now());
         return audit;
+    }
+
+    private net.microfalx.bootstrap.security.user.User fromJpa(User jpaUser) {
+        return UserImpl.builder().id(jpaUser.getUserName()).userName(jpaUser.getUserName()).name(jpaUser.getName())
+                .email(jpaUser.getEmail()).description(jpaUser.getDescription())
+                .enabled(jpaUser.isEnabled()).external(jpaUser.isExternal()).resetPassword(jpaUser.isResetPassword())
+                .build();
     }
 
     private User findUser(boolean create) {
@@ -436,6 +482,11 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     private void createDefaultRoles() {
         registerRole(Role.ADMIN);
         registerRole(Role.GUEST);
+    }
+
+    private void resetAdminPassword() {
+        if (!settings.isResetAdmin()) return;
+        resetPassword("admin");
     }
 
     private class UserPreferenceListener implements PreferenceStorage {

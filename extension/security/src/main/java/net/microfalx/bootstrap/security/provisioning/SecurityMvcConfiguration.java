@@ -9,31 +9,46 @@ import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.StringUtils;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 @Configuration
 @Slf4j
 public class SecurityMvcConfiguration implements WebMvcConfigurer {
 
+    private final Collection<RequestMatcher> anonymous = new CopyOnWriteArrayList<>();
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        initMatchers();
         registry.addInterceptor(new Interceptor());
     }
 
+    public void registerAnonymous(RequestMatcher matcher) {
+        requireNonNull(matcher);
+        anonymous.add(matcher);
+    }
+
     private boolean applySecurity(HttpServletRequest request, HttpServletResponse response, HandlerMethod handlerMethod) {
-        Rule rule = findRule(handlerMethod);
+        Rule rule = findRule(request, handlerMethod);
         LOGGER.debug("Request '{}' mapped to method '{}' with security rule: {}", request.getRequestURI(), describe(handlerMethod), rule);
         if (!rule.authenticated) return true;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -44,7 +59,8 @@ public class SecurityMvcConfiguration implements WebMvcConfigurer {
         return true;
     }
 
-    private Rule findRule(HandlerMethod hm) {
+    private Rule findRule(HttpServletRequest request, HandlerMethod hm) {
+        if (isAnonymous(request)) return NO_SECURITY;
         PermitAll permitAllAnnot = hm.getMethodAnnotation(PermitAll.class);
         if (permitAllAnnot != null) return NO_SECURITY;
         Class<?> controllerType = hm.getBeanType();
@@ -78,6 +94,18 @@ public class SecurityMvcConfiguration implements WebMvcConfigurer {
         return method.getDeclaringClass().getName() + "." + method.getName();
     }
 
+    private void initMatchers() {
+        registerAnonymous(PathPatternRequestMatcher.withDefaults().matcher("/login/**"));
+        registerAnonymous(PathPatternRequestMatcher.withDefaults().matcher("/logout/**"));
+    }
+
+    private boolean isAnonymous(HttpServletRequest request) {
+        for (RequestMatcher matcher : anonymous) {
+            if (matcher.matches(request)) return true;
+        }
+        return false;
+    }
+
     private static final Rule NO_SECURITY = new Rule(false);
     private static final Rule SECURITY_ANY_ROLE = new Rule(true);
 
@@ -97,6 +125,7 @@ public class SecurityMvcConfiguration implements WebMvcConfigurer {
         }
     }
 
+    @Order
     private class Interceptor implements HandlerInterceptor {
 
         @Override

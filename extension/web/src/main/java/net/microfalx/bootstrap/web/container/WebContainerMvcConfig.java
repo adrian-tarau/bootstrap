@@ -17,7 +17,7 @@ public class WebContainerMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(new RequestInterceptor());
     }
 
-    @Order()
+    @Order
     private static class RequestInterceptor implements HandlerInterceptor {
 
         @SuppressWarnings("ConstantValue")
@@ -25,8 +25,10 @@ public class WebContainerMvcConfig implements WebMvcConfigurer {
         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
             WebContainerRequest.REQUEST.set(request);
             WebContainerRequest containerRequest = WebContainerRequest.get();
-            FormatterUtils.setTimeZone(containerRequest.getTimeZone());
-            FormatterUtils.setLocale(containerRequest.getLocale());
+            if (!response.isCommitted()) {
+                FormatterUtils.setTimeZone(containerRequest.getTimeZone());
+                FormatterUtils.setLocale(containerRequest.getLocale());
+            }
             return true;
         }
 

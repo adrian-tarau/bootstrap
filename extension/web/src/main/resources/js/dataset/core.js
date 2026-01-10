@@ -351,11 +351,13 @@ DataSet.save = function () {
     let me = DataSet;
     let path = Utils.isEmpty(me.id) ? "" : me.id;
     let url = DataSet.getUri(path, {}, {params: false});
+    let headers = Application.getHeaders();
     let closeModel = false;
     let form = $('#dataset-form').ajaxSubmit({
         url: url,
         type: 'POST',
         dataType: 'json',
+        headers: headers,
         beforeSubmit: function (data, form, options) {
             DataSet.updateFormFields(data);
             Logger.info("Before form submission, response " + Utils.toString(data));

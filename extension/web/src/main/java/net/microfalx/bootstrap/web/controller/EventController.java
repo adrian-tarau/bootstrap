@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.web.event.*;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.threadpool.ThreadPool;
+import org.eclipse.jetty.io.EofException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
@@ -110,6 +111,10 @@ public class EventController implements AnonymousController {
             return !(rootCause instanceof AsyncRequestNotUsableException);
         }
 
+        private boolean isClientAbortError(Throwable e) {
+            return throwable instanceof IllegalStateException || ExceptionUtils.contains(throwable, EofException.class);
+        }
+
         @Override
         public void run() {
             try {
@@ -133,8 +138,8 @@ public class EventController implements AnonymousController {
                 emitter.complete();
             }
             if (throwable != null) {
-                if (throwable instanceof IllegalStateException) {
-                    LOGGER.info("Communication error with client reason: {}", getRootCauseMessage(throwable));
+                if (isClientAbortError(throwable)) {
+                    LOGGER.debug("Communication error with client reason: {}", getRootCauseMessage(throwable));
                 } else {
                     LOGGER.warn("Error while processing events, root cause: {}", getRootCauseMessage(throwable));
                 }

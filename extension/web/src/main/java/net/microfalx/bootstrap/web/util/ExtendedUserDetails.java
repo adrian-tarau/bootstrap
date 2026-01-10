@@ -31,4 +31,18 @@ public interface ExtendedUserDetails extends UserDetails, AuthenticatedPrincipal
      * @return the URL, null if not available
      */
     String getImageUrl();
+
+    /**
+     * Returns whether if the user is an external user (authenticated via an external identity provider).
+     *
+     * @return {@code true} if the user is external, {@code false} otherwise
+     */
+    boolean isExternal();
+
+    /**
+     * Returns whether the user is required to reset the password on next login.
+     *
+     * @return {@code true} if the user must reset the password, {@code false} otherwise
+     */
+    boolean isResetPassword();
 }

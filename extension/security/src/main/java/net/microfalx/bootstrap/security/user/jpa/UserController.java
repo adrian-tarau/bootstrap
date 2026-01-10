@@ -19,6 +19,7 @@ import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,6 +44,12 @@ public class UserController extends SecurityDataSetController<User, Integer> {
         super(dataSetService);
         this.userService = userService;
         this.mailService = mailService;
+    }
+
+    @Override
+    protected void beforeEdit(net.microfalx.bootstrap.dataset.DataSet<User, Field<User>, Integer> dataSet, Model controllerModel, User dataSetModel) {
+        super.beforeEdit(dataSet, controllerModel, dataSetModel);
+        setReadOnly(dataSetModel.isExternal(), "enabled");
     }
 
     @Override

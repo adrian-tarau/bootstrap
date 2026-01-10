@@ -52,4 +52,13 @@ class ExtendedOidcUser extends DefaultOidcUser implements ExtendedUserDetails {
         return null;
     }
 
+    @Override
+    public boolean isExternal() {
+        return true;
+    }
+
+    @Override
+    public boolean isResetPassword() {
+        return false;
+    }
 }

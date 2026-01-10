@@ -57,7 +57,7 @@ public class ThemeAwareTemplateResolver extends SpringResourceTemplateResolver {
                 templateAliases, templateResolutionAttributes);
         if (resolvedTemplates.add(resourceUri)) {
             boolean exists = applicationContext.getResource(resourceUri).exists();
-            org.slf4j.event.Level level = exists ? Level.INFO : Level.ERROR;
+            org.slf4j.event.Level level = exists ? Level.DEBUG : Level.ERROR;
             if (ownerTemplate != null) {
                 LOGGER.atLevel(level).log("Resolve template '{}' (owner template '{}') with themed resource URI '{}', themed {}, exists {}",
                         template, ownerTemplate, resourceUri, hasThemedTemplate, exists);

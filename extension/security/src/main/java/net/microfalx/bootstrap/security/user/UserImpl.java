@@ -6,7 +6,7 @@ import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
 /**
  * Simple implementation of the {@link User} interface.
@@ -21,18 +21,15 @@ class UserImpl implements User {
     private final String displayName;
     private final String userName;
     private final boolean enabled;
+    private final boolean external;
+    private final boolean resetPassword;
     private final String email;
     private final String description;
     private final String imageUrl;
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
+    private Collection<GrantedAuthority> authorities = Collections.emptyList();
 
     @Override
     public String getPassword() {
         return null;
     }
-
 }
