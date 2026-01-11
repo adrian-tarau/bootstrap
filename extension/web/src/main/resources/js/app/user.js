@@ -72,5 +72,14 @@ User.initialize = function () {
     Logger.debug("Initialize user: " + this.getName() + " (" + this.getUserName() + ")");
 }
 
+/**
+ * Starts user related functionality
+ */
+User.start = function () {
+    if (this.getData().resetPassword) {
+        Application.showWarnAlert("Security", "Your password was reset recently by the system administrator or yourself. Please change your password to a password known only to you, as soon as possible.");
+    }
+}
+
 // initialize user
 User.initialize();

@@ -59,6 +59,9 @@ public class SecurityUserDetailsManager extends JdbcUserDetailsManager {
         user.setName(extendedUserFromUserQuery.getUsername());
         user.setDisplayName(extendedUserFromUserQuery.getName());
         user.setEmail(extendedUserFromUserQuery.getEmail());
+        user.setImageUrl(extendedUserFromUserQuery.getImageUrl());
+        user.setExternal(extendedUserFromUserQuery.isExternal());
+        user.setResetPassword(extendedUserFromUserQuery.isResetPassword());
         return user;
     }
 
