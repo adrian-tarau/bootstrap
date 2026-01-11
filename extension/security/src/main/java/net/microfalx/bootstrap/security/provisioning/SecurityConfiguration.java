@@ -84,8 +84,8 @@ public class SecurityConfiguration {
         if (oauth2Properties.isEnabled()) {
             httpSecurity.oauth2Login(oauth2 -> oauth2.loginPage("/login")
                     .userInfoEndpoint(userInfo -> userInfo
-                            .oidcUserService(new OidcUserService())
-                            .userService(new OAuth2UserService())
+                            .oidcUserService(new OidcUserService(userService, oauth2Properties))
+                            .userService(new OAuth2UserService(userService, oauth2Properties))
                     ));
         }
     }

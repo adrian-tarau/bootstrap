@@ -161,30 +161,40 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     }
 
     /**
-     * Authenticate a user.
-     *
-     * @param userName the username
-     * @param password the password
-     * @return the user information
-     * @throws org.springframework.security.core.userdetails.UsernameNotFoundException if the user does not exists
-     * @throws org.springframework.security.authentication.BadCredentialsException     if the credentials are wrong
-     * @throws org.springframework.security.core.AuthenticationException               if any other authentication related issues
-     */
-    public UserDetails authenticate(String userName, String password) {
-        requireNotEmpty(userName);
-        requireNotEmpty(password);
-        return userDetailsManager.loadUserByUsername(userName);
-    }
-
-    /**
      * Checks whether a user with a given username exists.
      *
      * @param userName the username
-     * @return true if such a user exists, false otherwise
+     * @return {@code true} if such a user exists, {@code false} otherwise
      */
     public boolean exists(String userName) {
         requireNonNull(userName);
         return findUser(false, userName) != null;
+    }
+
+    /**
+     * Finds a user by its username.
+     *
+     * @param userName the user name
+     * @return the user, null if such a user does not exist
+     */
+    public User findUser(String userName) {
+        requireNonNull(userName);
+        return findUser(false, userName);
+    }
+
+    /**
+     * Finds user details for a user with a given user name.
+     *
+     * @param userName the username
+     * @return the user information. null if such a user does not exist
+     */
+    public UserDetails findUserDetails(String userName) {
+        requireNotEmpty(userName);
+        try {
+            return userDetailsManager.loadUserByUsername(normalizeUserName(userName));
+        } catch (UsernameNotFoundException e) {
+            return null;
+        }
     }
 
     /**
@@ -401,10 +411,10 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     }
 
     private net.microfalx.bootstrap.security.user.User fromJpa(User jpaUser) {
-        return UserImpl.builder().id(jpaUser.getUserName()).userName(jpaUser.getUserName()).name(jpaUser.getName())
+        UserImpl.UserImplBuilder builder = UserImpl.builder().id(jpaUser.getUserName()).userName(jpaUser.getUserName()).name(jpaUser.getName())
                 .email(jpaUser.getEmail()).description(jpaUser.getDescription())
-                .enabled(jpaUser.isEnabled()).external(jpaUser.isExternal()).resetPassword(jpaUser.isResetPassword())
-                .build();
+                .enabled(jpaUser.isEnabled()).external(jpaUser.isExternal()).resetPassword(jpaUser.isResetPassword());
+        return builder.build();
     }
 
     private User findUser(boolean create) {
@@ -510,7 +520,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
         public UserDetails load(String key) throws Exception {
             User user = userRepository.findByToken(key);
             if (user == null) return null;
-            return userDetailsManager.loadUserByUsername(user.getUserName());
+            return userDetailsManager.loadUserByUsername(normalizeUserName(user.getUserName()));
         }
     }
 }

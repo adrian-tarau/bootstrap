@@ -25,6 +25,8 @@ public class OAuth2Properties {
     private String azureClientId;
     private String azureClientSecret;
 
+    private boolean useLocalAuthorization = true;
+
     public boolean isEnabled() {
         return isGoogleEnabled() || isGithubEnabled() || isAzureEnabled();
     }
