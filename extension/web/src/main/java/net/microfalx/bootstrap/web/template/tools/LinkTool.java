@@ -26,6 +26,15 @@ public class LinkTool extends AbstractTool {
     }
 
     /**
+     * Returns the full URL which identifies the request.
+     *
+     * @return a non-null instance
+     */
+    public String getUrl() {
+        return getWebContext().getExchange().getRequest().getRequestURL();
+    }
+
+    /**
      * Returns the query parameters.
      *
      * @return a non-null instance

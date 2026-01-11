@@ -129,6 +129,7 @@ public class ApplicationDialect extends AbstractProcessorDialect {
             builder.append(SCRIPT_START_TAG);
             builder.append("\nconst APP_ID=\"").append(APP_ID_GENERATOR.nextAsString()).append("\";");
             builder.append("\nconst APP_AUTHENTICATED=").append(authenticated).append(";");
+            builder.append("\nconst APP_REQUEST_URL=\"").append(linkTool.getUrl()).append("\";");
             builder.append("\nconst APP_REQUEST_PATH=\"").append(linkTool.getSelf()).append("\";");
             builder.append("\nconst APP_REQUEST_QUERY=").append(linkTool.toJson(linkTool.getQuery())).append(";");
             if (csrf != null) {
