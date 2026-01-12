@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="render-alerts">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Created At</th>
+            <th scope="col">Modified At</th>
+            <th scope="col">Level</th>
+            <th scope="col">Message</th>
+            <th scope="col">Failure Type</th>
+            <th scope="col">Acknowledged</th>
+            <th scope="col" class="text-center">Total Count</th>
+            <th scope="col" class="text-center">Pending Count</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="alert : ${alerts}">
+            <td><span th:text="${helper.formatDateTime(createdAt)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(modifiedAt)}"></span></td>
+            <td><span th:text="${alert.level.name}"></span></td>
+            <td><span th:text="${alert.message}"></span></td>
+            <td><span th:text="${alert.failureType}"></span></td>
+            <td><<span th:replace="~{fragments/utils :: check(${alert.acknowledged})}"></span></td>
+            <td class="text-center"><span th:text="${helper.formatNumber(alert.totalEventCount)}"></span></td>
+            <td class="text-center"><span th:text="${helper.formatNumber(alert.pendingEventCount)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="content" th:with="alerts=${logger.getAlerts()}">
+    <h3 class="pt-2">Alerts</h3>
+    <div th:replace="~{logger :: render-alerts}" th:unless="${alerts.isEmpty()}"></div>
+    <p th:if="${alerts.isEmpty()}">
+        This system has no alerts.
+    </p>
+</div>
+
+<div th:fragment="code" th:remove="tag">
+</div>
+
+</body>
+</html>

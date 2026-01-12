@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="content">
+    <p>
+        Interval between <span class="text-primary-emphasis fw-bold"
+                               th:text="${helper.formatDateTime(report.startTime)}"></span>,
+        and <span class="text-primary-emphasis fw-bold"
+                  th:text="${helper.formatDateTime(report.endTime)}"></span>
+        . Report generated at <span class="text-primary-emphasis fw-bold"
+                                    th:text="${helper.formatDateTime(helper.currentTime)}"></span>, timezone
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${helper.startupTime.zone}"></span>
+    </p>
+
+</div>
+
+<div th:fragment="code" th:remove="tag">
+</div>
+
+</body>
+</html>

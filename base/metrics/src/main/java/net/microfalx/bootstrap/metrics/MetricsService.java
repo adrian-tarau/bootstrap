@@ -29,8 +29,8 @@ public class MetricsService extends ApplicationContextSupport implements Initial
 
     private final Collection<Repository> repositories = new CopyOnWriteArrayList<>();
 
-    @Autowired(required = false)
-    private ResourceService resourceService;
+    // Do not remove, tt is wired because resource service setups the JVM paths
+    @Autowired(required = false) private ResourceService resourceService;
 
     /**
      * Returns registered repositories.

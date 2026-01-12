@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="content">
+
+    <div class="container-fluid">
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Operating System</div>
+            <div class="col-8"><span th:text="${environment.server.os.name}"></span><span class="ms-2" th:text="${environment.server.os.version}"></span></div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Hostname</div>
+            <div class="col-8"><span th:text="${environment.server.hostName}"></span></div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Java</div>
+            <div class="col-8"><span th:text="${environment.virtualMachine.name}"></span></div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Server</div>
+            <div class="col-8">
+                CPU: <span th:text="${helper.formatPercent(environment.getAverageServerCpu())}"></span>
+                (Cores: <span th:text="${environment.server.cores}"></span>, Load: <span th:text="${helper.formatNumber(environment.getAverageServerLoad15())}"/>)
+                , Memory: <span th:text="${helper.formatBytes(environment.getAverageServerMemory())}"/>
+            </div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Process</div>
+            <div class="col-8">
+                CPU: <span th:text="${helper.formatPercent(environment.getAverageProcessCpu())}"></span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div th:fragment="code" th:remove="tag">
+</div>
+
+</body>
+</html>

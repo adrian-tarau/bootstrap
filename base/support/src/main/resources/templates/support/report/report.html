@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/page :: header}"></head>
+<body>
+<div class="page">
+    <!-- Sidebar -->
+    <aside class="navbar navbar-vertical navbar-expand-sm" data-bs-theme="dark" style="width: 18rem">
+        <div class="container-fluid">
+            <h1 class="navbar-brand navbar-brand-autodark">
+                <i class="fa-solid fa-cube fs-8"></i>
+                <a th:href="${application.url}">
+                    <span class="me-0 px-3 fs-8" th:text="${application.name}" ></span>
+                </a>
+            </h1>
+            <div class="collapse navbar-collapse" id="sidebar-menu">
+                <ul class="navbar-nav pt-lg-3">
+                    <li class="nav-item" th:each="fragment : ${fragments}">
+                        <a class="nav-link" th:href="|#${fragment.id}|">
+				            <span class="nav-link-icon d-md-none d-lg-inline-block"><i th:class="${fragment.icon}"></i></span>
+                            <span class="nav-link-title" th:text="${fragment.name}"></span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+    <div class="page-wrapper" style="margin-left: 18rem">
+        <div class="page-body" data-bs-theme="dark">
+            <div class="container-fluid">
+                <div class="row row-deck row-cards">
+                    <div th:id="${fragment.id}" class="col-lg-12" th:each="fragment : ${fragments}">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3 class="card-title" th:text="${fragment.name}"></h3>
+                                <div th:utext="${fragment.content}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn btn-secondary btn-floating" id="btn-back-to-top"><i class="fas fa-arrow-up"></i></button>
+<div th:replace="~{fragments/page :: code}"></div>
+<div th:replace="~{fragments/chart :: code}"></div>
+<div th:replace="~{fragments/table :: code}"></div>
+<th:block th:each="fragmentTemplate : ${fragmentTemplates}">
+    <div th:replace="~{${fragmentTemplate} :: code}"></div>
+</th:block>
+</body>
+</html>

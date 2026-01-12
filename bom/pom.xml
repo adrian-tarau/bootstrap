@@ -46,6 +46,24 @@
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-base-metrics</artifactId>
+                <version>0.8.5-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-base-registry</artifactId>
+                <version>0.8.5-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-base-support</artifactId>
+                <version>0.8.5-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
                 <artifactId>bootstrap-data-broker</artifactId>
                 <version>${project.version}</version>
             </dependency>

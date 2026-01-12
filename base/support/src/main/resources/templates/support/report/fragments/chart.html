@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="code" th:remove="tag">
+    <script th:inline="javascript">
+
+        isNumber = function (value) {
+            return typeof value === 'number' && isFinite(value);
+        }
+
+        isDefined = function (value) {
+            return typeof value !== 'undefined';
+        }
+
+        formatMillis = function (value, units) {
+            if (!isDefined(units)) units = true;
+
+            // Pad to 2 or 3 digits, default is 2
+            function pad(n, z) {
+                z = z || 2;
+                return ('00' + n).slice(-z);
+            }
+
+            value = Math.abs(value);
+            let ms = value % 1000;
+            let msp = pad(ms, 3);
+            value = (value - ms) / 1000;
+            let secs = value % 60;
+            let secsp = pad(secs);
+            value = (value - secs) / 60;
+            let mins = value % 60;
+            let minsp = pad(mins);
+            let hrs = (value - mins) / 60;
+            let displayValue;
+            if (units) {
+                if (hrs === 0) {
+                    if (mins === 0) {
+                        if (secs === 0) {
+                            displayValue = ms + "ms";
+                        } else {
+                            displayValue = secs + 's ' + ms + "ms";
+                        }
+                    } else {
+                        displayValue = mins + 'm ' + secs + 's ' + ms + "ms";
+                    }
+                } else {
+                    displayValue = hrs + 'h ' + mins + 'm ' + secs + 's ' + msp + "ms";
+                }
+            } else {
+                if (hrs === 0) {
+                    if (mins === 0) {
+                        displayValue = secsp + '.' + msp;
+                    } else {
+                        displayValue = minsp + ':' + secsp + '.' + msp;
+                    }
+                } else {
+                    displayValue = pad(hrs) + ':' + minsp + ':' + secsp + '.' + msp;
+                }
+            }
+            return displayValue;
+        }
+
+        formatDuration = function (value) {
+            if (isNumber(value)) {
+                return formatMillis(value);
+            } else {
+                return value;
+            }
+        }
+
+        formatByte = function (value) {
+            let unit;
+            if (value < 10000000) {
+                value = value / 1000;
+                unit = "KB";
+            } else if (value < 10000000000) {
+                value = value / 1000000;
+                unit = "MB";
+            } else {
+                value = value / 1000000000;
+                unit = "GB";
+            }
+            return Number(value).toFixed(0) + " " + unit;
+        }
+
+        formatPercent = function (value) {
+            let precision = 2;
+            if (value > 100 || value < 0.01) {
+                precision = 0;
+            } else if (value > 5) {
+                precision = 1;
+            }
+            return Number(value).toFixed(precision) + " %";
+        }
+
+        formatValue = function (value, unit) {
+            if (unit === "COUNT") {
+                return value;
+            } else if (unit === "DURATION") {
+                return formatDuration(value);
+            } else if (unit === "BYTE") {
+                return formatByte(value);
+            } else if (unit === "PERCENT") {
+                return formatPercent(value);
+            }
+        }
+
+    </script>
+</div>
+
+<div th:fragment="pie(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            title: {
+                text: [[${chart.name}]],
+                align: 'left',
+                margin: 10
+            },
+            legend: {
+                show: [[${chart.legend.show}]]
+            },
+            series: [[${chart.getSeries()}]],
+            noData: {
+                text: "No data available",
+                align: 'center',
+                verticalAlign: 'middle',
+                style: {
+                    fontSize: '14px',
+                },
+            },
+            chart: {
+                type: 'pie',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                animations: {
+                    enabled: false
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
+                }
+            },
+            labels: [[${chart.getLabels()}]],
+        };
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
+<div th:fragment="bar(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            series: [{
+                name: [[${chart.getSeriesName()}]],
+                data: [[${chart.getSeries()}]]
+            }],
+            chart: {
+                type: 'bar',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                animations: {
+                    enabled: false
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
+                }
+            },
+            title: {
+                text: [[${chart.name}]],
+                align: 'left',
+                margin: 10
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    borderRadiusApplication: 'end',
+                    horizontal: true,
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            xaxis: {
+                categories: [[${chart.getLabels()}]]
+            }
+        };
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
+<div th:fragment="column(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            series: [{
+                name: [[${chart.getSeriesName()}]],
+                data: [[${chart.getSeries()}]]
+            }],
+            chart: {
+                type: 'bar',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                animations: {
+                    enabled: false
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    borderRadius: 5,
+                    borderRadiusApplication: 'end'
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: [[${chart.getLabels()}]]
+            },
+            fill: {
+                opacity: 1
+            },
+            title: {
+                text: [[${chart.name}]],
+                align: 'left',
+                margin: 10
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return val
+                    }
+                }
+            }
+        };
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
+<div th:fragment="area(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            series: [[${chart.getSeries()}]],
+            chart: {
+                type: 'area',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                stacked: [[${chart.stacked}]],
+                animations: {
+                    enabled: false
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'monotoneCubic'
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    opacityFrom: 0.6,
+                    opacityTo: 0.8,
+                }
+            },
+            title: {
+                text: [[${chart.name}]],
+                align: 'left',
+                margin: 10
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'left'
+            },
+            xaxis: {
+                type: [[${chart.getXDataType()}]]
+            },
+            yaxis: {
+                labels: {
+                    formatter: function(value) {
+                        return formatValue(value, [[${chart.yaxis.unit}]])
+                    }
+                }
+            },
+            tooltip: {
+                enabled: true,
+                followCursor: true,
+                onDatasetHover: {
+                    highlightDataSeries: true,
+                },
+                y: {
+                    formatter: function (value) {
+                        return formatValue(value, [[${chart.yaxis.unit}]])
+                    },
+                    title: {
+                        formatter: (seriesName) => seriesName,
+                    },
+                }
+            },
+        };
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
+<div th:fragment="treemap(chart)" th:remove="tag">
+    <script th:inline="javascript">
+        var id = [[${chart.id}]]
+        var options = {
+            series: [{
+                data: [[${chart.getData()}]],
+            }],
+            legend: {
+                show: [[${chart.legend.show}]]
+            },
+            title: {
+                text: [[${chart.name}]],
+                align: 'left',
+                margin: 10
+            },
+            noData: {
+                text: "No data available",
+                align: 'center',
+                verticalAlign: 'middle',
+                style: {
+                    fontSize: '14px',
+                },
+            },
+            tooltip: {
+                enabled: true,
+                followCursor: true,
+                onDatasetHover: {
+                    highlightDataSeries: true,
+                },
+                y: {
+                    formatter: function (value) {
+                        return formatValue(value, [[${chart.yaxis.unit}]])
+                    },
+                    title: {
+                        formatter: (seriesName) => seriesName,
+                    },
+                }
+            },
+            chart: {
+                type: 'treemap',
+                width: [[${chart.width}]],
+                height: [[${chart.height}]],
+                animations: {
+                    enabled: false
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false,
+                }
+            }
+        };
+
+        var chart = new ApexCharts(document.querySelector("#" + id), options);
+        chart.render();
+    </script>
+</div>
+
+<div th:fragment="render" th:remove="tag">
+    <div th:replace="~{fragments/chart :: utils}"></div>
+</div>
+</body>
+</html>
