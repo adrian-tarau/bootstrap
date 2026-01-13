@@ -15,6 +15,11 @@
     </div>
 </div>
 
+<h3 th:fragment="h3(text,count)" class="border-top mt-3 pt-2">
+        <span class="text-primary-emphasis fw-bold"
+              th:text="${#numbers.formatInteger(count,0)}"></span><span class="ms-2" th:text="${text}"></span>
+</h3>
+
 <div th:fragment="failures_details(failures)" class="bt-1">
     <table class="table">
         <thead class="table-light">

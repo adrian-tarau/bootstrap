@@ -48,6 +48,23 @@ public class ReportService implements InitializingBean {
         return Collections.unmodifiableCollection(providers);
     }
 
+    /**
+     * Returns a provider by its class.
+     *
+     * @param providerClass the provider class
+     * @return a non-null instance
+     */
+    @SuppressWarnings("unchecked")
+    public <P extends Fragment.Provider> P getProviderByClass(Class<P> providerClass) {
+        requireNonNull(providerClass);
+        for (Fragment.Provider provider : providers) {
+            if (provider.getClass().equals(providerClass)) {
+                return (P) provider;
+            }
+        }
+        throw new IllegalArgumentException("No provider found for class " + providerClass.getName());
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         loadProviders();

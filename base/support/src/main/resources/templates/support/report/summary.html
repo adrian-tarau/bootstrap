@@ -2,9 +2,46 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
+<div th:fragment="render-alerts-table" class="col-10">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Created At</th>
+            <th scope="col">Modified At</th>
+            <th scope="col">Level</th>
+            <th scope="col">Failure Type</th>
+            <th scope="col" class="text-center">Total Count</th>
+            <th scope="col" class="text-center">Pending Count</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="alert : ${alerts}">
+            <td><span th:text="${helper.formatDateTime(alert.createdAt)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(alert.modifiedAt)}"></span></td>
+            <td><span th:text="${alert.level.name}"></span></td>
+            <td><span th:text="${alert.failureType}"></span></td>
+            <td class="text-center"><span th:text="${helper.formatNumber(alert.totalEventCount)}"></span></td>
+            <td class="text-center"><span th:text="${helper.formatNumber(alert.pendingEventCount)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="render-alerts">
+    <div class="container-fluid">
+        <div class="row justify-content-start g-2">
+            <div th:replace="~{summary :: render-alerts-table}" ></div>
+            <div class="col-2">
+                <div id="summary_alerts_level_pie"></div>
+                <div id="summary_alerts_failure_type_pie"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div th:fragment="content">
     <p>
-        Interval between <span class="text-primary-emphasis fw-bold"
+        Report time <span class="text-primary-emphasis fw-bold"
                                th:text="${helper.formatDateTime(report.startTime)}"></span>,
         and <span class="text-primary-emphasis fw-bold"
                   th:text="${helper.formatDateTime(report.endTime)}"></span>
@@ -13,10 +50,16 @@
         <span class="text-primary-emphasis fw-bold"
               th:text="${helper.startupTime.zone}"></span>
     </p>
+    <th:block th:with="alerts=${logger.getAlerts()}">
+    <h3 th:replace="~{fragments/utils :: h3('Pending Alerts', ${alerts.size()})}"></h3>
+    <div th:replace="~{summary :: render-alerts}" ></div>
+    </th:block>
 
 </div>
 
 <div th:fragment="code" th:remove="tag">
+    <div th:replace="~{fragments/chart :: pie(${logger.getAlertLevelPieChart('summary_alerts_level_pie')})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${logger.getAlertFailureTypePieChart('summary_alerts_failure_type_pie')})}"></div>
 </div>
 
 </body>

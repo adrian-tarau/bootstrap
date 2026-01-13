@@ -18,8 +18,8 @@
         </thead>
         <tbody>
         <tr th:each="alert : ${alerts}">
-            <td><span th:text="${helper.formatDateTime(createdAt)}"></span></td>
-            <td><span th:text="${helper.formatDateTime(modifiedAt)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(alert.createdAt)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(alert.modifiedAt)}"></span></td>
             <td><span th:text="${alert.level.name}"></span></td>
             <td><span th:text="${alert.message}"></span></td>
             <td><span th:text="${alert.failureType}"></span></td>

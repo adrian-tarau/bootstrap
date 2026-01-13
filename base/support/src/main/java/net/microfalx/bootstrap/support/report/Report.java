@@ -5,10 +5,8 @@ import net.microfalx.resource.Resource;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Supplier;
 
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -26,6 +24,7 @@ public class Report {
     private ZonedDateTime endTime = ZonedDateTime.now();
     private boolean failOnError;
     private final List<Fragment> fragments = new ArrayList<>();
+    private Map<String, Object> attributes = new HashMap<>();
 
     private static final ThreadLocal<Report> CURRENT_REPORT = new ThreadLocal<>();
 
@@ -102,6 +101,21 @@ public class Report {
         requireNotEmpty(startTime);
         this.endTime = endTime;
         return this;
+    }
+
+    /**
+     * Returns a cached attribute.
+     *
+     * @param name                 the name of the attribute
+     * @param defaultValueSupplier the supplier for the default value
+     * @param <A>                  the type of the attribute
+     * @return the attribute value
+     */
+    @SuppressWarnings("unchecked")
+    public <A> A getAttribute(String name, Supplier<A> defaultValueSupplier) {
+        requireNotEmpty(name);
+        requireNonNull(defaultValueSupplier);
+        return (A) attributes.computeIfAbsent(name, s -> defaultValueSupplier.get());
     }
 
     /**
