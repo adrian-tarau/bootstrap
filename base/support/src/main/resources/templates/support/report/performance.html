@@ -37,19 +37,19 @@
 </div>
 
 <div th:fragment="code" th:remove="tag">
-    <div th:replace="~{fragments/chart :: area(${performance.getServerCpu('server_cpu')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getServerMemory('server_memory')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getServerLoad('server_load')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getServerKernel('server_kernel')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getServerIOCounts('server_io_counts')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getServerIOBytes('server_io_bytes')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getServerCpu('server_cpu')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getServerMemory('server_memory')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getServerLoad('server_load')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getServerKernel('server_kernel')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getServerIOCounts('server_io_counts')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getServerIOBytes('server_io_bytes')})}"></div>
 
-    <div th:replace="~{fragments/chart :: area(${performance.getProcessCpu('process_cpu')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getProcessMemory('process_memory')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getProcessThreads('process_threads')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getProcessIO('process_io')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getProcessGcCounts('process_gc_counts')})}"></div>
-    <div th:replace="~{fragments/chart :: area(${performance.getProcessGcDuration('process_gc_durations')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getProcessCpu('process_cpu')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getProcessMemory('process_memory')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getProcessThreads('process_threads')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getProcessIO('process_io')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getProcessGcCounts('process_gc_counts')})}"></div>
+    <div th:replace="~{fragments/chart :: area(${performanceHelper.getProcessGcDuration('process_gc_durations')})}"></div>
 
 </div>
 

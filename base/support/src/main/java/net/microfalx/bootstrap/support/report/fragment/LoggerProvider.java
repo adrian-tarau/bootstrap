@@ -23,7 +23,9 @@ public class LoggerProvider extends AbstractFragmentProvider {
     @Override
     public void update(Template template) {
         super.update(template);
-        template.addVariable("logger", this);
+        template.addVariable("loggerHelper", this);
+        template.addVariable("alerts", getAlerts());
+        template.addVariable("pendingAlerts", getPendingAlerts());
     }
 
     /**

@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="render-running-tasks-table" class="col-10">
+<div th:fragment="render-running-tasks-table">
     <table class="table table-hover datatable">
         <thead class="table-light">
         <tr>
@@ -22,7 +22,7 @@
             <td><span th:text="${runningTask.name}"></span></td>
             <td><span th:text="${helper.toLabel(runningTask.taskClass)}"></span></td>
             <td><span th:text="${helper.formatDuration(runningTask.duration)}"></span></td>
-            <td><<span th:replace="~{fragments/utils :: check(false)}"></span></td>
+            <td><span th:replace="~{fragments/utils :: check(false)}"></span></td>
             <td><span th:text="${runningTask.thread.state}"></span></td>
             <td><span th:text="${runningTask.thread.name}"></span></td>
             <td><span></span></td>
@@ -31,14 +31,99 @@
     </table>
 </div>
 
+<div th:fragment="render-completed-tasks-table">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Thread Pool</th>
+            <th scope="col">Name</th>
+            <th scope="col">Class Name</th>
+            <th scope="col">Started At</th>
+            <th scope="col">Duration</th>
+            <th scope="col">Exception Class</th>
+            <th scope="col">Stack Trace</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="completedTask : ${completedTasks}">
+            <td><span th:text="${completedTask.threadPool.name}"></span></td>
+            <td><span th:text="${completedTask.name}"></span></td>
+            <td><span th:text="${helper.toLabel(completedTask.taskClass)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(completedTask.startedAt)}"></span></td>
+            <td><span th:text="${helper.formatDuration(completedTask.duration)}"></span></td>
+            <td><span th:text="${taskHelper.getThrowableClassName(completedTask)}"></span></td>
+            <td><span th:text="${taskHelper.getThrowableClassName(completedTask)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="render-scheduled-tasks-table">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Thread Pool</th>
+            <th scope="col">Name</th>
+            <th scope="col">Class Name</th>
+            <th scope="col" class="text-center">Periodic</th>
+            <th scope="col">Strategy</th>
+            <th scope="col">Delay</th>
+            <th scope="col">Interval</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="scheduledTask : ${scheduledTasks}">
+            <td><span th:text="${scheduledTask.threadPool.name}"></span></td>
+            <td><span th:text="${scheduledTask.name}"></span></td>
+            <td><span th:text="${helper.toLabel(scheduledTask.taskClass)}"></span></td>
+            <td><<span th:replace="~{fragments/utils :: check(${scheduledTask.periodic})}"></span></td>
+            <th:block th:if="${scheduledTask.periodic}">
+                <td><span th:text="${helper.toLabel(scheduledTask.strategy)}"></span></td>
+                <td><span th:text="${helper.formatDuration(scheduledTask.initialDelay)}"></span></td>
+                <td><span th:text="${helper.formatDuration(scheduledTask.interval)}"></span></td>
+            </th:block>
+            <th:block th:unless="${scheduledTask.periodic}">
+                <td><span></span></td>
+                <td><span></span></td>
+                <td><span></span></td>
+            </th:block>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
 <div th:fragment="render-running-tasks">
     <div class="container-fluid">
-        <div class="row justify-content-start g-2">
+        <div class="row">
             <div th:replace="~{task :: render-running-tasks-table}"></div>
-            <div class="col-2">
-                <div id="task_running_level_pie"></div>
-                <div id="task_running_type_pie"></div>
-            </div>
+        </div>
+        <div class="row justify-content-start g-2">
+            <div id="task_running_level_pie"></div>
+            <div id="task_running_type_pie"></div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="render-completed-tasks">
+    <div class="container-fluid">
+        <div class="row">
+            <div th:replace="~{task :: render-completed-tasks-table}"></div>
+        </div>
+        <div class="row justify-content-start g-2">
+            <div id="task_completed_level_pie"></div>
+            <div id="task_completed_type_pie"></div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="render-scheduled-tasks">
+    <div class="container-fluid">
+        <div class="row">
+            <div th:replace="~{task :: render-scheduled-tasks-table}"></div>
+        </div>
+        <div class="row justify-content-start g-2">
+            <div id="task_scheduled_level_pie"></div>
+            <div id="task_scheduled_type_pie"></div>
         </div>
     </div>
 </div>
@@ -46,6 +131,10 @@
 <div th:fragment="content">
     <h3 th:replace="~{fragments/utils :: h3('Running Tasks', ${runningTasks.size()})}"></h3>
     <div th:replace="~{task :: render-running-tasks}"></div>
+    <h3 th:replace="~{fragments/utils :: h3('Completed Tasks', ${completedTasks.size()})}"></h3>
+    <div th:replace="~{task :: render-completed-tasks}"></div>
+    <h3 th:replace="~{fragments/utils :: h3('Scheduled Tasks', ${scheduledTasks.size()})}"></h3>
+    <div th:replace="~{task :: render-scheduled-tasks}"></div>
 </div>
 
 <div th:fragment="code" th:remove="tag">

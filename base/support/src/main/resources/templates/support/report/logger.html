@@ -31,7 +31,7 @@
     </table>
 </div>
 
-<div th:fragment="content" th:with="alerts=${logger.getAlerts()}">
+<div th:fragment="content">
     <h3 class="pt-2">Alerts</h3>
     <div th:replace="~{logger :: render-alerts}" th:unless="${alerts.isEmpty()}"></div>
     <p th:if="${alerts.isEmpty()}">

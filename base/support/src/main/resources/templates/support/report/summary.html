@@ -27,6 +27,29 @@
     </table>
 </div>
 
+<div th:fragment="render-failed-tasks-table">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Thread Pool</th>
+            <th scope="col">Name</th>
+            <th scope="col">Class Name</th>
+            <th scope="col">Exception Class</th>
+            <th scope="col">Count</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="failedTask : ${failedAggregatedTasks}">
+            <td><span th:text="${failedTask.threadPool.name}"></span></td>
+            <td><span th:text="${failedTask.name}"></span></td>
+            <td><span th:text="${helper.toLabel(failedTask.taskClass)}"></span></td>
+            <td><span th:text="${taskHelper.getThrowableClassName(failedTask)}"></span></td>
+            <td><span th:text="${helper.formatNumber(failedTask.count)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
 <div th:fragment="render-alerts">
     <div class="container-fluid">
         <div class="row justify-content-start g-2">
@@ -34,6 +57,18 @@
             <div class="col-2">
                 <div id="summary_alerts_level_pie"></div>
                 <div id="summary_alerts_failure_type_pie"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="render-failed-tasks">
+    <div class="container-fluid">
+        <div class="row justify-content-start g-2">
+            <div th:replace="~{summary :: render-failed-tasks-table}" ></div>
+            <div class="col-2">
+                <div id="summary_failed_tasks_name_pie"></div>
+                <div id="summary_failed_tasks_failure_type_pie"></div>
             </div>
         </div>
     </div>
@@ -48,16 +83,17 @@
                                     th:text="${helper.formatDateTime(helper.currentTime)}"></span>, timezone
         <span class="text-primary-emphasis fw-bold" th:text="${helper.startupTime.zone}"></span>
     </p>
-    <th:block th:with="alerts=${logger.getAlerts()}">
     <h3 th:replace="~{fragments/utils :: h3('Pending Alerts', ${alerts.size()})}"></h3>
     <div th:replace="~{summary :: render-alerts}" ></div>
-    </th:block>
-
+    <h3 th:replace="~{fragments/utils :: h3('Failed Tasks', ${failedAggregatedTasks.size()})}"></h3>
+    <div th:replace="~{summary :: render-failed-tasks}" ></div>
 </div>
 
 <div th:fragment="code" th:remove="tag">
-    <div th:replace="~{fragments/chart :: pie(${logger.getAlertLevelPieChart('summary_alerts_level_pie')})}"></div>
-    <div th:replace="~{fragments/chart :: pie(${logger.getAlertFailureTypePieChart('summary_alerts_failure_type_pie')})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${loggerHelper.getAlertLevelPieChart('summary_alerts_level_pie')})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${loggerHelper.getAlertFailureTypePieChart('summary_alerts_failure_type_pie')})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${taskHelper.getFailedTaskNamePieChart('summary_failed_tasks_name_pie', failedAggregatedTasks)})}"></div>
+    <div th:replace="~{fragments/chart :: pie(${taskHelper.getFailedTaskFailureTypePieChart('summary_failed_tasks_failure_type_pie', failedAggregatedTasks)})}"></div>
 </div>
 
 </body>

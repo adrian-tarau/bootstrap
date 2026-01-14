@@ -22,7 +22,7 @@ public class PerformanceProvider extends AbstractFragmentProvider {
     @Override
     public void update(Template template) {
         super.update(template);
-        template.addVariable("performance", this);
+        template.addVariable("performanceHelper", this);
     }
 
     public Chart.AreaChart<Long, Float> getServerCpu(String id) {
