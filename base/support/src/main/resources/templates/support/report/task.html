@@ -23,7 +23,7 @@
             <td><span th:text="${helper.toLabel(runningTask.taskClass)}"></span></td>
             <td><span th:text="${helper.formatDuration(runningTask.duration)}"></span></td>
             <td><span th:replace="~{fragments/utils :: check(false)}"></span></td>
-            <td><span th:text="${runningTask.thread.state}"></span></td>
+            <td><span th:text="${taskHelper.getThreadState(runningTask)}"></span></td>
             <td><span th:text="${runningTask.thread.name}"></span></td>
             <td><span></span></td>
         </tr>

@@ -83,10 +83,14 @@
                                     th:text="${helper.formatDateTime(helper.currentTime)}"></span>, timezone
         <span class="text-primary-emphasis fw-bold" th:text="${helper.startupTime.zone}"></span>
     </p>
-    <h3 th:replace="~{fragments/utils :: h3('Pending Alerts', ${alerts.size()})}"></h3>
-    <div th:replace="~{summary :: render-alerts}" ></div>
-    <h3 th:replace="~{fragments/utils :: h3('Failed Tasks', ${failedAggregatedTasks.size()})}"></h3>
-    <div th:replace="~{summary :: render-failed-tasks}" ></div>
+    <th:block th:if="${alerts.size()}">
+        <h3 th:replace="~{fragments/utils :: h3('Pending Alerts', ${alerts.size()})}"></h3>
+        <div th:replace="~{summary :: render-alerts}" ></div>
+    </th:block>
+    <th:block th:if="${failedAggregatedTasks.size()}">
+        <h3 th:replace="~{fragments/utils :: h3('Failed Tasks', ${failedAggregatedTasks.size()})}"></h3>
+        <div th:replace="~{summary :: render-failed-tasks}" ></div>
+    </th:block>
 </div>
 
 <div th:fragment="code" th:remove="tag">

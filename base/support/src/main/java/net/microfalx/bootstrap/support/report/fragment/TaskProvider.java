@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.support.report.fragment;
 import net.microfalx.bootstrap.support.report.*;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Provider;
 import net.microfalx.threadpool.Task;
 import net.microfalx.threadpool.TaskDescriptor;
@@ -64,6 +65,11 @@ public class TaskProvider extends AbstractFragmentProvider {
         trendHelper.aggregateInt(failedTasks, FailedTasksAggregated::getFailureType, FailedTasksAggregated::getCount)
                 .forEach(chart::add);
         return chart;
+    }
+
+    public String getThreadState(TaskDescriptor descriptor) {
+        Thread thread = descriptor.getThread();
+        return thread != null ? thread.getState().name() : StringUtils.NA_STRING;
     }
 
     public String getThrowableClassName(TaskDescriptor descriptor) {

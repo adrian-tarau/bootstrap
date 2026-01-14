@@ -146,8 +146,11 @@
             },
             labels: [[${chart.getLabels()}]],
         };
-        var chart = new ApexCharts(document.querySelector("#" + id), options);
-        chart.render();
+        var dom = document.querySelector("#" + id);
+        if (dom) {
+            var chart = new ApexCharts(dom, options);
+            chart.render();
+        }
     </script>
 </div>
 
@@ -192,8 +195,11 @@
                 categories: [[${chart.getLabels()}]]
             }
         };
-        var chart = new ApexCharts(document.querySelector("#" + id), options);
-        chart.render();
+        var dom = document.querySelector("#" + id);
+        if (dom) {
+            var chart = new ApexCharts(dom, options);
+            chart.render();
+        }
     </script>
 </div>
 
@@ -254,8 +260,11 @@
                 }
             }
         };
-        var chart = new ApexCharts(document.querySelector("#" + id), options);
-        chart.render();
+        var dom = document.querySelector("#" + id);
+        if (dom) {
+            var chart = new ApexCharts(dom, options);
+            chart.render();
+        }
     </script>
 </div>
 
@@ -327,8 +336,11 @@
                 }
             },
         };
-        var chart = new ApexCharts(document.querySelector("#" + id), options);
-        chart.render();
+        var dom = document.querySelector("#" + id);
+        if (dom) {
+            var chart = new ApexCharts(dom, options);
+            chart.render();
+        }
     </script>
 </div>
 
@@ -385,9 +397,11 @@
                 }
             }
         };
-
-        var chart = new ApexCharts(document.querySelector("#" + id), options);
-        chart.render();
+        var dom = document.querySelector("#" + id);
+        if (dom) {
+            var chart = new ApexCharts(dom, options);
+            chart.render();
+        }
     </script>
 </div>
 
