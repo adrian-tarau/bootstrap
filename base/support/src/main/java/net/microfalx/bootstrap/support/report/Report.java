@@ -4,6 +4,7 @@ import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.resource.Resource;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.function.Supplier;
@@ -101,6 +102,15 @@ public class Report {
         requireNotEmpty(startTime);
         this.endTime = endTime;
         return this;
+    }
+
+    /**
+     * Returns the report time interval.
+     *
+     * @return a non-null instance
+     */
+    public Duration getInterval() {
+        return Duration.between(startTime, endTime);
     }
 
     /**

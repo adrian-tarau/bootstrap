@@ -9,7 +9,7 @@
             <th scope="col">Created At</th>
             <th scope="col">Modified At</th>
             <th scope="col">Level</th>
-            <th scope="col">Message</th>
+            <th scope="col" width="50%">Message</th>
             <th scope="col">Failure Type</th>
             <th scope="col">Acknowledged</th>
             <th scope="col" class="text-center">Total Count</th>
@@ -20,7 +20,7 @@
         <tr th:each="alert : ${alerts}">
             <td><span th:text="${helper.formatDateTime(alert.createdAt)}"></span></td>
             <td><span th:text="${helper.formatDateTime(alert.modifiedAt)}"></span></td>
-            <td><span th:text="${alert.level.name}"></span></td>
+            <td><span th:text="${helper.toLabel(alert.level)}"></span></td>
             <td><span th:text="${alert.message}"></span></td>
             <td><span th:text="${alert.failureType}"></span></td>
             <td><<span th:replace="~{fragments/utils :: check(${alert.acknowledged})}"></span></td>

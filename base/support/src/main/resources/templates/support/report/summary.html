@@ -18,7 +18,7 @@
         <tr th:each="alert : ${alerts}">
             <td><span th:text="${helper.formatDateTime(alert.createdAt)}"></span></td>
             <td><span th:text="${helper.formatDateTime(alert.modifiedAt)}"></span></td>
-            <td><span th:text="${alert.level.name}"></span></td>
+            <td><span th:text="${helper.toLabel(alert.level)}"></span></td>
             <td><span th:text="${alert.failureType}"></span></td>
             <td class="text-center"><span th:text="${helper.formatNumber(alert.totalEventCount)}"></span></td>
             <td class="text-center"><span th:text="${helper.formatNumber(alert.pendingEventCount)}"></span></td>
@@ -41,14 +41,12 @@
 
 <div th:fragment="content">
     <p>
-        Report time <span class="text-primary-emphasis fw-bold"
-                               th:text="${helper.formatDateTime(report.startTime)}"></span>,
-        and <span class="text-primary-emphasis fw-bold"
-                  th:text="${helper.formatDateTime(report.endTime)}"></span>
-        . Report generated at <span class="text-primary-emphasis fw-bold"
+        Report time range: <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDuration(report.interval)}"></span>
+        (<span class="text-primary-emphasis fw-bold"  th:text="${helper.formatDateTime(report.startTime)}"></span>
+        and <span class="text-primary-emphasis fw-bold"  th:text="${helper.formatDateTime(report.endTime)}"></span>).
+        Report generated at <span class="text-primary-emphasis fw-bold"
                                     th:text="${helper.formatDateTime(helper.currentTime)}"></span>, timezone
-        <span class="text-primary-emphasis fw-bold"
-              th:text="${helper.startupTime.zone}"></span>
+        <span class="text-primary-emphasis fw-bold" th:text="${helper.startupTime.zone}"></span>
     </p>
     <th:block th:with="alerts=${logger.getAlerts()}">
     <h3 th:replace="~{fragments/utils :: h3('Pending Alerts', ${alerts.size()})}"></h3>

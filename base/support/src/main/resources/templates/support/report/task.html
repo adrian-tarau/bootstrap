@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="render-running-tasks-table" class="col-10">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Thread Pool</th>
+            <th scope="col">Name</th>
+            <th scope="col">Class Name</th>
+            <th scope="col">Duration</th>
+            <th scope="col" class="text-center">Virtual</th>
+            <th scope="col">State</th>
+            <th scope="col">Thread Name</th>
+            <th scope="col">Executing</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="runningTask : ${runningTasks}">
+            <td><span th:text="${runningTask.threadPool.name}"></span></td>
+            <td><span th:text="${runningTask.name}"></span></td>
+            <td><span th:text="${helper.toLabel(runningTask.taskClass)}"></span></td>
+            <td><span th:text="${helper.formatDuration(runningTask.duration)}"></span></td>
+            <td><<span th:replace="~{fragments/utils :: check(false)}"></span></td>
+            <td><span th:text="${runningTask.thread.state}"></span></td>
+            <td><span th:text="${runningTask.thread.name}"></span></td>
+            <td><span></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="render-running-tasks">
+    <div class="container-fluid">
+        <div class="row justify-content-start g-2">
+            <div th:replace="~{task :: render-running-tasks-table}"></div>
+            <div class="col-2">
+                <div id="task_running_level_pie"></div>
+                <div id="task_running_type_pie"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="content">
+    <h3 th:replace="~{fragments/utils :: h3('Running Tasks', ${runningTasks.size()})}"></h3>
+    <div th:replace="~{task :: render-running-tasks}"></div>
+</div>
+
+<div th:fragment="code" th:remove="tag">
+</div>
+
+</body>
+</html>

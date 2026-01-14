@@ -1,8 +1,6 @@
 package net.microfalx.bootstrap.support.report;
 
-import net.microfalx.lang.FormatterUtils;
-import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -59,6 +57,17 @@ public class ReportHelper {
     public String toDisplay(Object value) {
         String text = toString(value);
         return StringUtils.isEmpty(text) ? "-" : text;
+    }
+
+    @SuppressWarnings("unchecked")
+    public String toLabel(Object value) {
+        if (value instanceof Enum) {
+            return EnumUtils.toLabel((Enum) value);
+        } else if (value instanceof Class<?> clazz) {
+            return ClassUtils.getCompactName(clazz);
+        } else {
+            return toDisplay(value);
+        }
     }
 
     public String toHtmlId(Object value) {

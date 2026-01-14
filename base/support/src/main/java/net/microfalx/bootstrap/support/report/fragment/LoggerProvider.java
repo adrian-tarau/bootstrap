@@ -10,6 +10,7 @@ import java.util.Collection;
 public class LoggerProvider extends AbstractFragmentProvider {
 
     private final TrendHelper trendHelper = new TrendHelper();
+    private final ReportHelper reportHelper = new ReportHelper();
 
     @Override
     public Fragment create() {
@@ -48,8 +49,8 @@ public class LoggerProvider extends AbstractFragmentProvider {
     public Chart.PieChart<Integer> getAlertLevelPieChart(String id) {
         Chart.PieChart<Integer> chart = new Chart.PieChart<>(id, "Levels");
         chart.getLegend().setShow(false);
-        trendHelper.aggregateInt(getPendingAlerts(), e -> e.getLevel().name(), AlertEvent::getPendingEventCount)
-                .forEach(chart::add);
+        trendHelper.aggregateInt(getPendingAlerts(), e -> reportHelper.toLabel(e.getLevel()),
+                AlertEvent::getPendingEventCount).forEach(chart::add);
         return chart;
     }
 
