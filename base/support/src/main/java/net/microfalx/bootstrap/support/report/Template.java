@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.support.report;
 
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.Nameable;
 import net.microfalx.resource.Resource;
 import org.thymeleaf.TemplateEngine;
@@ -20,6 +21,7 @@ import static net.microfalx.lang.StringUtils.isEmpty;
 /**
  * Renders a Thymeleaf templates.
  */
+@Slf4j
 public class Template implements Nameable {
 
     private final TemplateEngine templateEngine;
@@ -59,7 +61,10 @@ public class Template implements Nameable {
      */
     public Template addVariable(String name, Object value) {
         requireNonNull(name);
-        variables.put(name, value);
+        Object previous = variables.put(name, value);
+        if (previous != null) {
+            LOGGER.warn("Overriding existing template variable '{}' ({} -> {})", name, previous, value);
+        }
         return this;
     }
 

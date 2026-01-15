@@ -6,11 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.support.SupportProperties;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.TimeUtils;
+import net.microfalx.resource.Resource;
+import net.microfalx.threadpool.CronTrigger;
 import net.microfalx.threadpool.ThreadPool;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.cache.StandardCacheManager;
@@ -19,13 +23,18 @@ import org.thymeleaf.standard.StandardDialect;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.currentTimeMillis;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.split;
 
 @Service
 @Slf4j
@@ -36,6 +45,7 @@ public class ReportService implements InitializingBean {
     @Autowired private ApplicationContext applicationContext;
 
     private final Collection<Fragment.Provider> providers = new CopyOnWriteArrayList<>();
+    private final Collection<ReportingListener> listeners = new CopyOnWriteArrayList<>();
     private volatile TemplateEngine templateEngine;
     private volatile long lastRenderingTime = TimeUtils.oneHourAgo();
 
@@ -65,10 +75,43 @@ public class ReportService implements InitializingBean {
         throw new IllegalArgumentException("No provider found for class " + providerClass.getName());
     }
 
+    /**
+     * Sends a report about the system, using the given duration as the report time interval.
+     *
+     * @param interval the reporting interval
+     */
+    public void send(Duration interval) {
+        requireNonNull(interval);
+        Report report = createReport();
+        report.setEndTime(ZonedDateTime.now());
+        report.setStartTime(report.getEndTime().minus(interval));
+        report.setName("System Report - " + getSystemName());
+        Resource fullReport = Resource.temporary("report_full", ".html");
+        try {
+            report.render(fullReport);
+        } catch (Exception e) {
+            throw new ReportException("Failed to render the report for interval " + interval, e);
+        }
+        try {
+            send(report, fullReport, fullReport);
+        } catch (Exception e) {
+            throw new ReportException("Failed to send the report for interval " + interval, e);
+        }
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         loadProviders();
+        loadListeners();
         initVariables();
+        initTasks();
+    }
+
+    @EventListener
+    public void onApplicationEvent(ApplicationStartedEvent event) {
+        if (properties.isReportOnBoot()) {
+            threadPool.execute(new SendReportTask(Duration.ofHours(1)));
+        }
     }
 
     /**
@@ -112,11 +155,43 @@ public class ReportService implements InitializingBean {
             }
             providers.add(loadedProvider);
         }
-        LOGGER.info("Loaded {} report providers", loadedProviders.size());
+        LOGGER.info("Loaded {} report providers", providers.size());
+    }
+
+    private void loadListeners() {
+        LOGGER.debug("Loading reporting listeners");
+        Collection<ReportingListener> loadedListeners = ClassUtils.resolveProviderInstances(ReportingListener.class);
+        loadedListeners.addAll(applicationContext.getBeansOfType(ReportingListener.class).values());
+        for (ReportingListener loadedProvider : loadedListeners) {
+            LOGGER.debug(" - {}", ClassUtils.getName(loadedProvider));
+            if (loadedProvider instanceof ApplicationContextAware applicationContextAware) {
+                applicationContextAware.setApplicationContext(applicationContext);
+            }
+            listeners.add(loadedProvider);
+        }
+        LOGGER.info("Loaded {} reporting listeners", listeners.size());
+    }
+
+    private void send(Report report, Resource summary, Resource fullReport) {
+        Set<String> destinations = new HashSet<>(Arrays.asList(split(properties.getReportRecipients(), ",")));
+        if (destinations.isEmpty()) {
+            LOGGER.info("No report destinations configured, ask services");
+            for (ReportingListener listener : listeners) {
+                destinations.addAll(listener.getDestinations());
+            }
+        }
+        for (ReportingListener listener : listeners) {
+            listener.send(destinations, report.getName(), summary, Optional.of(fullReport));
+        }
+        LOGGER.info("Report sent to: {}", destinations);
     }
 
     private void initVariables() {
         LOGGER.info("Startup time: {} ", new ReportHelper().getStartupTime());
+    }
+
+    private void initTasks() {
+        threadPool.schedule(new SendReportTask(Duration.ofHours(24)), new CronTrigger(properties.getReportSchedule()));
     }
 
     private synchronized void initEngine() {
@@ -142,8 +217,37 @@ public class ReportService implements InitializingBean {
     private void updateTemplate(Template template) {
         template.addVariable("application", new Application());
         template.addVariable("helper", new ReportHelper());
+        for (ReportingListener listener : listeners) {
+            listener.update(template);
+        }
         for (Fragment.Provider provider : providers) {
             provider.update(template);
+        }
+    }
+
+    private String getSystemName() {
+        String systemName = properties.getReportSystemName();
+        if (isEmpty(systemName)) {
+            try {
+                systemName = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                systemName = "Local";
+            }
+        }
+        return systemName;
+    }
+
+    private class SendReportTask implements Runnable {
+
+        private final Duration interval;
+
+        public SendReportTask(Duration interval) {
+            this.interval = interval;
+        }
+
+        @Override
+        public void run() {
+            send(interval);
         }
     }
 

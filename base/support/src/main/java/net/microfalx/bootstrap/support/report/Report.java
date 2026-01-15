@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.support.report;
 
-import net.microfalx.lang.ArgumentUtils;
+import net.microfalx.lang.Nameable;
 import net.microfalx.resource.Resource;
 
 import java.io.IOException;
@@ -17,15 +17,16 @@ import static net.microfalx.lang.ExceptionUtils.rethrowException;
 /**
  * Holds the system report.
  */
-public class Report {
+public class Report implements Nameable {
 
     private final ReportService reportService;
 
+    private String name = "System Report";
     private ZonedDateTime startTime = ZonedDateTime.now().minusHours(24);
     private ZonedDateTime endTime = ZonedDateTime.now();
     private boolean failOnError;
     private final List<Fragment> fragments = new ArrayList<>();
-    private Map<String, Object> attributes = new HashMap<>();
+    private final Map<String, Object> attributes = new HashMap<>();
 
     private static final ThreadLocal<Report> CURRENT_REPORT = new ThreadLocal<>();
 
@@ -39,8 +40,25 @@ public class Report {
     }
 
     Report(ReportService reportService) {
-        ArgumentUtils.requireNonNull(reportService);
+        requireNonNull(reportService);
         this.reportService = reportService;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Changes the name of the report
+     *
+     * @param name the new name
+     * @return self
+     */
+    public Report setName(String name) {
+        requireNonNull(name);
+        this.name = name;
+        return this;
     }
 
     /**

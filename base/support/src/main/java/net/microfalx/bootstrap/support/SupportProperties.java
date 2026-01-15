@@ -19,6 +19,11 @@ public class SupportProperties {
     private boolean reportEnabled = true;
 
     /**
+     * Indicates whether the system report should be generated on boot.
+     */
+    private boolean reportOnBoot = true;
+
+    /**
      * The report schedule in CRON format.
      */
     private String reportSchedule = "0 0 0 * * ?";
@@ -29,4 +34,11 @@ public class SupportProperties {
      * If the list is empty, the report will be sent to all admins.
      */
     private String reportRecipients = "";
+
+    /**
+     * A name of the reporting system.
+     * <p>
+     * If the list is empty, the hostname will be used.
+     */
+    private String reportSystemName = "";
 }
