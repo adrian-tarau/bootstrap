@@ -25,6 +25,9 @@ public class Report implements Nameable {
     private ZonedDateTime startTime = ZonedDateTime.now().minusHours(24);
     private ZonedDateTime endTime = ZonedDateTime.now();
     private boolean failOnError;
+    private boolean offline = true;
+    private boolean dynamic = true;
+    private String fragment;
     private final List<Fragment> fragments = new ArrayList<>();
     private final Map<String, Object> attributes = new HashMap<>();
 
@@ -132,6 +135,80 @@ public class Report implements Nameable {
     }
 
     /**
+     * Returns whether the report is generated, and it should be viewed offline (outside the application).
+     * <p>
+     * This does not mean that the report does not need internet access, just that it should be self-contained.
+     * <p>
+     * By default, reports are offline.
+     *
+     * @return {@code true} if the report is offline, {@code false} otherwise
+     */
+    public boolean isOffline() {
+        return offline;
+    }
+
+    /**
+     * Changes the offline status of the report.
+     *
+     * @param offline @code true} to generate an offline report, {@code false} otherwise
+     */
+    public Report setOffline(boolean offline) {
+        this.offline = offline;
+        return this;
+    }
+
+    /**
+     * Returns whether the report has dynamic content (charts, etc), which requires code execution
+     * to be available (JavaScript).
+     *
+     * @return {@code true} if the report is dynamic, {@code false} otherwise
+     */
+    public boolean isDynamic() {
+        return dynamic;
+    }
+
+    /**
+     * Changes whether the report has dynamic content (charts, etc), which requires code execution
+     * to be available (JavaScript).
+     *
+     * @param dynamic {@code true} to generate a dynamic report, {@code false} otherwise
+     * @return self
+     */
+    public Report setDynamic(boolean dynamic) {
+        this.dynamic = dynamic;
+        return this;
+    }
+
+    /**
+     * Returns the fragment identifier to be rendered instead of rendering all fragments.
+     *
+     * @return the fragment identifier, null to render all fragments
+     */
+    public Optional<String> getFragment() {
+        return Optional.ofNullable(fragment);
+    }
+
+    /**
+     * Sets the fragment identifier to be rendered instead of rendering all fragments.
+     *
+     * @param fragment the fragment identifier, null to render all fragments
+     * @return self
+     */
+    public Report setFragment(String fragment) {
+        this.fragment = fragment;
+        return this;
+    }
+
+    /**
+     * Returns whether the report has navigation (multiple fragments).
+     *
+     * @return {@code true} if the report has navigation, {@code false} otherwise
+     */
+    public boolean hasNavigation() {
+        return this.fragment == null;
+    }
+
+    /**
      * Returns a cached attribute.
      *
      * @param name                 the name of the attribute
@@ -144,6 +221,17 @@ public class Report implements Nameable {
         requireNotEmpty(name);
         requireNonNull(defaultValueSupplier);
         return (A) attributes.computeIfAbsent(name, s -> defaultValueSupplier.get());
+    }
+
+    /**
+     * Sets an attribute.
+     *
+     * @param name  the name of the attribute
+     * @param value the value of the attribute
+     */
+    public void setAttribute(String name, Object value) {
+        requireNotEmpty(name);
+        attributes.put(name, value);
     }
 
     /**
@@ -190,6 +278,7 @@ public class Report implements Nameable {
     private void buildFragments() {
         for (Fragment fragment : fragments) {
             if (!fragment.isVisible()) continue;
+            if (this.fragment != null && !this.fragment.equals(fragment.getId())) continue;
             Resource temporary = Resource.temporary("support_report_" + fragment.getId() + "_", ".html");
             try {
                 fragment.render(this, temporary);

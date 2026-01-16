@@ -86,14 +86,21 @@ public class ReportService implements InitializingBean {
         report.setEndTime(ZonedDateTime.now());
         report.setStartTime(report.getEndTime().minus(interval));
         report.setName("System Report - " + getSystemName());
-        Resource fullReport = Resource.temporary("report_full", ".html");
+        Resource fullReport = Resource.temporary("report_full_", ".html");
         try {
             report.render(fullReport);
         } catch (Exception e) {
             throw new ReportException("Failed to render the report for interval " + interval, e);
         }
+        report.setDynamic(false).setFragment("summary");
+        Resource summaryReport = Resource.temporary("report_summary_", ".html");
         try {
-            send(report, fullReport, fullReport);
+            report.render(summaryReport);
+        } catch (Exception e) {
+            throw new ReportException("Failed to render the report for interval " + interval, e);
+        }
+        try {
+            send(report, summaryReport, fullReport);
         } catch (Exception e) {
             throw new ReportException("Failed to send the report for interval " + interval, e);
         }

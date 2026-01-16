@@ -126,11 +126,21 @@ public class Fragment implements Identifiable<String>, Nameable {
     }
 
     /**
+     * Returns whether if the fragment has been rendered successfully.
+     *
+     * @return {@code true} if rendered, {@code false} otherwise
+     */
+    public boolean isRendered() {
+        return resource != null && throwable == null;
+    }
+
+    /**
      * Returns the content of the fragment.
      *
      * @return a non-null instance
      */
     public String getContent() {
+        if (resource == null) return StringUtils.EMPTY_STRING;
         try {
             return resource.loadAsString();
         } catch (IOException e) {
