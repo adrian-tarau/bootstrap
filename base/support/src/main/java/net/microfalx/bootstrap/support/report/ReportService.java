@@ -3,9 +3,10 @@ package net.microfalx.bootstrap.support.report;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import net.lingala.zip4j.io.outputstream.ZipOutputStream;
+import net.lingala.zip4j.model.ZipParameters;
 import net.microfalx.bootstrap.support.SupportProperties;
-import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.TimeUtils;
+import net.microfalx.lang.*;
 import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.CronTrigger;
 import net.microfalx.threadpool.ThreadPool;
@@ -23,16 +24,26 @@ import org.thymeleaf.standard.StandardDialect;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.currentTimeMillis;
+import static java.time.Duration.ofHours;
+import static net.lingala.zip4j.model.enums.CompressionLevel.MAXIMUM;
+import static net.lingala.zip4j.model.enums.CompressionMethod.DEFLATE;
+import static net.lingala.zip4j.model.enums.EncryptionMethod.ZIP_STANDARD;
+import static net.microfalx.bootstrap.support.report.Template.APPLICATION_VARIABLE;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.IOUtils.getBufferedOutputStream;
 import static net.microfalx.lang.StringUtils.isEmpty;
 import static net.microfalx.lang.StringUtils.split;
 
@@ -86,9 +97,10 @@ public class ReportService implements InitializingBean {
         report.setEndTime(ZonedDateTime.now());
         report.setStartTime(report.getEndTime().minus(interval));
         report.setName("System Report - " + getSystemName());
-        Resource fullReport = Resource.temporary("report_full_", ".html");
+        Resource fullReport = Resource.temporary("report_", ".html");
         try {
             report.render(fullReport);
+            fullReport = encryptReport(fullReport);
         } catch (Exception e) {
             throw new ReportException("Failed to render the report for interval " + interval, e);
         }
@@ -117,7 +129,7 @@ public class ReportService implements InitializingBean {
     @EventListener
     public void onApplicationEvent(ApplicationStartedEvent event) {
         if (properties.isReportOnBoot()) {
-            threadPool.execute(new SendReportTask(Duration.ofHours(1)));
+            threadPool.execute(new SendReportTask(ofHours(1)));
         }
     }
 
@@ -142,7 +154,7 @@ public class ReportService implements InitializingBean {
      */
     public Report createReport() {
         initEngine();
-        LOGGER.info("Create report, providers loaded: {}", providers.size());
+        LOGGER.debug("Create report, providers loaded: {}", providers.size());
         Report report = new Report(this);
         for (Fragment.Provider provider : providers) {
             Fragment fragment = provider.create();
@@ -195,10 +207,14 @@ public class ReportService implements InitializingBean {
 
     private void initVariables() {
         LOGGER.info("Startup time: {} ", new ReportHelper().getStartupTime());
+        if (properties.isReportEnabled()) {
+            LOGGER.info("Support report scheduled at '{}', recipients: '{}'",
+                    properties.getReportSchedule(), properties.getReportRecipients());
+        }
     }
 
     private void initTasks() {
-        threadPool.schedule(new SendReportTask(Duration.ofHours(24)), new CronTrigger(properties.getReportSchedule()));
+        threadPool.schedule(new SendReportTask(ofHours(24)), new CronTrigger(properties.getReportSchedule()));
     }
 
     private synchronized void initEngine() {
@@ -222,13 +238,15 @@ public class ReportService implements InitializingBean {
     }
 
     private void updateTemplate(Template template) {
-        template.addVariable("application", new Application());
         template.addVariable("helper", new ReportHelper());
         for (ReportingListener listener : listeners) {
             listener.update(template);
         }
         for (Fragment.Provider provider : providers) {
             provider.update(template);
+        }
+        if (!template.hasVariable(APPLICATION_VARIABLE)) {
+            template.addVariable(APPLICATION_VARIABLE, new Application());
         }
     }
 
@@ -242,6 +260,33 @@ public class ReportService implements InitializingBean {
             }
         }
         return systemName;
+    }
+
+    private Resource encryptReport(Resource report) throws IOException {
+        if (StringUtils.isEmpty(properties.getReportPassword())) return report;
+        String systemName = StringUtils.toIdentifier(properties.getReportSystemName());
+        String reportPrefix = "support_report_" + systemName;
+        File reportZip = new File(JvmUtils.getTemporaryDirectory(), getFileName(reportPrefix, "zip"));
+        try (ZipOutputStream outputZipStream = new ZipOutputStream(getBufferedOutputStream(reportZip),
+                properties.getReportPassword().toCharArray())) {
+            //init the zip parameters
+            ZipParameters zipParams = new ZipParameters();
+            zipParams.setCompressionMethod(DEFLATE);
+            zipParams.setCompressionLevel(MAXIMUM);
+            zipParams.setEncryptFiles(true);
+            zipParams.setEncryptionMethod(ZIP_STANDARD);
+            zipParams.setFileNameInZip(getFileName(reportPrefix, "html"));
+            //create zip entry
+            outputZipStream.putNextEntry(zipParams);
+            IOUtils.appendStream(outputZipStream, report.getInputStream(), false);
+            outputZipStream.closeEntry();
+        }
+        return Resource.file(reportZip);
+    }
+
+    private String getFileName(String prefix, String extension) {
+        String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now());
+        return prefix + "_" + timestamp + "." + extension;
     }
 
     private class SendReportTask implements Runnable {

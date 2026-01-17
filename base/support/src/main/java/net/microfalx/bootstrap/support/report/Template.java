@@ -24,6 +24,8 @@ import static net.microfalx.lang.StringUtils.isEmpty;
 @Slf4j
 public class Template implements Nameable {
 
+    public static final String APPLICATION_VARIABLE = "application";
+
     private final TemplateEngine templateEngine;
     private final String name;
     private final Map<String, Object> variables = new HashMap<>();
@@ -62,10 +64,21 @@ public class Template implements Nameable {
     public Template addVariable(String name, Object value) {
         requireNonNull(name);
         Object previous = variables.put(name, value);
-        if (previous != null) {
+        if (previous != null && !previous.equals(value)) {
             LOGGER.warn("Overriding existing template variable '{}' ({} -> {})", name, previous, value);
         }
         return this;
+    }
+
+    /**
+     * Returns whether a variable with the given name exists.
+     *
+     * @param name the name of the variable
+     * @return {@code true} if the variable exists, {@code false} otherwise
+     */
+    public boolean hasVariable(String name) {
+        requireNonNull(name);
+        return variables.containsKey(name);
     }
 
     /**

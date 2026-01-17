@@ -87,45 +87,6 @@ public class Fragment implements Identifiable<String>, Nameable {
     }
 
     /**
-     * Returns the icon associated with the fragment.
-     *
-     * @return a non-null string
-     */
-    public String getIcon1() {
-        return icon;
-        /*switch (type) {
-            case SUMMARY:
-                return "fa-solid fa-list-check";
-            case ARTIFACTS:
-                return "fa-solid fa-circle-nodes";
-            case DEPENDENCIES:
-                return "fa-solid fa-hexagon-nodes";
-            case ENVIRONMENT:
-                return "fa-solid fa-gauge";
-            case LOGS:
-                return "fa-regular fa-file-lines";
-            case FAILURE:
-                return "fa-solid fa-triangle-exclamation";
-            case PERFORMANCE:
-                return "fa-solid fa-flag-checkered";
-            case PLUGINS:
-                return "fa-solid fa-plug";
-            case PROJECT:
-                return "fa-solid fa-diagram-project";
-            case TESTS:
-                return "fa-solid fa-clipboard-check";
-            case CODE_COVERAGE:
-                return "fa-solid fa-shoe-prints";
-            case EXTENSIONS:
-                return "fa-solid fa-plug-circle-bolt";
-            case TRENDS:
-                return "fa-solid fa-arrow-trend-up";
-            default:
-                return "fa-solid fa-notdef";
-        }*/
-    }
-
-    /**
      * Returns whether if the fragment has been rendered successfully.
      *
      * @return {@code true} if rendered, {@code false} otherwise
@@ -147,6 +108,20 @@ public class Fragment implements Identifiable<String>, Nameable {
             return "<div class=\"alert alert-primary\" role=\"alert\">\n" +
                     "Failed to load rendered fragment " + getName() + ", root cause: " + ExceptionUtils.getRootCauseMessage(e) +
                     "    </div>";
+        }
+    }
+
+    /**
+     * Cleanups resources used by the fragment.
+     */
+    public void cleanup() {
+        try {
+            if (resource != null) resource.delete();
+        } catch (Exception e) {
+            // not important
+        } finally {
+            resource = null;
+            throwable = null;
         }
     }
 

@@ -72,6 +72,11 @@ public class TaskProvider extends AbstractFragmentProvider {
         return thread != null ? thread.getState().name() : StringUtils.NA_STRING;
     }
 
+    public String getThreadName(TaskDescriptor descriptor) {
+        Thread thread = descriptor.getThread();
+        return thread != null ? thread.getName() : StringUtils.NA_STRING;
+    }
+
     public String getThrowableClassName(TaskDescriptor descriptor) {
         return descriptor.getThrowable() != null ? ClassUtils.getCompactName(descriptor.getThrowable()) : null;
     }

@@ -74,6 +74,26 @@
     </div>
 </div>
 
+<div th:fragment="render-environment">
+    <h3 th:replace="~{fragments/utils :: h2('Environment')}"></h3>
+    <div class="container-fluid">
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Server</div>
+            <div class="col-8">
+                Average CPU: <span th:text="${helper.formatPercent(environment.getAverageServerCpu())}"></span>
+                (Cores: <span th:text="${environment.server.cores}"></span>, Average Load: <span th:text="${helper.formatNumber(environment.getAverageServerLoad15())}"/>)
+                , Average Memory: <span th:text="${helper.formatBytes(environment.getAverageServerMemory())}"/>
+            </div>
+        </div>
+        <div class="row justify-content-start g-0">
+            <div class="col-4">Process</div>
+            <div class="col-8">
+                Average CPU: <span th:text="${helper.formatPercent(environment.getAverageProcessCpu())}"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div th:fragment="content">
     <p>
         Report time range: <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDuration(report.interval)}"></span>
@@ -83,12 +103,13 @@
                                     th:text="${helper.formatDateTime(helper.currentTime)}"></span>, timezone
         <span class="text-primary-emphasis fw-bold" th:text="${helper.startupTime.zone}"></span>
     </p>
+    <div th:replace="~{summary :: render-environment}" ></div>
     <th:block th:if="${alerts.size()}">
-        <h3 th:replace="~{fragments/utils :: h3('Pending Alerts', ${alerts.size()})}"></h3>
+        <h3 th:replace="~{fragments/utils :: h3_count('Pending Alerts', ${alerts.size()})}"></h3>
         <div th:replace="~{summary :: render-alerts}" ></div>
     </th:block>
     <th:block th:if="${failedAggregatedTasks.size()}">
-        <h3 th:replace="~{fragments/utils :: h3('Failed Tasks', ${failedAggregatedTasks.size()})}"></h3>
+        <h3 th:replace="~{fragments/utils :: h3_count('Failed Tasks', ${failedAggregatedTasks.size()})}"></h3>
         <div th:replace="~{summary :: render-failed-tasks}" ></div>
     </th:block>
 </div>

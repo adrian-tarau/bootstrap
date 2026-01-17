@@ -5,6 +5,8 @@ import lombok.ToString;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Nameable;
 
+import java.util.Objects;
+
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 
 /**
@@ -23,6 +25,18 @@ public final class Application implements Nameable, Descriptable {
 
     Theme theme;
     Theme systemTheme;
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Application that)) return false;
+        return Objects.equals(name, that.name) && Objects.equals(owner, that.owner) && Objects.equals(url, that.url)
+                && Objects.equals(version, that.version);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, owner, url, version);
+    }
 
     /**
      * Returns the current application identifier.

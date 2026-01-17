@@ -260,11 +260,7 @@ public class Report implements Nameable {
     public void cleanup() {
         for (Fragment fragment : fragments) {
             if (fragment.getResource() != null) {
-                try {
-                    fragment.getResource().delete();
-                } catch (Exception e) {
-                    // not important
-                }
+                fragment.cleanup();
             }
         }
     }

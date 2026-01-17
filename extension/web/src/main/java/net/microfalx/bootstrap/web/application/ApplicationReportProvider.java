@@ -5,6 +5,8 @@ import net.microfalx.bootstrap.support.report.Fragment;
 import net.microfalx.bootstrap.support.report.Template;
 import net.microfalx.lang.annotation.Provider;
 
+import static net.microfalx.bootstrap.support.report.Template.APPLICATION_VARIABLE;
+
 @Provider
 public class ApplicationReportProvider extends AbstractFragmentProvider {
 
@@ -18,6 +20,6 @@ public class ApplicationReportProvider extends AbstractFragmentProvider {
     @Override
     public void update(Template template) {
         ApplicationService applicationService = getBean(ApplicationService.class);
-        template.addVariable("application", applicationService.getApplication());
+        template.addVariable(APPLICATION_VARIABLE, applicationService.getApplication());
     }
 }
