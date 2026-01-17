@@ -15,15 +15,17 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Properties;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static net.microfalx.bootstrap.mail.MailProperties.DEFAULT_FROM;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.SecretUtils.maskSecret;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 @Service
@@ -100,8 +102,8 @@ public class MailService implements InitializingBean {
         requireNonNull(attachments);
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
-            helper.setFrom(properties.getFrom());
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
+            helper.setFrom(defaultIfEmpty(properties.getFrom(), DEFAULT_FROM));
             boolean html = MimeType.TEXT_HTML.equals(body.getMimeType());
             helper.setText(body.loadAsString(), html);
             helper.setTo(to);
