@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.support.report;
 
 import net.microfalx.resource.Resource;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -27,6 +28,15 @@ public interface ReportingListener {
      */
     default Set<String> getDestinations() {
         return Collections.emptySet();
+    }
+
+    /**
+     * Returns the issues of the application.
+     *
+     * @return a non-null instance
+     */
+    default Collection<Issue> getIssues() {
+        return Collections.emptyList();
     }
 
     /**

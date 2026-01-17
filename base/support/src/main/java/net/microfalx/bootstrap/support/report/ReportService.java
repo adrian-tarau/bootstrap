@@ -5,7 +5,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
-import net.microfalx.bootstrap.support.SupportProperties;
 import net.microfalx.lang.*;
 import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.CronTrigger;
@@ -33,11 +32,13 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofHours;
+import static java.util.Collections.unmodifiableCollection;
 import static net.lingala.zip4j.model.enums.CompressionLevel.MAXIMUM;
 import static net.lingala.zip4j.model.enums.CompressionMethod.DEFLATE;
 import static net.lingala.zip4j.model.enums.EncryptionMethod.ZIP_STANDARD;
@@ -46,19 +47,24 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.IOUtils.getBufferedOutputStream;
 import static net.microfalx.lang.StringUtils.isEmpty;
 import static net.microfalx.lang.StringUtils.split;
+import static net.microfalx.lang.TimeUtils.*;
 
 @Service
 @Slf4j
 public class ReportService implements InitializingBean {
 
-    @Autowired(required = false) private SupportProperties properties = new SupportProperties();
+    @Autowired(required = false) private ReportProperties properties = new ReportProperties();
     @Autowired private ThreadPool threadPool;
     @Autowired private ApplicationContext applicationContext;
 
     private final Collection<Fragment.Provider> providers = new CopyOnWriteArrayList<>();
     private final Collection<ReportingListener> listeners = new CopyOnWriteArrayList<>();
+    private final Object lock = new Object();
     private volatile TemplateEngine templateEngine;
     private volatile long lastRenderingTime = TimeUtils.oneHourAgo();
+    private volatile long lastIssuesUpdate = TimeUtils.oneHourAgo();
+    private volatile Collection<Issue> cachedIssues = Collections.emptyList();
+    private volatile Map<String, Issue> reportedIssues = new ConcurrentHashMap<>();
 
     /**
      * Returns registered providers.
@@ -66,7 +72,46 @@ public class ReportService implements InitializingBean {
      * @return a non-null instance
      */
     public Collection<Fragment.Provider> getProviders() {
-        return Collections.unmodifiableCollection(providers);
+        return unmodifiableCollection(providers);
+    }
+
+    /**
+     * Returns registered issues.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Issue> getIssues() {
+        updateIssuesCache();
+        return unmodifiableCollection(cachedIssues);
+    }
+
+    /**
+     * Returns the number of issues with the given severity or higher.
+     *
+     * @param severity the severity
+     * @return the number of issues
+     */
+    public int getIssueCount(Issue.Severity severity) {
+        return (int) getIssues().stream().filter(issue -> issue.getSeverity().ordinal() >= severity.ordinal()).count();
+    }
+
+    /**
+     * Reports an issue.
+     * <p>
+     * Services can call this method to report issues they detect directly. However, services can also report
+     * issues using {@link ReportingListener#getIssues()}.
+     *
+     * @param issue the issue
+     */
+    public void addIssue(Issue issue) {
+        requireNonNull(issue);
+        synchronized (lock) {
+            Issue previous = reportedIssues.putIfAbsent(issue.getId(), issue);
+            if (previous != null) {
+                issue = previous.withDetectedAt(issue.getLastDetectedAt());
+                reportedIssues.put(issue.getId(), issue);
+            }
+        }
     }
 
     /**
@@ -94,9 +139,9 @@ public class ReportService implements InitializingBean {
     public void send(Duration interval) {
         requireNonNull(interval);
         Report report = createReport();
+        updateReportName(report);
         report.setEndTime(ZonedDateTime.now());
         report.setStartTime(report.getEndTime().minus(interval));
-        report.setName("System Report - " + getSystemName());
         Resource fullReport = Resource.temporary("report_", ".html");
         try {
             report.render(fullReport);
@@ -128,7 +173,7 @@ public class ReportService implements InitializingBean {
 
     @EventListener
     public void onApplicationEvent(ApplicationStartedEvent event) {
-        if (properties.isReportOnBoot()) {
+        if (properties.isOnBoot()) {
             threadPool.execute(new SendReportTask(ofHours(1)));
         }
     }
@@ -192,7 +237,7 @@ public class ReportService implements InitializingBean {
     }
 
     private void send(Report report, Resource summary, Resource fullReport) {
-        Set<String> destinations = new HashSet<>(Arrays.asList(split(properties.getReportRecipients(), ",")));
+        Set<String> destinations = new HashSet<>(Arrays.asList(split(properties.getRecipients(), ",")));
         if (destinations.isEmpty()) {
             LOGGER.info("No report destinations configured, ask services");
             for (ReportingListener listener : listeners) {
@@ -207,14 +252,15 @@ public class ReportService implements InitializingBean {
 
     private void initVariables() {
         LOGGER.info("Startup time: {} ", new ReportHelper().getStartupTime());
-        if (properties.isReportEnabled()) {
-            LOGGER.info("Support report scheduled at '{}', recipients: '{}'",
-                    properties.getReportSchedule(), properties.getReportRecipients());
+        if (properties.isEnabled()) {
+            LOGGER.info("Support report scheduled at '{}/{}/{}', recipients: '{}'", properties.getDailySchedule(), properties.getWithIssuesSchedule(), properties.getWithCriticalIssuesSchedule(), properties.getRecipients());
         }
     }
 
     private void initTasks() {
-        threadPool.schedule(new SendReportTask(ofHours(24)), new CronTrigger(properties.getReportSchedule()));
+        threadPool.schedule(new SendReportTask(ofHours(24)), new CronTrigger(properties.getDailySchedule()));
+        threadPool.schedule(new IssuesReportTask(Issue.Severity.MEDIUM), new CronTrigger(properties.getWithIssuesSchedule()));
+        threadPool.schedule(new IssuesReportTask(Issue.Severity.CRITICAL), new CronTrigger(properties.getWithCriticalIssuesSchedule()));
     }
 
     private synchronized void initEngine() {
@@ -239,6 +285,7 @@ public class ReportService implements InitializingBean {
 
     private void updateTemplate(Template template) {
         template.addVariable("helper", new ReportHelper());
+        template.addVariable("issues", getIssues());
         for (ReportingListener listener : listeners) {
             listener.update(template);
         }
@@ -250,8 +297,17 @@ public class ReportService implements InitializingBean {
         }
     }
 
+    private void updateReportName(Report report) {
+        String name = "System Report - " + getSystemName();
+        int issueHighCount = getIssueCount(Issue.Severity.MEDIUM);
+        int issueCriticalCount = getIssueCount(Issue.Severity.CRITICAL);
+        issueHighCount = Math.max(0, issueCriticalCount - issueHighCount);
+        name += " (Issues: " + issueCriticalCount + ", Possible Issues: " + issueHighCount + ")";
+        report.setName(name);
+    }
+
     private String getSystemName() {
-        String systemName = properties.getReportSystemName();
+        String systemName = properties.getSystemName();
         if (isEmpty(systemName)) {
             try {
                 systemName = InetAddress.getLocalHost().getHostName();
@@ -263,12 +319,12 @@ public class ReportService implements InitializingBean {
     }
 
     private Resource encryptReport(Resource report) throws IOException {
-        if (StringUtils.isEmpty(properties.getReportPassword())) return report;
-        String systemName = StringUtils.toIdentifier(properties.getReportSystemName());
+        if (StringUtils.isEmpty(properties.getPassword())) return report;
+        String systemName = StringUtils.toIdentifier(properties.getSystemName());
         String reportPrefix = "support_report_" + systemName;
         File reportZip = new File(JvmUtils.getTemporaryDirectory(), getFileName(reportPrefix, "zip"));
         try (ZipOutputStream outputZipStream = new ZipOutputStream(getBufferedOutputStream(reportZip),
-                properties.getReportPassword().toCharArray())) {
+                properties.getPassword().toCharArray())) {
             //init the zip parameters
             ZipParameters zipParams = new ZipParameters();
             zipParams.setCompressionMethod(DEFLATE);
@@ -284,9 +340,59 @@ public class ReportService implements InitializingBean {
         return Resource.file(reportZip);
     }
 
+    private void extractAndSendIssues(Issue.Severity severity) {
+        updateIssuesCache();
+        if (cachedIssues.isEmpty()) {
+            LOGGER.info("No issues found with severity {}", severity);
+        } else {
+            long criticalIssuesCount = getIssueCount(Issue.Severity.CRITICAL);
+            long highIssuesCount = getIssueCount(Issue.Severity.HIGH);
+            // if it was requested to send only critical issues, but there are none, skip sending
+            if (criticalIssuesCount > 0 && severity != Issue.Severity.CRITICAL) return;
+            // if there are issues, sent the report, looking at the last hour
+            boolean shouldSend = criticalIssuesCount >= properties.getCriticalIssuesThreshold() ||
+                    highIssuesCount >= properties.getHighIssuesThreshold();
+            if (shouldSend) send(Duration.ofHours(1));
+        }
+
+    }
+
+    private synchronized void updateIssuesCache() {
+        if (millisSince(lastIssuesUpdate) < FIVE_MINUTE) return;
+        Map<String, Issue> issues = new HashMap<>();
+        for (ReportingListener listener : listeners) {
+            Collection<Issue> listenerIssues = listener.getIssues();
+            if (listenerIssues != null) listenerIssues.forEach(issue -> issues.put(issue.getId(), issue));
+        }
+        synchronized (lock) {
+            issues.putAll(reportedIssues);
+            reportedIssues = new ConcurrentHashMap<>();
+        }
+        /*Issue issue = Issue.create(Issue.Type.SECURITY, "Authentication Failure").withSeverity(Issue.Severity.CRITICAL).withDetectedAt(LocalDateTime.now());
+        issues.put(issue.getId(), issue);
+        issue = Issue.create(Issue.Type.STABILITY, "Logger Exception").withDetectedAt(LocalDateTime.now());
+        issues.put(issue.getId(), issue);*/
+        cachedIssues = issues.values();
+        lastIssuesUpdate = currentTimeMillis();
+    }
+
     private String getFileName(String prefix, String extension) {
         String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now());
         return prefix + "_" + timestamp + "." + extension;
+    }
+
+    private class IssuesReportTask implements Runnable {
+
+        private final Issue.Severity severity;
+
+        public IssuesReportTask(Issue.Severity severity) {
+            this.severity = severity;
+        }
+
+        @Override
+        public void run() {
+            extractAndSendIssues(severity);
+        }
     }
 
     private class SendReportTask implements Runnable {
@@ -308,7 +414,7 @@ public class ReportService implements InitializingBean {
         @Override
         public void run() {
             if (templateEngine == null) return;
-            if (TimeUtils.millisSince(lastRenderingTime) > TimeUtils.ONE_MINUTE) {
+            if (millisSince(lastRenderingTime) > ONE_MINUTE) {
                 templateEngine = null;
                 LOGGER.info("Template engine released due to inactivity");
             }

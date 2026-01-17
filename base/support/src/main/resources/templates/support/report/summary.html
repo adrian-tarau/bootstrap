@@ -94,6 +94,33 @@
     </div>
 </div>
 
+<div th:fragment="render-issues">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Type</th>
+            <th scope="col">Severity</th>
+            <th scope="col">Name</th>
+            <th scope="col">Count</th>
+            <th scope="col">First Occurrence</th>
+            <th scope="col">Last Occurrence</th>
+            <th scope="col">Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="issue : ${issues}">
+            <td><span th:text="${helper.toLabel(issue.type)}"></span></td>
+            <td><span th:text="${helper.toLabel(issue.severity)}"></span></td>
+            <td><span th:text="${issue.name}"></span></td>
+            <td><span th:text="${issue.occurrences}"></span></td>
+            <td><span th:text="${helper.formatDateTime(issue.firstDetectedAt)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(issue.lastDetectedAt)}"></span></td>
+            <td><span th:text="${issue.description}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
 <div th:fragment="content">
     <p>
         Report time range: <span class="text-primary-emphasis fw-bold" th:text="${helper.formatDuration(report.interval)}"></span>
@@ -103,7 +130,10 @@
                                     th:text="${helper.formatDateTime(helper.currentTime)}"></span>, timezone
         <span class="text-primary-emphasis fw-bold" th:text="${helper.startupTime.zone}"></span>
     </p>
-    <div th:replace="~{summary :: render-environment}" ></div>
+    <th:block th:if="${issues.size()}">
+        <h3 th:replace="~{fragments/utils :: h3_count('Issues', ${issues.size()})}"></h3>
+        <div th:replace="~{summary :: render-issues}" ></div>
+    </th:block>
     <th:block th:if="${alerts.size()}">
         <h3 th:replace="~{fragments/utils :: h3_count('Pending Alerts', ${alerts.size()})}"></h3>
         <div th:replace="~{summary :: render-alerts}" ></div>
@@ -112,6 +142,7 @@
         <h3 th:replace="~{fragments/utils :: h3_count('Failed Tasks', ${failedAggregatedTasks.size()})}"></h3>
         <div th:replace="~{summary :: render-failed-tasks}" ></div>
     </th:block>
+    <div th:replace="~{summary :: render-environment}" ></div>
 </div>
 
 <div th:fragment="code" th:remove="tag">
