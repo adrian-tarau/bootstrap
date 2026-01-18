@@ -5,7 +5,11 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
+import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
+import net.microfalx.bootstrap.logger.LoggerEvent;
+import net.microfalx.bootstrap.logger.LoggerListener;
 import net.microfalx.lang.*;
+import net.microfalx.lang.annotation.Provider;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.CronTrigger;
@@ -45,6 +49,7 @@ import static net.lingala.zip4j.model.enums.CompressionMethod.DEFLATE;
 import static net.lingala.zip4j.model.enums.EncryptionMethod.ZIP_STANDARD;
 import static net.microfalx.bootstrap.support.report.Template.APPLICATION_VARIABLE;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.EnumUtils.toLabel;
 import static net.microfalx.lang.IOUtils.getBufferedOutputStream;
 import static net.microfalx.lang.StringUtils.isEmpty;
 import static net.microfalx.lang.StringUtils.split;
@@ -93,7 +98,7 @@ public class ReportService implements InitializingBean {
      * @return the number of issues
      */
     public int getIssueCount(Issue.Severity severity) {
-        return (int) getIssues().stream().filter(issue -> issue.getSeverity().ordinal() >= severity.ordinal()).count();
+        return (int) getIssues().stream().filter(issue -> issue.getSeverity().ordinal() >= severity.ordinal()).mapToLong(Issue::getOccurrences).sum();
     }
 
     /**
@@ -368,14 +373,11 @@ public class ReportService implements InitializingBean {
             Collection<Issue> listenerIssues = listener.getIssues();
             if (listenerIssues != null) listenerIssues.forEach(issue -> issues.put(issue.getId(), issue));
         }
+        pollIssues();
         synchronized (lock) {
             issues.putAll(reportedIssues);
             reportedIssues = new ConcurrentHashMap<>();
         }
-        /*Issue issue = Issue.create(Issue.Type.SECURITY, "Authentication Failure").withSeverity(Issue.Severity.CRITICAL).withDetectedAt(LocalDateTime.now());
-        issues.put(issue.getId(), issue);
-        issue = Issue.create(Issue.Type.STABILITY, "Logger Exception").withDetectedAt(LocalDateTime.now());
-        issues.put(issue.getId(), issue);*/
         cachedIssues = issues.values();
         lastIssuesUpdate = currentTimeMillis();
     }
@@ -383,6 +385,25 @@ public class ReportService implements InitializingBean {
     private String getFileName(String prefix, String extension) {
         String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now());
         return prefix + "_" + timestamp + "." + extension;
+    }
+
+    private void pollIssues() {
+        while (!Issue.ISSUES.isEmpty()) {
+            addIssue(Issue.ISSUES.poll());
+        }
+    }
+
+    @Provider
+    public static class ReportingLoggerListener extends ApplicationContextSupport implements LoggerListener {
+
+        @Override
+        public void onEvent(LoggerEvent event) {
+            if (!event.getLevel().isHigherSeverity(LoggerEvent.Level.WARN)) return;
+            Issue.create(Issue.Type.STABILITY, "Level", toLabel(event.getLevel())).withModule("Logger")
+                    .withSeverity(event.getLevel() == LoggerEvent.Level.WARN ? Issue.Severity.LOW : Issue.Severity.MEDIUM)
+                    .withDescription("Most recent entry: " + event.getMessage())
+                    .register();
+        }
     }
 
     private class IssuesReportTask implements Runnable {

@@ -5,39 +5,60 @@ import lombok.ToString;
 import net.microfalx.lang.*;
 
 import java.time.LocalDateTime;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.StringUtils.formatMessage;
+import static net.microfalx.lang.TextUtils.abbreviateMiddle;
 
 @Getter
 @ToString
 public class Issue implements Identifiable<String>, Nameable, Descriptable, Cloneable {
 
-    private final String id;
+    private String id;
     private final String name;
     private final Type type;
+    private String module = "-";
     private String description;
     private LocalDateTime firstDetectedAt = LocalDateTime.now();
     private LocalDateTime lastDetectedAt = firstDetectedAt;
     private int occurrences = 1;
     private Severity severity = Severity.MEDIUM;
+    private Class<?> throwableClass;
+
+    static final Queue<Issue> ISSUES = new ConcurrentLinkedQueue<>();
 
     public static Issue create(Type type, String name) {
-        return create(type, name, null);
+        return new Issue(type, name);
     }
 
-    public static Issue create(Type type, String name, String description) {
-        String id = StringUtils.toIdentifier(type.name().toLowerCase() + "_" + name);
-        return new Issue(type, id, name, null);
+    public static Issue create(Type type, String... names) {
+        return new Issue(type, abbreviateMiddle(String.join(" : ", names), 60));
     }
 
-    private Issue(Type type, String id, String name, String description) {
-        requireNotEmpty(id);
+    private Issue(Type type, String name) {
+        requireNotEmpty(type);
         requireNotEmpty(name);
         this.type = type;
-        this.id = id;
         this.name = name;
-        this.description = description;
+        updateId();
+    }
+
+    /**
+     * Changes the module of this issue.
+     *
+     * @param module the new module
+     * @return a new instance with the updated description
+     */
+    public Issue withModule(String module) {
+        requireNotEmpty(module);
+        Issue copy = copy();
+        copy.module = module;
+        copy.updateId();
+        return copy;
     }
 
     /**
@@ -49,6 +70,34 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
     public Issue withDescription(String description) {
         Issue copy = copy();
         copy.description = description;
+        return copy;
+    }
+
+    /**
+     * Changes the description of this issue.
+     *
+     * @param pattern the new pattern for the description
+     * @param args    the arguments passed to format the description
+     * @return a new instance with the updated description
+     */
+    public Issue withDescription(String pattern, Object... args) {
+        Issue copy = copy();
+        copy.description = formatMessage(pattern, args);
+        return copy;
+    }
+
+    /**
+     * Changes the description of this issue including the root cause message of the exception.
+     *
+     * @param pattern   the new pattern for the description
+     * @param args      the arguments passed to format the description
+     * @param throwable the exception
+     * @return a new instance with the updated description
+     */
+    public Issue withDescription(Throwable throwable, String pattern, Object... args) {
+        Issue copy = copy();
+        copy.description = formatMessage(pattern, args) + ", root cause: " + getRootCauseMessage(throwable);
+        copy.throwableClass = throwable != null ? throwable.getClass() : null;
         return copy;
     }
 
@@ -91,6 +140,22 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
         return copy;
     }
 
+    /**
+     * Registers this issue for reporting.
+     */
+    public void register() {
+        ISSUES.offer(this);
+    }
+
+    private void updateId() {
+        Hashing hashing = Hashing.create();
+        hashing.update(type.name().toLowerCase());
+        hashing.update(StringUtils.toIdentifier(module));
+        hashing.update(StringUtils.toIdentifier(name));
+        if (throwableClass != null) hashing.update(throwableClass.getName());
+        this.id = hashing.asString();
+    }
+
     private Issue copy() {
         try {
             return (Issue) clone();
@@ -103,9 +168,46 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * An enum representing the type of the issue.
      */
     public enum Type {
+
+        /**
+         * Vulnerabilities, auth issues, data leaks, misconfigurations
+         */
         SECURITY,
+
+        /**
+         * Slow responses, high latency, excessive resource usage
+         */
         PERFORMANCE,
+
+        /**
+         * Downtime, service interruptions, network issues
+         */
+        AVAILABILITY,
+
+        /**
+         * DNS issues, firewall blocks, routing problems, service availability
+         */
+        CONNECTIVITY,
+
+        /**
+         * Crashes, deadlocks, unhandled exceptions, memory leaks
+         */
         STABILITY,
+
+        /**
+         * Bad configuration/variables, secrets, feature flags, misconfigured limits
+         */
+        CONFIGURATION,
+
+        /**
+         * Missing metrics, logs, traces, poor visibility
+         */
+        OBSERVABILITY,
+
+        /**
+         * Corrupted data, duplicates, missing records
+         */
+        DATA_INTEGRITY
     }
 
     /**

@@ -100,6 +100,7 @@
         <tr>
             <th scope="col">Type</th>
             <th scope="col">Severity</th>
+            <th scope="col">Module</th>
             <th scope="col">Name</th>
             <th scope="col">Count</th>
             <th scope="col">First Occurrence</th>
@@ -111,6 +112,7 @@
         <tr th:each="issue : ${issues}">
             <td><span th:text="${helper.toLabel(issue.type)}"></span></td>
             <td><span th:text="${helper.toLabel(issue.severity)}"></span></td>
+            <td><span th:text="${issue.module}"></span></td>
             <td><span th:text="${issue.name}"></span></td>
             <td><span th:text="${issue.occurrences}"></span></td>
             <td><span th:text="${helper.formatDateTime(issue.firstDetectedAt)}"></span></td>
