@@ -3,17 +3,14 @@
 <body>
 
 <div id="error" th:fragment="panel (code, title, message)" th:remove="tag">
-    <div class="d-flex justify-content-center align-items-center">
+    <div class="justify-content-center align-items-center mt-auto">
         <div class="col-md-12 text-center">
-            <img alt='#' th:src="@{/asset/image/{code}.png}"/>
+            <img alt='#' th:src="@{'/asset/image/'+${code}+'.png'}"/>
         </div>
         <div class="col-md-12 text-center">
             <h1 th:text="${code}"></h1>
             <h2 th:text="${title}"></h2>
             <p th:text="${message}"></p>
-        </div>
-        <div class="col-md-12 text-end">
-            <a href="@{/}" type='primary' class='btn btn-primary'>Home</a>
         </div>
     </div>
 </div>

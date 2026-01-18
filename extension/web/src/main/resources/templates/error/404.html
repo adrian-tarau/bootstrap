@@ -3,7 +3,9 @@
       layout:decorate="~{layouts/default}">
 <body>
 
-<div th:replace="~{ fragments/error :: panel('404', 'Page Not Found', 'The page you are looking for does not exist or has been moved.')}"></div>
+<div layout:fragment="content" th:remove="tag">
+    <div th:replace="~{ fragments/error :: panel('404', 'Page Not Found', 'The page you are looking for does not exist or has been moved.')}"></div>
+</div>
 
 </body>
 </html>

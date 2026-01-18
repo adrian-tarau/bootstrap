@@ -3,7 +3,9 @@
       layout:decorate="~{layouts/default}">
 <body>
 
-<div th:replace="~{ fragments/error :: panel('500', 'Internal server error', 'Something goes wrong with our servers, please try again later.')}"></div>
+<div layout:fragment="content" th:remove="tag">
+    <div th:replace="~{ fragments/error :: panel('500', 'Internal server error', 'Something goes wrong with our servers, please try again later.')}"></div>
+</div>
 
 </body>
 </html>

@@ -3,7 +3,9 @@
       layout:decorate="~{layouts/default}">
 <body>
 
-<div th:replace="~{ fragments/error :: panel('40', 'Bad Request', 'The request is invalid.')}"></div>
+<div layout:fragment="content" th:remove="tag">
+    <div th:replace="~{ fragments/error :: panel('400', 'Bad Request', 'The request is invalid.')}"></div>
+</div>
 
 </body>
 </html>
