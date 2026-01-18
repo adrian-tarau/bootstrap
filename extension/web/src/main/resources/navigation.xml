@@ -41,9 +41,7 @@
                 <item id="index" text="Indexes" action="/support/search/index" icon="fa-solid fa-book"/>
                 <item id="status" text="Status" action="/support/search/status" icon="fa-solid fa-temperature-quarter"/>
             </menu>
-            <item id="status" text="Status" action="/support/status" position="5000" icon="fa-solid fa-temperature-quarter"/>
-            <item id="logging" text="Logging" action="/support/logging" position="5020" roles="admin" icon="fa-solid fa-bars"/>
-            <item id="sys_info" text="System Information" action="/support/info" position="10000" icon="fa-solid fa-circle-info"/>
+            <item id="report" text="Report" action="/support/report" roles="admin" position="10000" icon="fa-solid fa-circle-info"/>
         </menu>
     </menu>
     <menu id="secondary">

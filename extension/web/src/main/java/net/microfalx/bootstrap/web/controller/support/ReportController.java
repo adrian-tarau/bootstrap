@@ -1,8 +1,10 @@
 package net.microfalx.bootstrap.web.controller.support;
 
+import jakarta.annotation.security.RolesAllowed;
 import net.microfalx.bootstrap.support.report.Report;
 import net.microfalx.bootstrap.support.report.ReportService;
-import net.microfalx.bootstrap.web.controller.AnonymousController;
+import net.microfalx.bootstrap.web.application.annotation.SystemTheme;
+import net.microfalx.bootstrap.web.controller.PageController;
 import net.microfalx.resource.Resource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +13,9 @@ import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping(value = "/support/report")
-public class ReportController implements AnonymousController {
+@SystemTheme
+@RolesAllowed("admin")
+public class ReportController extends PageController {
 
     @Autowired private ReportService reportService;
 
