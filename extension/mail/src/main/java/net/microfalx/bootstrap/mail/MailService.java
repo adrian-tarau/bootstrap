@@ -1,32 +1,37 @@
 package net.microfalx.bootstrap.mail;
 
+import jakarta.mail.Address;
+import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
-import net.microfalx.resource.MimeType;
+import net.microfalx.bootstrap.support.report.Issue;
+import net.microfalx.bootstrap.support.report.ReportService;
+import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.StringUtils;
+import net.microfalx.metrics.Metrics;
+import net.microfalx.metrics.Timer;
 import net.microfalx.resource.Resource;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
 import org.springframework.mail.MailException;
-import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Properties;
+import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.microfalx.bootstrap.mail.MailProperties.DEFAULT_FROM;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseName;
 import static net.microfalx.lang.SecretUtils.maskSecret;
-import static net.microfalx.lang.StringUtils.defaultIfEmpty;
-import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.resource.MimeType.TEXT_HTML;
 
 @Service
 @Slf4j
@@ -34,6 +39,8 @@ public class MailService implements InitializingBean {
 
     @Autowired(required = false)
     private MailProperties properties = new MailProperties();
+
+    @Autowired private ReportService reportService;
 
     private JavaMailSenderImpl mailSender;
 
@@ -52,7 +59,7 @@ public class MailService implements InitializingBean {
     public void send(Resource resource) throws IOException, MailException {
         requireNonNull(resource);
         MimeMessage mimeMessage = mailSender.createMimeMessage(resource.getInputStream());
-        mailSender.send(mimeMessage);
+        doSend(mimeMessage);
     }
 
     /**
@@ -63,8 +70,7 @@ public class MailService implements InitializingBean {
      * @throws MailException if an error occurs while sending the MIME message
      */
     public void send(MimeMessage mimeMessage) throws IOException, MailException {
-        requireNonNull(mimeMessage);
-        mailSender.send(mimeMessage);
+        doSend(mimeMessage);
     }
 
     /**
@@ -100,11 +106,12 @@ public class MailService implements InitializingBean {
         requireNonNull(subject);
         requireNonNull(body);
         requireNonNull(attachments);
+        MimeMessage mimeMessage = null;
         try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
             helper.setFrom(defaultIfEmpty(properties.getFrom(), DEFAULT_FROM));
-            boolean html = MimeType.TEXT_HTML.equals(body.getMimeType());
+            boolean html = TEXT_HTML.equals(body.getMimeType());
             helper.setText(body.loadAsString(), html);
             helper.setTo(to);
             helper.setSubject(subject);
@@ -112,11 +119,31 @@ public class MailService implements InitializingBean {
             for (Resource resource : attachments) {
                 helper.addAttachment(resource.getFileName(), new UrlResource(resource.toURL()));
             }
-            send(mimeMessage);
         } catch (Exception e) {
-            throw new MailSendException("The mail could not be send", e);
+            registerFailure(mimeMessage, e);
         }
+        if (mimeMessage != null) doSend(mimeMessage);
+    }
 
+    private void doSend(MimeMessage mimeMessage) {
+        requireNonNull(mimeMessage);
+        String address = getFirstAddress(mimeMessage);
+        try (Timer ignored = MAIL_SENDING.startTimer(address)) {
+            mailSender.send(mimeMessage);
+            Arrays.stream(mimeMessage.getAllRecipients()).forEach(a -> MAIL_SENT.count(getAddress(a)));
+        } catch (Exception e) {
+            registerFailure(mimeMessage, e);
+        }
+    }
+
+    private void registerFailure(MimeMessage mimeMessage, Exception e) {
+        String address = StringUtils.NA_STRING;
+        if (mimeMessage != null) {
+            address = getFirstAddress(mimeMessage);
+        }
+        MAIL_FAILED.count(address);
+        Issue issue = Issue.create(Issue.Type.STABILITY, "Mail: " + getRootCauseName(e), "Failed to send email to " + address + ": " + ExceptionUtils.getRootCause(e)).withSeverity(Issue.Severity.HIGH);
+        reportService.addIssue(issue);
     }
 
     private void initMailSender() {
@@ -136,5 +163,33 @@ public class MailService implements InitializingBean {
         LOGGER.info("SMTP settings: {}, port: {}, user: {}", properties.getHost(), properties.getPort(),
                 maskSecret(properties.getUserName()));
     }
+
+    private static String getFirstAddress(MimeMessage mimeMessage) {
+        try {
+            Address[] allRecipients = mimeMessage.getAllRecipients();
+            if (allRecipients != null && allRecipients.length > 0) {
+                return getAddress(allRecipients[0]);
+            } else {
+                return NA_STRING;
+            }
+        } catch (MessagingException e) {
+            return NA_STRING;
+        }
+    }
+
+    private static String getAddress(Address address) {
+        if (address instanceof InternetAddress internetAddress) {
+            return internetAddress.getAddress();
+        } else if (address != null) {
+            return address.toString();
+        } else {
+            return NA_STRING;
+        }
+    }
+
+    private static final Metrics MAIL = Metrics.of("Mail");
+    private static final Metrics MAIL_SENDING = MAIL.withGroup("Sending");
+    private static final Metrics MAIL_SENT = MAIL.withGroup("Sent");
+    private static final Metrics MAIL_FAILED = MAIL.withGroup("Failed");
 
 }

@@ -1,24 +1,23 @@
 package net.microfalx.bootstrap.mail;
 
 import lombok.extern.slf4j.Slf4j;
+import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.support.report.ReportingListener;
+import net.microfalx.lang.annotation.Provider;
 import net.microfalx.resource.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
-@Component
+@Provider
 @Slf4j
-public class MailReportingListener implements ReportingListener {
-
-    @Autowired private MailService mailService;
+public class MailReportingListener extends ApplicationContextSupport implements ReportingListener {
 
     @Override
     public boolean send(Set<String> destinations, String title, Resource summary, Optional<Resource> attachment) {
+        MailService mailService = getBean(MailService.class);
         for (String destination : destinations) {
             try {
                 Collection<Resource> attachments = attachment.map(Collections::singleton).orElse(Collections.emptySet());

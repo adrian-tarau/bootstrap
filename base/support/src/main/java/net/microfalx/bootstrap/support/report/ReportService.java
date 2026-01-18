@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
 import net.microfalx.lang.*;
+import net.microfalx.metrics.Metrics;
 import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.CronTrigger;
 import net.microfalx.threadpool.ThreadPool;
@@ -173,7 +174,7 @@ public class ReportService implements InitializingBean {
 
     @EventListener
     public void onApplicationEvent(ApplicationStartedEvent event) {
-        if (properties.isOnBoot()) {
+        if (properties.isEnabled() && properties.isOnBoot()) {
             threadPool.execute(new SendReportTask(ofHours(1)));
         }
     }
@@ -225,7 +226,6 @@ public class ReportService implements InitializingBean {
     private void loadListeners() {
         LOGGER.debug("Loading reporting listeners");
         Collection<ReportingListener> loadedListeners = ClassUtils.resolveProviderInstances(ReportingListener.class);
-        loadedListeners.addAll(applicationContext.getBeansOfType(ReportingListener.class).values());
         for (ReportingListener loadedProvider : loadedListeners) {
             LOGGER.debug(" - {}", ClassUtils.getName(loadedProvider));
             if (loadedProvider instanceof ApplicationContextAware applicationContextAware) {
@@ -352,13 +352,17 @@ public class ReportService implements InitializingBean {
             // if there are issues, sent the report, looking at the last hour
             boolean shouldSend = criticalIssuesCount >= properties.getCriticalIssuesThreshold() ||
                     highIssuesCount >= properties.getHighIssuesThreshold();
-            if (shouldSend) send(Duration.ofHours(1));
+            if (shouldSend) {
+                REPORT.count("Sent: " + severity.name());
+                send(Duration.ofHours(1));
+            }
         }
 
     }
 
     private synchronized void updateIssuesCache() {
         if (millisSince(lastIssuesUpdate) < FIVE_MINUTE) return;
+        REPORT.count("Update Issues");
         Map<String, Issue> issues = new HashMap<>();
         for (ReportingListener listener : listeners) {
             Collection<Issue> listenerIssues = listener.getIssues();
@@ -405,6 +409,7 @@ public class ReportService implements InitializingBean {
 
         @Override
         public void run() {
+            REPORT.count("Sent: Daily");
             send(interval);
         }
     }
@@ -428,6 +433,8 @@ public class ReportService implements InitializingBean {
         private final String name = "Test";
         private final String owner = "The team";
     }
+
+    private static final Metrics REPORT = Metrics.of("Support").withGroup("Report");
 
 
 }
