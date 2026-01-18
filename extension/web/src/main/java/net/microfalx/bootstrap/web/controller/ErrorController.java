@@ -11,8 +11,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Collections.unmodifiableMap;
 
 @Controller
 @RequestMapping("/error")
@@ -24,6 +27,19 @@ public class ErrorController extends BasicErrorController implements AnonymousCo
 
     @Override
     protected ModelAndView resolveErrorView(HttpServletRequest request, HttpServletResponse response, HttpStatus status, Map<String, Object> model) {
-        return super.resolveErrorView(request, response, status, model);
+        model = new HashMap<>(model);
+        updateModel(status, model);
+        return super.resolveErrorView(request, response, status, unmodifiableMap(model));
+    }
+
+    private void updateModel(HttpStatus status, Map<String, Object> model) {
+        String statusGlyph;
+        status = status != null ? status : HttpStatus.INTERNAL_SERVER_ERROR;
+        statusGlyph = switch (status) {
+            case BAD_REQUEST -> "fa-solid fa-circle-exclamation text-warning";
+            case NOT_FOUND -> "fa-solid fa-file-circle-xmark text-secondary";
+            default -> "fa-solid fa-server text-danger";
+        };
+        model.put("statusGlyph", statusGlyph);
     }
 }
