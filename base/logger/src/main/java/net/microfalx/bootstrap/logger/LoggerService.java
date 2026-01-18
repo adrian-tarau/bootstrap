@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
@@ -43,14 +45,10 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerService.class);
 
-    @Autowired
-    private StoreService storeService;
-
-    @Autowired
-    private LoggerProperties properties;
-
-    @Autowired
-    private ThreadPool threadPool;
+    @Autowired private ApplicationContext applicationContext;
+    @Autowired private StoreService storeService;
+    @Autowired private LoggerProperties properties;
+    @Autowired private ThreadPool threadPool;
 
     private String hostname;
 
@@ -101,6 +99,9 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
         requireNonNull(loggerListener);
         if (!(loggerListener instanceof LoggerService)) {
             LOGGER.info("Logger listener '{}'", ClassUtils.getName(loggerListener));
+            if (loggerListener instanceof ApplicationContextAware applicationContextAware) {
+                applicationContextAware.setApplicationContext(this.applicationContext);
+            }
             listeners.add(loggerListener);
         }
     }
@@ -131,6 +132,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     }
 
     private void initializeListeners() {
+        ClassUtils.resolveProviderInstances(LoggerListener.class).forEach(this::registerLoggerListener);
         getBeansOfType(LoggerListener.class).forEach(this::registerLoggerListener);
     }
 

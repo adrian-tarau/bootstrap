@@ -13,6 +13,7 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.InfoStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +27,11 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -67,6 +70,8 @@ public class IndexService implements InitializingBean {
     private final Collection<IndexListener> listeners = new CopyOnWriteArrayList<>();
     private final Queue<Collection<Document>> pendingDocuments = new ArrayBlockingQueue<>(500);
     private final Map<String, Indexer> indexers = new ConcurrentHashMap<>();
+    private final Map<String, Lock> locks = new ConcurrentHashMap<>();
+    private final Set<String> indexersOpened = new CopyOnWriteArraySet<>();
     private volatile Indexer indexer;
 
     /**
@@ -271,19 +276,30 @@ public class IndexService implements InitializingBean {
         writerConfig.setUseCompoundFile(true);
         writerConfig.setRAMBufferSizeMB(getRAMBufferSizeMB());
         writerConfig.setRAMPerThreadHardLimitMB(getRAMBPerThreadBufferSizeMB());
-        if (LOGGER.isDebugEnabled()) writerConfig.setInfoStream(new LoggerInfoStream());
+        Lock indexLock = getIndexLock(options.getId());
+        indexLock.lock();
         try {
-            Directory luceneDirectory = FSDirectory.open(options.getDirectory().toPath());
-            IndexWriter indexWriter = new IndexWriter(luceneDirectory, writerConfig);
-            if (openMode == IndexWriterConfig.OpenMode.CREATE) indexWriter.commit();
-            LOGGER.debug("Create index writer, RAM Buffer " + writerConfig.getRAMBufferSizeMB() + " MB" +
-                         ", Thread RAM Buffer " + writerConfig.getRAMPerThreadHardLimitMB() + " MB" +
-                         ", Use compound files " + writerConfig.getUseCompoundFile());
-            Indexer indexer = new Indexer(indexWriter, luceneDirectory, options);
-            this.indexers.put(indexer.getOptions().getId(), indexer);
-            return indexer;
-        } catch (IOException e) {
-            throw new IndexException("Failed to create the index", e);
+            // on startup, make sure if there is a leftover lock file, remove it
+            if (indexersOpened.add(options.getId())) unlockIndexDirectory(options);
+            if (LOGGER.isDebugEnabled()) writerConfig.setInfoStream(new LoggerInfoStream());
+            try {
+                Directory luceneDirectory = FSDirectory.open(options.getDirectory().toPath());
+                IndexWriter indexWriter = new IndexWriter(luceneDirectory, writerConfig);
+                if (openMode == IndexWriterConfig.OpenMode.CREATE) indexWriter.commit();
+                LOGGER.debug("Create index writer, RAM Buffer " + writerConfig.getRAMBufferSizeMB() + " MB" +
+                        ", Thread RAM Buffer " + writerConfig.getRAMPerThreadHardLimitMB() + " MB" +
+                        ", Use compound files " + writerConfig.getUseCompoundFile());
+                Indexer indexer = new Indexer(indexWriter, luceneDirectory, options);
+                this.indexers.put(indexer.getOptions().getId(), indexer);
+                return indexer;
+            } catch (IOException e) {
+                if (e instanceof LockObtainFailedException) {
+                    unlockIndexDirectory(options);
+                }
+                throw new IndexException("Failed to create the index", e);
+            }
+        } finally {
+            indexLock.unlock();
         }
     }
 
@@ -445,6 +461,18 @@ public class IndexService implements InitializingBean {
 
     private void initTaskExecutor() {
         threadPool = ThreadPoolFactory.create("Indexer").create();
+    }
+
+    private void unlockIndexDirectory(IndexerOptions options) {
+        File file = new File(options.directory, "write.lock");
+        if (file.exists()) {
+            LOGGER.warn("Index directory appears to be locked. Attempting to unlock it: {}", options.getDirectory());
+            FileUtils.deleteQuietly(file);
+        }
+    }
+
+    private Lock getIndexLock(String id) {
+        return locks.computeIfAbsent(id, s -> new ReentrantLock());
     }
 
     class IndexMaintenanceTask implements Runnable {

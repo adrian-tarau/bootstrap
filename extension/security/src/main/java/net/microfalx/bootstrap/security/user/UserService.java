@@ -16,10 +16,10 @@ import net.microfalx.bootstrap.security.group.jpa.Group;
 import net.microfalx.bootstrap.security.provisioning.SecurityProperties;
 import net.microfalx.bootstrap.security.user.jpa.User;
 import net.microfalx.bootstrap.security.user.jpa.UserRepository;
+import net.microfalx.bootstrap.support.report.Issue;
 import net.microfalx.bootstrap.web.preference.PreferenceService;
 import net.microfalx.bootstrap.web.preference.PreferenceStorage;
 import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,32 +73,17 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     private static final String LOGOUT_ACTION = "Logout";
     private static final String SECURITY_MODULE = "Security";
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private UserSettingRepository userSettingRepository;
+    @Autowired private AuditRepository auditRepository;
 
-    @Autowired
-    private UserSettingRepository userSettingRepository;
+    @Autowired private SecurityProperties settings;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private GroupService groupService;
+    @Autowired private UserDetailsManager userDetailsManager;
+    @Autowired(required = false) private OAuth2AuthorizedClientService authorizedClientService;
 
-    @Autowired
-    private AuditRepository auditRepository;
-
-    @Autowired
-    private SecurityProperties settings;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private GroupService groupService;
-
-    @Autowired
-    private UserDetailsManager userDetailsManager;
-
-    @Autowired
-    private JdbcClient jdbcClient;
-
-    @Autowired(required = false)
-    private OAuth2AuthorizedClientService authorizedClientService;
+    @Autowired private JdbcClient jdbcClient;
 
     private final Map<String, Role> roles = new ConcurrentHashMap<>();
     private final Map<String, SecurityContext> securityContexts = new ConcurrentHashMap<>();
@@ -370,15 +355,24 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
                         + getRootCauseMessage(exception));
         context = updateAuditContext(context, failures.getAuthentication());
         audit(context);
+        Issue issue;
         if (exception instanceof BadCredentialsException) {
+            issue = Issue.create(Issue.Type.SECURITY, "Bad Credentials").withDescription("Bad credentials provided for user ''{0}''", failures.getAuthentication().getName());
             LOGGER.warn("Bad credentials provided for user '{}'", failures.getAuthentication().getName());
         } else if (exception instanceof UsernameNotFoundException) {
+            issue = Issue.create(Issue.Type.SECURITY, "Wrong User")
+                    .withDescription("User ''{0}'' could not be found", failures.getAuthentication().getName());
             LOGGER.warn("User '{}' could not be found", failures.getAuthentication().getName());
         } else if (exception instanceof AuthenticationException) {
-            LOGGER.warn("Authentication exception for user '{}': {}", failures.getAuthentication().getName(), ExceptionUtils.getRootCauseMessage(exception));
+            issue = Issue.create(Issue.Type.SECURITY, "Authentication")
+                    .withDescription(exception, "Authentication exception for user ''{0}''", failures.getAuthentication().getName());
+            LOGGER.warn("Authentication exception for user '{}': {}", failures.getAuthentication().getName(), getRootCauseMessage(exception));
         } else {
+            issue = Issue.create(Issue.Type.SECURITY, "Unknown Authentication")
+                    .withDescription(exception, "An unknown authentication failure occurred for user ''{0}''", failures.getAuthentication().getName());
             LOGGER.atWarn().setCause(exception).log("Unknown authentication failure, user '{}'", failures.getAuthentication().getName());
         }
+        issue.withModule("User").withSeverity(Issue.Severity.CRITICAL).register();
     }
 
     @EventListener

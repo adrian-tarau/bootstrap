@@ -7,8 +7,6 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.support.report.Issue;
-import net.microfalx.bootstrap.support.report.ReportService;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.metrics.Timer;
@@ -28,7 +26,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.microfalx.bootstrap.mail.MailProperties.DEFAULT_FROM;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseName;
 import static net.microfalx.lang.SecretUtils.maskSecret;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.resource.MimeType.TEXT_HTML;
@@ -39,8 +36,6 @@ public class MailService implements InitializingBean {
 
     @Autowired(required = false)
     private MailProperties properties = new MailProperties();
-
-    @Autowired private ReportService reportService;
 
     private JavaMailSenderImpl mailSender;
 
@@ -142,8 +137,9 @@ public class MailService implements InitializingBean {
             address = getFirstAddress(mimeMessage);
         }
         MAIL_FAILED.count(address);
-        Issue issue = Issue.create(Issue.Type.STABILITY, "Mail: " + getRootCauseName(e), "Failed to send email to " + address + ": " + ExceptionUtils.getRootCause(e)).withSeverity(Issue.Severity.HIGH);
-        reportService.addIssue(issue);
+        Issue.create(Issue.Type.STABILITY, "Mail")
+                .withDescription(e, "Failed to send email to ''{0}''", address)
+                .withSeverity(Issue.Severity.HIGH).register();
     }
 
     private void initMailSender() {

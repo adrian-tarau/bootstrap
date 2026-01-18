@@ -88,7 +88,7 @@ public class StoreService implements InitializingBean, DisposableBean {
             try {
                 store.flush();
             } catch (Exception e) {
-                LOGGER.error("Failed to flush store '" + store.getName() + "'");
+                LOGGER.error("Failed to flush store '{}'", store.getName());
             }
         }
     }
@@ -115,7 +115,7 @@ public class StoreService implements InitializingBean, DisposableBean {
             try {
                 ((StoreImpl<?, ?>) store).close();
             } catch (Exception e) {
-                LOGGER.error("Failed to close store '" + store.getOptions().getName() + "'", e);
+                LOGGER.error("Failed to close store '{}'", store.getName());
             }
         }
     }
@@ -169,7 +169,7 @@ public class StoreService implements InitializingBean, DisposableBean {
                         store.flush();
                     }
                 } catch (Exception e) {
-                    LOGGER.error("Failed to flush store '" + store.getName() + "'");
+                    LOGGER.error("Failed to flush store '{}'", store.getName());
                 }
             }
         }
@@ -187,7 +187,7 @@ public class StoreService implements InitializingBean, DisposableBean {
                 try {
                     store.purge();
                 } catch (Exception e) {
-                    LOGGER.error("Failed to purge store '" + store.getName() + "'");
+                    LOGGER.error("Failed to purge store '{}'", store.getName());
                 }
             }
         }
