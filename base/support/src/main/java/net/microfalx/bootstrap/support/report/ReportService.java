@@ -50,6 +50,7 @@ import static net.lingala.zip4j.model.enums.EncryptionMethod.ZIP_STANDARD;
 import static net.microfalx.bootstrap.support.report.Template.APPLICATION_VARIABLE;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.EnumUtils.toLabel;
+import static net.microfalx.lang.FormatterUtils.formatDuration;
 import static net.microfalx.lang.IOUtils.getBufferedOutputStream;
 import static net.microfalx.lang.StringUtils.isEmpty;
 import static net.microfalx.lang.StringUtils.split;
@@ -346,6 +347,7 @@ public class ReportService implements InitializingBean {
     }
 
     private void extractAndSendIssues(Issue.Severity severity) {
+        REPORT.count("Check Issues: " + severity.name());
         updateIssuesCache();
         if (cachedIssues.isEmpty()) {
             LOGGER.info("No issues found with severity {}", severity);
@@ -430,7 +432,7 @@ public class ReportService implements InitializingBean {
 
         @Override
         public void run() {
-            REPORT.count("Sent: Daily");
+            REPORT.count("Send Report: " + formatDuration(interval));
             send(interval);
         }
     }
