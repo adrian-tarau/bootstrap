@@ -309,7 +309,7 @@ public class ReportService implements InitializingBean {
         int issueHighCount = getIssueCount(Issue.Severity.HIGH);
         int issueMediumHighCount = getIssueCount(Issue.Severity.MEDIUM);
         int issueLowCount = getIssueCount(Issue.Severity.LOW);
-        name += " (Critical" + issueCriticalCount + ", High: " + issueHighCount + ", Medium: " + issueMediumHighCount
+        name += " (Critical: " + issueCriticalCount + ", High: " + issueHighCount + ", Medium: " + issueMediumHighCount
                 + ", Low: " + issueLowCount + ")";
         report.setName(name);
     }
