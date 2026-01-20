@@ -305,10 +305,12 @@ public class ReportService implements InitializingBean {
 
     private void updateReportName(Report report) {
         String name = "System Report - " + getSystemName();
-        int issueHighCount = getIssueCount(Issue.Severity.MEDIUM);
         int issueCriticalCount = getIssueCount(Issue.Severity.CRITICAL);
-        issueHighCount = Math.max(0, issueCriticalCount - issueHighCount);
-        name += " (Issues: " + issueCriticalCount + ", Possible Issues: " + issueHighCount + ")";
+        int issueHighCount = getIssueCount(Issue.Severity.HIGH);
+        int issueMediumHighCount = getIssueCount(Issue.Severity.MEDIUM);
+        int issueLowCount = getIssueCount(Issue.Severity.LOW);
+        name += " (Critical" + issueCriticalCount + ", High: " + issueHighCount + ", Medium: " + issueMediumHighCount
+                + ", Low: " + issueLowCount + ")";
         report.setName(name);
     }
 

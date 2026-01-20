@@ -133,7 +133,7 @@
         <span class="text-primary-emphasis fw-bold" th:text="${helper.startupTime.zone}"></span>
     </p>
     <th:block th:if="${issues.size()}">
-        <h3 th:replace="~{fragments/utils :: h3_count('Issues', ${issues.size()})}"></h3>
+        <h3 th:replace="~{fragments/utils :: h3_count('Issue Types', ${issues.size()})}"></h3>
         <div th:replace="~{summary :: render-issues}" ></div>
     </th:block>
     <th:block th:if="${alerts.size()}">
