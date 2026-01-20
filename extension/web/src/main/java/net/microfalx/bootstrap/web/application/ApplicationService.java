@@ -1,5 +1,8 @@
 package net.microfalx.bootstrap.web.application;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.container.WebContainerService;
 import net.microfalx.lang.ObjectUtils;
@@ -16,8 +19,10 @@ import java.io.IOException;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.defaultIfNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
@@ -42,6 +47,7 @@ public final class ApplicationService implements InitializingBean {
 
     private final AssetBundleManager assetBundleManager = new AssetBundleManager(this);
     private final Map<String, Menu> navigations = new ConcurrentHashMap<>();
+    private final Collection<DomainTheme> domainsToTheme = new ArrayList<>();
 
     private final Application application = new Application();
 
@@ -124,6 +130,22 @@ public final class ApplicationService implements InitializingBean {
      */
     public Theme getTheme(String idOrName) {
         return assetBundleManager.getTheme(idOrName);
+    }
+
+    /**
+     * Returns a theme to be used for a given domain name.
+     *
+     * @param domainName the domain name
+     * @return the theme, or empty if no theme is associated with the domain
+     */
+    public Optional<Theme> getThemeForDomain(String domainName) {
+        requireNotEmpty(domainName);
+        for (DomainTheme domainTheme : domainsToTheme) {
+            if (domainTheme.getPattern().matcher(domainName).matches()) {
+                return Optional.of(domainTheme.getTheme());
+            }
+        }
+        return Optional.empty();
     }
 
     /**
@@ -316,6 +338,7 @@ public final class ApplicationService implements InitializingBean {
         initTimeZone();
         initNavigation();
         initTheme();
+        initDomains();
         logApplication();
     }
 
@@ -325,6 +348,25 @@ public final class ApplicationService implements InitializingBean {
             application.theme = getTheme(defaultIfNull(applicationProperties.getSystemTheme(), Theme.SYSTEM));
         } else {
             application.systemTheme = application.theme;
+        }
+    }
+
+    private void initDomains() {
+        Map<String, String> domainThemeMap = applicationProperties.getDomainThemes();
+        if (ObjectUtils.isEmpty(domainThemeMap)) return;
+        for (Map.Entry<String, String> entry : domainThemeMap.entrySet()) {
+            String themeId = entry.getKey();
+            String domainPatternValue = entry.getValue();
+            try {
+                String[] domainPatterns = StringUtils.split(domainPatternValue, ",");
+                for (String domainPattern : domainPatterns) {
+                    Pattern domainPatternCompiled = Pattern.compile(domainPattern, Pattern.CASE_INSENSITIVE);
+                    Theme theme = getTheme(themeId);
+                    domainsToTheme.add(new DomainTheme(domainPatternCompiled, theme));
+                }
+            } catch (Exception e) {
+                LOGGER.warn("Failed to load domain theme for pattern '{}' and theme id '{}'", domainPatternValue, themeId, e);
+            }
         }
     }
 
@@ -373,6 +415,14 @@ public final class ApplicationService implements InitializingBean {
 
     private String getFontBasePath() {
         return webContainerService.getPath("font");
+    }
+
+    @Getter
+    @ToString
+    @AllArgsConstructor
+    private static class DomainTheme {
+        private final Pattern pattern;
+        private final Theme theme;
     }
 
 
