@@ -120,20 +120,21 @@ public class FormatterUtils {
                         throw new IllegalArgumentException("Unhandled unit: " + unit);
                     }
                 } else if (unit.isTime()) {
+                    String zeroValue = Formattable.AUTO.equals(formattable.zeroValue()) ? null : Formattable.NA;
                     if (unit == Formattable.Unit.MICRO_SECOND) {
                         float floatValue = ((Number) value).floatValue() / MICROSECONDS_IN_MILLISECONDS;
-                        return net.microfalx.lang.FormatterUtils.formatDuration(floatValue);
+                        return net.microfalx.lang.FormatterUtils.formatDuration(floatValue, zeroValue, false, zeroValue);
                     } else if (unit == Formattable.Unit.MILLI_SECOND) {
-                        return net.microfalx.lang.FormatterUtils.formatDuration(value);
+                        return net.microfalx.lang.FormatterUtils.formatDuration(value, zeroValue, false, zeroValue);
                     } else if (unit == Formattable.Unit.SECOND) {
                         value = ((Number) value).longValue() * MILLISECONDS_IN_SECOND;
-                        return net.microfalx.lang.FormatterUtils.formatDuration(value);
+                        return net.microfalx.lang.FormatterUtils.formatDuration(value, zeroValue, false, zeroValue);
                     } else if (unit == Formattable.Unit.MINUTE) {
                         value = ((Number) value).longValue() * MILLISECONDS_IN_MINUTE;
-                        return net.microfalx.lang.FormatterUtils.formatDuration(value);
+                        return net.microfalx.lang.FormatterUtils.formatDuration(value, zeroValue, false, zeroValue);
                     } else if (unit == Formattable.Unit.NANO_SECOND) {
                         float floatValue = ((Number) value).floatValue() / NANOSECONDS_IN_MILLISECONDS;
-                        return net.microfalx.lang.FormatterUtils.formatDuration(floatValue);
+                        return net.microfalx.lang.FormatterUtils.formatDuration(floatValue, zeroValue, false, zeroValue);
                     } else {
                         throw new IllegalArgumentException("Unhandled unit: " + unit);
                     }
@@ -142,6 +143,8 @@ public class FormatterUtils {
                 } else if (unit == Formattable.Unit.BYTES) {
                     return net.microfalx.lang.FormatterUtils.formatBytes(value);
                 } else if (!Formattable.AUTO.equals(formattable.negativeValue()) && ((Number) value).doubleValue() < 0) {
+                    return formattable.NA;
+                } else if (!Formattable.AUTO.equals(formattable.zeroValue()) && ((Number) value).doubleValue() == 0) {
                     return formattable.NA;
                 }
             }
@@ -166,7 +169,8 @@ public class FormatterUtils {
         } else if (value instanceof Temporal) {
             return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value, getTimeZone());
         } else if (value instanceof Duration) {
-            return net.microfalx.lang.FormatterUtils.formatDuration(value, Formattable.NA, false);
+            String zeroValue = formattable != null ? (Formattable.AUTO.equals(formattable.zeroValue()) ? null : Formattable.NA) : null;
+            return net.microfalx.lang.FormatterUtils.formatDuration(value, Formattable.NA, false, zeroValue);
         } else {
             return ObjectUtils.toString(value);
         }

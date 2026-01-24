@@ -62,6 +62,13 @@ public @interface Formattable {
     String negativeValue() default AUTO;
 
     /**
+     * Returns the string to be used when the value is ZERO.
+     *
+     * @return the value
+     */
+    String zeroValue() default AUTO;
+
+    /**
      * Uses a human-readable format to make it easier to read the values.
      * <p>
      * For numbers, it uses locale specific thousands and fractional separators, for temporal uses custom format patterns
