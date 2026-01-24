@@ -49,6 +49,8 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     private final DataSetFactory<M, F, ID> factory;
     private final Metadata<M, F, ID> metadata;
     private final Set<String> tags = new HashSet<>();
+    private final Map<String, Boolean> visibleClassCache = new HashMap<>();
+    private final Map<String, Boolean> readOnlyClassCache = new HashMap<>();
     private String name;
     private boolean readOnly;
     private State state = State.BROWSE;
@@ -143,6 +145,8 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public final boolean isVisible(Field<M> field) {
         requireNonNull(field);
+        Boolean visible = visibleClassCache.get(field.getName().toLowerCase());
+        if (visible != null) return visible;
         Visible visibleAnnot = field.findAnnotation(Visible.class);
         if (visibleAnnot == null) return !field.isId();
         if (!visibleAnnot.value()) return false;
@@ -157,6 +161,8 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
     @Override
     public boolean isReadOnly(Field<M> field) {
         requireNonNull(field);
+        Boolean readOnly = readOnlyClassCache.get(field.getName().toLowerCase());
+        if (readOnly != null) return readOnly;
         ReadOnly readOnlyAnnot = field.findAnnotation(ReadOnly.class);
         if (readOnlyAnnot == null || !readOnlyAnnot.value()) return false;
         return switch (state) {
@@ -677,11 +683,26 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
 
     private void initFromMetadata() {
         ReadOnly readOnlyAnnot = metadata.findAnnotation(ReadOnly.class);
-        if (readOnlyAnnot != null) this.readOnly = readOnlyAnnot.value();
+        if (readOnlyAnnot != null) {
+            if (readOnlyAnnot.fieldNames().length > 0) {
+                for (String fieldName : readOnlyAnnot.fieldNames()) {
+                    readOnlyClassCache.put(fieldName.toLowerCase(), readOnlyAnnot.value());
+                }
+            } else {
+                this.readOnly = readOnlyAnnot.value();
+            }
+        }
         Name nameAnnot = metadata.findAnnotation(Name.class);
         if (nameAnnot != null) setName(nameAnnot.value());
         Label labelAnnot = metadata.findAnnotation(Label.class);
         if (labelAnnot != null) setName(labelAnnot.value());
+        Visible visibleAnnot = metadata.findAnnotation(Visible.class);
+        if (visibleAnnot != null) {
+            for (String fieldName : visibleAnnot.fieldNames()) {
+                visibleClassCache.put(fieldName.toLowerCase(), visibleAnnot.value());
+            }
+        }
+
     }
 
     private List<F> getVisibleAndOrderedFields() {

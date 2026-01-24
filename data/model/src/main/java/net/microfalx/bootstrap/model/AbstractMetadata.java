@@ -322,7 +322,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
 
     @Override
     public final <A extends Annotation> A findAnnotation(Class<A> annotationClass) {
-        return modelClass.getAnnotation(annotationClass);
+        return AnnotationUtils.getAnnotation(getModel(), annotationClass);
     }
 
     @Override
