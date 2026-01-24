@@ -71,7 +71,11 @@ public class ReportService implements InitializingBean {
     private volatile long lastRenderingTime = TimeUtils.oneHourAgo();
     private volatile long lastIssuesUpdate = TimeUtils.oneHourAgo();
     private volatile Collection<Issue> cachedIssues = Collections.emptyList();
+    private volatile Collection<Issue> cachedDailyIssues;
     private volatile Map<String, Issue> reportedIssues = new ConcurrentHashMap<>();
+    private volatile Map<String, Issue> dailyReportedIssues = new ConcurrentHashMap<>();
+
+    private static final ThreadLocal<Boolean> DAILY_REPORT = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     /**
      * Returns registered providers.
@@ -89,7 +93,18 @@ public class ReportService implements InitializingBean {
      */
     public Collection<Issue> getIssues() {
         updateIssuesCache();
-        return unmodifiableCollection(cachedIssues);
+        if (isDailyReport()) {
+            synchronized (lock) {
+                if (cachedDailyIssues == null) {
+                    Map<String, Issue> allIssues = new HashMap<>(dailyReportedIssues);
+                    cachedIssues.forEach(issue -> mergeIssue(allIssues, issue));
+                    cachedDailyIssues = new ArrayList<>(allIssues.values());
+                }
+            }
+            return unmodifiableCollection(cachedDailyIssues);
+        } else {
+            return unmodifiableCollection(cachedIssues);
+        }
     }
 
     /**
@@ -113,11 +128,7 @@ public class ReportService implements InitializingBean {
     public void addIssue(Issue issue) {
         requireNonNull(issue);
         synchronized (lock) {
-            Issue previous = reportedIssues.putIfAbsent(issue.getId(), issue);
-            if (previous != null) {
-                issue = previous.withDetectedAt(issue.getLastDetectedAt());
-                reportedIssues.put(issue.getId(), issue);
-            }
+            mergeIssue(reportedIssues, issue);
         }
     }
 
@@ -378,11 +389,13 @@ public class ReportService implements InitializingBean {
             if (listenerIssues != null) listenerIssues.forEach(issue -> issues.put(issue.getId(), issue));
         }
         pollIssues();
+        // take all reported issues, accumulate them for the 24h report, and start fresh for the next interval
         synchronized (lock) {
             issues.putAll(reportedIssues);
+            dailyReportedIssues.putAll(reportedIssues);
             reportedIssues = new ConcurrentHashMap<>();
         }
-        cachedIssues = issues.values();
+        cachedIssues = new ArrayList<>(issues.values());
         lastIssuesUpdate = currentTimeMillis();
     }
 
@@ -394,6 +407,18 @@ public class ReportService implements InitializingBean {
     private void pollIssues() {
         while (!Issue.ISSUES.isEmpty()) {
             addIssue(Issue.ISSUES.poll());
+        }
+    }
+
+    private static boolean isDailyReport() {
+        return DAILY_REPORT.get();
+    }
+
+    private void mergeIssue(Map<String, Issue> issues, Issue issue) {
+        Issue previous = issues.putIfAbsent(issue.getId(), issue);
+        if (previous != null) {
+            issue = previous.withDetectedAt(issue.getLastDetectedAt());
+            issues.put(issue.getId(), issue);
         }
     }
 
@@ -432,10 +457,25 @@ public class ReportService implements InitializingBean {
             this.interval = interval;
         }
 
+        private void cleanup() {
+            if (isDailyReport()) {
+                synchronized (lock) {
+                    dailyReportedIssues = new ConcurrentHashMap<>();
+                    cachedDailyIssues = null;
+                }
+            }
+            DAILY_REPORT.remove();
+        }
+
         @Override
         public void run() {
-            REPORT.count("Send Report: " + formatDuration(interval));
-            send(interval);
+            DAILY_REPORT.set(interval.toHours() >= 24);
+            try {
+                REPORT.count("Send Report: " + formatDuration(interval));
+                send(interval);
+            } finally {
+                cleanup();
+            }
         }
     }
 
