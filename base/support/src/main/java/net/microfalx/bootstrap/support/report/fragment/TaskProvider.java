@@ -137,6 +137,11 @@ public class TaskProvider extends AbstractFragmentProvider {
         }
 
         @Override
+        public LocalDateTime getLastExecutionTime() {
+            return getStartedAt();
+        }
+
+        @Override
         public Duration getDuration() {
             return descriptor.getDuration();
         }

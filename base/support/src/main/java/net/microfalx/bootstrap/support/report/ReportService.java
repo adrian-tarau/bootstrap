@@ -428,7 +428,7 @@ public class ReportService implements InitializingBean {
         @Override
         public void onEvent(LoggerEvent event) {
             if (!event.getLevel().isHigherSeverity(LoggerEvent.Level.WARN)) return;
-            Issue.create(Issue.Type.STABILITY, "Level", toLabel(event.getLevel())).withModule("Logger")
+            Issue.create(Issue.Type.STABILITY, toLabel(event.getLevel())).withModule("Logger")
                     .withSeverity(event.getLevel() == LoggerEvent.Level.WARN ? Issue.Severity.LOW : Issue.Severity.MEDIUM)
                     .withDescription("Most recent entry: " + event.getMessage())
                     .register();

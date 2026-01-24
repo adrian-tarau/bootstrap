@@ -23,6 +23,7 @@ public abstract class AbstractTask extends NamedIdentityAware<Long> {
     @Position(20)
     @Label(value = "Class Name")
     @Description("The name of the class")
+    @Width("200")
     private String className;
 
     public static void update(AbstractTask model, TaskDescriptor taskDescriptor) {
