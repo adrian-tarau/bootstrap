@@ -12,6 +12,9 @@
             <th scope="col">Total</th>
             <th scope="col">Average</th>
             <th scope="col">Maximum</th>
+            <th scope="col">P50</th>
+            <th scope="col">P95</th>
+            <th scope="col">P99</th>
             <th scope="col">First Access</th>
             <th scope="col">Last Access</th>
         </tr>
@@ -24,6 +27,9 @@
             <td><span th:text="${helper.formatDuration(timer.duration)}"></span></td>
             <td><span th:text="${helper.formatDuration(timer.averageDuration)}"></span></td>
             <td><span th:text="${helper.formatDuration(timer.maximumDuration)}"></span></td>
+            <td><span th:text="${meter.getPercentile(timer, 0, true)}"></span></td>
+            <td><span th:text="${meter.getPercentile(timer, 1, false)}"></span></td>
+            <td><span th:text="${meter.getPercentile(timer, 2, false)}"></span></td>
             <td><span th:text="${helper.formatDateTime(timer.firstAccess)}"></span></td>
             <td><span th:text="${helper.formatDateTime(timer.lastAccess)}"></span></td>
         </tr>

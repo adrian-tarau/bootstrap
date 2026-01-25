@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.security.user.UserService;
+import net.microfalx.bootstrap.web.util.PathFilter;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Action;
 import net.microfalx.lang.annotation.Module;
@@ -15,22 +16,16 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.lang.reflect.Method;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import static net.microfalx.lang.StringUtils.*;
 
 @Configuration
 public class AuditMvcConfig implements WebMvcConfigurer {
 
-    private final Set<String> excludedPaths = new CopyOnWriteArraySet<>();
+    private final PathFilter pathFilter = new PathFilter();
 
     @Autowired
     private UserService userService;
-
-    public AuditMvcConfig() {
-        registerDefaultPaths();
-    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -38,10 +33,9 @@ public class AuditMvcConfig implements WebMvcConfigurer {
     }
 
     private void audit(HttpServletRequest request, HttpServletResponse response, Method method) {
-        String path = request.getRequestURI();
-        if (shouldExclude(path)) return;
+        if (pathFilter.shouldExclude(request)) return;
         AuditContext context = AuditContext.get();
-        context.setReference(path);
+        context.setReference(request.getRequestURI());
         context.setErrorCode(Integer.toString(response.getStatus()));
         context.setClientInfo(getClientIp(request));
         if (isEmpty(context.getAction())) context.setAction(getAction(method));
@@ -79,28 +73,6 @@ public class AuditMvcConfig implements WebMvcConfigurer {
         }
         if (isNotEmpty(request.getRemoteUser())) ip = request.getRemoteUser() + "@" + ip;
         return ip;
-    }
-
-    private void registerExclusion(String path) {
-        excludedPaths.add(removeStartSlash(path).toLowerCase());
-    }
-
-    private void registerDefaultPaths() {
-        registerExclusion("ping");
-        registerExclusion("status");
-        registerExclusion("event");
-        registerExclusion("asset");
-        registerExclusion("image");
-        registerExclusion("error");
-        registerExclusion("favicon.ico");
-    }
-
-    private boolean shouldExclude(String path) {
-        path = removeStartSlash(path).toLowerCase();
-        for (String excludedPath : excludedPaths) {
-            if (path.startsWith(excludedPath)) return true;
-        }
-        return false;
     }
 
     private class Interceptor implements HandlerInterceptor {

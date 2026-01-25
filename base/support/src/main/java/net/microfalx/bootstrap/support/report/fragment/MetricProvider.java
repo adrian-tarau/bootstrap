@@ -8,10 +8,16 @@ import net.microfalx.metrics.Gauge;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.metrics.Timer;
 
+import java.time.Duration;
 import java.util.Comparator;
+
+import static net.microfalx.lang.FormatterUtils.formatDuration;
 
 @net.microfalx.lang.annotation.Provider
 public class MetricProvider extends AbstractFragmentProvider {
+
+    private static final Duration[] ZERO = new Duration[]{Duration.ZERO, Duration.ZERO, Duration.ZERO};
+    private static final ThreadLocal<Duration[]> PERCENTILES = ThreadLocal.withInitial(() -> ZERO);
 
     @Override
     public Fragment create() {
@@ -29,5 +35,15 @@ public class MetricProvider extends AbstractFragmentProvider {
         template.addVariable("counters", root.getCounters().stream().sorted(Comparator.comparing(Counter::getValue).reversed()).toList());
         template.addVariable("gauges", root.getGauges().stream().sorted(Comparator.comparing(Gauge::getValue).reversed()).toList());
         template.addVariable("meter", this);
+    }
+
+    public String getPercentile(Timer timer, int position, boolean calculate) {
+        if (calculate) PERCENTILES.set(timer.getPercentiles());
+        Duration duration = PERCENTILES.get()[position];
+        if (duration.isZero()) {
+            return "-";
+        } else {
+            return formatDuration(duration);
+        }
     }
 }

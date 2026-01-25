@@ -17,13 +17,13 @@ public abstract class Metric extends IdentityAware<String> {
 
     @Position(2)
     @Description("The group of the timer")
-    @Width("20%")
+    @Width("15%")
     private String group;
 
     @Position(3)
     @Name
     @Description("The name of the timer")
-    @Width("30%")
+    @Width("20%")
     private String name;
 
     @Position(101)

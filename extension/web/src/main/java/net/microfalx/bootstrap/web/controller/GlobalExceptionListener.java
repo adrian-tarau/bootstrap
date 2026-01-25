@@ -8,6 +8,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 @Component
@@ -16,9 +17,11 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
 
     @Override
     public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        String matchedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        if (matchedPattern == null) matchedPattern = getControllerPath(request.getRequestURI());
         try {
-            String path = getControllerPath(request.getRequestURI());
-            Issue.create(Issue.Type.STABILITY, path)
+
+            Issue.create(Issue.Type.STABILITY, matchedPattern)
                     .withDescription(ex, "Unhandled exception in controller")
                     .withModule("Controller").withSeverity(Issue.Severity.HIGH).register();
         } catch (Exception e) {
