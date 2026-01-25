@@ -7,6 +7,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static net.microfalx.lang.StringUtils.addStartSlash;
 import static net.microfalx.lang.StringUtils.removeStartSlash;
 
 /**
@@ -49,7 +50,7 @@ public class PathFilter {
     public static String getRequestPattern(HttpServletRequest request) {
         String matchedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
         if (matchedPattern == null) matchedPattern = getRootPath(request.getRequestURI());
-        return matchedPattern;
+        return addStartSlash(matchedPattern);
     }
 
     private void registerDefaultPaths() {

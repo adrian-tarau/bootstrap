@@ -40,12 +40,12 @@ public class RestApiAudit {
     }
 
     public String getRequestPath() {
-        return defaultIfEmpty(requestPath, SLASH);
+        return addStartSlash(defaultIfEmpty(requestPath, SLASH));
     }
 
     public String getRequestPattern() {
         String pattern = CURRENT_REQUEST_PATTERN.get();
-        return defaultIfEmpty(pattern, getRootPath(getRequestPath()));
+        return addStartSlash(defaultIfEmpty(pattern, getRootPath(getRequestPath())));
     }
 
     public boolean isSuccess() {
