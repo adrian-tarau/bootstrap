@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.web.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.support.report.Issue;
+import net.microfalx.lang.StringUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -15,9 +16,18 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
 
     @Override
     public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        Issue.create(Issue.Type.STABILITY, "Controller")
-                .withDescription(ex, "Unhandled exception in controller")
-                .withModule("Controller").withSeverity(Issue.Severity.HIGH).register();
+        try {
+            String path = getControllerPath(request.getRequestURI());
+            Issue.create(Issue.Type.STABILITY, path)
+                    .withDescription(ex, "Unhandled exception in controller")
+                    .withModule("Controller").withSeverity(Issue.Severity.HIGH).register();
+        } catch (Exception e) {
+            // ignore any exception here
+        }
         return null;
+    }
+
+    private String getControllerPath(String path) {
+        return StringUtils.split(path, "/")[0];
     }
 }
