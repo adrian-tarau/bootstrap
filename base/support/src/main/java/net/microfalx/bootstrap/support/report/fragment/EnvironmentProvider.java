@@ -16,7 +16,7 @@ public class EnvironmentProvider extends AbstractFragmentProvider {
     @Override
     public Fragment create() {
         return Fragment.builder("Environment").template("environment")
-                .icon("fa-solid fa-gauge")
+                .icon("fa-solid fa-server")
                 .order(1000)
                 .build();
     }

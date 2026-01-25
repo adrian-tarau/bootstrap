@@ -117,7 +117,7 @@
             <td><span th:text="${issue.occurrences}"></span></td>
             <td><span th:text="${helper.formatDateTime(issue.firstDetectedAt)}"></span></td>
             <td><span th:text="${helper.formatDateTime(issue.lastDetectedAt)}"></span></td>
-            <td><span th:text="${issue.description}"></span></td>
+            <td><span th:text="${helper.toDisplay(issue.description, 100)}"></span></td>
         </tr>
         </tbody>
     </table>

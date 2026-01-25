@@ -59,6 +59,10 @@ public class ReportHelper {
         return StringUtils.isEmpty(text) ? "-" : text;
     }
 
+    public String toDisplay(Object value, int maxLength) {
+        return TextUtils.abbreviateMiddle(toDisplay(value), maxLength);
+    }
+
     @SuppressWarnings("unchecked")
     public String toLabel(Object value) {
         if (value instanceof Enum) {

@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="render-timers-table">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Group</th>
+            <th scope="col">Name</th>
+            <th scope="col">Count</th>
+            <th scope="col">Total</th>
+            <th scope="col">Average</th>
+            <th scope="col">Maximum</th>
+            <th scope="col">First Access</th>
+            <th scope="col">Last Access</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="timer : ${timers}">
+            <td><span th:text="${timer.group}"></span></td>
+            <td><span th:text="${timer.name}"></span></td>
+            <td><span th:text="${helper.formatNumber(timer.count)}"></span></td>
+            <td><span th:text="${helper.formatDuration(timer.duration)}"></span></td>
+            <td><span th:text="${helper.formatDuration(timer.averageDuration)}"></span></td>
+            <td><span th:text="${helper.formatDuration(timer.maximumDuration)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(timer.firstAccess)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(timer.lastAccess)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="render-counters-table">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Group</th>
+            <th scope="col">Name</th>
+            <th scope="col">Count</th>
+            <th scope="col">First Access</th>
+            <th scope="col">Last Access</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="counter : ${counters}">
+            <td><span th:text="${counter.group}"></span></td>
+            <td><span th:text="${counter.name}"></span></td>
+            <td><span th:text="${helper.formatNumber(counter.value)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(counter.firstAccess)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(counter.lastAccess)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="render-gauges-table">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Group</th>
+            <th scope="col">Name</th>
+            <th scope="col">Value</th>
+            <th scope="col">Total</th>
+            <th scope="col">Average</th>
+            <th scope="col">Maximum</th>
+            <th scope="col">First Access</th>
+            <th scope="col">Last Access</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="gauge : ${gauges}">
+            <td><span th:text="${gauge.group}"></span></td>
+            <td><span th:text="${gauge.name}"></span></td>
+            <td><span th:text="${helper.formatNumber(gauge.value)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(gauge.firstAccess)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(gauge.lastAccess)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="content">
+    <h3 th:replace="~{fragments/utils :: h3_count('Timers', ${timers.size()})}"></h3>
+    <div th:replace="~{meter :: render-timers-table}"></div>
+    <h3 th:replace="~{fragments/utils :: h3_count('Counters', ${counters.size()})}"></h3>
+    <div th:replace="~{meter :: render-counters-table}"></div>
+    <h3 th:replace="~{fragments/utils :: h3_count('Gauges', ${gauges.size()})}"></h3>
+    <div th:replace="~{meter :: render-gauges-table}"></div>
+</div>
+
+<div th:fragment="code" th:remove="tag">
+</div>
+
+</body>
+</html>
