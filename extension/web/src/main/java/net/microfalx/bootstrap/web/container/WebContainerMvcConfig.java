@@ -9,7 +9,6 @@ import net.microfalx.metrics.Timer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -53,7 +52,7 @@ public class WebContainerMvcConfig implements WebMvcConfigurer {
         }
 
         private void recordTime(HttpServletRequest request) {
-            String matchedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+            String matchedPattern = PathFilter.getRequestPattern(request);
             long duration = System.nanoTime() - START_TIME.get();
             Timer timer = METRICS.getTimer(matchedPattern, Timer.Type.SHORT_PERCENTILE);
             timer.record(Duration.ofNanos(duration));

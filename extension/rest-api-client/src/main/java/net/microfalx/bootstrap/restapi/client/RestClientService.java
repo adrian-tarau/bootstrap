@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.restapi.client;
 
 import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
+import net.microfalx.metrics.Metrics;
+import net.microfalx.metrics.Timer;
 import net.microfalx.threadpool.ThreadPool;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
@@ -47,6 +49,7 @@ public class RestClientService implements InitializingBean, TextEncryptor {
 
     private static final String ENCRYPTION_PREFIX = "{rsa}";
     private static final String ENCRYPTION_SALT = "jc1Ynhul3q5kyMU8j7cY9RRrD43CI3cg";
+    private static final Metrics METRICS = Metrics.of("REST Client");
 
     @Autowired private RestApiAuditPersister persister;
 
@@ -132,6 +135,8 @@ public class RestClientService implements InitializingBean, TextEncryptor {
         if (client != null) {
             client.auditEnd(audit);
             auditsForPersistence.offer(audit);
+            Timer timer = METRICS.withGroup(client.getName()).getTimer(audit.getRequestPattern(), Timer.Type.SHORT_PERCENTILE);
+            timer.record(audit.getDuration());
         }
     }
 

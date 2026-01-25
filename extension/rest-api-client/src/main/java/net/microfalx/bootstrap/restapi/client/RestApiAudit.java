@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.restapi.client;
 
 import lombok.Data;
+import net.microfalx.lang.StringUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -29,6 +30,8 @@ public class RestApiAudit {
     private LocalDateTime endedAt;
     private Duration duration;
 
+    static final ThreadLocal<String> CURRENT_REQUEST_PATTERN = new ThreadLocal<>();
+
     public String getName() {
         if (isEmpty(name)) {
             name = defaultIfEmpty(capitalizeWords(getFileName(requestPath)), SLASH);
@@ -40,6 +43,11 @@ public class RestApiAudit {
         return defaultIfEmpty(requestPath, SLASH);
     }
 
+    public String getRequestPattern() {
+        String pattern = CURRENT_REQUEST_PATTERN.get();
+        return defaultIfEmpty(pattern, getRootPath(getRequestPath()));
+    }
+
     public boolean isSuccess() {
         return responseStatus >= 200 && responseStatus < 300;
     }
@@ -49,5 +57,9 @@ public class RestApiAudit {
             return Duration.between(startedAt, endedAt);
         }
         return duration;
+    }
+
+    private static String getRootPath(String path) {
+        return StringUtils.split(path, "/")[0];
     }
 }

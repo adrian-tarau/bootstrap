@@ -3,12 +3,11 @@ package net.microfalx.bootstrap.web.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.support.report.Issue;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.bootstrap.web.util.PathFilter;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 @Component
@@ -17,8 +16,7 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
 
     @Override
     public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        String matchedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        if (matchedPattern == null) matchedPattern = getControllerPath(request.getRequestURI());
+        String matchedPattern = PathFilter.getRequestPattern(request);
         try {
 
             Issue.create(Issue.Type.STABILITY, matchedPattern)
@@ -28,9 +26,5 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
             // ignore any exception here
         }
         return null;
-    }
-
-    private String getControllerPath(String path) {
-        return StringUtils.split(path, "/")[0];
     }
 }
