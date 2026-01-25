@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
 import static net.microfalx.lang.StringUtils.defaultIfNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
@@ -393,11 +394,11 @@ public final class ApplicationService implements InitializingBean {
                 zoneId = ZoneId.of(applicationProperties.getTimeZone());
                 source = "Application";
             } catch (Exception e) {
-                LOGGER.error("Invalid application time zone : " + applicationProperties.getTimeZone());
+                LOGGER.error("Invalid application time zone : {}, root cause: {}", applicationProperties.getTimeZone(), getRootCauseMessage(e));
             }
         }
         TimeZone.setDefault(TimeZone.getTimeZone(zoneId));
-        LOGGER.info("Application Time Zone '{}', source '{}' - initial time zone '{}'", zoneId, source, systemZoneId);
+        LOGGER.info("Application Time Zone '{}', source '{}', initial time zone '{}'", zoneId, source, systemZoneId);
     }
 
     private void initNavigation() {
