@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.restapi.client;
 
 import lombok.Data;
+import net.microfalx.lang.IdGenerator;
 import net.microfalx.lang.StringUtils;
 
 import java.time.Duration;
@@ -18,7 +19,7 @@ public class RestApiAudit {
 
     private RestClient client;
     private String name;
-    private String requestId;
+    private String requestId = REQUEST_ID.get();
     private String requestMethod;
     private String requestPath;
     private String requestQuery;
@@ -30,7 +31,9 @@ public class RestApiAudit {
     private LocalDateTime endedAt;
     private Duration duration;
 
+    private static final IdGenerator ID_GENERATOR = IdGenerator.get("RestAPIClient");
     static final ThreadLocal<String> CURRENT_REQUEST_PATTERN = new ThreadLocal<>();
+    static final ThreadLocal<String> REQUEST_ID = ThreadLocal.withInitial(ID_GENERATOR::nextAsString);
 
     public String getName() {
         if (isEmpty(name)) {

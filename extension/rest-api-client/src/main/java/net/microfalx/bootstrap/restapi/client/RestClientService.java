@@ -170,9 +170,9 @@ public class RestClientService implements InitializingBean, TextEncryptor {
         // first interceptor is the audit one
         builder.addInterceptor(new RestApiAuditInterceptor(this));
         // then the rest
-        builder.addInterceptor(logger.create())
+        builder.addInterceptor(new RestApiHeadersInterceptor())
+                .addInterceptor(logger.create())
                 .addInterceptor(retryInterceptor)
-                .addInterceptor(new RestClientApiKeyInterceptor())
                 .build();
         builder.dispatcher(new Dispatcher(threadPool));
         httpClient = builder.build();

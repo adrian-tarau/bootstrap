@@ -59,7 +59,7 @@ public class Audit extends IdentityAware<Integer> {
     @Column(name = "response_length", nullable = false)
     @Position(12)
     @Label(group = "Response", value = "Length")
-    @Formattable(unit = Formattable.Unit.BYTES)
+    @Formattable(unit = Formattable.Unit.BYTES, negativeValue = Formattable.NA)
     @Description("The response length returned by the server")
     @Width("80px")
     private int responseLength;

@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.restapi.client;
 
+import net.microfalx.lang.ThreadUtils;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -18,6 +19,7 @@ class RestClientRetryInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
         IOException lastException = null;
+        long retryWait = 1000L;
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 Response response = chain.proceed(request);
@@ -26,15 +28,9 @@ class RestClientRetryInterceptor implements Interceptor {
             } catch (IOException e) {
                 lastException = e;
             }
-            try {
-                Thread.sleep(1000L * attempt); // simple backoff
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-            }
+            ThreadUtils.sleepMillis(retryWait);
+            retryWait *= 2;
         }
-
-        throw lastException != null
-                ? lastException
-                : new IOException("Request failed after retries");
+        throw lastException != null ? lastException : new IOException("Request failed after retries");
     }
 }
