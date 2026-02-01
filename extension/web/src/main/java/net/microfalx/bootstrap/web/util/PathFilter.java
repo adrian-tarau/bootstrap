@@ -104,6 +104,6 @@ public class PathFilter {
                 finalParts = 1;
             }
         }
-        return defaultIfEmpty(StringUtils.join("/", Arrays.copyOf(fragments, finalParts)), SLASH);
+        return addStartSlash(defaultIfEmpty(StringUtils.join("/", Arrays.copyOf(fragments, finalParts)), SLASH));
     }
 }
