@@ -298,7 +298,7 @@ class DosRegistry {
     private AddressCounts getCounts(CachedAddress address) {
         return addressCounts.computeIfAbsent(address.getId(), s -> {
             if (!address.isLocalNetwork()) {
-                Issue.create(Issue.Type.DOS, address.getHostname()).withDescription(address.toDescription())
+                Issue.create(Issue.Type.DOS, address.getHostname()).withDescription(address.toDescription()).withModule("Registration")
                         .withSeverity(Issue.Severity.NOTICE).withDescription(address.getLocation().getDescription())
                         .register();
             }

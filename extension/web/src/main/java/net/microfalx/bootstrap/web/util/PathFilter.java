@@ -9,8 +9,8 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.StringUtils.addStartSlash;
-import static net.microfalx.lang.StringUtils.removeStartSlash;
+import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.UriUtils.SLASH;
 
 /**
  * A utility class which filters paths based on exclusion rules.
@@ -104,6 +104,6 @@ public class PathFilter {
                 finalParts = 1;
             }
         }
-        return StringUtils.join("/", Arrays.copyOf(fragments, finalParts));
+        return defaultIfEmpty(StringUtils.join("/", Arrays.copyOf(fragments, finalParts)), SLASH);
     }
 }
