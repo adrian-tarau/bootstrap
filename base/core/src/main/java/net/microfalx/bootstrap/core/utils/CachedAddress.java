@@ -218,6 +218,10 @@ public class CachedAddress implements Identifiable<String>, Nameable, Timestampa
         return isLocalHost(hostOrIp);
     }
 
+    public boolean isLocalNetwork() {
+        return isLocalNetwork(hostOrIp);
+    }
+
     public boolean isIp() {
         return isIP(hostOrIp);
     }

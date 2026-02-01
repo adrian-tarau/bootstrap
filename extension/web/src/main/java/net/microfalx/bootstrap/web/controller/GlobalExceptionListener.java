@@ -20,7 +20,7 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
         try {
             Issue.create(Issue.Type.STABILITY, matchedPattern).withDescription(ex, "Unhandled exception in controller")
                     .withModule("Controller").withSeverity(Issue.Severity.HIGH)
-                    .withAttribute(PathFilter.getRootPath(request), 1)
+                    .withAttributeCounter(PathFilter.getRootPath(request))
                     .register();
         } catch (Exception e) {
             // ignore any exception here

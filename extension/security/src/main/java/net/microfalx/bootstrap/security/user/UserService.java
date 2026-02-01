@@ -373,7 +373,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
             LOGGER.atWarn().setCause(exception).log("Unknown authentication failure, user '{}'", failures.getAuthentication().getName());
         }
         issue.withModule("User").withSeverity(Issue.Severity.CRITICAL)
-                .withAttribute(failures.getAuthentication().getName(), 1)
+                .withAttributeCounter(failures.getAuthentication().getName())
                 .register();
     }
 

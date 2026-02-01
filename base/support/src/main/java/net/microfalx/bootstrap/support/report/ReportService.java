@@ -114,7 +114,7 @@ public class ReportService implements InitializingBean {
      * @return the number of issues
      */
     public int getIssueCount(Issue.Severity severity) {
-        return (int) getIssues().stream().filter(issue -> issue.getSeverity().ordinal() >= severity.ordinal()).mapToLong(Issue::getOccurrences).sum();
+        return (int) getIssues().stream().filter(issue -> issue.getSeverity().ordinal() == severity.ordinal()).mapToLong(Issue::getOccurrences).sum();
     }
 
     /**
@@ -276,6 +276,7 @@ public class ReportService implements InitializingBean {
 
     private void initTasks() {
         threadPool.schedule(new SendReportTask(ofHours(24)), new CronTrigger(properties.getDailySchedule()));
+        threadPool.schedule(new IssuesReportTask(Issue.Severity.NOTICE), new CronTrigger(properties.getWithIssuesSchedule()));
         threadPool.schedule(new IssuesReportTask(Issue.Severity.MEDIUM), new CronTrigger(properties.getWithIssuesSchedule()));
         threadPool.schedule(new IssuesReportTask(Issue.Severity.CRITICAL), new CronTrigger(properties.getWithCriticalIssuesSchedule()));
     }
@@ -320,8 +321,17 @@ public class ReportService implements InitializingBean {
         int issueHighCount = getIssueCount(Issue.Severity.HIGH);
         int issueMediumHighCount = getIssueCount(Issue.Severity.MEDIUM);
         int issueLowCount = getIssueCount(Issue.Severity.LOW);
-        name += " (Critical: " + issueCriticalCount + ", High: " + issueHighCount + ", Medium: " + issueMediumHighCount
-                + ", Low: " + issueLowCount + ")";
+        boolean hasIssues = issueCriticalCount + issueHighCount + issueMediumHighCount + issueLowCount > 0;
+        int issueNoticeCount = getIssueCount(Issue.Severity.NOTICE);
+        if (hasIssues) {
+            name += " (Critical: " + issueCriticalCount + ", High: " + issueHighCount + ", Medium: " + issueMediumHighCount
+                    + ", Low: " + issueLowCount;
+        }
+        if (issueNoticeCount > 0) {
+            if (hasIssues) name += ", ";
+            name += "Notice: " + issueNoticeCount;
+        }
+        name += ")";
         report.setName(name);
     }
 
@@ -367,11 +377,17 @@ public class ReportService implements InitializingBean {
         } else {
             long criticalIssuesCount = getIssueCount(Issue.Severity.CRITICAL);
             long highIssuesCount = getIssueCount(Issue.Severity.HIGH);
-            // if it was requested to send only critical issues, but there are none, skip sending
-            if (criticalIssuesCount > 0 && severity != Issue.Severity.CRITICAL) return;
-            // if there are issues, sent the report, looking at the last hour
-            boolean shouldSend = criticalIssuesCount >= properties.getCriticalIssuesThreshold() ||
-                    highIssuesCount >= properties.getHighIssuesThreshold();
+            long noticeIssuesCount = getIssueCount(Issue.Severity.NOTICE);
+            boolean shouldSend;
+            if (severity == Issue.Severity.NOTICE) {
+                shouldSend = noticeIssuesCount > 0;
+            } else {
+                // if it was requested to send only critical issues, but there are none, skip sending
+                if (criticalIssuesCount > 0 && severity != Issue.Severity.CRITICAL) return;
+                // if there are issues, sent the report, looking at the last hour
+                shouldSend = criticalIssuesCount >= properties.getCriticalIssuesThreshold() ||
+                        highIssuesCount >= properties.getHighIssuesThreshold();
+            }
             if (shouldSend) {
                 REPORT.count("Sent: " + severity.name());
                 send(Duration.ofHours(1));

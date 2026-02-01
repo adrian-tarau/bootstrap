@@ -146,12 +146,12 @@ public class DosService implements InitializingBean {
         requireNonNull(request);
         registry.checkReload();
         if (!isEnabled()) {
-            registry.incrementCount(request.getAddress(), Rule.Action.ALLOW);
+            registry.incrementCount(request, Rule.Action.ALLOW);
             return Rule.Action.ALLOW;
         }
         CachedAddress address = registry.resolve(request.getAddress());
         if (!address.isResolved()) {
-            registry.incrementCount(request.getAddress(), Rule.Action.DENY);
+            registry.incrementCount(request, Rule.Action.DENY);
             return Rule.Action.DENY;
         }
         return registry.validate(request, address);

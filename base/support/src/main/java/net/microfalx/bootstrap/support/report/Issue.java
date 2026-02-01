@@ -170,6 +170,16 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
     }
 
     /**
+     * Adds a counter attribute to this issue.
+     *
+     * @param name the name of the attribute
+     * @return a new instance with the added attribute
+     */
+    public Issue withAttributeCounter(String name) {
+        return withAttribute(name, 1);
+    }
+
+    /**
      * Merges this issue with another one.
      *
      * @param other the other issue
@@ -256,6 +266,11 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
          * Vulnerabilities, auth issues, data leaks, misconfigurations
          */
         SECURITY,
+
+        /**
+         * Denial of Service, excessive requests, abuse
+         */
+        DOS,
 
         /**
          * Slow responses, high latency, excessive resource usage

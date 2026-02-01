@@ -7,6 +7,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.core.utils.CachedAddress;
 import net.microfalx.bootstrap.core.utils.GeoLocation;
+import net.microfalx.bootstrap.support.report.Issue;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Timer;
@@ -40,8 +41,8 @@ class DosRegistry {
 
     private final Map<String, Rule> rulesById = new ConcurrentHashMap<>();
     private final Map<String, Rule> rulesByAddress = new ConcurrentHashMap<>();
-    private final Map<String, AddressCounts> counts = new ConcurrentHashMap<>();
-    private final Map<String, AddressCounts> lastPersistedCounts = new ConcurrentHashMap<>();
+    private final Map<String, AddressCounts> addressCounts = new ConcurrentHashMap<>();
+    private final Map<String, AddressCounts> persistedAddressCounts = new ConcurrentHashMap<>();
     private final Map<String, ActionCache> actions = new ConcurrentHashMap<>();
     private final Map<String, ActionCache> cidrActions = new ConcurrentHashMap<>();
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
@@ -66,7 +67,7 @@ class DosRegistry {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     Collection<RequestCounts> getRequestCounts() {
-        Collection values = unmodifiableCollection(counts.values());
+        Collection values = unmodifiableCollection(addressCounts.values());
         return (Collection<RequestCounts>) values;
     }
 
@@ -90,7 +91,7 @@ class DosRegistry {
         incrementCount(request, address);
         registerClientIfRequired(address, request);
         Rule rule = findRule(ip);
-        AddressCounts addressCounts = counts.computeIfAbsent(address.getId(), s -> new AddressCounts(address));
+        AddressCounts addressCounts = getCounts(address);
         AddressCount requestCount = addressCounts.increment(request);
         ThresholdViolation thresholdViolation = getThresholdViolation(request, addressCounts);
         Rule.Action action = rule.getAction() == Rule.Action.AUTO ? Rule.Action.DENY : rule.getAction();
@@ -123,7 +124,7 @@ class DosRegistry {
         if (actionCache == null || actionCache.action == Rule.Action.AUTO || !actionCache.rule.isActive()) {
             actionCache = actions.get(ip);
         }
-        if (actionCache == null) return incrementCount(ip, Rule.Action.ALLOW);
+        if (actionCache == null) return incrementCount(request, Rule.Action.ALLOW);
         if (actionCache.action == Rule.Action.THROTTLE && !actionCache.isExpired()) {
             throttle(actionCache.rule, address);
         }
@@ -134,7 +135,7 @@ class DosRegistry {
                 action = removeBan(address, actionCache);
             }
         }
-        return incrementCount(ip, action);
+        return incrementCount(request, action);
     }
 
     Rule findRuleWithCidr(String ip) {
@@ -164,8 +165,15 @@ class DosRegistry {
         DosUtils.REQUEST_OUTCOME.increment(request.getOutcome().name().toLowerCase());
     }
 
-    Rule.Action incrementCount(String hostName, Rule.Action action) {
-        DosUtils.METRICS.withGroup(capitalize(action.name())).increment(hostName);
+    Rule.Action incrementCount(Request request, Rule.Action action) {
+        CachedAddress address = resolve(request.getAddress());
+        DosUtils.METRICS.withGroup(capitalize(action.name())).increment(address.getHostname());
+        if (action == Rule.Action.DENY || action == Rule.Action.THROTTLE) {
+            Issue.create(Issue.Type.DOS, address.getHostname()).withDescription(address.toDescription())
+                    .withAttributeCounter(request.getUri().getPath())
+                    .withSeverity(action == Rule.Action.DENY ? Issue.Severity.CRITICAL : Issue.Severity.NOTICE)
+                    .register();
+        }
         return action;
     }
 
@@ -287,6 +295,17 @@ class DosRegistry {
         });
     }
 
+    private AddressCounts getCounts(CachedAddress address) {
+        return addressCounts.computeIfAbsent(address.getId(), s -> {
+            if (!address.isLocalNetwork()) {
+                Issue.create(Issue.Type.DOS, address.getHostname()).withDescription(address.toDescription())
+                        .withSeverity(Issue.Severity.NOTICE).withDescription(address.getLocation().getDescription())
+                        .register();
+            }
+            return new AddressCounts(address);
+        });
+    }
+
     private void initThresholds() {
         accessThreshold = DosUtils.parseThreshold(properties.getAccessThreshold());
         failureThreshold = DosUtils.parseThreshold(properties.getFailureThreshold());
@@ -298,11 +317,11 @@ class DosRegistry {
     }
 
     private void persistCounts() {
-        for (AddressCounts count : counts.values()) {
-            AddressCounts previous = lastPersistedCounts.getOrDefault(count.getId(), new AddressCounts(count.getAddress()));
+        for (AddressCounts count : addressCounts.values()) {
+            AddressCounts previous = persistedAddressCounts.getOrDefault(count.getId(), new AddressCounts(count.getAddress()));
             AddressCounts current = count.copy(null);
             AddressCounts toPersist = current.copy(previous);
-            lastPersistedCounts.put(count.getId(), current);
+            persistedAddressCounts.put(count.getId(), current);
             Rule rule = findRule(count.getIp());
             if (rule != null) {
                 try {
@@ -317,14 +336,14 @@ class DosRegistry {
     private void updateCounts() {
         Set<String> ips = new HashSet<>();
         long inactiveIntervalMs = properties.getInactivityInterval().toMillis();
-        for (AddressCounts value : counts.values()) {
+        for (AddressCounts value : addressCounts.values()) {
             if (millisSince(value.updated) > inactiveIntervalMs) ips.add(value.getId());
         }
         StringBuilder logger = new StringBuilder();
         logger.append("Removed inactive IPs:");
         for (String ip : ips) {
             logger.append("  - ").append(ip).append('\n');
-            counts.remove(ip);
+            addressCounts.remove(ip);
         }
         if (!ips.isEmpty()) LOGGER.info(logger.toString());
     }
