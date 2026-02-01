@@ -31,7 +31,7 @@ public class Audit extends IdentityAware<Integer> {
     @Column(name = "uri")
     @Position(20)
     @Description("The requested URI which triggered the audit entry")
-    @Width("150px")
+    @Width("20%")
     private String uri;
 
     @Column(name = "reason")
@@ -52,6 +52,6 @@ public class Audit extends IdentityAware<Integer> {
     @Column(name = "description")
     @Description("A description associated with the audit entry")
     @Position(100)
-    @Width("50%")
+    @Width("40%")
     private String description;
 }

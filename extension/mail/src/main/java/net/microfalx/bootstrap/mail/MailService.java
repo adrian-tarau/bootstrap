@@ -139,7 +139,8 @@ public class MailService implements InitializingBean {
         MAIL_FAILED.count(address);
         Issue.create(Issue.Type.STABILITY, "Mail")
                 .withDescription(e, "Failed to send email to ''{0}''", address)
-                .withSeverity(Issue.Severity.HIGH).register();
+                .withSeverity(Issue.Severity.HIGH).withAttribute(address, 1)
+                .register();
     }
 
     private void initMailSender() {

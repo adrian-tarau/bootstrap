@@ -105,6 +105,7 @@
             <th scope="col">Count</th>
             <th scope="col">First Occurrence</th>
             <th scope="col">Last Occurrence</th>
+            <th scope="col">Attributes</th>
             <th scope="col">Description</th>
         </tr>
         </thead>
@@ -117,6 +118,7 @@
             <td><span th:text="${issue.occurrences}"></span></td>
             <td><span th:text="${helper.formatDateTime(issue.firstDetectedAt)}"></span></td>
             <td><span th:text="${helper.formatDateTime(issue.lastDetectedAt)}"></span></td>
+            <td><span th:text="${helper.toDisplay(issue.getAttributesDescription(), 100)}"></span></td>
             <td><span th:text="${helper.toDisplay(issue.description, 100)}"></span></td>
         </tr>
         </tbody>

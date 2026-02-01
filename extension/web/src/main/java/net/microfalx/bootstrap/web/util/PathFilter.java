@@ -4,9 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import net.microfalx.lang.StringUtils;
 import org.springframework.web.servlet.HandlerMapping;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.addStartSlash;
 import static net.microfalx.lang.StringUtils.removeStartSlash;
 
@@ -52,9 +54,32 @@ public class PathFilter {
     }
 
     public static String getRequestPattern(HttpServletRequest request) {
+        requireNonNull(request);
         String matchedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        if (matchedPattern == null) matchedPattern = getRootPath(request.getRequestURI());
+        if (matchedPattern == null) matchedPattern = getRootPath(request.getRequestURI(), -1);
         return addStartSlash(matchedPattern);
+    }
+
+    /**
+     * Returns the root path with the given number of parts.
+     *
+     * @param request the request
+     * @return a non-null instance
+     */
+    public static String getRootPath(HttpServletRequest request) {
+        return getRootPath(request, -1);
+    }
+
+    /**
+     * Returns the root path with the given number of parts.
+     *
+     * @param request the request
+     * @param parts   the number of parts
+     * @return a non-null instance
+     */
+    public static String getRootPath(HttpServletRequest request, int parts) {
+        requireNonNull(request);
+        return getRootPath(request.getRequestURI(), parts);
     }
 
     private void registerDefaultPaths() {
@@ -68,7 +93,17 @@ public class PathFilter {
         registerExclusion(".well-known");
     }
 
-    private static String getRootPath(String path) {
-        return StringUtils.split(path, "/")[0];
+    private static String getRootPath(String path, int parts) {
+        String[] fragments = StringUtils.split(path, "/");
+        int finalParts = parts;
+        if (finalParts <= 0) {
+            // if in auto mode, if it is longer than 3
+            if (fragments.length >= 3) {
+                finalParts = 2;
+            } else {
+                finalParts = 1;
+            }
+        }
+        return StringUtils.join("/", Arrays.copyOf(fragments, finalParts));
     }
 }

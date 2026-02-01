@@ -5,13 +5,17 @@ import lombok.ToString;
 import net.microfalx.lang.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableMap;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
-import static net.microfalx.lang.StringUtils.formatMessage;
+import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TextUtils.abbreviateMiddle;
 
 @Getter
@@ -25,6 +29,7 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
     private String description;
     private LocalDateTime firstDetectedAt = LocalDateTime.now();
     private LocalDateTime lastDetectedAt = firstDetectedAt;
+    private Map<String, Object> attributes;
     private int occurrences = 1;
     private Severity severity = Severity.MEDIUM;
     private Class<?> throwableClass;
@@ -45,6 +50,15 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
         this.type = type;
         this.name = name;
         updateId();
+    }
+
+    /**
+     * Returns the attributes associated with this issue.
+     *
+     * @return a non-null instance
+     */
+    public Map<String, Object> getAttributes() {
+        return attributes != null ? unmodifiableMap(attributes) : emptyMap();
     }
 
     /**
@@ -141,10 +155,57 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
     }
 
     /**
+     * Adds an attribute to this issue.
+     *
+     * @param name  the name of the attribute
+     * @param value the value of the attribute
+     * @return a new instance with the added attribute
+     */
+    public Issue withAttribute(String name, Object value) {
+        requireNotEmpty(name);
+        Issue copy = copy();
+        copy.attributes = new HashMap<>(copy.attributes != null ? copy.attributes : emptyMap());
+        copy.attributes.put(name, merge(copy.attributes.get(name), value));
+        return copy;
+    }
+
+    /**
+     * Merges this issue with another one.
+     *
+     * @param other the other issue
+     * @return a new instance representing the merged issue
+     */
+    public Issue merge(Issue other) {
+        Issue copy = copy();
+        if (other.firstDetectedAt.isBefore(copy.firstDetectedAt)) {
+            copy.firstDetectedAt = other.firstDetectedAt;
+        }
+        if (other.lastDetectedAt.isAfter(copy.lastDetectedAt)) {
+            copy.lastDetectedAt = other.lastDetectedAt;
+        }
+        copy.occurrences = copy.occurrences + other.occurrences;
+        copy.attributes = merge(copy.attributes, other.attributes);
+        return copy;
+    }
+
+    /**
      * Registers this issue for reporting.
      */
     public void register() {
         ISSUES.offer(this);
+    }
+
+    /**
+     * Returns a description of attributes.
+     *
+     * @return a non-null instance
+     */
+    public String getAttributesDescription() {
+        if (attributes == null || attributes.isEmpty()) return EMPTY_STRING;
+        StringBuilder builder = new StringBuilder();
+        attributes.forEach((k, v) -> builder.append(k).append("=").append(v).append(", "));
+        if (builder.length() > 2) builder.setLength(builder.length() - 2);
+        return defaultIfEmpty(builder.toString(), NA_STRING);
     }
 
     private void updateId() {
@@ -162,6 +223,28 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
         } catch (CloneNotSupportedException e) {
             return ExceptionUtils.rethrowExceptionAndReturn(e);
         }
+    }
+
+    private Map<String, Object> merge(Map<String, Object> currentMap, Map<String, Object> newMap) {
+        if (currentMap == null || newMap == null) return null;
+        Map<String, Object> merged = new java.util.HashMap<>(currentMap);
+        newMap.forEach((k, v) -> merged.put(k, merge(merged.get(k), v)));
+        return merged;
+    }
+
+    private Object merge(Object previous, Object current) {
+        if (previous instanceof Number previousNumber && current instanceof Number newNumber) {
+            if (previousNumber instanceof Double || newNumber instanceof Double) {
+                return previousNumber.doubleValue() + newNumber.doubleValue();
+            } else if (previousNumber instanceof Float || newNumber instanceof Float) {
+                return previousNumber.floatValue() + newNumber.floatValue();
+            } else if (previousNumber instanceof Long || newNumber instanceof Long) {
+                return previousNumber.longValue() + newNumber.longValue();
+            } else {
+                return previousNumber.intValue() + newNumber.intValue();
+            }
+        }
+        return current;
     }
 
     /**
@@ -214,9 +297,30 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * A severity associated with the issue.
      */
     public enum Severity {
+
+        /**
+         * Notice level issue - informational only
+         */
+        NOTICE,
+
+        /**
+         * Low severity issue - minor impact
+         */
         LOW,
+
+        /**
+         * Medium severity issue - moderate impact
+         */
         MEDIUM,
+
+        /**
+         * High severity issue - significant impact
+         */
         HIGH,
+
+        /**
+         * Critical severity issue - severe impact
+         */
         CRITICAL
     }
 }

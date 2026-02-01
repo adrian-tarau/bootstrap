@@ -417,7 +417,7 @@ public class ReportService implements InitializingBean {
     private void mergeIssue(Map<String, Issue> issues, Issue issue) {
         Issue previous = issues.putIfAbsent(issue.getId(), issue);
         if (previous != null) {
-            issue = previous.withDetectedAt(issue.getLastDetectedAt());
+            issue = previous.merge(issue);
             issues.put(issue.getId(), issue);
         }
     }
