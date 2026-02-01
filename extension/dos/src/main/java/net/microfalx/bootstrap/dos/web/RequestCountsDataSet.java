@@ -13,6 +13,7 @@ public class RequestCountsDataSet extends MemoryDataSet<RequestCounts, Field<Req
 
     public RequestCountsDataSet(DataSetFactory<RequestCounts, Field<RequestCounts>, String> factory, Metadata<RequestCounts, Field<RequestCounts>, String> metadata) {
         super(factory, metadata);
+        expireImmediately();
     }
 
     @Override

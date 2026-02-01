@@ -51,6 +51,16 @@ public abstract class MemoryDataSet<M, F extends Field<M>, ID> extends AbstractD
         return this;
     }
 
+    /**
+     * Changes the expiration to expire "immediately".
+     *
+     * @return self
+     */
+    public MemoryDataSet<M, F, ID> expireImmediately() {
+        this.expiration = Duration.ofMillis(500);
+        return this;
+    }
+
     @Override
     protected final List<M> doFindAll() {
         return getCachedModels(Filter.EMPTY).getModels();

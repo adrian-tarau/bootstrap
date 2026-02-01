@@ -21,6 +21,7 @@ import static net.microfalx.lang.StringUtils.isEmpty;
 public class DosUtils {
 
     private static final String HTTP_HEADER_X_FORWARDED_FOR = "X-Forwarded-For";
+    private static final String HTTP_HEADER_X_HEALTH_CHECK = "X-Health-Check";
 
     static final Metrics METRICS = Metrics.of("Denial of Service");
     static final Metrics ERROR = METRICS.withGroup("Error");
