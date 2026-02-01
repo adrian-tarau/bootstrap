@@ -74,7 +74,7 @@ public class DosProperties {
     private String validationThreshold = "5 r/s, 15m";
 
     /**
-     * A threshold applied to any request which connot be decoded.
+     * A threshold applied to any request which cannot be decoded.
      */
     private String invalidThreshold = "2 r/s, 5m";
 

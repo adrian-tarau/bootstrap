@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.FormatterUtils.formatDuration;
 
 /**
  * A service which provides protection against DoS attacks.
@@ -190,7 +191,8 @@ public class DosService implements InitializingBean {
     }
 
     private void logConfiguration() {
-        LOGGER.info("DoS Service is enabled = {}", isEnabled());
+        LOGGER.info("DoS Service is enabled = {}, maintenance interval {}, maximum throttling duration {}",
+                isEnabled(), formatDuration(properties.getMaintenanceInterval()), formatDuration(properties.getMaximumThrottlingDuration()));
     }
 
     private Rule normalize(Rule rule) {

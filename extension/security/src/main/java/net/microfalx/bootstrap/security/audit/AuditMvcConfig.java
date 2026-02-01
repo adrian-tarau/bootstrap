@@ -67,7 +67,7 @@ public class AuditMvcConfig implements WebMvcConfigurer {
     private String getClientIp(HttpServletRequest request) {
         String forwardedHost = request.getHeader(HTTP_HEADER_X_FORWARDED_FOR);
         if (isEmpty(forwardedHost)) {
-            forwardedHost = request.getServerName();
+            forwardedHost = request.getRemoteAddr();
         } else {
             forwardedHost = StringUtils.split(forwardedHost, ",")[0];
         }
