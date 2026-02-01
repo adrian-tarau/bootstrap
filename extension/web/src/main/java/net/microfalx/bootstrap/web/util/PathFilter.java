@@ -18,7 +18,11 @@ public class PathFilter {
     private final Set<String> excludedPaths = new CopyOnWriteArraySet<>();
 
     public PathFilter() {
-        registerDefaultPaths();
+        this(true);
+    }
+
+    public PathFilter(boolean withDefaults) {
+        if (withDefaults) registerDefaultPaths();
     }
 
     public void registerExclusion(String path) {
@@ -61,6 +65,7 @@ public class PathFilter {
         registerExclusion("image");
         registerExclusion("error");
         registerExclusion("favicon.ico");
+        registerExclusion(".well-known");
     }
 
     private static String getRootPath(String path) {

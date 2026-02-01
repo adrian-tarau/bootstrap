@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.model;
 
 import net.microfalx.lang.EnumUtils;
+import net.microfalx.lang.ObjectUtils;
 
 /**
  * A collection of Jodd data conversions
@@ -17,7 +18,7 @@ public class FieldConverters {
      */
     @SuppressWarnings("unchecked")
     static final <E extends Enum<E>> E toEnum(Class<E> type, Object value) {
-        if (value == null) {
+        if (ObjectUtils.isEmpty(value)) {
             return null;
         } else if (value instanceof Enum) {
             return (E) value;

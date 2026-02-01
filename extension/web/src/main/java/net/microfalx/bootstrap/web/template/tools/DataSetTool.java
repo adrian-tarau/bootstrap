@@ -420,6 +420,7 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
      * @return {@code true} if checked, {@code false} if unchecked, {@code NULL} if the field is not a boolean
      */
     public Boolean isChecked(M model, Field<M> field) {
+        if (model == null) return null;
         DataSet<M, F, ID> dataSet = getDataSet();
         if (field.getDataType().isBoolean()) {
             return Boolean.TRUE.equals(field.get(model));

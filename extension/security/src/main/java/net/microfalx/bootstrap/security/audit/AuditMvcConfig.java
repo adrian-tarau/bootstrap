@@ -17,10 +17,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.lang.reflect.Method;
 
-import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.replaceFirst;
 
 @Configuration
 public class AuditMvcConfig implements WebMvcConfigurer {
+
+    private static final String HTTP_HEADER_X_FORWARDED_FOR = "X-Forwarded-For";
 
     private final PathFilter pathFilter = new PathFilter();
 
@@ -62,17 +65,13 @@ public class AuditMvcConfig implements WebMvcConfigurer {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (isEmpty(ip)) {
-            ip = request.getRemoteAddr();
+        String forwardedHost = request.getHeader(HTTP_HEADER_X_FORWARDED_FOR);
+        if (isEmpty(forwardedHost)) {
+            forwardedHost = request.getServerName();
         } else {
-            int commaIndex = ip.indexOf(',');
-            if (commaIndex != -1) {
-                ip = ip.substring(0, commaIndex);
-            }
+            forwardedHost = StringUtils.split(forwardedHost, ",")[0];
         }
-        if (isNotEmpty(request.getRemoteUser())) ip = request.getRemoteUser() + "@" + ip;
-        return ip;
+        return forwardedHost;
     }
 
     private class Interceptor implements HandlerInterceptor {
