@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<navigations xmlns="https://net.microfalx/xsd/navigation-1.0.xsd">
+    <menu id="primary">
+        <menu id="dos" text="Denial Of Service" position="500" parent="system" roles="admin" icon="fa-solid fa-shield-halved">
+            <item id="rule" text="Rules" action="/system/dos/rules" icon="fa-solid fa-filter"/>
+            <item id="request" text="Requests" action="/system/dos/request" icon="fa-solid fa-server"/>
+            <item id="audit" text="Audit" action="/system/dos/audit" icon="fa-solid fa-file-shield"/>
+        </menu>
+    </menu>
+</navigations>
