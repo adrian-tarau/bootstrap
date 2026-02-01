@@ -70,8 +70,8 @@ public class IpWhoIs implements GeoLocation {
     @Override
     public String getDescription() {
         if (resolved && (isNotEmpty(country) || isNotEmpty(region) || isNotEmpty(city))) {
-            return defaultIfEmpty(country, NA_STRING) + " / " + defaultIfEmpty(region, NA_STRING)
-                    + " / " + defaultIfEmpty(city, NA_STRING);
+            return defaultIfEmpty(region, NA_STRING) + " / " + defaultIfEmpty(city, NA_STRING)
+                    + " (" + defaultIfEmpty(country, NA_STRING) + ")";
         } else {
             return EMPTY_STRING;
         }

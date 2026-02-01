@@ -56,7 +56,7 @@ public class DosProperties {
     /**
      * A threshold applied to any request which is considered a valid request.
      */
-    private String accessThreshold = "30 r/s, 60s";
+    private String accessThreshold = "60 r/s, 60s";
 
     /**
      * A threshold applied to any request which is considered a failed request (4XX, 5XX, outside security).

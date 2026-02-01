@@ -76,17 +76,17 @@ public class RequestCounts {
 
     @Position(30)
     @Description("The location associated with the IP address (if available)")
-    @Width("15%")
+    @Width("10%")
     private String location;
 
     @Position(100)
     @Description("The timestamp of the first request")
-    @Width("150px")
+    @Width("180px")
     private LocalDateTime createdAt;
 
     @Position(101)
     @Description("The timestamp of the last request")
-    @Width("150px")
+    @Width("180px")
     private LocalDateTime modifiedAt;
 
 }

@@ -7,10 +7,7 @@ import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.bootstrap.jdbc.entity.surrogate.IdentityAware;
-import net.microfalx.lang.annotation.CreatedAt;
-import net.microfalx.lang.annotation.Description;
-import net.microfalx.lang.annotation.Position;
-import net.microfalx.lang.annotation.ReadOnly;
+import net.microfalx.lang.annotation.*;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
@@ -28,11 +25,13 @@ public class Audit extends IdentityAware<Integer> {
     @ManyToOne
     @Position(10)
     @Description("The rule which logged this audit entry")
+    @Width("150px")
     private Rule rule;
 
     @Column(name = "uri")
     @Position(20)
     @Description("The requested URI which triggered the audit entry")
+    @Width("150px")
     private String uri;
 
     @Column(name = "reason")
@@ -47,9 +46,12 @@ public class Audit extends IdentityAware<Integer> {
     @net.microfalx.bootstrap.dataset.annotation.OrderBy(OrderBy.Direction.DESC)
     @CreatedDate
     @CreatedAt
+    @Width("180px")
     private LocalDateTime createdAt;
 
     @Column(name = "description")
     @Description("A description associated with the audit entry")
+    @Position(100)
+    @Width("50%")
     private String description;
 }
