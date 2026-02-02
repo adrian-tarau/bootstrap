@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.security;
 
 import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
+import net.microfalx.lang.StringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -97,11 +98,16 @@ public class SecurityUtils {
      * @return a non-null instance
      */
     public static String getUserName(Authentication authentication) {
+        String userName = null;
         if (authentication != null) {
             Object principal = authentication.getPrincipal();
-            if (principal instanceof UserDetails) return ((UserDetails) principal).getUsername();
+            if (principal instanceof UserDetails) {
+                userName = ((UserDetails) principal).getUsername();
+            } else if (principal instanceof Principal) {
+                userName = ((Principal) principal).getName();
+            }
         }
-        return SecurityConstants.ANONYMOUS_USER;
+        return StringUtils.defaultIfEmpty(userName, SecurityConstants.ANONYMOUS_USER);
     }
 
     /**

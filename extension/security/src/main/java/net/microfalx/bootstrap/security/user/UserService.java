@@ -8,6 +8,7 @@ import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.restapi.ApiCredentialService;
 import net.microfalx.bootstrap.security.SecurityConstants;
 import net.microfalx.bootstrap.security.SecurityContext;
+import net.microfalx.bootstrap.security.SecurityUtils;
 import net.microfalx.bootstrap.security.audit.AuditContext;
 import net.microfalx.bootstrap.security.audit.jpa.Audit;
 import net.microfalx.bootstrap.security.audit.jpa.AuditRepository;
@@ -343,7 +344,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
                 .setDescription("User '" + success.getAuthentication().getName() + "' was authenticated successfully");
         context = updateAuditContext(context, success.getAuthentication());
         audit(context);
-        LOGGER.info("Authenticated user '{}'", success.getAuthentication().getName());
+        LOGGER.info("Authenticated user '{}'", getUserName(success.getAuthentication()));
     }
 
     @EventListener
@@ -355,25 +356,26 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
                         + getRootCauseMessage(exception));
         context = updateAuditContext(context, failures.getAuthentication());
         audit(context);
+        String userName = getUserName(failures.getAuthentication());
         Issue issue;
         if (exception instanceof BadCredentialsException) {
             issue = Issue.create(Issue.Type.SECURITY, "Bad Credentials").withDescription("Bad credentials provided for user ''{0}''", failures.getAuthentication().getName());
-            LOGGER.warn("Bad credentials provided for user '{}'", failures.getAuthentication().getName());
+            LOGGER.warn("Bad credentials provided for user '{}'", userName);
         } else if (exception instanceof UsernameNotFoundException) {
             issue = Issue.create(Issue.Type.SECURITY, "Wrong User")
-                    .withDescription("User ''{0}'' could not be found", failures.getAuthentication().getName());
-            LOGGER.warn("User '{}' could not be found", failures.getAuthentication().getName());
+                    .withDescription("User ''{0}'' could not be found", userName);
+            LOGGER.warn("User '{}' could not be found", userName);
         } else if (exception instanceof AuthenticationException) {
             issue = Issue.create(Issue.Type.SECURITY, "Authentication")
-                    .withDescription(exception, "Authentication exception for user ''{0}''", failures.getAuthentication().getName());
-            LOGGER.warn("Authentication exception for user '{}': {}", failures.getAuthentication().getName(), getRootCauseMessage(exception));
+                    .withDescription(exception, "Authentication exception for user ''{0}''", userName);
+            LOGGER.warn("Authentication exception for user '{}': {}", userName, getRootCauseMessage(exception));
         } else {
             issue = Issue.create(Issue.Type.SECURITY, "Unknown Authentication")
-                    .withDescription(exception, "An unknown authentication failure occurred for user ''{0}''", failures.getAuthentication().getName());
-            LOGGER.atWarn().setCause(exception).log("Unknown authentication failure, user '{}'", failures.getAuthentication().getName());
+                    .withDescription(exception, "An unknown authentication failure occurred for user ''{0}''", userName);
+            LOGGER.atWarn().setCause(exception).log("Unknown authentication failure, user '{}'", userName);
         }
         issue.withModule("User").withSeverity(Issue.Severity.CRITICAL)
-                .withAttributeCounter(failures.getAuthentication().getName())
+                .withAttributeCounter(userName)
                 .register();
     }
 
@@ -468,8 +470,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     }
 
     private AuditContext updateAuditContext(AuditContext context, Authentication authentication) {
-        UserDetails userDetails = getUserDetails(authentication);
-        context.setReference(userDetails.getUsername());
+        context.setReference(SecurityUtils.getUserName(authentication));
         return context;
     }
 
