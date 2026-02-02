@@ -278,6 +278,15 @@ Application.getHeaders = function() {
 }
 
 /**
+ * Updates the CSRF token in the given parameters.
+ *
+ * @param {Object} params the parameters where to set the token
+ */
+Application.updateCsrf = function (params) {
+    if (Utils.isDefined(APP_CSRF)) params[APP_CSRF.parameterName] = APP_CSRF.token;
+}
+
+/**
  * Returns the query parameter with a given name.
  *
  * @param {String} name the parameter name

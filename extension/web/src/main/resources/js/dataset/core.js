@@ -616,10 +616,13 @@ DataSet.initTables = function () {
 DataSet.initUpload = function () {
     let dropZoneEl = $("div." + DATASET_DROP_ZONE_CLASS);
     if (dropZoneEl.length === 0) return;
+    let params=  {};
+    Application.updateCsrf(params);
     let dropZone = new Dropzone("div." + DATASET_DROP_ZONE_CLASS, {
         //autoProcessQueue: false,
         createImageThumbnails: false,
         disablePreviews: true,
+        params: params,
         url: APP_REQUEST_PATH + "/upload"
     });
     dropZone.on("success", function (file) {
