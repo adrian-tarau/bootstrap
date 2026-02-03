@@ -44,6 +44,7 @@
         <module>registry</module>
         <module>store</module>
         <module>support</module>
+        <module>feature</module>
     </modules>
 
 </project>
