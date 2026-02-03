@@ -53,6 +53,7 @@
         <module>base</module>
         <module>data</module>
         <module>extension</module>
+        <module>cloud</module>
         <module>ai</module>
         <module>test</module>
         <module>serenity</module>

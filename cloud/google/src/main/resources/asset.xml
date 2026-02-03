@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<assets xmlns="https://net.microfalx/xsd/asset-1.0.xsd">
+
+    <!-- Google  -->
+    <asset-bundle id="google" path="cloud/google" name="Google" order="1000">
+        <asset path="core.js" type="script"/>
+        <asset path="maps.js" type="script"/>
+    </asset-bundle>
+
+    <!-- Google Cloud  -->
+    <asset-bundle id="google-cloud" path="cloud/google" name="Google Cloud" order="1001">
+        <depends-on-asset-bundle>google</depends-on-asset-bundle>
+    </asset-bundle>
+
+</assets>

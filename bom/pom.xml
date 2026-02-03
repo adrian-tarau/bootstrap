@@ -106,6 +106,12 @@
 
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-base-feature</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
                 <artifactId>bootstrap-data-model</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -179,6 +185,12 @@
             <dependency>
                 <groupId>net.microfalx.bootstrap</groupId>
                 <artifactId>bootstrap-extension-dos</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx.bootstrap</groupId>
+                <artifactId>bootstrap-cloud-google</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
