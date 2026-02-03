@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.web.application;
 
-import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.XmlUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -54,11 +53,11 @@ final class AssetBundleLoader {
         } catch (IOException e) {
             LOGGER.error("Failed to discover web descriptors", e);
         }
-        LOGGER.info("Discovered {} asset bundles from web descriptors", assetBundleManager.getAssetBundles().size());
+        LOGGER.info("Discovered {} asset bundles from web descriptors", assetBundleManager.getAssetBundleCount());
     }
 
     private void loadResources(URL webDescriptor) throws IOException {
-        LOGGER.debug("Load resources from " + webDescriptor.toExternalForm());
+        LOGGER.debug("Load resources from {}", webDescriptor.toExternalForm());
         Document document = loadDocument(webDescriptor.openStream());
         Element rootElement = document.getRootElement();
         loadAssetBundles(rootElement);
@@ -92,7 +91,7 @@ final class AssetBundleLoader {
             loadAssetBundleDependencies(assetBundle, assetBundleElement);
             assetBundleManager.registerAssetBundle(assetBundle);
             String themeName = getAttribute(assetBundleElement, "theme");
-            if (StringUtils.isNotEmpty(themeName)) {
+            if (isNotEmpty(themeName)) {
                 Theme theme = getTheme(themeName);
                 theme.addAssetBundle(assetBundle);
                 assetBundleManager.registerTheme(theme);
@@ -120,7 +119,7 @@ final class AssetBundleLoader {
             loadAssets(assetBundleElement, tmpAssetBundleBuilder);
             AssetBundle tmpAssetBundle = tmpAssetBundleBuilder.build();
             for (Asset asset : tmpAssetBundle.getAssets()) {
-                LOGGER.debug(" - " + asset.getDescription());
+                LOGGER.debug(" - {}", asset.getDescription());
                 assetBundle.addAsset(asset);
             }
         }
@@ -137,10 +136,16 @@ final class AssetBundleLoader {
         List<Element> assetElements = resourceGroupElement.elements("asset");
         for (Element assetElement : assetElements) {
             Asset.Type type = resourceTypeMapping.get(getRequiredAttribute(assetElement, "type").toLowerCase());
-            String path = getRequiredAttribute(assetElement, "path");
-            Asset.Builder resourceBuilder = Asset.file(type, path);
-            resourceBuilder.order(getAttribute(assetElement, "order", Integer.MIN_VALUE));
-            resourceGroupBuilder.asset(resourceBuilder.build());
+            String path = getAttribute(assetElement, "path", (String) null);
+            String uri = getAttribute(assetElement, "uri", (String) null);
+            Asset.Builder assetBuilder;
+            if (isNotEmpty(uri)) {
+                assetBuilder = Asset.uri(type, uri);
+            } else {
+                assetBuilder = Asset.file(type, path);
+            }
+            assetBuilder.order(getAttribute(assetElement, "order", Integer.MIN_VALUE));
+            resourceGroupBuilder.asset(assetBuilder.build());
         }
     }
 

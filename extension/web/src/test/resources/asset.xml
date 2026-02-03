@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<assets xmlns="https://net.microfalx/xsd/asset-1.0.xsd">
+
+    <!-- Google Cloud  -->
+    <asset-bundle id="google-cloud" path="cloud/google" name="Google Cloud" order="1001">
+        <asset uri="https://maps.googleapis.com/maps/api/js" type="script" feature="google.maps"/>
+
+    </asset-bundle>
+
+</assets>

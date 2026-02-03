@@ -3,16 +3,20 @@ package net.microfalx.bootstrap.web.application;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
+import net.microfalx.bootstrap.feature.FeatureContext;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.container.WebContainerService;
+import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
-import net.microfalx.lang.TextUtils;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -26,6 +30,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
 import static net.microfalx.lang.StringUtils.defaultIfNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.TextUtils.insertSpaces;
 
 /**
  * A service which provides metadata for a web application.
@@ -37,14 +42,12 @@ public final class ApplicationService implements InitializingBean {
 
     private static final long timestamp = System.currentTimeMillis();
 
-    @Autowired(required = false)
-    private ApplicationProperties applicationProperties = new ApplicationProperties();
+    @Autowired(required = false) private ApplicationProperties applicationProperties = new ApplicationProperties();
 
-    @Autowired(required = false)
-    private AssetProperties assetProperties = new AssetProperties();
+    @Autowired(required = false) private AssetProperties assetProperties = new AssetProperties();
 
-    @Autowired
-    private WebContainerService webContainerService;
+    @Autowired private ApplicationContext applicationContext;
+    @Autowired private WebContainerService webContainerService;
 
     private final AssetBundleManager assetBundleManager = new AssetBundleManager(this);
     private final Map<String, Menu> navigations = new ConcurrentHashMap<>();
@@ -237,6 +240,51 @@ public final class ApplicationService implements InitializingBean {
     }
 
     /**
+     * Returns the HTML tag to include this external asset in a web page.
+     *
+     * @param asset the asset
+     * @param type  the asset type to referenced
+     * @return the HTML tag
+     */
+    public String getAssetTag(Asset asset, Asset.Type type) {
+        requireNonNull(asset);
+        requireNonNull(type);
+        if (!asset.isExternal()) {
+            throw new ApplicationException("Asset with identifier '" + asset.getId() + "' is not external");
+        }
+        StringBuilder builder = new StringBuilder();
+        switch (type) {
+            case JAVA_SCRIPT -> {
+                builder.append("<script type=\"text/javascript\" src=\"").append(asset.toExternalUri())
+                        .append('"');
+                if (asset.isAsync()) builder.append(" async");
+                if (asset.isDefer()) builder.append(" defer");
+            }
+            case STYLE_SHEET -> {
+                builder.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"").append(asset.toExternalUri())
+                        .append('"');
+            }
+            default -> throw new IllegalStateException("Unhandled asset type: " + type);
+        }
+        appendEndOfTag(builder, type);
+        return builder.toString();
+    }
+
+    private void appendEndOfTag(StringBuilder builder, Asset.Type type) {
+        builder.append(">");
+        switch (type) {
+            case JAVA_SCRIPT:
+                builder.append("</script>");
+                break;
+            case STYLE_SHEET:
+                //builder.append("</link>"); No end tag for link!
+                break;
+            default:
+                throw new IllegalStateException("Unhandled asset type: " + type);
+        }
+    }
+
+    /**
      * Returns the HTML tag to include this asset bundle in a web page.
      *
      * @param assetBundle the asset
@@ -246,7 +294,6 @@ public final class ApplicationService implements InitializingBean {
     public String getAssetBundleTag(AssetBundle assetBundle, Asset.Type type) {
         requireNonNull(assetBundle);
         requireNonNull(type);
-
         StringBuilder builder = new StringBuilder();
         String path = "asset/";
         switch (type) {
@@ -268,17 +315,8 @@ public final class ApplicationService implements InitializingBean {
         } else {
             builder.append(Long.toString(timestamp, Character.MAX_RADIX));
         }
-        builder.append("\">");
-        switch (type) {
-            case JAVA_SCRIPT:
-                builder.append("</script>");
-                break;
-            case STYLE_SHEET:
-                //builder.append("</link>"); No end tag for link!
-                break;
-            default:
-                throw new IllegalStateException("Unhandled asset type: " + type);
-        }
+        builder.append('"');
+        appendEndOfTag(builder, type);
         return builder.toString();
     }
 
@@ -318,18 +356,27 @@ public final class ApplicationService implements InitializingBean {
      */
     public String getAssetBundleTags(Asset.Type type, int indent, Collection<AssetBundle> assetBundles) {
         requireNonNull(assetBundles);
-
         StringBuilder builder = new StringBuilder();
         Iterator<AssetBundle> assetBundleIterator = assetBundles.iterator();
+        FeatureContext featureContext = FeatureContext.get();
         while (assetBundleIterator.hasNext()) {
             AssetBundle assetBundle = assetBundleIterator.next();
-            String assetBundleTag = getAssetBundleTag(assetBundle, type);
-            builder.append(assetBundleTag);
-            if (assetBundleIterator.hasNext()) {
-                builder.append('\n');
+            if (!assetBundle.has(type)) continue;
+            if (assetBundle.isExternal()) {
+                Iterator<Asset> assetIterator = assetBundle.getAssets().iterator();
+                while (assetIterator.hasNext()) {
+                    Asset asset = assetIterator.next();
+                    if (asset.getFeature() != null && !featureContext.isEnabled(asset.getFeature())) continue;
+                    builder.append(getAssetTag(asset, type));
+                    if (assetIterator.hasNext()) builder.append('\n');
+                }
+            } else {
+                String assetBundleTag = getAssetBundleTag(assetBundle, type);
+                builder.append(assetBundleTag);
             }
+            if (assetBundleIterator.hasNext()) builder.append('\n');
         }
-        return TextUtils.insertSpaces(builder.toString(), indent);
+        return insertSpaces(builder.toString(), indent);
     }
 
     @Override
@@ -341,6 +388,11 @@ public final class ApplicationService implements InitializingBean {
         initTheme();
         initDomains();
         logApplication();
+    }
+
+    @EventListener(ApplicationStartedEvent.class)
+    public void onStart(ApplicationStartedEvent event) {
+        assetBundleManager.loadDynamic();
     }
 
     private void initTheme() {
@@ -381,8 +433,9 @@ public final class ApplicationService implements InitializingBean {
     }
 
     private void initAssets() {
-        assetBundleManager.assetProperties = assetProperties;
+        assetBundleManager.initialize(applicationContext, assetProperties);
         assetBundleManager.load();
+        initAssetBundleListeners();
     }
 
     private void initTimeZone() {
@@ -406,8 +459,14 @@ public final class ApplicationService implements InitializingBean {
     }
 
     private void logApplication() {
-        LOGGER.info("Initialize application: " + application.getName() + " (" + application.getVersion()
-                + "), theme " + application.getTheme().getName() + ", logo " + application.getLogo());
+        LOGGER.info("Initialize application: {} ({}), theme {}, logo {}", application.getName(), application.getVersion(), application.getTheme().getName(), application.getLogo());
+    }
+
+    private void initAssetBundleListeners() {
+        Collection<AssetBundleListener> listeners = ClassUtils.resolveProviderInstances(AssetBundleListener.class);
+        listeners.forEach(assetBundleManager::registerListener);
+        LOGGER.info("Registered {} asset bundle listeners", listeners.size());
+
     }
 
     private String getImageBasePath() {

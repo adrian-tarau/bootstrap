@@ -83,6 +83,12 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-feature</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
             <artifactId>bootstrap-data-content</artifactId>
             <version>${project.version}</version>
         </dependency>

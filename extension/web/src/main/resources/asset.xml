@@ -61,7 +61,8 @@
         <asset path="sort.js" type="script"/>
     </asset-bundle>
 
-    <!-- Module  -->
+    <!-- Modules/Extensions  -->
+
     <asset-bundle id="module" path="module" name="Modules" order="506">
         <depends-on-asset-bundle>app</depends-on-asset-bundle>
         <depends-on-asset-bundle>dataset</depends-on-asset-bundle>

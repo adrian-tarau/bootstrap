@@ -56,7 +56,9 @@
             <xs:sequence>
                 <xs:element minOccurs="0" maxOccurs="unbounded" ref="depends-on-feature"/>
             </xs:sequence>
-            <xs:attribute name="path" use="required"/>
+            <xs:attribute name="path"/>
+            <xs:attribute name="uri"/>
+            <xs:attribute name="feature"/>
             <xs:attribute name="type" use="required">
                 <xs:simpleType>
                     <xs:restriction base="xs:token">

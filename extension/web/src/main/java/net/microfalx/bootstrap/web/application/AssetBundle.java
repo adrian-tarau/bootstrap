@@ -24,9 +24,15 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     private String path;
     private String theme;
     private boolean inline;
+    private boolean external;
+    private boolean hasCss;
+    private boolean hasJs;
+    private boolean hasFont;
+    private boolean hasImage;
     private int order = Integer.MIN_VALUE;
     boolean requiresAuthentication;
 
+    private final Set<String> features = new HashSet<>();
     private final List<Asset> assets = new CopyOnWriteArrayList<>();
 
     /**
@@ -99,6 +105,31 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     }
 
     /**
+     * Returns whether the asset bundle is made out of external asserts (i.e. assets with URI).
+     *
+     * @return {@code true} if external, {@code false} otherwise
+     */
+    public boolean isExternal() {
+        return external;
+    }
+
+    /**
+     * Returns whether the asset bundle has assets of the given type.
+     *
+     * @param type the asset type
+     * @return {@code true} if has assets of the given type, {@code false} otherwise
+     */
+    public boolean has(Asset.Type type) {
+        requireNonNull(type);
+        return switch (type) {
+            case JAVA_SCRIPT -> hasJs;
+            case STYLE_SHEET -> hasCss;
+            case FONT -> hasFont;
+            case IMAGE -> hasImage;
+        };
+    }
+
+    /**
      * Returns the theme identifier.
      * <p>
      * An asset bundle which carries CSS & JS for a theme has the theme identifier associated with it.
@@ -127,7 +158,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
      */
     public String getContentType() {
         if (assets.isEmpty()) return "application/octet-stream";
-        return assets.iterator().next().getContentType();
+        return assets.getFirst().getContentType();
     }
 
     @Override
@@ -152,6 +183,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
         requireNonNull(asset);
         if (asset.order == Integer.MIN_VALUE) asset.order = this.assets.size();
         if (!this.assets.contains(asset)) this.assets.add(asset);
+        updateAfterAdd();
         asset.assetBundle = this;
     }
 
@@ -163,8 +195,20 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     void insertAsset(Asset asset) {
         requireNonNull(asset);
         if (asset.order == Integer.MIN_VALUE) asset.order = this.assets.size();
-        if (!this.assets.contains(asset)) this.assets.add(0, asset);
+        if (!this.assets.contains(asset)) this.assets.addFirst(asset);
         asset.assetBundle = this;
+    }
+
+    private void updateAfterAdd() {
+        int externalCount = (int) this.assets.stream().filter(Asset::isExternal).count();
+        hasCss = this.assets.stream().anyMatch(a -> a.getType() == Asset.Type.STYLE_SHEET);
+        hasJs = this.assets.stream().anyMatch(a -> a.getType() == Asset.Type.JAVA_SCRIPT);
+        hasFont = this.assets.stream().anyMatch(a -> a.getType() == Asset.Type.FONT);
+        hasImage = this.assets.stream().anyMatch(a -> a.getType() == Asset.Type.IMAGE);
+        this.external = externalCount > 0;
+        if (this.external && externalCount != this.assets.size()) {
+            throw new IllegalStateException("An asset bundle cannot mix external and non-external assets");
+        }
     }
 
     @Override
@@ -238,7 +282,6 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
 
         public Builder asset(Asset asset) {
             requireNonNull(asset);
-
             // if order is not provisioned, give one based the current position in the list
             if (asset.order == Integer.MIN_VALUE) asset.order = this.assets.size();
             this.assets.add(asset);
@@ -266,6 +309,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
                 assetBundle.assets.add(asset);
             }
             assetBundle.assets.sort(Comparator.comparingInt(Asset::getOrder));
+            assetBundle.updateAfterAdd();
             return assetBundle;
         }
     }

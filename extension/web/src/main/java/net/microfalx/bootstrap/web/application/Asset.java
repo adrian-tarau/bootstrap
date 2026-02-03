@@ -1,17 +1,18 @@
 package net.microfalx.bootstrap.web.application;
 
-import net.microfalx.lang.Descriptable;
-import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.Nameable;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.net.URLConnection;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.CollectionUtils.immutableMap;
 import static net.microfalx.lang.StringUtils.*;
 
 /**
@@ -25,6 +26,11 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
     private String path;
     private boolean requiresAuthentication;
     private Resource resource;
+    private URI uri;
+    private boolean async;
+    private boolean defer;
+    private String feature;
+    private Map<String, Object> parameters;
 
     int order = Integer.MIN_VALUE;
     AssetBundle assetBundle;
@@ -42,6 +48,29 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
     }
 
     /**
+     * Creates an asset builder based on an external script.
+     *
+     * @param type the type
+     * @param uri  the URI to the external resource
+     * @return a non-null instance
+     */
+    public static Builder uri(Asset.Type type, String uri) {
+        requireNotEmpty(uri);
+        return uri(type, URI.create(uri));
+    }
+
+    /**
+     * Creates an asset builder based on an external script.
+     *
+     * @param type the type
+     * @param uri  the URI to the external resource
+     * @return a non-null instance
+     */
+    public static Builder uri(Asset.Type type, URI uri) {
+        return new Builder().type(type).uri(uri);
+    }
+
+    /**
      * Creates an asset builder based on a resource.
      *
      * @param type     the type
@@ -52,13 +81,13 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
         return new Builder().type(type).resource(resource);
     }
 
-    public final String getId() {
+    public String getId() {
         return id;
     }
 
     @Override
     public String getName() {
-        return resource != null ? resource.getName() : path;
+        return resource != null ? resource.getName() : (uri != null ? uri.getHost() : path);
     }
 
     @Override
@@ -86,7 +115,77 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
      * @return the path, null if not loaded from class loader.
      */
     public String getPath() {
-        return path;
+        return uri != null ? uri.getPath() : path;
+    }
+
+    /**
+     * Returns the URI to access the asset, null if the asset is not external.
+     *
+     * @return the URI, null if not external
+     */
+    public URI getUri() {
+        return uri;
+    }
+
+    /**
+     * Returns the external URI with parameters appended.
+     *
+     * @return the external URI, null if not external
+     */
+    public URI toExternalUri() {
+        if (uri == null) return null;
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUri(uri);
+        parameters.forEach(uriBuilder::queryParam);
+        return URI.create(uriBuilder.build().toUriString());
+    }
+
+    /**
+     * Returns whether the asset is hosted externally (i.e. assets with URI).
+     *
+     * @return {@code true} if external, {@code false} otherwise
+     */
+    public boolean isExternal() {
+        return uri != null;
+    }
+
+    /**
+     * Indicates the asset should be loaded asynchronously (most used in combination with {@link #isDefer()}).
+     *
+     * @return {@code true} if the asset should be loaded asynchronously
+     */
+    public boolean isAsync() {
+        return async;
+    }
+
+    /**
+     * Returns whether the asset should be deferred (most used in combination with {@link #isAsync()}).
+     *
+     * @return {@code true} if the asset should be deferred, <code>false</code> otherwise
+     */
+    public boolean isDefer() {
+        return defer;
+    }
+
+    /**
+     * Returns the feature associated with the asset.
+     * <p>
+     * If the feature is not active, the asset will not be included.
+     *
+     * @return the feature id, null if not associated with a feature
+     */
+    public String getFeature() {
+        return feature;
+    }
+
+    /**
+     * Returns the (query) parameters associated with the asset.
+     * <p>
+     * Mostly used with external assets.
+     *
+     * @return a non-null instance
+     */
+    public Map<String, Object> getParameters() {
+        return immutableMap(parameters);
     }
 
     /**
@@ -94,7 +193,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
      *
      * @return <code>true</code> if the asset requires authenticated pages
      */
-    public final boolean isRequiresAuthentication() {
+    public boolean isRequiresAuthentication() {
         return requiresAuthentication;
     }
 
@@ -105,16 +204,16 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
      *
      * @return the order of the asset
      */
-    public final int getOrder() {
+    public int getOrder() {
         return order;
     }
 
     /**
-     * Returns the last time when the asses was modifled.
+     * Returns the last time when the asses was modified.
      *
      * @return millis
      */
-    public final long getLastModified() {
+    public long getLastModified() {
         return lastModified;
     }
 
@@ -123,7 +222,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
      *
      * @return a non-null instance
      */
-    public final Resource getResource() {
+    public Resource getResource() {
         if (resource != null) {
             return resource;
         } else {
@@ -141,7 +240,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
      *
      * @return a non-null instance
      */
-    public final AssetBundle getAssetBundle() {
+    public AssetBundle getAssetBundle() {
         return assetBundle;
     }
 
@@ -150,7 +249,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
      *
      * @return the content type
      */
-    public final String getContentType() {
+    public String getContentType() {
         return switch (type) {
             case STYLE_SHEET -> "text/css";
             case JAVA_SCRIPT -> "text/javascript";
@@ -214,7 +313,13 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
         private String path;
         private int order;
 
+        private URI uri;
+        private boolean async;
+        private boolean defer;
+        private String feature;
+
         private Resource resource;
+        private Map<String, Object> parameters;
 
         private boolean requiresAuthentication;
 
@@ -240,9 +345,38 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
             return this;
         }
 
+        public Builder feature(String feature) {
+            this.feature = feature;
+            return this;
+        }
+
         public Builder resource(Resource resource) {
             requireNonNull(resource);
             this.resource = resource;
+            return this;
+        }
+
+        public Builder uri(URI uri) {
+            requireNonNull(uri);
+            if (isEmpty(id)) id = Hashing.get(uri.toASCIIString());
+            this.uri = uri;
+            return this;
+        }
+
+        public Builder async(boolean async) {
+            this.async = async;
+            return this;
+        }
+
+        public Builder defer(boolean defer) {
+            this.defer = defer;
+            return this;
+        }
+
+        public Builder parameter(String name, Object value) {
+            requireNonNull(name);
+            if (parameters == null) parameters = new java.util.LinkedHashMap<>();
+            parameters.put(name, value);
             return this;
         }
 
@@ -253,21 +387,26 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
 
         public Builder requiresAuthentication(boolean requiresAuthentication) {
             this.requiresAuthentication = requiresAuthentication;
-
             return this;
         }
 
         public Asset build() {
             requireNonNull(id);
             requireNonNull(type);
-            if (isEmpty(path) && resource == null)
-                throw new IllegalArgumentException("A resource or a class loader path need to be provided");
-
+            if (isEmpty(path) && resource == null && uri == null) {
+                throw new IllegalArgumentException("A resource, an URI or a class loader path need to be provided");
+            }
             Asset asset = new Asset();
             asset.id = id;
             asset.type = type;
             asset.order = order;
+            asset.feature = feature;
             asset.path = path;
+            asset.uri = uri;
+            asset.async = async;
+            asset.defer = defer;
+            asset.resource = resource;
+            asset.parameters = parameters;
             asset.requiresAuthentication = requiresAuthentication;
             return asset;
         }
