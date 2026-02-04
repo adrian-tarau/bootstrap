@@ -8,10 +8,10 @@ import net.microfalx.bootstrap.feature.Features;
  */
 public class GoogleFeatures implements Features {
 
-    public static final String MAP = "google.map";
+    public static final String MAP = "google.maps";
 
     /**
      * Google Map feature.
      */
-    public static final Feature MAP_FEATURE = Feature.create(MAP, "Google Map");
+    public static final Feature MAP_FEATURE = Feature.create(MAP, "Google Maps");
 }
