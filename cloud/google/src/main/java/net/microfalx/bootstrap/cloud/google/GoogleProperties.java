@@ -43,6 +43,15 @@ public class GoogleProperties {
     }
 
     /**
+     * Returns whether the Google Maps API is enabled.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public boolean isMapApiEnabled() {
+        return !isEmpty(mapApiKey);
+    }
+
+    /**
      * Returns the Google Maps API key.
      *
      * @return a non-null instance

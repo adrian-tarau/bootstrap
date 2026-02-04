@@ -8,8 +8,6 @@ import net.microfalx.lang.annotation.Provider;
 
 import java.util.Collection;
 
-import static net.microfalx.lang.StringUtils.isNotEmpty;
-
 @Provider
 public class GoogleAssetBundleListener extends ApplicationContextSupport implements AssetBundleListener {
 
@@ -21,9 +19,7 @@ public class GoogleAssetBundleListener extends ApplicationContextSupport impleme
     @Override
     public void update(AssetBundle assetBundle, Collection<Asset> asserts) {
         GoogleProperties properties = getBean(GoogleProperties.class);
-        if (isNotEmpty(properties.getMapApiKey())) {
-            initMaps(properties, asserts);
-        }
+        if (properties.isMapApiEnabled()) initMaps(properties, asserts);
     }
 
     private void initMaps(GoogleProperties properties, Collection<Asset> asserts) {
