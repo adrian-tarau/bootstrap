@@ -56,7 +56,9 @@ class Converters {
      */
     private static <T extends Temporal> Temporal toTemporal(Object value, Class<T> target) {
         if (value instanceof Temporal) return (Temporal) value;
-        if ("now".equals(value)) {
+        if (ObjectUtils.isEmpty(value)) {
+            return null;
+        } else if ("now".equals(value)) {
             return convert(LocalDateTime.now(), target);
         } else if ("today".equals(value)) {
             return convert(LocalDate.now().atStartOfDay(), target);
