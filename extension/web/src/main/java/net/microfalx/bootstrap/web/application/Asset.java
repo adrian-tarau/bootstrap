@@ -1,8 +1,12 @@
 package net.microfalx.bootstrap.web.application;
 
-import net.microfalx.lang.*;
+import net.microfalx.lang.Descriptable;
+import net.microfalx.lang.Hashing;
+import net.microfalx.lang.Identifiable;
+import net.microfalx.lang.Nameable;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
+import net.microfalx.resource.ResourceUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -24,11 +28,12 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
     private String name;
     private Type type;
     private String path;
-    private boolean requiresAuthentication;
+    private Boolean requiresAuthentication;
     private Resource resource;
     private URI uri;
     private boolean async;
     private boolean defer;
+    private String onLoad;
     private String feature;
     private Map<String, Object> parameters;
 
@@ -135,8 +140,17 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
     public URI toExternalUri() {
         if (uri == null) return null;
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUri(uri);
-        parameters.forEach(uriBuilder::queryParam);
+        if (parameters != null) parameters.forEach(uriBuilder::queryParam);
         return URI.create(uriBuilder.build().toUriString());
+    }
+
+    /**
+     * Returns the JavaScript function to be called once the asset is loaded.
+     *
+     * @return the JavaScript function, null if not set
+     */
+    public String getOnLoad() {
+        return onLoad;
     }
 
     /**
@@ -146,6 +160,15 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
      */
     public boolean isExternal() {
         return uri != null;
+    }
+
+    /**
+     * Returns whether the asset is loaded from memory (i.e. assets with a resource).
+     *
+     * @return a non-null instance
+     */
+    public boolean isMemory() {
+        return resource != null;
     }
 
     /**
@@ -189,11 +212,12 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
     }
 
     /**
-     * Returns whether this asses is required only on authenticated pages.
+     * Returns whether this asset will be rendered based on the security context.
      *
-     * @return <code>true</code> if the asset requires authenticated pages
+     * @return {@code true} if the asset is required only on authenticated pages, {@code false} if the asset is required on
+     * pages accessible to anonymous users as well, null if not specified (i.e. the asset is required on all pages)
      */
-    public boolean isRequiresAuthentication() {
+    public Boolean isRequiresAuthentication() {
         return requiresAuthentication;
     }
 
@@ -228,7 +252,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
         } else {
             String fullPath = getPathFromType();
             if (assetBundle != null && isNotEmpty(assetBundle.getPath())) {
-                fullPath += StringUtils.addStartSlash(assetBundle.getPath());
+                fullPath += addStartSlash(assetBundle.getPath());
             }
             fullPath += addStartSlash(path);
             return ClassPathResource.file(fullPath);
@@ -290,6 +314,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
                 .add("type=" + type)
                 .add("path='" + path + "'")
                 .add("requiresAuthentication=" + requiresAuthentication)
+                .add("uri=" + uri)
                 .add("resource=" + resource)
                 .add("order=" + order)
                 .add("assetBundle=" + assetBundle.getName())
@@ -317,11 +342,12 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
         private boolean async;
         private boolean defer;
         private String feature;
+        private String onLoad;
 
         private Resource resource;
         private Map<String, Object> parameters;
 
-        private boolean requiresAuthentication;
+        private Boolean requiresAuthentication;
 
         Builder() {
         }
@@ -335,7 +361,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
 
         public Builder id(String id) {
             requireNonNull(id);
-            this.id = StringUtils.toIdentifier(id);
+            this.id = toIdentifier(id);
             return this;
         }
 
@@ -352,6 +378,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
 
         public Builder resource(Resource resource) {
             requireNonNull(resource);
+            this.id = resource.toHash();
             this.resource = resource;
             return this;
         }
@@ -360,6 +387,11 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
             requireNonNull(uri);
             if (isEmpty(id)) id = Hashing.get(uri.toASCIIString());
             this.uri = uri;
+            return this;
+        }
+
+        public Builder onLoad(String onLoad) {
+            this.onLoad = onLoad;
             return this;
         }
 
@@ -396,6 +428,9 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
             if (isEmpty(path) && resource == null && uri == null) {
                 throw new IllegalArgumentException("A resource, an URI or a class loader path need to be provided");
             }
+            if (resource != null && !ResourceUtils.exists(resource)) {
+                throw new IllegalArgumentException("The resource does not exist: " + resource.toURI());
+            }
             Asset asset = new Asset();
             asset.id = id;
             asset.type = type;
@@ -405,6 +440,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
             asset.uri = uri;
             asset.async = async;
             asset.defer = defer;
+            asset.onLoad = onLoad;
             asset.resource = resource;
             asset.parameters = parameters;
             asset.requiresAuthentication = requiresAuthentication;

@@ -6,9 +6,8 @@ import lombok.ToString;
 import net.microfalx.bootstrap.feature.FeatureContext;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.container.WebContainerService;
-import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.bootstrap.web.util.SecurityUtils;
+import net.microfalx.lang.*;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +19,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -249,29 +249,47 @@ public final class ApplicationService implements InitializingBean {
     public String getAssetTag(Asset asset, Asset.Type type) {
         requireNonNull(asset);
         requireNonNull(type);
-        if (!asset.isExternal()) {
-            throw new ApplicationException("Asset with identifier '" + asset.getId() + "' is not external");
+        if (!(asset.isExternal() || asset.isMemory())) {
+            throw new ApplicationException("Asset with identifier '" + asset.getId() + "' is not external or in-memory");
         }
+        URI uri = asset.toExternalUri();
+        Resource resource = uri == null ? asset.getResource() : null;
         StringBuilder builder = new StringBuilder();
         switch (type) {
             case JAVA_SCRIPT -> {
-                builder.append("<script type=\"text/javascript\" src=\"").append(asset.toExternalUri())
-                        .append('"');
+                builder.append("<script type=\"text/javascript\"");
+                if (uri != null) {
+                    builder.append(" src=\"").append(uri).append('"');
+                }
                 if (asset.isAsync()) builder.append(" async");
                 if (asset.isDefer()) builder.append(" defer");
+                if (StringUtils.isNotEmpty(asset.getOnLoad())) {
+                    builder.append(" onload=\"").append(asset.getOnLoad()).append('"');
+                }
             }
             case STYLE_SHEET -> {
-                builder.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"").append(asset.toExternalUri())
-                        .append('"');
+                builder.append("<link rel=\"stylesheet\" type=\"text/css\"");
+                if (uri != null) {
+                    builder.append(" href=\"").append(uri).append('"');
+                }
             }
             default -> throw new IllegalStateException("Unhandled asset type: " + type);
         }
-        appendEndOfTag(builder, type);
+        appendEndOfTag(builder, type, resource);
         return builder.toString();
     }
 
-    private void appendEndOfTag(StringBuilder builder, Asset.Type type) {
+    private void appendEndOfTag(StringBuilder builder, Asset.Type type, Resource resource) {
         builder.append(">");
+        if (resource != null) {
+            builder.append("\n");
+            try {
+                builder.append(TextUtils.insertSpaces(resource.loadAsString(), 2));
+            } catch (IOException e) {
+                ExceptionUtils.rethrowException(e);
+            }
+            builder.append("\n");
+        }
         switch (type) {
             case JAVA_SCRIPT:
                 builder.append("</script>");
@@ -316,7 +334,7 @@ public final class ApplicationService implements InitializingBean {
             builder.append(Long.toString(timestamp, Character.MAX_RADIX));
         }
         builder.append('"');
-        appendEndOfTag(builder, type);
+        appendEndOfTag(builder, type, null);
         return builder.toString();
     }
 
@@ -358,15 +376,14 @@ public final class ApplicationService implements InitializingBean {
         requireNonNull(assetBundles);
         StringBuilder builder = new StringBuilder();
         Iterator<AssetBundle> assetBundleIterator = assetBundles.iterator();
-        FeatureContext featureContext = FeatureContext.get();
         while (assetBundleIterator.hasNext()) {
             AssetBundle assetBundle = assetBundleIterator.next();
-            if (!assetBundle.has(type)) continue;
+            if (!(assetBundle.has(type) && shouldRender(assetBundle))) continue;
             if (assetBundle.isExternal()) {
                 Iterator<Asset> assetIterator = assetBundle.getAssets().iterator();
                 while (assetIterator.hasNext()) {
                     Asset asset = assetIterator.next();
-                    if (asset.getFeature() != null && !featureContext.isEnabled(asset.getFeature())) continue;
+                    if (!shouldRender(asset)) continue;
                     builder.append(getAssetTag(asset, type));
                     if (assetIterator.hasNext()) builder.append('\n');
                 }
@@ -475,6 +492,31 @@ public final class ApplicationService implements InitializingBean {
 
     private String getFontBasePath() {
         return webContainerService.getPath("font");
+    }
+
+    private boolean shouldRender(Asset asset) {
+        FeatureContext featureContext = FeatureContext.get();
+        if (asset.getFeature() != null && !featureContext.isEnabled(asset.getFeature())) return false;
+        return shouldRender(asset.isRequiresAuthentication());
+    }
+
+    private boolean shouldRender(AssetBundle assetBundle) {
+        FeatureContext featureContext = FeatureContext.get();
+        if (assetBundle.getFeature() != null && !featureContext.isEnabled(assetBundle.getFeature())) return false;
+        return shouldRender(assetBundle.isRequiresAuthentication());
+
+    }
+
+    private boolean shouldRender(Boolean requiresAuthentication) {
+        if (requiresAuthentication == null) return true;
+        boolean authenticated = SecurityUtils.isAuthenticated();
+        if (requiresAuthentication && !authenticated) {
+            return false;
+        } else if (!requiresAuthentication && authenticated) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     @Getter

@@ -71,6 +71,7 @@
             </xs:attribute>
             <xs:attribute name="order"/>
             <xs:attribute name="absolute" type="xs:boolean" default="false"/>
+            <xs:attribute name="requires-authentication" type="xs:boolean"/>
         </xs:complexType>
     </xs:element>
 

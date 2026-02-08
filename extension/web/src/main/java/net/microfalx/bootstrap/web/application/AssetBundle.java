@@ -23,6 +23,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     private String description;
     private String path;
     private String theme;
+    private String feature;
     private boolean inline;
     private boolean external;
     private boolean hasCss;
@@ -30,7 +31,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     private boolean hasFont;
     private boolean hasImage;
     private int order = Integer.MIN_VALUE;
-    boolean requiresAuthentication;
+    private Boolean requiresAuthentication;
 
     private final Set<String> features = new HashSet<>();
     private final List<Asset> assets = new CopyOnWriteArrayList<>();
@@ -96,6 +97,17 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
     }
 
     /**
+     * Returns the feature associated with the asset.
+     * <p>
+     * If the feature is not active, the asset will not be included.
+     *
+     * @return the feature id, null if not associated with a feature
+     */
+    public String getFeature() {
+        return feature;
+    }
+
+    /**
      * Returns whether the bundle is used to inject inline assets in HTML files.
      *
      * @return {@code true} if inline, {@code false} otherwise
@@ -149,6 +161,16 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
      */
     public Collection<Asset> getAssets() {
         return Collections.unmodifiableCollection(assets);
+    }
+
+    /**
+     * Returns whether this asset will be rendered based on the security context.
+     *
+     * @return {@code true} if the asset is required only on authenticated pages, {@code false} if the asset is required on
+     * pages accessible to anonymous users as well, null if not specified (i.e. the asset is required on all pages)
+     */
+    public Boolean isRequiresAuthentication() {
+        return requiresAuthentication;
     }
 
     /**
@@ -233,9 +255,10 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
         private String description;
         private String path;
         private String theme;
+        private String feature;
         private boolean inline;
         private int order;
-        private boolean requiresAuthentication;
+        private Boolean requiresAuthentication;
         private final List<Asset> assets = new ArrayList<>();
 
         Builder(String id) {
@@ -270,6 +293,11 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
             return this;
         }
 
+        public Builder feature(String feature) {
+            this.feature = feature;
+            return this;
+        }
+
         public Builder order(int order) {
             this.order = order;
             return this;
@@ -300,6 +328,7 @@ public final class AssetBundle implements Identifiable<String>, Nameable, Descri
             assetBundle.description = description;
             assetBundle.version = version;
             assetBundle.path = path;
+            assetBundle.feature = feature;
             assetBundle.inline = inline;
             assetBundle.theme = theme;
             assetBundle.requiresAuthentication = requiresAuthentication;

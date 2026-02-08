@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.application;
 
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.XmlUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -83,9 +84,14 @@ final class AssetBundleLoader {
             assetBundleBuilder.order(getAttribute(assetBundleElement, "order", 1000));
             assetBundleBuilder.inline(getAttribute(assetBundleElement, "inline", false));
             assetBundleBuilder.theme(getAttribute(assetBundleElement, "theme", (String) null));
+            assetBundleBuilder.feature(getAttribute(assetBundleElement, "feature", (String) null));
             assetBundleBuilder.description(getAttribute(assetBundleElement, "description"));
             String version = getAttribute(assetBundleElement, "version");
             assetBundleBuilder.version(isNotEmpty(version) ? version : assetBundleManager.getApplication().getVersion());
+            String requiresAuthentication = getAttribute(assetBundleElement, "requires-authentication");
+            if (StringUtils.isNotEmpty(requiresAuthentication)) {
+                assetBundleBuilder.requiresAuthentication(StringUtils.asBoolean(requiresAuthentication, false));
+            }
             loadAssets(assetBundleElement, assetBundleBuilder);
             AssetBundle assetBundle = assetBundleBuilder.build();
             loadAssetBundleDependencies(assetBundle, assetBundleElement);
@@ -145,6 +151,10 @@ final class AssetBundleLoader {
                 assetBuilder = Asset.file(type, path);
             }
             assetBuilder.order(getAttribute(assetElement, "order", Integer.MIN_VALUE));
+            String requiresAuthentication = getAttribute(assetElement, "requires-authentication");
+            if (StringUtils.isNotEmpty(requiresAuthentication)) {
+                assetBuilder.requiresAuthentication(StringUtils.asBoolean(requiresAuthentication, false));
+            }
             resourceGroupBuilder.asset(assetBuilder.build());
         }
     }
