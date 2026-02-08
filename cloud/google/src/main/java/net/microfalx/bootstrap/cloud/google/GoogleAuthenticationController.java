@@ -5,18 +5,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,9 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class GoogleAuthenticationController {
 
     @Autowired private GoogleIdentityService googleIdentityService;
-    @Autowired private AuthenticationManager authenticationManager;
-    @Autowired private SecurityContextRepository securityContextRepository;
-    @Autowired private ApplicationEventPublisher eventPublisher;
+    //@Autowired private SecurityContextRepository securityContextRepository;
+    //@Autowired private ApplicationEventPublisher eventPublisher;
     @Autowired private UserDetailsService userDetailsService;
 
     @PostMapping("/token")
@@ -44,10 +35,10 @@ public class GoogleAuthenticationController {
         try {
             userDetails = userDetailsService.loadUserByUsername(email);
         } catch (UsernameNotFoundException e) {
-            userDetails = new
+            //
         }
 
-        Authentication authRequest = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+      /*  Authentication authRequest = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         Authentication authenticated = authenticationManager.authenticate(authRequest);
 
         SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -56,6 +47,8 @@ public class GoogleAuthenticationController {
 
         securityContextRepository.saveContext(context, request, response);
         eventPublisher.publishEvent(new AuthenticationSuccessEvent(authenticated));
+
+       */
 
         return ResponseEntity.ok().build();
     }

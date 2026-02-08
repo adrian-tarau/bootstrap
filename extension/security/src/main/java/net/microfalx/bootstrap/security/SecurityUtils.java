@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.security;
 
-import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
+import net.microfalx.bootstrap.security.userinfo.ExtendedUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 

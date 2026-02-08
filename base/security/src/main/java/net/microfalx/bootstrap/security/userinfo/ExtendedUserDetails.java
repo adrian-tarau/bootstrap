@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.web.util;
+package net.microfalx.bootstrap.security.userinfo;
 
 import net.microfalx.lang.Descriptable;
 import org.springframework.security.core.AuthenticatedPrincipal;

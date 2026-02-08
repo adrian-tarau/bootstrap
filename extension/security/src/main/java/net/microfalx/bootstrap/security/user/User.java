@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.security.user;
 
-import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
+import net.microfalx.bootstrap.security.userinfo.ExtendedUserDetails;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;

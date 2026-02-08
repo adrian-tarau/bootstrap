@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.security.provisioning;
+package net.microfalx.bootstrap.security.oauth2;
 
 import net.microfalx.lang.StringUtils;
 import org.joor.Reflect;
@@ -13,7 +13,7 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 /**
  * Various utilities for OAuth2.
  */
-class OAuth2Utils {
+public class OAuth2Utils {
 
     private static final String[] USER_NAME_ATTRIBUTES = {"login", StandardClaimNames.EMAIL, IdTokenClaimNames.SUB};
     private static final String[] DISPLAY_NAME_ATTRIBUTES = {StandardClaimNames.NAME, StandardClaimNames.EMAIL};
@@ -22,7 +22,13 @@ class OAuth2Utils {
 
     private static final ThreadLocal<Boolean> USER_NAME_LOOKUP = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
-    static String getDisplayName(OAuth2AuthenticatedPrincipal principal) {
+    /**
+     * Returns the display name associated with an OAuth2 principal.
+     *
+     * @param principal the principal to extract the display name from
+     * @return the display name, never null
+     */
+    public static String getDisplayName(OAuth2AuthenticatedPrincipal principal) {
         String displayName = null;
         String firstName = principal.getAttribute(StandardClaimNames.GIVEN_NAME);
         String lastName = principal.getAttribute(StandardClaimNames.FAMILY_NAME);
@@ -36,7 +42,13 @@ class OAuth2Utils {
         return displayName;
     }
 
-    static String getUserName(OAuth2AuthenticatedPrincipal principal) {
+    /**
+     * Returns the username associated with an OAuth2 principal.
+     *
+     * @param principal the principal to extract the username from
+     * @return the username, never null
+     */
+    public static String getUserName(OAuth2AuthenticatedPrincipal principal) {
         String userName = getAttribute(principal, USER_NAME_ATTRIBUTES);
         if (isNotEmpty(userName)) {
             return userName;
@@ -54,15 +66,27 @@ class OAuth2Utils {
         }
     }
 
-    static String getEMail(OAuth2AuthenticatedPrincipal principal) {
+    /**
+     * Returns the email associated with an OAuth2 principal.
+     *
+     * @param principal the principal to extract the email from
+     * @return the email, null if not available
+     */
+    public static String getEMail(OAuth2AuthenticatedPrincipal principal) {
         return getAttribute(principal, EMAIL_ATTRIBUTES);
     }
 
-    static String getPictureUrl(OAuth2AuthenticatedPrincipal principal) {
+    /**
+     * Returns the picture url with an OAuth2 principal.
+     *
+     * @param principal the principal to extract the picture url from
+     * @return the url, null if not available
+     */
+    public static String getPictureUrl(OAuth2AuthenticatedPrincipal principal) {
         return getAttribute(principal, PICTURE_ATTRIBUTES);
     }
 
-    static String getNameAttributeKey(OAuth2User user) {
+    public static String getNameAttributeKey(OAuth2User user) {
         String key = Reflect.on(user).get("nameAttributeKey");
         return StringUtils.defaultIfEmpty(key, IdTokenClaimNames.SUB);
     }

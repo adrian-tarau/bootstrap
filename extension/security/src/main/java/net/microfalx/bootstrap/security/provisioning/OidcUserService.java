@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.security.provisioning;
 
 import net.microfalx.bootstrap.security.user.UserService;
+import net.microfalx.bootstrap.security.userinfo.ExtendedOidcUser;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -10,7 +11,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static net.microfalx.bootstrap.security.provisioning.OAuth2Utils.getNameAttributeKey;
+import static net.microfalx.bootstrap.security.oauth2.OAuth2Utils.getNameAttributeKey;
 
 class OidcUserService extends org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService {
 

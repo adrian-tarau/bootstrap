@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.security.provisioning;
 
 import net.microfalx.bootstrap.security.user.UserService;
+import net.microfalx.bootstrap.security.userinfo.ExtendedOAuth2User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -11,7 +12,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static net.microfalx.bootstrap.security.provisioning.OAuth2Utils.getNameAttributeKey;
+import static net.microfalx.bootstrap.security.oauth2.OAuth2Utils.getNameAttributeKey;
 
 class OAuth2UserService extends DefaultOAuth2UserService {
 

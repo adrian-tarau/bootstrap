@@ -24,16 +24,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-cloud-google</artifactId>
+    <artifactId>bootstrap-base-security</artifactId>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap-cloud</artifactId>
+        <artifactId>bootstrap-base</artifactId>
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Cloud :: Google</name>
+    <name>Bootstrap :: Base :: Security</name>
 
     <dependencies>
 
@@ -41,35 +41,26 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-base-web</artifactId>
+            <artifactId>bootstrap-base-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-base-feature</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-extension-web</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-extension-security</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
+            <groupId>org.jooq</groupId>
+            <artifactId>joor</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.google.api-client</groupId>
-            <artifactId>google-api-client</artifactId>
-        </dependency>
-
+        <!-- Testing -->
 
     </dependencies>
 

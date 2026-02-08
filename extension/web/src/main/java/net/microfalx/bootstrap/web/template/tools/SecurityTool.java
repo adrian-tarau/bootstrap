@@ -1,9 +1,9 @@
 package net.microfalx.bootstrap.web.template.tools;
 
+import net.microfalx.bootstrap.security.userinfo.ExtendedUserDetails;
 import net.microfalx.bootstrap.web.component.Actionable;
 import net.microfalx.bootstrap.web.component.Component;
 import net.microfalx.bootstrap.web.component.Container;
-import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
 import net.microfalx.bootstrap.web.util.Gravatar;
 import net.microfalx.lang.ObjectUtils;
 import org.springframework.context.ApplicationContext;

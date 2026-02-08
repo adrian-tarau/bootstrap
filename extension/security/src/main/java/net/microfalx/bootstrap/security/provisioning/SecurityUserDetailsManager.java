@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.security.provisioning;
 import lombok.Getter;
 import lombok.Setter;
 import net.microfalx.bootstrap.security.user.Role;
-import net.microfalx.bootstrap.web.util.ExtendedUserDetails;
+import net.microfalx.bootstrap.security.userinfo.ExtendedUserDetails;
 import net.microfalx.lang.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
