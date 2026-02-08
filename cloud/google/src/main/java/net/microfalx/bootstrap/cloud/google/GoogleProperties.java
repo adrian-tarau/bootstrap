@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 @Configuration
 @ConfigurationProperties("bootstrap.cloud.google")
@@ -14,6 +15,21 @@ import static net.microfalx.lang.StringUtils.isEmpty;
 @Setter
 @ToString
 public class GoogleProperties {
+
+    /**
+     * Client ID for Google Identity Services. If not provided, Google Identity Services will be disabled.
+     */
+    private String clientId;
+
+    /**
+     * Client secret for Google Identity Services. If not provided, Google Identity Services will be disabled.
+     */
+    private String clientSecret;
+
+    /**
+     * Whether Google Identity Services is enabled. If not provided, it will be enabled if both client ID are provided.
+     */
+    private boolean gisEnabled;
 
     /**
      * API key for Google Address services. If not provided, Google Address services will be disabled.
@@ -29,6 +45,48 @@ public class GoogleProperties {
      * Map identifier for Google Maps services.
      */
     private String mapId;
+
+    /**
+     * Returns the client ID for Google Identity Services.
+     *
+     * @return a non-null instance
+     */
+    public String getClientId() {
+        if (isEmpty(clientId)) {
+            throw new IllegalStateException("Google Client ID is not set");
+        }
+        return clientId;
+    }
+
+    /**
+     * Returns the client secret for Google Identity Services.
+     *
+     * @return a non-null instance
+     */
+    public String getClientSecret() {
+        if (isEmpty(clientSecret)) {
+            throw new IllegalStateException("Google Client Secret is not set");
+        }
+        return clientSecret;
+    }
+
+    /**
+     * Returns whether the client id and secret are available.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise`
+     */
+    public boolean isClientSecretAvailable() {
+        return isNotEmpty(clientId) && isNotEmpty(clientSecret);
+    }
+
+    /**
+     * Returns whether GIS (client side) is enabled.
+     *
+     * @return {@code true} if enabled, {@code false} otherwise
+     */
+    public boolean isGisEnabled() {
+        return gisEnabled && isNotEmpty(clientId);
+    }
 
     /**
      * Returns the Google Address API key.

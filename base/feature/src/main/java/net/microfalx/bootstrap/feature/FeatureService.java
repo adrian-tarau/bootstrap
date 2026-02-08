@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.ClassUtils;
 import org.atteo.classindex.ClassIndex;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -21,6 +22,8 @@ import static net.microfalx.lang.StringUtils.toIdentifier;
 @Service
 @Slf4j
 public class FeatureService implements InitializingBean {
+
+    @Autowired(required = false) private FeatureProperties properties = new FeatureProperties();
 
     private final Map<String, Feature> features = new ConcurrentHashMap<>();
     private final Set<Feature> enabledFeatures = ConcurrentHashMap.newKeySet();
@@ -115,6 +118,7 @@ public class FeatureService implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         loadFeatures();
+        enableFeatures();
     }
 
     private void loadFeatures() {
@@ -134,5 +138,9 @@ public class FeatureService implements InitializingBean {
             }
         }
         LOGGER.info("Loaded {} features", features.size());
+    }
+
+    private void enableFeatures() {
+
     }
 }

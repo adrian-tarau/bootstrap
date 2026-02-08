@@ -41,9 +41,8 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
-            <artifactId>bootstrap-extension-web</artifactId>
+            <artifactId>bootstrap-base-web</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -52,24 +51,19 @@
             <version>${project.version}</version>
         </dependency>
 
-    </dependencies>
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-extension-web</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <!--configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.mapstruct</groupId>
-                            <artifactId>mapstruct-processor</artifactId>
-                            <version>1.6.3</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration-->
-            </plugin>
-        </plugins>
-    </build>
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+        </dependency>
+
+
+    </dependencies>
 
 </project>

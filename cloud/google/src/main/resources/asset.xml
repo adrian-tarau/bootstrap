@@ -5,6 +5,7 @@
     <asset-bundle id="google" path="cloud/google" name="Google" order="1000">
         <asset path="core.js" type="script"/>
         <asset path="maps.js" type="script"/>
+        <asset path="gis.js" type="script"/>
     </asset-bundle>
 
     <!-- Google Cloud  -->

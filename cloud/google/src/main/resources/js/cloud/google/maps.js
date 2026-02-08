@@ -1,5 +1,5 @@
 /*
-* The Google Cloud Global Variables
+* The Google Maps Global Variables
  */
 window.Google.Maps = window.Google.Maps || {};
 
