@@ -205,7 +205,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
         String currentUserName = getCurrentUserName();
         SecurityContext securityContext = securityContexts.get(normalizeUserName(currentUserName));
         if (securityContext != null) return securityContext;
-        if (!SecurityConstants.ANONYMOUS_USER.equals(currentUserName)) {
+        if (!SecurityConstants.ANONYMOUS_USER_NAME.equals(currentUserName)) {
             User currentUser = findUser(false);
             if (currentUser != null) {
                 securityContext = securityContexts.computeIfAbsent(normalizeUserName(currentUser.getUserName()),

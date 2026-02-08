@@ -33,9 +33,9 @@
             </form>
             <div th:if="${oauth2Properties.enabled}" class="social-auth-links text-center mb-3 d-grid gap-2">
                 <p>- OR -</p>
-                <a th:if="${oauth2Properties.googleEnabled}" href="/oauth2/authorization/google" class="btn btn-danger"> <i class="bi bi-google me-2"></i> Sign in using Google</a>
-                <a th:if="${oauth2Properties.azureEnabled}" href="/oauth2/authorization/azure" class="btn btn-primary"> <i class="bi bi-microsoft me-2"></i> Sign in using Microsoft</a>
-                <a th:if="${oauth2Properties.githubEnabled}" href="/oauth2/authorization/github" class="btn btn-secondary"> <i class="bi bi-github me-2"></i> Sign in using Github</a>
+                <a id="login_google" th:if="${oauth2Properties.googleEnabled}" href="/oauth2/authorization/google" class="btn btn-danger"> <i class="bi bi-google me-2"></i> Sign in using Google</a>
+                <a id="login_azure" th:if="${oauth2Properties.azureEnabled}" href="/oauth2/authorization/azure" class="btn btn-primary"> <i class="bi bi-microsoft me-2"></i> Sign in using Microsoft</a>
+                <a id="login_github" th:if="${oauth2Properties.githubEnabled}" href="/oauth2/authorization/github" class="btn btn-secondary"> <i class="bi bi-github me-2"></i> Sign in using Github</a>
             </div>
             <p class="mb-1"> <a th:href="@{/login/forgot-password}">I forgot my password</a> </p>
             <p th:if="${securityProperties.register}" class="mb-0"> <a th:href="@{/login/register}" class="text-center">

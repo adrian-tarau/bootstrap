@@ -12,16 +12,12 @@ import java.time.Duration;
 
 import static jakarta.servlet.http.HttpServletResponse.*;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
-import static net.microfalx.lang.StringUtils.isEmpty;
 
 /**
  * Various utilities for DoS Service.
  */
 @Slf4j
 public class DosUtils {
-
-    private static final String HTTP_HEADER_X_FORWARDED_FOR = "X-Forwarded-For";
-    private static final String HTTP_HEADER_X_HEALTH_CHECK = "X-Health-Check";
 
     static final Metrics METRICS = Metrics.of("Denial of Service");
     static final Metrics ERROR = METRICS.withGroup("Error");
@@ -112,22 +108,6 @@ public class DosUtils {
             };
             return outcome;
         }
-    }
-
-    /**
-     * Returns client identification, as reported by a proxy or as it comes in the request
-     *
-     * @param request a servlet request
-     * @return a string identifying the client (usually an IP)
-     */
-    public static String getFirstClientInfo(HttpServletRequest request) {
-        String forwardedHost = request.getHeader(HTTP_HEADER_X_FORWARDED_FOR);
-        if (isEmpty(forwardedHost)) {
-            forwardedHost = request.getRemoteAddr();
-        } else {
-            forwardedHost = StringUtils.split(forwardedHost, ",")[0];
-        }
-        return forwardedHost;
     }
 
     /**

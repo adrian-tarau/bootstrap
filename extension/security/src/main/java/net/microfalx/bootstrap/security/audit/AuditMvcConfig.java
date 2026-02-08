@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.security.user.UserService;
+import net.microfalx.bootstrap.web.util.HttpServletUtils;
 import net.microfalx.bootstrap.web.util.PathFilter;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Action;
@@ -23,8 +24,6 @@ import static net.microfalx.lang.StringUtils.replaceFirst;
 @Configuration
 public class AuditMvcConfig implements WebMvcConfigurer {
 
-    private static final String HTTP_HEADER_X_FORWARDED_FOR = "X-Forwarded-For";
-
     private final PathFilter pathFilter = new PathFilter();
 
     @Autowired
@@ -40,7 +39,7 @@ public class AuditMvcConfig implements WebMvcConfigurer {
         AuditContext context = AuditContext.get();
         context.setReference(request.getRequestURI());
         context.setErrorCode(Integer.toString(response.getStatus()));
-        context.setClientInfo(getClientIp(request));
+        context.setClientInfo(HttpServletUtils.getClientIp(request));
         if (isEmpty(context.getAction())) context.setAction(getAction(method));
         if (isEmpty(context.getModule())) context.setModule(getModule(method));
         userService.audit(context);
@@ -62,16 +61,6 @@ public class AuditMvcConfig implements WebMvcConfigurer {
         Module nameAnnot = method.getAnnotation(Module.class);
         if (nameAnnot != null) module = nameAnnot.value();
         return module;
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        String forwardedHost = request.getHeader(HTTP_HEADER_X_FORWARDED_FOR);
-        if (isEmpty(forwardedHost)) {
-            forwardedHost = request.getRemoteAddr();
-        } else {
-            forwardedHost = StringUtils.split(forwardedHost, ",")[0];
-        }
-        return forwardedHost;
     }
 
     private class Interceptor implements HandlerInterceptor {

@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.dos;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import net.microfalx.bootstrap.web.util.HttpServletUtils;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
 
@@ -83,7 +84,7 @@ public class DosValidator {
 
     private Request extractRoutingRequest() throws IOException {
         try {
-            String address = getFirstClientInfo(request);
+            String address = HttpServletUtils.getClientIp(request);
             if (StringUtils.isEmpty(address)) address = "localhost";
             return Request.create(getAbsoluteUri(request), address, Request.Outcome.NONE);
         } catch (Exception e) {

@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.security;
 
+import net.microfalx.bootstrap.web.util.SecurityUtils;
+
 /**
  * A collection of constants used by the security module.
  */
@@ -8,7 +10,7 @@ public class SecurityConstants {
     /**
      * The username for a user which is not authenticated.
      */
-    public static final String ANONYMOUS_USER = "anonymous";
+    public static final String ANONYMOUS_USER_NAME = SecurityUtils.ANONYMOUS_USER_NAME;
 
     /**
      * The name of the administrators group.

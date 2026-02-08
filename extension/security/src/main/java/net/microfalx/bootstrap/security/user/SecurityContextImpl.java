@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.security.user;
 
 import lombok.ToString;
-import net.microfalx.bootstrap.security.SecurityConstants;
 import net.microfalx.bootstrap.security.SecurityContext;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -12,7 +11,8 @@ import java.security.Principal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static net.microfalx.bootstrap.security.SecurityUtils.getCurrentPrincipal;
+import static net.microfalx.bootstrap.security.SecurityConstants.ANONYMOUS_USER_NAME;
+import static net.microfalx.bootstrap.web.util.SecurityUtils.ANONYMOUS_PRINCIPAL;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 @ToString
@@ -101,7 +101,7 @@ public class SecurityContextImpl implements SecurityContext {
             this.authentication = securityContext.getAuthentication();
         }
         if (this.authentication == null) {
-            this.authentication = new AnonymousAuthenticationToken(SecurityConstants.ANONYMOUS_USER, getCurrentPrincipal(), Collections.emptyList());
+            this.authentication = new AnonymousAuthenticationToken(ANONYMOUS_USER_NAME, ANONYMOUS_PRINCIPAL, Collections.emptyList());
         }
         if (this.authentication.getPrincipal() instanceof UserDetails userDetailsFromPrincipal) {
             this.userDetails = userDetailsFromPrincipal;
