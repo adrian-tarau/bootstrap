@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.security.provisioning;
 
 import net.microfalx.bootstrap.restapi.RestApiAccessDeniedHandler;
 import net.microfalx.bootstrap.restapi.RestApiAuthenticationEntryPoint;
-import net.microfalx.bootstrap.security.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.actuate.health.HealthEndpoint;
@@ -14,7 +13,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.RememberMeServices;
 
@@ -29,19 +27,11 @@ public class SecurityConfiguration {
     @Autowired
     private SecurityProperties securityProperties;
 
-    @Autowired
-    private OAuth2Properties oauth2Properties;
-
-    @Autowired
-    private OAuth2AuthorizedClientService authorizedClientService;
-
-    @Autowired
-    private UserService userService;
-
     @Bean
     @Order(5)
-    public SecurityFilterChain healthChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
+    public SecurityFilterChain healthChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.securityMatcher(EndpointRequest.to(HealthEndpoint.class));
+        httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return httpSecurity.build();
     }
 
@@ -49,11 +39,9 @@ public class SecurityConfiguration {
     @Order(10)
     public SecurityFilterChain webChain(HttpSecurity httpSecurity, RememberMeServices rememberMeServices) throws Exception {
         if (securityProperties.isEnabled()) {
-            httpSecurity = httpSecurity.securityMatcher(addMatchAll("/"));
-            // everything else requires authentication
+            httpSecurity.securityMatcher(addMatchAll("/"));
             httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             updateLogin(httpSecurity);
-            updateOAuth2(httpSecurity);
             updateRememberMe(httpSecurity, rememberMeServices);
             updateCommon(httpSecurity);
             updateExceptionHandling(httpSecurity);
@@ -80,15 +68,6 @@ public class SecurityConfiguration {
         httpSecurity.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
     }
 
-    private void updateOAuth2(HttpSecurity httpSecurity) throws Exception {
-        if (oauth2Properties.isEnabled()) {
-            httpSecurity.oauth2Login(oauth2 -> oauth2.loginPage("/login")
-                    .userInfoEndpoint(userInfo -> userInfo
-                            .oidcUserService(new OidcUserService(userService, oauth2Properties))
-                            .userService(new OAuth2UserService(userService, oauth2Properties))
-                    ));
-        }
-    }
 
     private void updateOther(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(Customizer.withDefaults());
@@ -121,17 +100,12 @@ public class SecurityConfiguration {
         );
     }
 
-
     private void updateLogin(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.formLogin(login -> login.loginPage("/login").loginProcessingUrl("/login/auth")
                 .usernameParameter("username").passwordParameter("password").permitAll());
         httpSecurity.logout(logout -> logout.clearAuthentication(true)
                 .invalidateHttpSession(true).logoutUrl("/logout")
                 .logoutSuccessUrl("/"));
-    }
-
-    private void allowPath(HttpSecurity httpSecurity, String path) throws Exception {
-        httpSecurity.authorizeHttpRequests(auth -> auth.requestMatchers(addMatchAll(path)).permitAll());
     }
 
     private String addMatchAll(String path) {
