@@ -17,6 +17,7 @@ public class OAuth2Properties {
 
     private String googleClientId;
     private String googleClientSecret;
+    private String googleClientDomain;
 
     private String githubClientId;
     private String githubClientSecret;

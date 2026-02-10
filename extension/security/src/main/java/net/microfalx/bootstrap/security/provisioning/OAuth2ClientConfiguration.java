@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.security.provisioning;
 
+import jakarta.servlet.http.HttpServletRequest;
 import net.microfalx.bootstrap.security.SecurityUtils;
 import net.microfalx.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,12 +10,17 @@ import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
@@ -41,6 +47,13 @@ public class OAuth2ClientConfiguration {
         }
         if (registrations.isEmpty()) registrations.add(noop());
         return new InMemoryClientRegistrationRepository(registrations);
+    }
+
+    @Bean
+    public OAuth2AuthorizationRequestResolver resolver(ClientRegistrationRepository repo) {
+        DefaultOAuth2AuthorizationRequestResolver resolver = new DefaultOAuth2AuthorizationRequestResolver(
+                repo, "/oauth2/authorization");
+        return new AuthorizationRequestResolver(resolver);
     }
 
     private ClientRegistration google() {
@@ -93,5 +106,43 @@ public class OAuth2ClientConfiguration {
                 .clientSecret(SecurityUtils.getRandomPassword())
                 .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
                 .build();
+    }
+
+    private class AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
+
+        private final OAuth2AuthorizationRequestResolver delegate;
+
+        public AuthorizationRequestResolver(OAuth2AuthorizationRequestResolver delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+            return update(delegate.resolve(request));
+
+        }
+
+        @Override
+        public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
+            return update(delegate.resolve(request, clientRegistrationId));
+        }
+
+        private OAuth2AuthorizationRequest update(OAuth2AuthorizationRequest request) {
+            if (request == null) return request;
+            String registrationId = request.getAttributes().get(OAuth2ParameterNames.REGISTRATION_ID).toString();
+            if ("google".equals(registrationId)) {
+                return OAuth2AuthorizationRequest.from(request)
+                        .additionalParameters(this::updateAdditionalParameters)
+                        .build();
+            } else {
+                return request;
+            }
+        }
+
+        private void updateAdditionalParameters(Map<String, Object> parameters) {
+            if (StringUtils.isNotEmpty(properties.getGoogleClientDomain())) {
+                parameters.put("hd", properties.getGoogleClientDomain());
+            }
+        }
     }
 }

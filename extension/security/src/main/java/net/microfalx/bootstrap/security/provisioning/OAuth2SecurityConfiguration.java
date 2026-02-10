@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 
 import static net.microfalx.lang.StringUtils.addEndSlash;
@@ -25,11 +26,11 @@ public class OAuth2SecurityConfiguration {
 
     @Bean
     @Order(9)
-    public SecurityFilterChain oauthChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain oauthChain(HttpSecurity httpSecurity, OAuth2AuthorizationRequestResolver resolver) throws Exception {
         if (securityProperties.isEnabled() && oauth2Properties.isEnabled()) {
             httpSecurity.securityMatcher(addMatchAll("/oauth2"), addMatchAll("/login/oauth2"));
             httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-            updateOAuth2(httpSecurity);
+            updateOAuth2(httpSecurity, resolver);
             return httpSecurity.build();
         } else {
             httpSecurity.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
@@ -37,13 +38,16 @@ public class OAuth2SecurityConfiguration {
         }
     }
 
-    private void updateOAuth2(HttpSecurity httpSecurity) throws Exception {
+    private void updateOAuth2(HttpSecurity httpSecurity, OAuth2AuthorizationRequestResolver resolver) throws Exception {
         if (oauth2Properties.isEnabled()) {
             httpSecurity.oauth2Login(oauth2 -> oauth2.loginPage("/login")
                     .userInfoEndpoint(userInfo -> userInfo
                             .oidcUserService(new OidcUserService(userService, oauth2Properties))
                             .userService(new OAuth2UserService(userService, oauth2Properties))
-                    ));
+                    ).authorizationEndpoint(auth -> auth
+                            .authorizationRequestResolver(resolver)
+                    )
+            );
         }
     }
 

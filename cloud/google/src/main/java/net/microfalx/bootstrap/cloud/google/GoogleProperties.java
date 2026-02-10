@@ -27,6 +27,11 @@ public class GoogleProperties {
     private String clientSecret;
 
     /**
+     * The domain to restrict client requests
+     */
+    private String clientDomain;
+
+    /**
      * Whether Google Identity Services is enabled. If not provided, it will be enabled if both client ID are provided.
      */
     private boolean gisEnabled;
