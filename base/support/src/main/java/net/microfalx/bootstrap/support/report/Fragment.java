@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.support.report;
 
 import lombok.Getter;
 import lombok.ToString;
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.StringUtils;
@@ -12,6 +11,7 @@ import java.io.IOException;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.ExceptionUtils.rethrowException;
 
 /**
@@ -106,7 +106,7 @@ public class Fragment implements Identifiable<String>, Nameable {
             return resource.loadAsString();
         } catch (IOException e) {
             return "<div class=\"alert alert-primary\" role=\"alert\">\n" +
-                    "Failed to load rendered fragment " + getName() + ", root cause: " + ExceptionUtils.getRootCauseMessage(e) +
+                    "Failed to load rendered fragment " + getName() + ", root cause: " + getRootCauseDescription(e) +
                     "    </div>";
         }
     }

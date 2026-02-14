@@ -24,7 +24,7 @@ import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.createJdbcUri;
 import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.describe;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
@@ -82,7 +82,7 @@ public abstract class AbstractDatabase extends AbstractNode implements Database 
                         copyNodeAttributes(extractedNodes);
                         nodes = extractedNodes.stream().collect(Collectors.toMap(node -> toIdentifier(node.getId()), node -> node));
                     } catch (ObjectPoolException e) {
-                        LOGGER.debug("Failed to extract database nodes for {}, database is not available, root cause: {}", describe(this), getRootCauseMessage(e));
+                        LOGGER.debug("Failed to extract database nodes for {}, database is not available, root cause: {}", describe(this), getRootCauseDescription(e));
                     } catch (Exception e) {
                         LOGGER.atError().setCause(e).log("Failed to extract database nodes for {}", describe(this));
                     }

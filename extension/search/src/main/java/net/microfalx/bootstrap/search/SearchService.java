@@ -42,7 +42,7 @@ import java.util.function.Function;
 import static java.util.Collections.emptySet;
 import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.FormatterUtils.formatDuration;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
@@ -173,7 +173,7 @@ public class SearchService implements InitializingBean {
             retryTemplate.registerListener(new RetryListener() {
                 @Override
                 public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-                    LOGGER.info("Failed to find document with id {}, root cause: {}", id, getRootCauseMessage(throwable));
+                    LOGGER.info("Failed to find document with id {}, root cause: {}", id, getRootCauseDescription(throwable));
                     releaseSearcher();
                 }
             });
@@ -396,7 +396,7 @@ public class SearchService implements InitializingBean {
         retryTemplate.registerListener(new RetryListener() {
             @Override
             public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-                LOGGER.info("Failure detected during action '{}', root cause: {}", operation, getRootCauseMessage(throwable));
+                LOGGER.info("Failure detected during action '{}', root cause: {}", operation, getRootCauseDescription(throwable));
                 releaseSearcher();
             }
         });
@@ -579,7 +579,7 @@ public class SearchService implements InitializingBean {
         retryTemplate.registerListener(new RetryListener() {
             @Override
             public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-                LOGGER.info("Failed to search for '" + searchQuery + ", root cause: " + getRootCauseMessage(throwable));
+                LOGGER.info("Failed to search for '" + searchQuery + ", root cause: " + getRootCauseDescription(throwable));
                 releaseSearcher();
             }
         });

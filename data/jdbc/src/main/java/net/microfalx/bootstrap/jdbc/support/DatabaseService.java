@@ -8,7 +8,10 @@ import net.microfalx.bootstrap.jdbc.support.mysql.MySqlDatabase;
 import net.microfalx.bootstrap.jdbc.support.vertica.VerticaDatabase;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
-import net.microfalx.lang.*;
+import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ConcurrencyUtils;
+import net.microfalx.lang.TextUtils;
+import net.microfalx.lang.TimeUtils;
 import net.microfalx.objectpool.ObjectPoolException;
 import net.microfalx.threadpool.AbstractCallable;
 import net.microfalx.threadpool.AbstractRunnable;
@@ -39,8 +42,7 @@ import static net.microfalx.bootstrap.jdbc.support.DatabaseUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ConcurrencyUtils.*;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseName;
-import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
+import static net.microfalx.lang.ExceptionUtils.*;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.millisSince;
 
@@ -448,9 +450,8 @@ public class DatabaseService implements InitializingBean {
 
     private void registerFailure(Node node, Throwable throwable) {
         requireNonNull(node);
-        String message = throwable != null ? ExceptionUtils.getRootCauseMessage(throwable) : StringUtils.NA_STRING;
         if (node instanceof AbstractNode abstractNode) {
-            abstractNode.setState(Node.State.DOWN, message);
+            abstractNode.setState(Node.State.DOWN, getRootCauseDescription(throwable));
         }
     }
 

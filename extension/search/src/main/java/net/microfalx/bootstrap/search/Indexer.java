@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.search;
 
-import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 import net.microfalx.lang.TimeUtils;
@@ -25,8 +24,7 @@ import static java.lang.System.currentTimeMillis;
 import static net.microfalx.bootstrap.search.SearchUtils.createRetryTemplate;
 import static net.microfalx.bootstrap.search.SearchUtils.isIndexUnusable;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.rethrowException;
-import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
+import static net.microfalx.lang.ExceptionUtils.*;
 import static net.microfalx.lang.TimeUtils.ONE_MINUTE;
 import static net.microfalx.lang.TimeUtils.millisSince;
 
@@ -178,7 +176,7 @@ public class Indexer implements Identifiable<String>, Nameable {
             }
         } catch (Exception e) {
             if (isIndexUnusable(e)) {
-                LOGGER.warn("Failed to commit changes to index. root cause: {}", ExceptionUtils.getRootCauseMessage(e));
+                LOGGER.warn("Failed to commit changes to index. root cause: {}", getRootCauseDescription(e));
             } else {
                 rethrowException(e);
             }

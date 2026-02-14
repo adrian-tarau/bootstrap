@@ -7,7 +7,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static net.microfalx.bootstrap.restapi.client.RestApiAudit.REQUEST_ID;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 
 public class RestApiAuditInterceptor implements Interceptor {
 
@@ -60,6 +60,6 @@ public class RestApiAuditInterceptor implements Interceptor {
 
     private void updateAudit(RestApiAudit audit, Exception exception) {
         audit.setResponseStatus(500);
-        audit.setErrorMessage("Internal error in interceptor, root cause: " + getRootCauseMessage(exception));
+        audit.setErrorMessage("Internal error in interceptor, root cause: " + getRootCauseDescription(exception));
     }
 }

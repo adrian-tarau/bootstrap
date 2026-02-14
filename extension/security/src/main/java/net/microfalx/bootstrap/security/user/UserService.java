@@ -58,7 +58,7 @@ import static net.microfalx.bootstrap.security.SecurityConstants.USERS_GROUP;
 import static net.microfalx.bootstrap.security.SecurityUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.StringUtils.*;
 
 /**
@@ -353,7 +353,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
         AuditContext context = AuditContext.get().setAction(LOGIN_ACTION)
                 .setModule(SECURITY_MODULE).setErrorCode("403")
                 .setDescription("User '" + failures.getAuthentication().getName() + "' failed to authenticate, root cause: "
-                        + getRootCauseMessage(exception));
+                        + getRootCauseDescription(exception));
         context = updateAuditContext(context, failures.getAuthentication());
         audit(context);
         String userName = getUserName(failures.getAuthentication());
@@ -368,7 +368,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
         } else if (exception instanceof AuthenticationException) {
             issue = Issue.create(Issue.Type.SECURITY, "Authentication")
                     .withDescription(exception, "Authentication exception for user ''{0}''", userName);
-            LOGGER.warn("Authentication exception for user '{}': {}", userName, getRootCauseMessage(exception));
+            LOGGER.warn("Authentication exception for user '{}': {}", userName, getRootCauseDescription(exception));
         } else {
             issue = Issue.create(Issue.Type.SECURITY, "Unknown Authentication")
                     .withDescription(exception, "An unknown authentication failure occurred for user ''{0}''", userName);

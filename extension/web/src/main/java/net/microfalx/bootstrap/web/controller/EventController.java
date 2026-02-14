@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.System.currentTimeMillis;
 import static net.microfalx.bootstrap.web.event.EventService.SSE_TIMEOUT;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.ExceptionUtils.rethrowException;
 import static net.microfalx.lang.StringUtils.isEmpty;
 import static net.microfalx.lang.ThreadUtils.sleepMillis;
@@ -139,9 +139,9 @@ public class EventController implements AnonymousController {
             }
             if (throwable != null) {
                 if (isClientAbortError(throwable)) {
-                    LOGGER.debug("Communication error with client reason: {}", getRootCauseMessage(throwable));
+                    LOGGER.debug("Communication error with client reason: {}", getRootCauseDescription(throwable));
                 } else {
-                    LOGGER.warn("Error while processing events, root cause: {}", getRootCauseMessage(throwable));
+                    LOGGER.warn("Error while processing events, root cause: {}", getRootCauseDescription(throwable));
                 }
             }
         }

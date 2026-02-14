@@ -13,7 +13,7 @@ import net.microfalx.resource.Resource;
 import java.io.IOException;
 import java.util.List;
 
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 
 @Slf4j
@@ -57,7 +57,7 @@ public class HelpTool extends AbstractToolExecutor {
                     chat.addAttribute(TOC_ATTR_PREFIX + toc.getId(), Boolean.TRUE);
                     StringUtils.append(nameBuilder, toc.getName());
                 } catch (IOException e) {
-                    LOGGER.warn("Failed to load content for TOC '{}', root cause: {}", toc.getPath(), getRootCauseMessage(e));
+                    LOGGER.warn("Failed to load content for TOC '{}', root cause: {}", toc.getPath(), getRootCauseDescription(e));
                 }
             }
         }

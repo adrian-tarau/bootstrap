@@ -12,7 +12,7 @@ import java.time.temporal.Temporal;
 
 import static net.microfalx.bootstrap.help.HelpUtilities.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 
 /**
  * Indexes the help content for the application.
@@ -54,8 +54,7 @@ class HelpIndexer implements Runnable {
         try {
             if (toc.getContent().exists()) doIndexContent(toc);
         } catch (Exception e) {
-            LOGGER.warn("Failed to index TOC content for {}, root cause: {}",
-                    toc.getPath(), getRootCauseMessage(e));
+            LOGGER.warn("Failed to index TOC content for {}, root cause: {}", toc.getPath(), getRootCauseDescription(e));
         }
     }
 

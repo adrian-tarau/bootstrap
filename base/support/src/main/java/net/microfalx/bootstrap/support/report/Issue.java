@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.support.report;
 
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.*;
 
 import java.time.LocalDateTime;
@@ -14,12 +15,13 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TextUtils.abbreviateMiddle;
 
 @Getter
 @ToString
+@Slf4j
 public class Issue implements Identifiable<String>, Nameable, Descriptable, Cloneable {
 
     private String id;
@@ -33,6 +35,7 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
     private int occurrences = 1;
     private Severity severity = Severity.MEDIUM;
     private Class<?> throwableClass;
+    private boolean failed;
 
     static final Queue<Issue> ISSUES = new ConcurrentLinkedQueue<>();
 
@@ -46,9 +49,8 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
 
     private Issue(Type type, String name) {
         requireNotEmpty(type);
-        requireNotEmpty(name);
         this.type = type;
-        this.name = name;
+        this.name = defaultIfEmpty(name, NA_STRING);
         updateId();
     }
 
@@ -68,11 +70,17 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * @return a new instance with the updated description
      */
     public Issue withModule(String module) {
-        requireNotEmpty(module);
-        Issue copy = copy();
-        copy.module = module;
-        copy.updateId();
-        return copy;
+        try {
+            requireNotEmpty(module);
+            Issue copy = copy();
+            copy.module = module;
+            copy.updateId();
+            return copy;
+        } catch (Exception e) {
+            logError(e, "Failed to change issue module {}", module);
+            this.failed = true;
+            return this;
+        }
     }
 
     /**
@@ -82,9 +90,15 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * @return a new instance with the updated description
      */
     public Issue withDescription(String description) {
-        Issue copy = copy();
-        copy.description = description;
-        return copy;
+        try {
+            Issue copy = copy();
+            copy.description = description;
+            return copy;
+        } catch (Exception e) {
+            logError(e, "Failed to change issue description");
+            this.failed = true;
+            return this;
+        }
     }
 
     /**
@@ -95,9 +109,15 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * @return a new instance with the updated description
      */
     public Issue withDescription(String pattern, Object... args) {
-        Issue copy = copy();
-        copy.description = formatMessage(pattern, args);
-        return copy;
+        try {
+            Issue copy = copy();
+            copy.description = formatMessage(pattern, args);
+            return copy;
+        } catch (Exception e) {
+            logError(e, "Failed to change issue description");
+            this.failed = true;
+            return this;
+        }
     }
 
     /**
@@ -109,10 +129,16 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * @return a new instance with the updated description
      */
     public Issue withDescription(Throwable throwable, String pattern, Object... args) {
-        Issue copy = copy();
-        copy.description = formatMessage(pattern, args) + ", root cause: " + getRootCauseMessage(throwable);
-        copy.throwableClass = throwable != null ? throwable.getClass() : null;
-        return copy;
+        try {
+            Issue copy = copy();
+            copy.description = formatMessage(pattern, args) + ", root cause: " + getRootCauseDescription(throwable);
+            copy.throwableClass = throwable != null ? throwable.getClass() : null;
+            return copy;
+        } catch (Exception e) {
+            logError(e, "Failed to change issue description");
+            this.failed = true;
+            return this;
+        }
     }
 
     /**
@@ -122,10 +148,16 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * @return a new instance with the updated severity
      */
     public Issue withSeverity(Severity severity) {
-        requireNonNull(severity);
-        Issue copy = copy();
-        copy.severity = severity;
-        return copy;
+        try {
+            requireNonNull(severity);
+            Issue copy = copy();
+            copy.severity = severity;
+            return copy;
+        } catch (Exception e) {
+            logError(e, "Failed to change issue severity {]", severity);
+            this.failed = true;
+            return this;
+        }
     }
 
     /**
@@ -135,9 +167,15 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * @return a new instance with the updated occurrences
      */
     public Issue withOccurrences(Integer occurrences) {
-        Issue copy = copy();
-        copy.occurrences = occurrences;
-        return copy;
+        try {
+            Issue copy = copy();
+            copy.occurrences = occurrences;
+            return copy;
+        } catch (Exception e) {
+            logError(e, "Failed to change issue occurrences");
+            this.failed = true;
+            return this;
+        }
     }
 
     /**
@@ -147,11 +185,17 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * @return a new instance with the updated occurrences
      */
     public Issue withDetectedAt(LocalDateTime detectedAt) {
-        Issue copy = copy();
-        if (copy.firstDetectedAt == null) copy.firstDetectedAt = detectedAt;
-        copy.lastDetectedAt = detectedAt;
-        copy.occurrences = copy.occurrences + 1;
-        return copy;
+        try {
+            Issue copy = copy();
+            if (copy.firstDetectedAt == null) copy.firstDetectedAt = detectedAt;
+            copy.lastDetectedAt = detectedAt;
+            copy.occurrences = copy.occurrences + 1;
+            return copy;
+        } catch (Exception e) {
+            logError(e, "Failed to change issue detection time");
+            this.failed = true;
+            return this;
+        }
     }
 
     /**
@@ -162,11 +206,17 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * @return a new instance with the added attribute
      */
     public Issue withAttribute(String name, Object value) {
-        requireNotEmpty(name);
-        Issue copy = copy();
-        copy.attributes = new HashMap<>(copy.attributes != null ? copy.attributes : emptyMap());
-        copy.attributes.put(name, merge(copy.attributes.get(name), value));
-        return copy;
+        try {
+            requireNotEmpty(name);
+            Issue copy = copy();
+            copy.attributes = new HashMap<>(copy.attributes != null ? copy.attributes : emptyMap());
+            copy.attributes.put(name, merge(copy.attributes.get(name), value));
+            return copy;
+        } catch (Exception e) {
+            logError(e, "Failed to update issue attribute {}", name);
+            this.failed = true;
+            return this;
+        }
     }
 
     /**
@@ -186,23 +236,34 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
      * @return a new instance representing the merged issue
      */
     public Issue merge(Issue other) {
-        Issue copy = copy();
-        if (other.firstDetectedAt.isBefore(copy.firstDetectedAt)) {
-            copy.firstDetectedAt = other.firstDetectedAt;
+        if (other == null) return this;
+        try {
+            Issue copy = copy();
+            if (other.firstDetectedAt.isBefore(copy.firstDetectedAt)) {
+                copy.firstDetectedAt = other.firstDetectedAt;
+            }
+            if (other.lastDetectedAt.isAfter(copy.lastDetectedAt)) {
+                copy.lastDetectedAt = other.lastDetectedAt;
+            }
+            copy.occurrences = copy.occurrences + other.occurrences;
+            copy.attributes = merge(copy.attributes, other.attributes);
+            return copy;
+        } catch (Exception e) {
+            logError(e, "Failed to merge issue {}", other.getName());
+            this.failed = true;
+            return this;
         }
-        if (other.lastDetectedAt.isAfter(copy.lastDetectedAt)) {
-            copy.lastDetectedAt = other.lastDetectedAt;
-        }
-        copy.occurrences = copy.occurrences + other.occurrences;
-        copy.attributes = merge(copy.attributes, other.attributes);
-        return copy;
     }
 
     /**
      * Registers this issue for reporting.
      */
     public void register() {
-        ISSUES.offer(this);
+        try {
+            if (!failed) ISSUES.offer(this);
+        } catch (Exception e) {
+            logError(e, "Failed to register issue {}", getName());
+        }
     }
 
     /**
@@ -219,12 +280,17 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
     }
 
     private void updateId() {
-        Hashing hashing = Hashing.create();
-        hashing.update(type.name().toLowerCase());
-        hashing.update(StringUtils.toIdentifier(module));
-        hashing.update(StringUtils.toIdentifier(name));
-        if (throwableClass != null) hashing.update(throwableClass.getName());
-        this.id = hashing.asString();
+        try {
+            Hashing hashing = Hashing.create();
+            hashing.update(type.name().toLowerCase());
+            hashing.update(StringUtils.toIdentifier(module));
+            hashing.update(StringUtils.toIdentifier(name));
+            if (throwableClass != null) hashing.update(throwableClass.getName());
+            this.id = hashing.asString();
+        } catch (Exception e) {
+            logError(e, "Failed to update identifier for issue {}", getName());
+            this.failed = true;
+        }
     }
 
     private Issue copy() {
@@ -255,6 +321,18 @@ public class Issue implements Identifiable<String>, Nameable, Descriptable, Clon
             }
         }
         return current;
+    }
+
+    private void logError(Throwable throwable, String message, Object... args) {
+        try {
+            if (throwable != null) {
+                LOGGER.atError().setCause(throwable).log(message, args);
+            } else {
+                LOGGER.error(message, args);
+            }
+        } catch (Exception e) {
+            // if it really happens during logging, we don't want to do anything about it
+        }
     }
 
     /**

@@ -16,7 +16,7 @@ import java.util.Collection;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.FormatterUtils.formatDuration;
 import static net.microfalx.lang.StringUtils.addStartSlash;
 import static net.microfalx.lang.TextUtils.insertSpacesWithBlock;
@@ -173,7 +173,7 @@ public final class Session implements Identifiable<String> {
             failedStatementCount++;
             status = Status.FAILED;
             logWarn("Migration failed while executing:\nStatement:\n" + insertSpacesWithBlock(query.getSql(), 5)
-                    + "\nRoot Cause:\n" + insertSpacesWithBlock(getRootCauseMessage(e), 5));
+                    + "\nRoot Cause:\n" + insertSpacesWithBlock(getRootCauseDescription(e), 5));
             return Status.FAILED;
         }
     }

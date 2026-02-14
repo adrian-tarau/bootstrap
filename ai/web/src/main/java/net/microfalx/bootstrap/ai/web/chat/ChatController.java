@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.microfalx.bootstrap.ai.core.AiUtils.getChatThreadPool;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.ExceptionUtils.rethrowException;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
@@ -359,9 +359,9 @@ public class ChatController extends PageController {
             }
             if (throwable != null) {
                 if (throwable instanceof IllegalStateException) {
-                    LOGGER.info("Communication error with client for chat '{}', reason: {}", chat.getId(), getRootCauseMessage(throwable));
+                    LOGGER.info("Communication error with client for chat '{}', reason: {}", chat.getId(), getRootCauseDescription(throwable));
                 } else {
-                    LOGGER.warn("Error while processing chat {}, root cause: {}", chat.getId(), getRootCauseMessage(throwable));
+                    LOGGER.warn("Error while processing chat {}, root cause: {}", chat.getId(), getRootCauseDescription(throwable));
                 }
             }
         }

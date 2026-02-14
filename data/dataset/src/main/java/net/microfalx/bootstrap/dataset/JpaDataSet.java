@@ -5,7 +5,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import net.microfalx.bootstrap.model.*;
-import net.microfalx.lang.ExceptionUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.LazyInitializable;
 import org.slf4j.Logger;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static net.microfalx.lang.AnnotationUtils.getAnnotation;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 
 /**
@@ -49,8 +49,7 @@ public class JpaDataSet<M, ID> extends PojoDataSet<M, JpaField<M>, ID> {
             try {
                 specification.toPredicate(query.from(getMetadata().getModel()), query, criteriaBuilder);
             } catch (InvalidDataTypeExpression e) {
-                LOGGER.warn("Validation of filter for '{}', filter '{}' has failed with '{}'", getName(), filter,
-                        ExceptionUtils.getRootCauseMessage(e));
+                LOGGER.warn("Validation of filter for '{}', filter '{}' has failed with '{}'", getName(), filter, getRootCauseDescription(e));
                 throw new DataSetException(e.getMessage(), e);
             }
         }

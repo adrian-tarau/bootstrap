@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import net.microfalx.lang.ExceptionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -15,6 +14,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 
 @RestControllerAdvice(assignableTypes = RestApiController.class)
 @Slf4j
@@ -67,7 +68,7 @@ public class RestApiExceptionHandler {
     private Map<String, Object> getDetails(Throwable throwable) {
         Map<String, Object> details = new HashMap<>();
         details.put("type", throwable.getClass().getSimpleName());
-        details.put("message", ExceptionUtils.getRootCauseMessage(throwable));
+        details.put("message", getRootCauseDescription(throwable));
         return details;
     }
 

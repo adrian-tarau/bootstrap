@@ -40,7 +40,7 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.bootstrap.search.SearchUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseMessage;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 
@@ -481,7 +481,7 @@ public class IndexService implements InitializingBean {
             try {
                 indexer.commit();
             } catch (Exception e) {
-                LOGGER.warn("Failed to commit changes to index {}. root cause: {}", indexer.getId(), getRootCauseMessage(e));
+                LOGGER.warn("Failed to commit changes to index {}. root cause: {}", indexer.getId(), getRootCauseDescription(e));
             }
         }
 

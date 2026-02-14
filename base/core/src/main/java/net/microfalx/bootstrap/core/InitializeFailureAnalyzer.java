@@ -10,8 +10,7 @@ public class InitializeFailureAnalyzer implements FailureAnalyzer {
 
     @Override
     public FailureAnalysis analyze(Throwable throwable) {
-        String rootCauseMessage = ExceptionUtils.getRootCauseMessage(throwable);
-        String description = "An error occurred during application initialization: " + rootCauseMessage;
+        String description = "An error occurred during application initialization: " + ExceptionUtils.getRootCauseDescription(throwable);
         LOGGER.atError().setCause(throwable).log();
         return new FailureAnalysis(description, "None", throwable);
     }
