@@ -97,6 +97,7 @@ public class SecurityMvcConfiguration implements WebMvcConfigurer {
     private void initMatchers() {
         registerAnonymous(PathPatternRequestMatcher.withDefaults().matcher("/login/**"));
         registerAnonymous(PathPatternRequestMatcher.withDefaults().matcher("/logout/**"));
+        registerAnonymous(PathPatternRequestMatcher.withDefaults().matcher("/robots.txt"));
     }
 
     private boolean isAnonymous(HttpServletRequest request) {
