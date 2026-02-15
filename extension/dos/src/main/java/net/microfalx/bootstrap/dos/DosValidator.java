@@ -60,11 +60,11 @@ public class DosValidator {
      *
      * @param response the response object
      */
-    void afterCompletion(HttpServletResponse response) {
+    void afterCompletion(HttpServletResponse response, Exception exception) {
         if (dosRequest == null) return;
         try {
             int status = response.getStatus();
-            Request finalDosRequest = dosRequest.withOutcome(getOutcomeFromHttp(status));
+            Request finalDosRequest = dosRequest.withOutcome(getOutcomeFromHttp(status, exception));
             dosService.register(finalDosRequest);
         } catch (Exception e) {
             ERROR.increment(ExceptionUtils.getRootCauseName(e));

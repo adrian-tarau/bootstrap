@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.dos;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import net.microfalx.bootstrap.core.utils.Failure;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.lang.UriUtils;
@@ -90,24 +91,33 @@ public class DosUtils {
      * @param statusCode the HTTP status code
      * @return a non-null instance
      */
-    public static Request.Outcome getOutcomeFromHttp(Integer statusCode) {
+    public static Request.Outcome getOutcomeFromHttp(Integer statusCode, Exception exception) {
         if (statusCode == null) return Request.Outcome.SUCCESS;
         if (statusCode < SC_BAD_REQUEST) {
             return Request.Outcome.SUCCESS;
         } else if (statusCode >= SC_INTERNAL_SERVER_ERROR) {
-            return Request.Outcome.FAILURE;
+            return getOutcomeFromException(exception);
         } else {
-            Request.Outcome outcome = Request.Outcome.FAILURE;
-            outcome = switch (statusCode) {
+            return switch (statusCode) {
                 case SC_METHOD_NOT_ALLOWED, SC_NOT_ACCEPTABLE, SC_UNSUPPORTED_MEDIA_TYPE -> Request.Outcome.INVALID;
                 case SC_BAD_REQUEST -> Request.Outcome.VALIDATION;
                 case SC_NOT_FOUND -> Request.Outcome.NOT_FOUND;
                 case SC_UNAUTHORIZED -> Request.Outcome.AUTHENTICATION;
                 case SC_FORBIDDEN -> Request.Outcome.AUTHORIZATION;
-                default -> outcome;
+                default -> getOutcomeFromException(exception);
             };
-            return outcome;
         }
+    }
+
+    public static Request.Outcome getOutcomeFromException(Exception exception) {
+        if (exception == null) return Request.Outcome.FAILURE;
+        return switch (Failure.getType(exception)) {
+            case ILLEGAL_INPUT, ILLEGAL_OUTPUT -> Request.Outcome.VALIDATION;
+            case AUTHENTICATION -> Request.Outcome.AUTHENTICATION;
+            case AUTHORIZATION -> Request.Outcome.AUTHORIZATION;
+            case RESOURCE_NOT_FOUND, RESOURCE_UNAVAILABLE -> Request.Outcome.NOT_FOUND;
+            default -> Request.Outcome.FAILURE;
+        };
     }
 
     /**

@@ -33,9 +33,9 @@ public class DosHandlerInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception exception) throws Exception {
         DosValidator validator = (DosValidator) request.getAttribute(DOS_VALIDATOR_ATTRIBUTE);
-        if (validator != null && pathFilter.shouldInclude(request)) validator.afterCompletion(response);
+        if (validator != null && pathFilter.shouldInclude(request)) validator.afterCompletion(response, exception);
     }
 
     private DosValidator getValidator(HttpServletRequest request, HttpServletResponse response) {

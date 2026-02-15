@@ -95,6 +95,7 @@ public class PathFilter {
 
     private static String getRootPath(String path, int parts) {
         String[] fragments = StringUtils.split(path, "/");
+        if (fragments.length == 0) return SLASH;
         int finalParts = parts;
         if (finalParts <= 0) {
             // if in auto mode, if it is longer than 3

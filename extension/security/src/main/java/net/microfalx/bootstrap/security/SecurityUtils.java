@@ -1,8 +1,17 @@
 package net.microfalx.bootstrap.security;
 
+import net.microfalx.bootstrap.core.utils.Failure;
 import net.microfalx.bootstrap.security.userinfo.ExtendedUserDetails;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.ott.InvalidOneTimeTokenException;
+import org.springframework.security.authentication.password.CompromisedPasswordException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.web.authentication.www.NonceExpiredException;
 
 import java.security.Principal;
 
@@ -86,6 +95,18 @@ public class SecurityUtils {
      */
     public static String getCurrentUserName() {
         return net.microfalx.bootstrap.web.util.SecurityUtils.getCurrentUserName();
+    }
+
+    static {
+        Failure.registerType(Failure.Type.AUTHENTICATION, BadCredentialsException.class);
+        Failure.registerType(Failure.Type.AUTHENTICATION, UsernameNotFoundException.class);
+        Failure.registerType(Failure.Type.AUTHENTICATION, CompromisedPasswordException.class);
+        Failure.registerType(Failure.Type.AUTHENTICATION, NonceExpiredException.class);
+        Failure.registerType(Failure.Type.AUTHENTICATION, InvalidOneTimeTokenException.class);
+        Failure.registerType(Failure.Type.AUTHENTICATION, OAuth2AuthenticationException.class);
+
+        Failure.registerSubType(Failure.Type.AUTHENTICATION, AuthenticationException.class);
+        Failure.registerSubType(Failure.Type.AUTHORIZATION, AccessDeniedException.class);
     }
 
 }

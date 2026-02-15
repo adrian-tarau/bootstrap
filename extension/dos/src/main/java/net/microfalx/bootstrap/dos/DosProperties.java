@@ -51,7 +51,7 @@ public class DosProperties {
     /**
      * Inactivity interval after which tracked requests are removed.
      */
-    private Duration inactivityInterval = Duration.ofHours(8);
+    private Duration inactivityInterval = Duration.ofDays(7);
 
     /**
      * A threshold applied to any request which is considered a valid request.
