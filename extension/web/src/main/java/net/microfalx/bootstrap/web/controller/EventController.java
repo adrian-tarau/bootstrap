@@ -3,10 +3,10 @@ package net.microfalx.bootstrap.web.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import net.microfalx.bootstrap.core.utils.Failure;
 import net.microfalx.bootstrap.web.event.*;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.threadpool.ThreadPool;
-import org.eclipse.jetty.io.EofException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
@@ -111,8 +111,8 @@ public class EventController implements AnonymousController {
             return !(rootCause instanceof AsyncRequestNotUsableException);
         }
 
-        private boolean isClientAbortError(Throwable e) {
-            return throwable instanceof IllegalStateException || ExceptionUtils.contains(throwable, EofException.class);
+        private boolean isClientAbortError(Throwable throwable) {
+            return throwable instanceof IllegalStateException || Failure.getType(throwable) == Failure.Type.RESET;
         }
 
         @Override

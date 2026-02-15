@@ -5,6 +5,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.metrics.Metrics;
 
@@ -22,11 +23,9 @@ import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.NoSuchFileException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.JarException;
 import java.util.zip.DataFormatException;
 import java.util.zip.ZipException;
@@ -44,6 +43,7 @@ public final class Failure {
 
     private static final Map<Class<? extends Throwable>, Type> exceptionTypes = new ConcurrentHashMap<>();
     private static final Map<Class<? extends Throwable>, Type> exceptionSubTypes = new ConcurrentHashMap<>();
+    private static final Collection<TypeExtractor> extractors = new CopyOnWriteArrayList<>();
     private static final Metrics METRICS = Metrics.of("Failure");
     private static final Metrics MISSING = METRICS.withGroup("Missing");
     private static final Metrics MAPPED = METRICS.withGroup("Mapped");
@@ -150,6 +150,17 @@ public final class Failure {
     }
 
     /**
+     * Registers a failure type extractor.
+     *
+     * @param extractor the extractor
+     */
+    public static void registerExtractor(TypeExtractor extractor) {
+        requireNonNull(extractor);
+        LOGGER.debug("Register failure type extractor {}", ClassUtils.getName(extractor));
+        extractors.add(extractor);
+    }
+
+    /**
      * Registers a failure type associated with all subclasses of a give exception.
      *
      * @param type           exception type
@@ -217,6 +228,10 @@ public final class Failure {
         for (Map.Entry<Class<? extends Throwable>, Type> entry : exceptionSubTypes.entrySet()) {
             if (ClassUtils.isSubClassOf(throwable.getClass(), entry.getKey())) return entry.getValue();
         }
+        for (TypeExtractor extractor : extractors) {
+            Type type = extractor.resolve(throwable);
+            if (type != null) return type;
+        }
         return null;
     }
 
@@ -227,6 +242,10 @@ public final class Failure {
     private static Failure.Type registerMapped(Failure.Type type) {
         MAPPED.count(type.name());
         return type;
+    }
+
+    private static void registerExtractors() {
+        registerExtractor(new IOExceptionTypeExtractor());
     }
 
     private static void registerFailureTypes() {
@@ -274,6 +293,23 @@ public final class Failure {
 
     static {
         registerFailureTypes();
+        registerExtractors();
+    }
+
+    /**
+     * An interface for extracting the failure type from an exception. This allows for custom logic to determine the
+     * failure type based on the exception, which can be useful
+     */
+    public interface TypeExtractor {
+
+        /**
+         * Extracts the failure type from the given exception. This method should return a non-null failure type if it can determine the type of failure
+         * based on the exception, or null if it cannot determine the type.
+         *
+         * @param throwable the exception to examine
+         * @return the failure type, or null if it cannot be determined
+         */
+        Type resolve(Throwable throwable);
     }
 
     /**
@@ -458,6 +494,34 @@ public final class Failure {
                     .add("retriable=" + retriable)
                     .add("_transient=" + _transient)
                     .toString();
+        }
+    }
+
+    static class IOExceptionTypeExtractor implements TypeExtractor {
+
+        private static final String[] NOT_ENOUGH_SPACE_MESSAGES = new String[]{
+                "There is not enough space on the disk",
+                "Not enough space",
+                "No space left on device",
+        };
+
+        private static final String[] RESET_MESSAGES = new String[]{
+                "Connection reset by peer"
+        };
+
+        private static final String[] COMMUNICATION_MESSAGES = new String[]{
+
+        };
+
+        @Override
+        public Type resolve(Throwable throwable) {
+            if (!(throwable instanceof IOException ioException)) return null;
+            String message = ioException.getMessage();
+            if (message == null) return null;
+            if (ObjectUtils.contains(message, NOT_ENOUGH_SPACE_MESSAGES)) return Type.INSUFFICIENT_STORAGE;
+            if (ObjectUtils.contains(message, COMMUNICATION_MESSAGES)) return Type.NETWORK;
+            if (ObjectUtils.contains(message, RESET_MESSAGES)) return Type.RESET;
+            return null;
         }
     }
 }

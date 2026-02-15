@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import net.microfalx.bootstrap.core.utils.Failure;
 import net.microfalx.lang.StringUtils;
 import org.eclipse.jetty.ee10.servlet.QuietServletException;
+import org.eclipse.jetty.io.EofException;
 import org.springframework.web.HttpMediaTypeException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -39,6 +40,7 @@ public class HttpServletUtils {
         Failure.registerType(Failure.Type.RESOURCE_NOT_FOUND, NoResourceFoundException.class);
         Failure.registerType(Failure.Type.RESOURCE_NOT_FOUND, NoHandlerFoundException.class);
         Failure.registerType(Failure.Type.RESET, QuietServletException.class);
+        Failure.registerType(Failure.Type.RESET, EofException.class);
         Failure.registerSubType(Failure.Type.ILLEGAL_INPUT, HttpMediaTypeException.class);
     }
 }
