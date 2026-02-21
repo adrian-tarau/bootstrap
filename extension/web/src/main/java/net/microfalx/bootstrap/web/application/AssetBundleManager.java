@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.web.application;
 
+import net.microfalx.bootstrap.feature.Feature;
 import net.microfalx.bootstrap.feature.FeatureContext;
+import net.microfalx.bootstrap.feature.FeatureService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ConcurrencyUtils;
 import net.microfalx.lang.StringUtils;
@@ -26,6 +28,7 @@ import java.util.zip.GZIPOutputStream;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
  * Manages the asset bundles.
@@ -87,6 +90,12 @@ final class AssetBundleManager {
         requireNonNull(assetBundle);
         LOGGER.debug("Register asset bundle {}, name {}", assetBundle.getId(), assetBundle.getName());
         bundles.put(assetBundle.getId(), assetBundle);
+        if (isNotEmpty(assetBundle.getFeature())) {
+            FeatureService featureService = applicationService.getFeatureService();
+            if (featureService.findFeature(assetBundle.getFeature()).isEmpty()) {
+                featureService.registerFeature(Feature.create(assetBundle.getId(), assetBundle.getName()));
+            }
+        }
     }
 
     void registerListener(AssetBundleListener listener) {

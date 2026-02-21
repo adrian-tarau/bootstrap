@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.feature;
 
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.StringUtils;
 import org.atteo.classindex.ClassIndex;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +68,11 @@ public class FeatureService implements InitializingBean {
      */
     public Feature getFeature(String id) {
         requireNotEmpty(id);
-        return features.get(toIdentifier(id));
+        Feature feature = features.get(toIdentifier(id));
+        if (feature == null) {
+            throw new FeatureNotFoundException("A feature with identifier '" + id + "' does not exist");
+        }
+        return feature;
     }
 
     /**
@@ -105,14 +110,16 @@ public class FeatureService implements InitializingBean {
      * Enables (activates) a feature.
      *
      * @param feature the feature
+     * @param enabled {@code true} to enable, {@code false} to disable
      */
-    public void setEnabled(Feature feature, boolean active) {
+    public void setEnabled(Feature feature, boolean enabled) {
         requireNonNull(feature);
-        if (active) {
+        if (enabled) {
             enabledFeatures.add(feature);
         } else {
             enabledFeatures.remove(feature);
         }
+        LOGGER.info("Feature '{}' is {}", feature.getName() + " (" + feature.getId() + ")", enabled ? "enabled" : "disabled");
     }
 
     @Override
@@ -141,6 +148,25 @@ public class FeatureService implements InitializingBean {
     }
 
     private void enableFeatures() {
+        Map<String, Boolean> toBeActivated = properties.getActivation();
+        if (toBeActivated.isEmpty()) return;
+        LOGGER.debug("Activate features: {}", toBeActivated);
+        for (Map.Entry<String, Boolean> entry : toBeActivated.entrySet()) {
+            String featureId = entry.getKey();
+            if (findFeature(featureId).isEmpty()) {
+                LOGGER.debug("Feature '{}' does not exist, registering it", featureId);
+                registerFeature(Feature.create(featureId, StringUtils.capitalize(featureId)));
+            }
+            boolean active = entry.getValue();
+            try {
+                Feature feature = getFeature(featureId);
+                setEnabled(feature, active);
+            } catch (FeatureNotFoundException e) {
+                LOGGER.error("Cannot activate feature '{}', it does not exist", featureId);
+            } catch (Exception e) {
+                LOGGER.atError().setCause(e).log("Failed to activate feature '{}'", featureId);
+            }
 
+        }
     }
 }

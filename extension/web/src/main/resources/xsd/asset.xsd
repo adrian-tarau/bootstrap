@@ -33,6 +33,8 @@
             <xs:attribute name="order"/>
             <xs:attribute name="inline" type="xs:boolean" default="false"/>
             <xs:attribute name="theme"/>
+            <xs:attribute name="feature"/>
+            <xs:attribute name="home-page"/>
         </xs:complexType>
     </xs:element>
 

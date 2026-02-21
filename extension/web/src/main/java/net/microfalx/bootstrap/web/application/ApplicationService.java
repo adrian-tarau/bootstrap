@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 import net.microfalx.bootstrap.feature.FeatureContext;
+import net.microfalx.bootstrap.feature.FeatureService;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.container.WebContainerService;
 import net.microfalx.bootstrap.web.util.SecurityUtils;
@@ -48,6 +49,7 @@ public final class ApplicationService implements InitializingBean {
 
     @Autowired private ApplicationContext applicationContext;
     @Autowired private WebContainerService webContainerService;
+    @Autowired private FeatureService featureService;
 
     private final AssetBundleManager assetBundleManager = new AssetBundleManager(this);
     private final Map<String, Menu> navigations = new ConcurrentHashMap<>();
@@ -277,6 +279,10 @@ public final class ApplicationService implements InitializingBean {
         }
         appendEndOfTag(builder, type, resource);
         return builder.toString();
+    }
+
+     FeatureService getFeatureService() {
+        return featureService;
     }
 
     private void appendEndOfTag(StringBuilder builder, Asset.Type type, Resource resource) {
