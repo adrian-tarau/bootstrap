@@ -274,6 +274,29 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
     }
 
     /**
+     * An enum representing the strategy to use when pulling a model from the internet.
+     */
+    public enum PullStrategy {
+
+        /**
+         * Always pull the model, even if it's already available. Useful to ensure you're
+         * using the latest version of that model.
+         */
+        ALWAYS,
+
+        /**
+         * Only pull the model if it's not already available. It might be an older version of
+         * the model.
+         */
+        WHEN_MISSING,
+
+        /**
+         * Never pull the model.
+         */
+        NEVER
+    }
+
+    /**
      * A builder class.
      */
     public static class Builder extends NamedAndTaggedIdentifyAware.Builder<String> {

@@ -4,11 +4,12 @@ import net.microfalx.bootstrap.ai.api.FinishReason;
 import net.microfalx.bootstrap.ai.api.Message;
 import net.microfalx.bootstrap.ai.api.TokenStream;
 import net.microfalx.lang.NumberUtils;
-import net.microfalx.lang.ThreadUtils;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static java.util.Objects.requireNonNullElseGet;
 import static net.microfalx.lang.ExceptionUtils.rethrowException;
+import static net.microfalx.lang.ThreadUtils.sleepMillis;
 
 /**
  * Base class for token streams.
@@ -29,20 +30,12 @@ public abstract class AbstractTokenStream implements TokenStream {
     @Override
     public final Message getAnswerMessage() {
         waitForCompletion();
-        if (answerMessage != null) {
-            return answerMessage;
-        } else {
-            return MessageImpl.create(Message.Type.MODEL, answerBuilder.toString());
-        }
+        return requireNonNullElseGet(answerMessage, () -> MessageImpl.create(Message.Type.MODEL, answerBuilder.toString()));
     }
 
     @Override
     public final Message getThinkingMessage() {
-        if (thinkingMessage != null) {
-            return thinkingMessage;
-        } else {
-            return MessageImpl.create(Message.Type.MODEL, thinkingBuilder.toString());
-        }
+        return requireNonNullElseGet(thinkingMessage, () -> MessageImpl.create(Message.Type.MODEL, thinkingBuilder.toString()));
     }
 
     @Override
@@ -76,7 +69,7 @@ public abstract class AbstractTokenStream implements TokenStream {
 
     protected final void waitForCompletion() {
         while (!completed.get()) {
-            ThreadUtils.sleepMillis(10);
+            sleepMillis(10);
         }
     }
 }

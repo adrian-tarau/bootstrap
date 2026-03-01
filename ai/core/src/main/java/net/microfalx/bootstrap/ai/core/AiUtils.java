@@ -1,10 +1,10 @@
 package net.microfalx.bootstrap.ai.core;
 
-import dev.langchain4j.data.embedding.Embedding;
 import net.microfalx.bootstrap.ai.api.AiService;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.threadpool.ThreadPool;
+import org.springframework.ai.embedding.Embedding;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.SPACE_CHAR;

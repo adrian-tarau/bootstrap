@@ -1,16 +1,10 @@
 package net.microfalx.bootstrap.ai.core;
 
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.ChatMessageSerializer;
-import dev.langchain4j.model.input.PromptTemplate;
-import dev.langchain4j.rag.content.retriever.ContentRetriever;
-import dev.langchain4j.store.memory.chat.ChatMemoryStore;
-import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import jakarta.annotation.PreDestroy;
 import lombok.AccessLevel;
 import lombok.Getter;
 import net.microfalx.bootstrap.ai.api.*;
-import net.microfalx.bootstrap.ai.lucene.LuceneEmbeddingStore;
+import net.microfalx.bootstrap.ai.lucene.LuceneEmbeddingModel;
 import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.dataset.DataSetExport;
@@ -18,6 +12,7 @@ import net.microfalx.bootstrap.dataset.DataSetRequest;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.resource.ResourceService;
+import net.microfalx.bootstrap.search.IndexListener;
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.bootstrap.search.SearchService;
 import net.microfalx.lang.*;
@@ -28,6 +23,15 @@ import net.microfalx.resource.rocksdb.RocksDbResource;
 import net.microfalx.threadpool.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.template.ValidationMode;
+import org.springframework.ai.template.st.StTemplateRenderer;
+import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextAware;
@@ -79,9 +83,8 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     private AiProperties properties = new AiProperties();
 
     private File variableDirectory;
-    private LuceneEmbeddingStore embeddingStore;
-    private ContentRetriever contentRetriever;
-    private ChatMemoryStore chatStore;
+    private EmbeddingModel embeddingModel;
+    private ChatMemory chatMemory;
     private volatile AiCache cache = new AiCache(this, null);
     private final Map<String, Tool> tools = new ConcurrentHashMap<>();
     private final Map<String, Object> variables = new ConcurrentHashMap<>();
@@ -107,12 +110,8 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         warmClassesWorkaround();
     }
 
-    ChatMemoryStore getChatStore() {
-        return chatStore;
-    }
-
-    ContentRetriever getContentRetriever() {
-        return contentRetriever;
+    ChatMemory getChatMemory() {
+        return chatMemory;
     }
 
     @Override
@@ -278,6 +277,14 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     }
 
     @Override
+    public void registerTool(Object tool) {
+        requireNonNull(tool);
+        LOGGER.info("Registering tool {}", ClassUtils.getName(tool));
+        MethodToolCallbackProvider provider = MethodToolCallbackProvider.builder().toolObjects(tool).build();
+        Arrays.asList(provider.getToolCallbacks()).forEach(callback -> registerTool(AiTools.fromToolCallback(callback)));
+    }
+
+    @Override
     public void registerVariable(String name) {
         requireNotEmpty(name);
         try {
@@ -301,7 +308,8 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         variables = ObjectUtils.defaultIfNull(variables, Collections.emptyMap());
         Map<String, Object> currentVariables = new HashMap<>(this.variables);
         currentVariables.putAll(variables);
-        String renderedTemplate = PromptTemplate.from(resource.loadAsString()).apply(currentVariables).text();
+        PromptTemplate template = createPromptTemplateBuilder().template(resource.loadAsString()).variables(currentVariables).build();
+        String renderedTemplate = template.render();
         return Resource.text(renderedTemplate);
     }
 
@@ -317,7 +325,8 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         updateToolsVariable(chat, currentVariables);
         return AiUtils.CREATE_SYSTEM_MESSAGE_METRICS.time(chat.getPrompt().getName(), () -> {
             getDataSetAsJson(chat, currentVariables);
-            return PromptTemplate.from(builder.build()).apply(currentVariables).text();
+            PromptTemplate template = createPromptTemplateBuilder().template(builder.build()).variables(currentVariables).build();
+            return template.render();
         });
     }
 
@@ -389,7 +398,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
 
     @PreDestroy
     protected void destroy() {
-        if (embeddingStore != null) embeddingStore.close();
+        //if (embeddingModel != null) embeddingModel.close();
     }
 
     public ThreadPool getChatPool() {
@@ -519,8 +528,9 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         Resource target = directory.resolve(String.format(FILE_NAME_FORMAT, getNextSequence()));
         if (!directory.exists()) directory.create();
         return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Messages", () -> {
-            List<ChatMessage> messages = chatStore.getMessages(chat.getId());
-            String json = ChatMessageSerializer.messagesToJson(messages);
+            List<Message> messages = chatMemory.get(chat.getId());
+            // TODO - optimize by writing directly to the output stream instead of building a string in memory
+            String json = "";//ChatMessageSerializer.messagesToJson(messages);
             IOUtils.appendStream(target.getWriter(), new StringReader(json));
             return target;
         });
@@ -571,14 +581,15 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     }
 
     private void initializeEmbeddingStore() {
-        this.embeddingStore = new LuceneEmbeddingStore(this, indexService, searchService)
+        this.embeddingModel = new LuceneEmbeddingModel(this, indexService, searchService)
                 .setThreadPool(getEmbeddingPool()).setEnabled(properties.isEmbeddingEnabled());
-        this.indexService.registerListener(this.embeddingStore);
-        this.contentRetriever = this.embeddingStore.getContentRetriever();
+        this.indexService.registerListener((IndexListener) this.embeddingModel);
+        //this.contentRetriever = this.embeddingStore.getContentRetriever();
     }
 
     private void initializeChatStore() {
-        this.chatStore = new InMemoryChatMemoryStore();
+        ChatMemoryRepository repository = new AiChatStore(persistence);
+        this.chatMemory = MessageWindowChatMemory.builder().chatMemoryRepository(repository).maxMessages(1000).build();
     }
 
     private void initializeApplicationContext() {
@@ -598,7 +609,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
                 LOGGER.error("Failed to initialize statement store", e);
                 System.exit(10);
             }
-            ResourceFactory.registerSymlink("db/statements", dbStatementsResource);
+            ResourceFactory.registerSymlink("ai/chats", dbStatementsResource);
         } else {
             LOGGER.info("Database statements are stored in a remote storage: {}", chatsResource);
         }
@@ -680,7 +691,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     private void warmClassesWorkaround() {
         try {
             Class.forName("net.microfalx.bootstrap.ai.lucene.LuceneContentRetriever");
-            Class.forName("net.microfalx.bootstrap.ai.lucene.LuceneEmbeddingStore");
+            Class.forName("net.microfalx.bootstrap.ai.lucene.LuceneEmbeddingModel");
         } catch (Exception e) {
             rethrowException(e);
         }
@@ -722,6 +733,12 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
             }
             return new AtomicInteger(start);
         }).getAndIncrement();
+    }
+
+    private PromptTemplate.Builder createPromptTemplateBuilder() {
+        StTemplateRenderer templateRenderer = StTemplateRenderer.builder().startDelimiterToken('{').endDelimiterToken('}')
+                .validationMode(ValidationMode.WARN).build();
+        return PromptTemplate.builder().renderer(templateRenderer);
     }
 
     class MaintenanceTask implements Runnable {

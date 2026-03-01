@@ -1,11 +1,14 @@
 package net.microfalx.bootstrap.ai.core;
 
-import dev.langchain4j.data.message.*;
 import lombok.Getter;
 import lombok.ToString;
 import net.microfalx.bootstrap.ai.api.Content;
 import net.microfalx.bootstrap.ai.api.Message;
 import net.microfalx.lang.StringUtils;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.ToolResponseMessage;
+import org.springframework.ai.chat.messages.UserMessage;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -27,7 +30,7 @@ public class MessageImpl implements Message {
     private final List<Content> contents = new ArrayList<>();
     private ZonedDateTime timestamp = ZonedDateTime.now();
 
-    public static Message create(ChatMessage message) {
+    public static Message create(org.springframework.ai.chat.messages.Message message) {
         return new MessageImpl(getType(message), getContent(message));
     }
 
@@ -52,6 +55,11 @@ public class MessageImpl implements Message {
     }
 
     @Override
+    public boolean isEmpty() {
+        return contents.isEmpty();
+    }
+
+    @Override
     public String getText() {
         if (contents.isEmpty()) {
             return StringUtils.EMPTY_STRING;
@@ -64,15 +72,15 @@ public class MessageImpl implements Message {
         }
     }
 
-    private static List<Content> getContent(ChatMessage message) {
+    private static List<Content> getContent(org.springframework.ai.chat.messages.Message message) {
         if (message instanceof SystemMessage systemMessage) {
-            return List.of(ContentImpl.from(systemMessage.text()));
+            return List.of(ContentImpl.from(systemMessage.getText()));
         } else if (message instanceof UserMessage userMessage) {
-            return userMessage.contents().stream().map(ContentImpl::from).toList();
-        } else if (message instanceof AiMessage aiMessage) {
-            return List.of(ContentImpl.from(aiMessage.text()));
-        } else if (message instanceof ToolExecutionResultMessage toolExecutionResultMessage) {
-            return List.of(ContentImpl.from(toolExecutionResultMessage.text()));
+            return userMessage.getMedia().stream().map(ContentImpl::from).toList();
+        } else if (message instanceof AssistantMessage assistantMessage) {
+            return assistantMessage.getMedia().stream().map(ContentImpl::from).toList();
+        } else if (message instanceof ToolResponseMessage toolResponseMessage) {
+            return List.of(ContentImpl.from(toolResponseMessage.getText()));
         } else if (message == null) {
             return emptyList();
         } else {
@@ -80,12 +88,12 @@ public class MessageImpl implements Message {
         }
     }
 
-    private static Message.Type getType(ChatMessage message) {
+    private static Message.Type getType(org.springframework.ai.chat.messages.Message message) {
         return switch (message) {
             case SystemMessage m -> Type.SYSTEM;
-            case ToolExecutionResultMessage m -> Type.TOOL;
+            case ToolResponseMessage m -> Type.TOOL;
             case UserMessage m -> Type.USER;
-            case AiMessage m -> Type.MODEL;
+            case AssistantMessage m -> Type.MODEL;
             case null, default -> Type.CUSTOM;
         };
     }

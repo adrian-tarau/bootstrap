@@ -35,6 +35,18 @@
 
     <name>Bootstrap :: AI :: Core</name>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>ai.djl</groupId>
+                <artifactId>bom</artifactId>
+                <version>0.36.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
 
         <dependency>
@@ -80,54 +92,49 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Spring AI -->
+
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j</artifactId>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-model</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-easy-rag</artifactId>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-retry</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-embeddings-all-minilm-l6-v2-q</artifactId>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-client-chat</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-embeddings-e5-small-v2-q</artifactId>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-model-chat-memory-repository-jdbc</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-web-search-engine-google-custom</artifactId>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-transformers</artifactId>
+        </dependency>
+
+        <!-- DJL  -->
+
+        <dependency>
+            <groupId>ai.djl</groupId>
+            <artifactId>api</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-document-parser-apache-tika</artifactId>
+            <groupId>ai.djl.huggingface</groupId>
+            <artifactId>tokenizers</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-community-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.tjake</groupId>
-            <artifactId>jlama-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.tjake</groupId>
-            <artifactId>jlama-native</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-jlama</artifactId>
+            <groupId>ai.djl.llama</groupId>
+            <artifactId>llama</artifactId>
+            <version>0.28.0</version>
         </dependency>
 
     </dependencies>

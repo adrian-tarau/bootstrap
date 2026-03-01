@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.ai.core;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.microfalx.bootstrap.ai.api.Model;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,6 +33,11 @@ public class AiProperties {
      * Indicates whether the AI service should persist data to the database.
      */
     private boolean persistenceEnabled = true;
+
+    /**
+     * Indicates whether the model is allowed to think (if available).
+     */
+    private boolean thinkingEnabled;
 
     /**
      * The maximum number of parallel requests each model can process simultaneously. By default, this
@@ -76,6 +82,19 @@ public class AiProperties {
      * The duration of a chat request before it times out.
      */
     private Duration chatRequestTimeout = Duration.ofSeconds(60);
+
+    /**
+     * The number of times to retry pulling a model before giving up. This is used to handle transient errors when
+     * pulling models from providers.
+     */
+    private int modelPullRetryCount = 5;
+
+    /**
+     * The strategy to use when pulling models from providers. By default, it is set to {@code WHEN_MISSING}, which means that
+     * models will only be pulled when they are not already loaded in memory. This is used to optimize performance and reduce
+     * the number of requests to providers.
+     */
+    private Model.PullStrategy modelPullStrategy = Model.PullStrategy.NEVER;
 
     /**
      * The default provider to use instead of the one selected.

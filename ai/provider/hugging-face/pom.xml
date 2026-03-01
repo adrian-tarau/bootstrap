@@ -44,8 +44,8 @@
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-hugging-face</artifactId>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-huggingface</artifactId>
         </dependency>
 
     </dependencies>

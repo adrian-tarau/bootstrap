@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.ai.core.tools;
 
-import dev.langchain4j.model.embedding.onnx.HuggingFaceTokenCountEstimator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -9,6 +8,9 @@ import net.microfalx.bootstrap.ai.api.Tool;
 import net.microfalx.bootstrap.ai.core.ContentImpl;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.lang.StringUtils;
+import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
+import org.springframework.ai.tokenizer.TokenCountEstimator;
+import org.springframework.ai.tool.execution.DefaultToolCallResultConverter;
 
 import java.io.IOException;
 
@@ -67,6 +69,18 @@ public abstract class AbstractToolExecutor extends ApplicationContextSupport imp
         return createResponse(StringUtils.EMPTY_STRING, 0, "Empty");
     }
 
+    /**
+     * Converts the result of the tool execution to a string format that can be used in the response.
+     *
+     * @param result the result of the tool execution
+     * @return the string representation of the result
+     */
+    protected final String convert(Object result) {
+        if (result == null) return StringUtils.EMPTY_STRING;
+        DefaultToolCallResultConverter converter = new DefaultToolCallResultConverter();
+        return converter.convert(converter, result.getClass());
+    }
+
     @RequiredArgsConstructor
     @Getter
     @ToString
@@ -78,9 +92,9 @@ public abstract class AbstractToolExecutor extends ApplicationContextSupport imp
 
         @Override
         public int getTokenCount() {
-            HuggingFaceTokenCountEstimator estimator = new HuggingFaceTokenCountEstimator();
+            TokenCountEstimator estimator = new JTokkitTokenCountEstimator();
             try {
-                return estimator.estimateTokenCountInText(content.getResource().loadAsString());
+                return estimator.estimate(content.getResource().loadAsString());
             } catch (IOException e) {
                 return -1;
             }

@@ -39,6 +39,13 @@ public interface Message extends Identifiable<String> {
     ZonedDateTime getTimestamp();
 
     /**
+     * Returns whether the message is empty, meaning it has no content or text.
+     *
+     * @return {@code true} if the message is empty, {@code false} otherwise
+     */
+    boolean isEmpty();
+
+    /**
      * An enumeration representing the type of message in a chat session.
      */
     enum Type {

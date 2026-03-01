@@ -1,7 +1,6 @@
-package net.microfalx.bootstrap.ai.ollama;
+package net.microfalx.bootstrap.ai.core.provider.djl;
 
 import net.microfalx.bootstrap.ai.api.*;
-import net.microfalx.bootstrap.ai.core.AiProperties;
 import net.microfalx.bootstrap.ai.core.AiServiceImpl;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,28 +9,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Iterator;
-
 @ExtendWith(MockitoExtension.class)
-class OllamaChatTest {
+class DjlChatTest {
 
     @InjectMocks
-    private AiServiceImpl aiService;
-
-    private AiProperties properties = new AiProperties();
+    private AiServiceImpl llmService;
 
     private Provider provider;
 
     @BeforeEach
     void setup() throws Exception {
-        properties.setOllamaUri(System.getProperty("ollama.uri", "http://localhost:11434"));
-        properties.setOllamaApiKey(System.getProperty("ollama.api_key", "demo"));
-        provider = new OllamaProviderFactory().setProperties(properties).createProvider();
+        provider = new DjlProviderFactory().createProvider();
     }
 
     @Test
     void ask() {
-        Chat chat = aiService.createChat(loadChat("ollama_gemma3_1b"));
+        Chat chat = llmService.createChat(loadModel("jlama_llama3_2_1b"));
         String response = chat.ask("Tell me a joke about Java");
         System.out.println(response);
         Assertions.assertThat(response.length()).isGreaterThan(0);
@@ -39,7 +32,7 @@ class OllamaChatTest {
 
     @Test
     void chat() {
-        Chat chat = aiService.createChat(loadChat("ollama_gemma3_1b"));
+        Chat chat = llmService.createChat(loadModel("jlama_llama3_2_1b"));
         int tokenCount = 0;
         TokenStream stream = chat.chat("Tell me a joke about Java");
         while (stream.hasNext()) {
@@ -51,7 +44,7 @@ class OllamaChatTest {
         Assertions.assertThat(tokenCount).isGreaterThan(0);
     }
 
-    private Model loadChat(String modelId) {
+    private Model loadModel(String modelId) {
         return provider.getModel(modelId);
     }
 

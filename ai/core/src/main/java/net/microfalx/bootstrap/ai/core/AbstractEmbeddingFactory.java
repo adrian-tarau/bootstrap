@@ -17,7 +17,7 @@ public abstract class AbstractEmbeddingFactory implements Embedding.Factory {
      * @param embedding the embedding data
      * @return a new instance
      */
-    protected final Embedding create(Model model, dev.langchain4j.data.embedding.Embedding embedding) {
+    protected final Embedding create(Model model, org.springframework.ai.embedding.Embedding embedding) {
         requireNonNull(model);
         requireNonNull(embedding);
         return new EmbeddingImpl(model, embedding);
@@ -26,9 +26,9 @@ public abstract class AbstractEmbeddingFactory implements Embedding.Factory {
     protected static class EmbeddingImpl implements Embedding {
 
         private final Model model;
-        final dev.langchain4j.data.embedding.Embedding embedding;
+        final org.springframework.ai.embedding.Embedding embedding;
 
-        protected EmbeddingImpl(Model model, dev.langchain4j.data.embedding.Embedding embedding) {
+        protected EmbeddingImpl(Model model, org.springframework.ai.embedding.Embedding embedding) {
             requireNonNull(model);
             requireNonNull(embedding);
             this.model = model;
@@ -42,17 +42,17 @@ public abstract class AbstractEmbeddingFactory implements Embedding.Factory {
 
         @Override
         public float[] getVector() {
-            return embedding.vector();
+            return embedding.getOutput();
         }
 
         @Override
         public int getDimension() {
-            return embedding.dimension();
+            return getVector().length;
         }
 
         @Override
         public void normalize() {
-            embedding.normalize();
+            // TODO implement normalization
         }
 
     }

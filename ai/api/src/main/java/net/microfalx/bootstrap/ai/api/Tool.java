@@ -173,6 +173,24 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
         }
 
         /**
+         * Returns the Java class corresponding to the parameter type.
+         *
+         * @return a non-null instance
+         */
+        public Class<?> getDataType() {
+            return switch (type) {
+                case STRING -> String.class;
+                case INTEGER -> Integer.class;
+                case DECIMAL -> Double.class;
+                case BOOLEAN -> Boolean.class;
+                case DATE -> LocalDate.class;
+                case DATE_TIME -> LocalDateTime.class;
+                case ARRAY -> Object[].class;
+            };
+
+        }
+
+        /**
          * Returns whether the parameter is required.
          *
          * @return {@code true} if the parameter is required, {@code false} otherwise
@@ -304,7 +322,7 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
         }
 
         @Override
-        public NamedAndTaggedIdentifyAware<String> build() {
+        public Tool build() {
             if (executor == null) throw new IllegalArgumentException("Executor is required");
             Tool tool = (Tool) super.build();
             tool.parameters = parameters;

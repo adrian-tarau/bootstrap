@@ -1,13 +1,13 @@
 package net.microfalx.bootstrap.ai.core;
 
+import net.microfalx.bootstrap.ai.api.*;
+import net.microfalx.bootstrap.ai.core.jpa.ModelRepository;
+import net.microfalx.bootstrap.ai.core.jpa.ProviderRepository;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.bootstrap.search.SearchService;
 import net.microfalx.bootstrap.test.AbstractBootstrapServiceTestCase;
 import net.microfalx.bootstrap.test.answer.RepositoryAnswer;
-import net.microfalx.bootstrap.ai.api.*;
-import net.microfalx.bootstrap.ai.core.jpa.ModelRepository;
-import net.microfalx.bootstrap.ai.core.jpa.ProviderRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;

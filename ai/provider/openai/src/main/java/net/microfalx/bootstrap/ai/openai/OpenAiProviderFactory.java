@@ -22,7 +22,7 @@ public class OpenAiProviderFactory extends AbstractProviderFactory {
         }
         builder.name("OpenAI").description("Develops safe and beneficial artificial general " +
                 "intelligence, which it defines as highly autonomous systems that outperform humans at most economically valuable work.");
-        builder.version("4.1").author("John Schulman, Elon Musk, Ilya Sutskever, Sam Altman").license("Proprietary")
+        builder.version("4.1").author("OpenAI Team").license("Proprietary")
                 .chatFactory(new OpenAiChatFactory()).tag("openai");
         registerModels(builder);
         return builder.build();

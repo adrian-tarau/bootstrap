@@ -1,19 +1,5 @@
 package net.microfalx.bootstrap.ai.core;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.memory.chat.TokenWindowChatMemory;
-import dev.langchain4j.model.TokenCountEstimator;
-import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.StreamingChatModel;
-import dev.langchain4j.model.embedding.onnx.HuggingFaceTokenCountEstimator;
-import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.Result;
-import dev.langchain4j.service.TokenStream;
-import dev.langchain4j.service.tool.ToolExecutor;
-import dev.langchain4j.service.tool.ToolProvider;
-import dev.langchain4j.service.tool.ToolProviderRequest;
-import dev.langchain4j.service.tool.ToolProviderResult;
 import net.microfalx.bootstrap.ai.api.*;
 import net.microfalx.bootstrap.dataset.DataSetRequest;
 import net.microfalx.bootstrap.security.SecurityContext;
@@ -21,7 +7,17 @@ import net.microfalx.lang.NamedAndTaggedIdentifyAware;
 import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.data.domain.Page;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -33,13 +29,14 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
+import static java.util.Collections.unmodifiableMap;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.FormatterUtils.formatBytes;
 import static net.microfalx.lang.FormatterUtils.formatNumber;
+import static net.microfalx.lang.StringUtils.isEmpty;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -56,18 +53,18 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     private final LocalDateTime startAt = LocalDateTime.now();
     private LocalDateTime finishAt;
     private ChatModel chatModel;
-    private StreamingChatModel streamingChatModel;
 
     private ChatMemory chatMemory;
-    private SimpleChat chat;
-    private StreamChat streamChat;
+    private ChatClient client;
     private AiServiceImpl service;
 
     private boolean disableTools;
-    private Set<String> disabledTools = new CopyOnWriteArraySet<>();
+    private final Set<String> disabledTools = new CopyOnWriteArraySet<>();
+    private final Set<Tool> tools = new CopyOnWriteArraySet<>();
 
     private volatile Principal principal;
     private volatile String systemMessage;
+    private volatile String userMessage;
 
     final AtomicLong lastActivity = new AtomicLong(System.currentTimeMillis());
     private final AtomicInteger inputTokenCount = new AtomicInteger();
@@ -134,28 +131,32 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
 
     @Override
     public Message getSystemMessage() {
-        return getMessages().stream().filter(message -> message.getType() == Message.Type.SYSTEM)
-                .findFirst().orElse(MessageImpl.create(Message.Type.SYSTEM, "System message is not available"));
+        if (isEmpty(systemMessage)) systemMessage = doGetSystemMessage();
+        return MessageImpl.create(Message.Type.SYSTEM, systemMessage != null ? systemMessage : StringUtils.EMPTY_STRING);
+    }
+
+    @Override
+    public Collection<Message> getMessages(boolean includeSystemMessage) {
+        Collection<Message> messages = new ArrayList<>();
+        Message currentSystemMessage = getSystemMessage();
+        if (includeSystemMessage && !currentSystemMessage.isEmpty()) messages.add(currentSystemMessage);
+        chatMemory.get(getId()).stream().map(MessageImpl::create).forEach((messages::add));
+        return messages;
     }
 
     @Override
     public Collection<Message> getMessages() {
-        return chatMemory.messages().stream()
-                .map(MessageImpl::create)
-                .collect(Collectors.toList());
+        return getMessages(false);
     }
 
     @Override
     public int getMessageCount() {
-        return chatMemory.messages().size();
+        return chatMemory.get(getId()).size();
     }
 
     @Override
     public String ask(String message) {
         validate();
-        if (chatModel != null) {
-            return chatModel.chat(message);
-        } else {
             StringBuilder builder = new StringBuilder();
             net.microfalx.bootstrap.ai.api.TokenStream stream = chat(message);
             while (stream.hasNext()) {
@@ -163,23 +164,13 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
                 builder.append(token.getText());
             }
             return builder.toString();
-        }
     }
 
     @Override
     public net.microfalx.bootstrap.ai.api.TokenStream chat(String message) {
         validate();
-        if (streamingChatModel != null) {
-            TokenStream stream = streamChat.chat(message);
-            TokenStreamHandler handler = new TokenStreamHandler(service, this, stream);
-            service.getChatPool().execute(stream::start);
-            return handler;
-        } else {
-            String answer = ask(message);
-            List<Token> parts = Arrays.stream(StringUtils.split(answer, " ")).map(p ->
-                    Token.create(Token.Type.ANSWER, p)).toList();
-            return new TokenStreamImpl(parts.iterator());
-        }
+        Flux<ChatResponse> chatResponse = client.prompt(message).stream().chatResponse();
+        return new TokenStreamHandler(service, this, chatResponse);
     }
 
     @Override
@@ -205,7 +196,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
 
     @Override
     public Map<Tool.ExecutionRequest, Tool.ExecutionResponse> getToolExecutions() {
-        return Collections.unmodifiableMap(toolExecutions);
+        return unmodifiableMap(toolExecutions);
     }
 
     @Override
@@ -246,6 +237,12 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     }
 
     @Override
+    public void addTool(Tool tool) {
+        requireNonNull(tool);
+        this.tools.add(tool);
+    }
+
+    @Override
     public void disableTool(String name) {
         requireNotEmpty(name);
         disabledTools.add(name.toLowerCase());
@@ -279,14 +276,8 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         if (StringUtils.isNotEmpty(name)) setName(name);
     }
 
-    public final AbstractChat setChatModel(ChatModel chatModel) {
+    public final <CM extends ChatModel> AbstractChat setChatModel(CM chatModel) {
         this.chatModel = chatModel;
-        return this;
-    }
-
-    public final AbstractChat setStreamingChatModel(StreamingChatModel streamingChatModel) {
-        requireNonNull(streamingChatModel);
-        this.streamingChatModel = streamingChatModel;
         return this;
     }
 
@@ -295,7 +286,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     }
 
     private void validate() {
-        if (chatModel == null && streamingChatModel == null) {
+        if (chatModel == null) {
             throw new IllegalStateException("No chat model has been set");
         }
         updateLastActivity();
@@ -317,16 +308,8 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         validate();
         initializePrincipal();
         this.service = service;
-        TokenCountEstimator tokenCountEstimator = new CustomHuggingFaceTokenCountEstimator();
-        this.chatMemory = TokenWindowChatMemory.builder().id(getId())
-                .maxTokens(model.getMaximumContextLength(), tokenCountEstimator)
-                .chatMemoryStore(service.getChatStore())
-                .build();
-        if (chatModel != null) {
-            chat = updateAiService(AiServices.builder(SimpleChat.class)).build();
-        } else {
-            streamChat = updateAiService(AiServices.builder(StreamChat.class)).build();
-        }
+        this.chatMemory = service.getChatMemory();
+        client = createClient();
         streamCompleted(new TokenStreamImpl(Collections.emptyIterator()));
         if (isNotEmpty(prompt.getQuestion())) summarize(prompt.getQuestion());
     }
@@ -357,20 +340,25 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         });
     }
 
-    private <T> AiServices<T> updateAiService(AiServices<T> aiService) {
-        aiService.chatMemory(chatMemory)
-                .systemMessageProvider(new SystemMessageProvider())
-                .contentRetriever(service.getContentRetriever())
-                .toolProvider(new ToolProviderImpl())
-                .maxSequentialToolsInvocations(1);
-        if (streamingChatModel != null) {
-            aiService.streamingChatModel(streamingChatModel);
-        } else if (chatModel != null) {
-            aiService.chatModel(chatModel);
-        } else {
-            throw new IllegalStateException("No chat model has been set");
+    private ChatOptions createChatOptions() {
+        ChatOptions.Builder builder = ChatOptions.builder()
+                .model(model.getModelName())
+                .topP(model.getTopP())
+                .topK(model.getTopK())
+                .stopSequences(model.getStopSequences().stream().toList())
+                .temperature(model.getTemperature());
+        if (model.getMaximumOutputTokens() != null) {
+            builder.maxTokens(model.getMaximumOutputTokens());
         }
-        return aiService;
+        return builder.build();
+    }
+
+    private ChatClient createClient() {
+        ChatClient.Builder builder = ChatClient.builder(chatModel).defaultOptions(createChatOptions());
+        builder.defaultSystem(new SystemMessageProvider())
+                .defaultToolCallbacks(new ToolProvider())
+                .defaultAdvisors(new AdvisorProvider());
+        return builder.build();
     }
 
     private void updateDescription() {
@@ -412,44 +400,50 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         return counter.getAndIncrement();
     }
 
-    public interface SimpleChat {
-
-        Result<String> chat(String message);
+    private List<Advisor> getAdvisors() {
+        List<Advisor> advisors = new ArrayList<>();
+        advisors.add(PromptChatMemoryAdvisor.builder(chatMemory).conversationId(getId()).build());
+        return advisors;
     }
 
-    public interface StreamChat {
-
-        TokenStream chat(String message);
+    private ToolCallback[] getFinalTools() {
+        ToolCallback[] tools = new ToolCallback[0];
+        if (!disableTools) tools = new ToolsBuilder(service, AbstractChat.this).getTools();
+        return tools;
     }
 
-    private class SystemMessageProvider implements Function<Object, String> {
+    private String doGetSystemMessage() {
+        return service.getSystemMessage(AbstractChat.this);
+    }
+
+    private class SystemMessageProvider implements Consumer<ChatClient.PromptSystemSpec> {
 
         @Override
-        public String apply(Object o) {
+        public void accept(ChatClient.PromptSystemSpec promptSystemSpec) {
             if (systemMessage == null) {
-                systemMessage = service.getSystemMessage(AbstractChat.this);
+                systemMessage = doGetSystemMessage();
+                promptSystemSpec.text(systemMessage);
                 updateDescription();
             }
-            return systemMessage;
         }
+
     }
 
-    private class ToolProviderImpl implements ToolProvider {
+    private class AdvisorProvider implements Consumer<ChatClient.AdvisorSpec> {
 
         @Override
-        public ToolProviderResult provideTools(ToolProviderRequest request) {
-            Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
-            if (!disableTools) tools = new ToolsBuilder(service, AbstractChat.this).getTools();
-            return new ToolProviderResult(tools);
+        public void accept(ChatClient.AdvisorSpec advisorSpec) {
+            advisorSpec.advisors(getAdvisors());
         }
     }
 
-    private static class CustomHuggingFaceTokenCountEstimator extends HuggingFaceTokenCountEstimator {
+    private class ToolProvider implements ToolCallbackProvider {
 
         @Override
-        public int estimateTokenCountInText(String text) {
-            if (StringUtils.isEmpty(text)) return 0;
-            return super.estimateTokenCountInText(text);
+        public ToolCallback[] getToolCallbacks() {
+            return getFinalTools();
         }
+
     }
+
 }

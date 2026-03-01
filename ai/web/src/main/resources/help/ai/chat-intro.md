@@ -1,4 +1,4 @@
-#### Welcome to {{APP_NAME}}'s Chat Interface!
+#### Welcome to {APP_NAME}'s Chat Interface!
 
 I’m your built-in **assistant**, designed to support you in working with the system more effectively. I can help you with tasks such as:
 

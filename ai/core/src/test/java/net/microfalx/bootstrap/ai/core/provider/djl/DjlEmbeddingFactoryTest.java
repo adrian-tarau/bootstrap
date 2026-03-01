@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.ai.core.provider.jlama;
+package net.microfalx.bootstrap.ai.core.provider.djl;
 
 import net.microfalx.bootstrap.ai.api.Embedding;
 import net.microfalx.bootstrap.ai.api.Model;
@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class JLamaEmbeddingFactoryTest {
+class DjlEmbeddingFactoryTest {
 
     private Provider provider;
 
     @BeforeEach
     void setup() throws Exception {
-        provider = new JLamaProviderFactory().createProvider();
+        provider = new DjlProviderFactory().createProvider();
     }
 
     @Test
@@ -30,7 +30,7 @@ class JLamaEmbeddingFactoryTest {
     }
 
     private Embedding createEmbedding(String modelId, String text) {
-        JLamaEmbeddingFactory factory = new JLamaEmbeddingFactory();
+        DjlEmbeddingFactory factory = new DjlEmbeddingFactory();
         Model model = loadModel(modelId);
         return factory.createEmbedding(model, text);
     }

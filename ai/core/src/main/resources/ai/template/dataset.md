@@ -2,10 +2,10 @@ Use only the data set bellow to answer a previous question which required extrac
 
 Schema of the dataset:
 ```json
-{{SCHEMA}}
+{SCHEMA}
 ```
 
 The dataset contains the following entries:
 ```json
-{{DATASET}}
+{DATASET}
 ```

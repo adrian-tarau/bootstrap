@@ -44,8 +44,14 @@
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-ollama</artifactId>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-ollama</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-test</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>

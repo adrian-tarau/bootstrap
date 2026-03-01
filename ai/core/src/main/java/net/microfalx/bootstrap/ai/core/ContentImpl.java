@@ -1,14 +1,10 @@
 package net.microfalx.bootstrap.ai.core;
 
-import dev.langchain4j.data.audio.Audio;
-import dev.langchain4j.data.message.AudioContent;
-import dev.langchain4j.data.message.PdfFileContent;
-import dev.langchain4j.data.message.TextContent;
-import dev.langchain4j.data.pdf.PdfFile;
 import lombok.ToString;
 import net.microfalx.bootstrap.ai.api.Content;
-import net.microfalx.lang.UriUtils;
+import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
+import org.springframework.ai.content.Media;
 
 import java.io.IOException;
 import java.net.URL;
@@ -22,9 +18,9 @@ public class ContentImpl implements Content {
     private final Type type;
     private final Resource resource;
 
-    static Content from(dev.langchain4j.data.message.Content content) {
-        requireNonNull(content);
-        return new ContentImpl(getType(content), getResource(content));
+    static Content from(Media media) {
+        requireNonNull(media);
+        return new ContentImpl(getType(media), getResource(media));
     }
 
     public static Content from(String text) {
@@ -63,28 +59,28 @@ public class ContentImpl implements Content {
         }
     }
 
-    private static Type getType(dev.langchain4j.data.message.Content content) {
-        return switch (content.type()) {
-            case TEXT -> Type.TEXT;
-            case IMAGE -> Type.IMAGE;
-            case AUDIO -> Type.AUDIO;
-            case VIDEO -> Type.VIDEO;
-            case PDF -> Type.DOCUMENT;
-        };
+    private static Type getType(Media media) {
+        MimeType mimeType = MimeType.get(media.getMimeType().getType());
+        if (mimeType.isText()) {
+            return Type.TEXT;
+        } else if (MimeType.IMAGE.equals(mimeType)) {
+            return Type.IMAGE;
+        } else {
+            return Type.VIDEO;
+        }
     }
 
-    private static Resource getResource(dev.langchain4j.data.message.Content content) {
-        if (content instanceof AudioContent audioContent) {
-            Audio audio = audioContent.audio();
-            return create(UriUtils.toUrl(audio.url()), audio.base64Data());
-        } else if (content instanceof TextContent textContent) {
-            return Resource.text(textContent.text());
-        } else if (content instanceof PdfFileContent pdfFileContent) {
-            PdfFile pdfFile = pdfFileContent.pdfFile();
-            return create(UriUtils.toUrl(pdfFile.url()), pdfFile.base64Data());
+    private static Resource getResource(Media media) {
+        Resource resource;
+        if (media.getData() instanceof String) {
+            resource = Resource.url((String) media.getData());
+        } else if (media.getData() instanceof byte[]) {
+            resource = Resource.bytes((byte[]) media.getData());
         } else {
-            throw new IllegalArgumentException("Unsupported content type: " + content.type());
+            throw new IllegalArgumentException("Unsupported media: " + media);
         }
+        MimeType mimeType = MimeType.get(media.getMimeType().getType());
+        return resource.withName(media.getName()).withMimeType(mimeType);
     }
 
     private static Resource create(URL url, String base64Encoded) {

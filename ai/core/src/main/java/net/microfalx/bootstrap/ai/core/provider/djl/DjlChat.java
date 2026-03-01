@@ -1,14 +1,12 @@
-package net.microfalx.bootstrap.ai.core.provider.jlama;
+package net.microfalx.bootstrap.ai.core.provider.djl;
 
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Prompt;
 import net.microfalx.bootstrap.ai.core.AbstractChat;
 
-public class JLamaChat extends AbstractChat {
+public class DjlChat extends AbstractChat {
 
-    public JLamaChat(Prompt prompt, Model model) {
+    public DjlChat(Prompt prompt, Model model) {
         super(prompt, model);
     }
-
-
 }

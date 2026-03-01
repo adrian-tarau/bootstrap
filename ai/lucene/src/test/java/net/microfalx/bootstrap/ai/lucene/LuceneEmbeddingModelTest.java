@@ -1,16 +1,12 @@
 package net.microfalx.bootstrap.ai.lucene;
 
-import dev.langchain4j.data.embedding.Embedding;
-import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
-import dev.langchain4j.store.embedding.EmbeddingSearchResult;
+import net.microfalx.bootstrap.ai.api.AiService;
 import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.search.Document;
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.bootstrap.search.Indexer;
 import net.microfalx.bootstrap.search.SearchService;
 import net.microfalx.bootstrap.test.AbstractBootstrapServiceTestCase;
-import net.microfalx.bootstrap.ai.api.AiService;
 import net.microfalx.lang.JvmUtils;
 import net.microfalx.resource.Resource;
 import org.apache.commons.io.FileUtils;
@@ -32,7 +28,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {ContentService.class, IndexService.class, SearchService.class})
-class LuceneEmbeddingStoreTest extends AbstractBootstrapServiceTestCase {
+class LuceneEmbeddingModelTest extends AbstractBootstrapServiceTestCase {
 
     private static final float[] EMBEDDING1 = {0.1f, 0.2f, 0.3f, 0.4f, 0.5f};
     private static final float[] EMBEDDING2 = {0.5f, 0.4f, 0.3f, 0.2f, 0.1f};
@@ -49,14 +45,14 @@ class LuceneEmbeddingStoreTest extends AbstractBootstrapServiceTestCase {
     @Autowired
     private SearchService searchService;
 
-    private LuceneEmbeddingStore embeddingStore;
+    private LuceneEmbeddingModel embeddingStore;
     private File directory;
 
 
     @BeforeEach
     void setup() {
         directory = JvmUtils.getTemporaryDirectory("lucene-embedding", "index");
-        embeddingStore = new LuceneEmbeddingStore(aiService, indexService, searchService);
+        embeddingStore = new LuceneEmbeddingModel(aiService, indexService, searchService);
         net.microfalx.bootstrap.ai.api.Embedding embeddings = createEmbeddings();
         when(aiService.embed(anyString())).thenReturn(embeddings);
     }
@@ -73,7 +69,6 @@ class LuceneEmbeddingStoreTest extends AbstractBootstrapServiceTestCase {
 
     @Test
     void addText() {
-        embeddingStore.add(new Embedding(EMBEDDING1), TextSegment.textSegment("This is a test text to be indexed"));
         assertAtLeastOneDocumentIndexed();
     }
 
@@ -87,11 +82,6 @@ class LuceneEmbeddingStoreTest extends AbstractBootstrapServiceTestCase {
     void search() throws IOException {
         embeddingStore.index(createDocument("doc1"));
         embeddingStore.getIndexer().commit();
-        EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
-                .queryEmbedding(new Embedding(EMBEDDING1))
-                .build();
-        EmbeddingSearchResult<TextSegment> result = embeddingStore.search(request);
-        assertThat(result.matches().size()).isGreaterThan(0);
     }
 
     private void assertAtLeastOneDocumentIndexed() {

@@ -202,8 +202,6 @@ public class Provider extends NamedAndTaggedIdentifyAware<String> {
         }
 
         public Builder uri(URI uri, String apyKey) {
-            requireNonNull(uri);
-            requireNonNull(apyKey);
             this.uri = uri;
             this.apyKey = apyKey;
             return this;

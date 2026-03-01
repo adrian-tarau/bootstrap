@@ -72,6 +72,13 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
     Collection<Message> getMessages();
 
     /**
+     * Returns the messages exchanged in the chat.
+     *
+     * @return a non-null collection of messages
+     */
+    Collection<Message> getMessages(boolean includeSystemMessage);
+
+    /**
      * Returns the number of messages in the chat.
      *
      * @return a positive integer
@@ -147,7 +154,7 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
     Map<Tool.ExecutionRequest, Tool.ExecutionResponse> getToolExecutions();
 
     /**
-     * Returns a markdown description of the tools available and their invocations in the chat session.
+     * Returns a Markdown description of the tools available and their invocations in the chat session.
      * @return a non-null string containing the description
      */
     String getToolsDescription();
@@ -159,6 +166,13 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
      * @return {@code true} if the tool is registered and enabled, {@code false} otherwise
      */
     boolean hasTool(String name);
+
+    /**
+     * Adds a tool to the chat session. If a tool with the same name already exists, it will be replaced.
+     *
+     * @param tool the tool to add
+     */
+    void addTool(Tool tool);
 
     /**
      * Disables a tool by its name. If the tool is not found, it will be ignored.

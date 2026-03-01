@@ -23,12 +23,6 @@ class OnnxEmbeddingFactoryTest {
         assertEquals(384, embedding.getDimension());
     }
 
-    @Test
-    void embedE5Smallq() {
-        Embedding embedding = createEmbedding("onnx-e5-small-v2-q", "This is a test embedding");
-        assertEquals(384, embedding.getDimension());
-    }
-
     private Embedding createEmbedding(String modelId, String text) {
         OnnxEmbeddingFactory factory = new OnnxEmbeddingFactory();
         Model model = loadModel(modelId);

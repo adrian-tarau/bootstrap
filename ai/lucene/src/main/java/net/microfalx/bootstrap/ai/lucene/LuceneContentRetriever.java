@@ -1,18 +1,10 @@
 package net.microfalx.bootstrap.ai.lucene;
 
-import dev.langchain4j.data.document.Metadata;
-import dev.langchain4j.data.embedding.Embedding;
-import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.rag.content.Content;
-import dev.langchain4j.rag.content.ContentMetadata;
-import dev.langchain4j.rag.content.retriever.ContentRetriever;
-import dev.langchain4j.rag.query.Query;
-import dev.langchain4j.store.embedding.filter.Filter;
 import lombok.AccessLevel;
 import lombok.Setter;
+import net.microfalx.bootstrap.ai.api.AiException;
 import net.microfalx.bootstrap.search.Searcher;
 import net.microfalx.bootstrap.search.SearcherOptions;
-import net.microfalx.bootstrap.ai.api.AiException;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.UriUtils;
@@ -29,35 +21,36 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.content.Content;
+import org.springframework.ai.embedding.Embedding;
 
 import java.io.IOException;
 import java.util.*;
 
-import static net.microfalx.bootstrap.search.SearchUtils.SEARCH_METRICS;
 import static net.microfalx.bootstrap.ai.lucene.LuceneFields.CONTENT_FIELD_NAME;
 import static net.microfalx.bootstrap.ai.lucene.LuceneFields.TOKEN_COUNT_FIELD_NAME;
+import static net.microfalx.bootstrap.search.SearchUtils.SEARCH_METRICS;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.isEmpty;
 import static org.apache.lucene.search.Sort.RELEVANCE;
 
-class LuceneContentRetriever implements ContentRetriever {
+class LuceneContentRetriever {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LuceneContentRetriever.class);
 
-    private final LuceneEmbeddingStore embeddingStore;
+    private final LuceneEmbeddingModel embeddingStore;
 
     private Searcher searcher;
     private final Object lock = new Object();
 
     static ThreadLocal<QueryParams> queryParams = ThreadLocal.withInitial(QueryParams::new);
 
-    public LuceneContentRetriever(LuceneEmbeddingStore embeddingStore) {
+    public LuceneContentRetriever(LuceneEmbeddingModel embeddingStore) {
         requireNonNull(embeddingStore);
         this.embeddingStore = embeddingStore;
     }
 
-    @Override
     public List<Content> retrieve(Query query) {
         requireNonNull(query);
         return retrieve(query, null);
@@ -66,7 +59,7 @@ class LuceneContentRetriever implements ContentRetriever {
     public List<Content> retrieve(Query query, Embedding embedding) {
         requireNonNull(query);
         if (!embeddingStore.isEnabled()) return Collections.emptyList();
-        String queryText = query.text();
+        String queryText = "";//query.text();
         org.apache.lucene.search.Query luceneQuery = buildQuery(queryText, embedding);
         try {
             Searcher searcher = getSearcher(false);
@@ -118,13 +111,13 @@ class LuceneContentRetriever implements ContentRetriever {
                 Embedding embedding = null;
                 IndexableField embeddingField = document.getField(LuceneFields.EMBEDDING_FIELD_NAME);
                 if (embeddingField instanceof KnnFloatVectorField vectorField) {
-                    embedding = new Embedding(vectorField.vectorValue());
+                    embedding = null;//new Embedding(vectorField.vectorValue());
                 }
                 // Add all other document fields to metadata
-                Metadata metadata = createTextSegmentMetadata(document);
+                //Metadata metadata = createTextSegmentMetadata(document);
                 // Finally, add text segment to the list
-                TextSegment textSegment = TextSegment.from(content, metadata);
-                hits.add(new LuceneContent(textSegment, withScore(scoreDoc)).setEmbedding(embedding));
+                //TextSegment textSegment = TextSegment.from(content, metadata);
+                //hits.add(new LuceneContent(textSegment, withScore(scoreDoc)).setEmbedding(embedding));
             }
             return hits;
         });
@@ -142,19 +135,19 @@ class LuceneContentRetriever implements ContentRetriever {
                 LOGGER.warn(String.format("Could not create query <%s>", query), e);
             }
         }
-        if (embedding != null && embedding.vector().length > 0) {
+        /*if (embedding != null && embedding.vector().length > 0) {
             final org.apache.lucene.search.Query vectorQuery = new KnnFloatVectorQuery(LuceneFields.EMBEDDING_FIELD_NAME,
                     embedding.vector(), queryParams.get().maxResults);
             builder.add(vectorQuery, BooleanClause.Occur.SHOULD);
-        }
+        }*/
         if (!queryParams.get().onlyMatches) {
             builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD);
         }
         return builder.build();
     }
 
-    private Metadata createTextSegmentMetadata(Document document) {
-        Metadata metadata = new Metadata();
+    private Object createTextSegmentMetadata(Document document) {
+        Map<String, Object> metadata = new HashMap<>();
         for (IndexableField field : document) {
             String fieldName = field.name();
             // skip our standard fields
@@ -185,13 +178,7 @@ class LuceneContentRetriever implements ContentRetriever {
     }
 
     private Embedding embedQuery(String queryText) {
-        return new Embedding(embeddingStore.getAiService().embed(queryText).getVector());
-    }
-
-    private Map<ContentMetadata, Object> withScore(ScoreDoc scoreDoc) {
-        Map<ContentMetadata, Object> contentMetadata = new HashMap<>();
-        contentMetadata.put(ContentMetadata.SCORE, (double) scoreDoc.score);
-        return contentMetadata;
+        return null;
     }
 
     static class QueryParams {
@@ -203,8 +190,8 @@ class LuceneContentRetriever implements ContentRetriever {
         private int maxTokens = Integer.MAX_VALUE;
         @Setter(AccessLevel.PROTECTED)
         private double minScore = 0;
-        @Setter(AccessLevel.PROTECTED)
-        private Filter filter;
+        //@Setter(AccessLevel.PROTECTED)
+        //private Filter filter;
     }
 
     private Searcher getSearcher(boolean reopen) {
@@ -215,7 +202,7 @@ class LuceneContentRetriever implements ContentRetriever {
                 LOGGER.debug("Open searcher");
                 SearcherOptions options = (SearcherOptions) SearcherOptions.create(LuceneFields.INDEX_NAME)
                         .threadPool(embeddingStore.getThreadPool())
-                        .analyzer(new StandardAnalyzer()).metrics(LuceneEmbeddingStore.SEARCH_METRICS)
+                        .analyzer(new StandardAnalyzer()).metrics(LuceneEmbeddingModel.SEARCH_METRICS)
                         .build();
                 searcher = embeddingStore.getSearchService().createSearcher(options);
             }

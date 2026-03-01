@@ -1,12 +1,11 @@
 package net.microfalx.bootstrap.ai.core;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Tool;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.definition.ToolDefinition;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +18,7 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 class ToolsBuilder {
 
     private static final String NO_TOOLS_AVAILABLE = "No tools available";
+
 
     private final AiServiceImpl service;
     private final Chat chat;
@@ -37,15 +37,15 @@ class ToolsBuilder {
      *
      * @return a non-null instance
      */
-    Map<ToolSpecification, dev.langchain4j.service.tool.ToolExecutor> getTools() {
-        if (!model.getTags().contains(Model.TOOLS_TAG)) return Collections.emptyMap();
-        Map<ToolSpecification, dev.langchain4j.service.tool.ToolExecutor> tools = new HashMap<>();
+    ToolCallback[] getTools() {
+        if (!model.getTags().contains(Model.TOOLS_TAG)) return new ToolCallback[0];
+        Map<String, ToolCallback> tools = new HashMap<>();
         for (Tool tool : service.getTools()) {
-            ToolSpecification toolSpecification = createToolSpecification(tool);
-            ToolExecutor toolExecutor = new ToolExecutor(service, chat, tool);
-            tools.put(toolSpecification, toolExecutor);
+            ToolCallback toolCallback = AiTools.callbackFromTool(tool);
+            if (toolCallback == null) toolCallback = new ToolCallbackImpl(tool, new ToolExecutor(service, chat, tool));
+            tools.put(tool.getName(), toolCallback);
         }
-        return tools;
+        return tools.values().toArray(new ToolCallback[0]);
     }
 
     /**
@@ -72,24 +72,32 @@ class ToolsBuilder {
         return isNotEmpty(variableDescription) ? variableDescription : NO_TOOLS_AVAILABLE;
     }
 
-    private ToolSpecification createToolSpecification(Tool tool) {
-        requireNonNull(tool);
-        ToolSpecification.Builder builder = ToolSpecification.builder().name(tool.getName()).description(tool.getDescription()).parameters(createJsonSchema(tool));
-        return builder.build();
+
+    private static class ToolCallbackImpl implements ToolCallback {
+
+        private final Tool tool;
+        private final ToolExecutor toolExecutor;
+
+        public ToolCallbackImpl(Tool tool, ToolExecutor toolExecutor) {
+            this.tool = tool;
+            this.toolExecutor = toolExecutor;
+        }
+
+        @Override
+        public ToolDefinition getToolDefinition() {
+            return ToolDefinition.builder().name(tool.getName())
+                    .description(tool.getDescription())
+                    .inputSchema(AiTools.generateSchema(tool))
+                    .build();
+        }
+
+        @Override
+        public String call(String toolInput) {
+            Tool.ExecutionResponse response = tool.getExecutor().execute(null);
+            return "No data";
+        }
+
     }
 
-    private JsonObjectSchema createJsonSchema(Tool tool) {
-        requireNonNull(tool);
-        JsonObjectSchema.Builder schemaBuilder = JsonObjectSchema.builder();
-        for (Tool.Parameter parameter : tool.getParameters().values()) {
-            switch (parameter.getType()) {
-                case STRING -> schemaBuilder.addStringProperty(parameter.getName(), parameter.getDescription());
-                case INTEGER -> schemaBuilder.addIntegerProperty(parameter.getName(), parameter.getDescription());
-                case DECIMAL -> schemaBuilder.addNumberProperty(parameter.getName(), parameter.getDescription());
-                case BOOLEAN -> schemaBuilder.addBooleanProperty(parameter.getName(), parameter.getDescription());
-            }
-        }
-        return schemaBuilder.build();
-    }
 
 }

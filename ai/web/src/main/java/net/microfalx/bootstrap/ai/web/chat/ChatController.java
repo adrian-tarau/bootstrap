@@ -100,7 +100,7 @@ public class ChatController extends PageController {
     public String showTools(Model model, @PathVariable("id") String chatId) {
         net.microfalx.bootstrap.ai.api.Chat chat = aiService.getChat(chatId);
         updateModel(model, chat);
-        model.addAttribute("title", "Model");
+        model.addAttribute("title", "Tools");
         model.addAttribute("modalClasses", "modal-lg");
         model.addAttribute("content", renderMarkdown(chat.getToolsDescription()));
         return "ai/chat :: info";
@@ -110,7 +110,7 @@ public class ChatController extends PageController {
     public String showPrompt(Model model, @PathVariable("id") String chatId) {
         net.microfalx.bootstrap.ai.api.Chat chat = aiService.getChat(chatId);
         updateModel(model, chat);
-        model.addAttribute("title", "Model");
+        model.addAttribute("title", "Prompt");
         model.addAttribute("content", chat.getSystemMessage().getText());
         model.addAttribute("modalClasses", "modal-lg");
         model.addAttribute("contentClasses", "ai-chat-info-smaller dataset-text-mono");
@@ -247,9 +247,7 @@ public class ChatController extends PageController {
         }
 
         public Collection<Message> getMessages(Chat chat) {
-            return chat.getMessages().stream()
-                    .filter(message -> message.getType() != Message.Type.SYSTEM)
-                    .toList();
+            return chat.getMessages();
         }
 
         public String getUser(Message message) {
@@ -345,7 +343,7 @@ public class ChatController extends PageController {
                             net.microfalx.bootstrap.ai.api.Token token = stream.next();
                             sendToken(getPrefix(token) + token.getText(), false);
                         }
-                        sleepMillis(20);
+                        sleepMillis(50);
                     }
                     if (stream.isComplete()) sendToken(END_OF_DATA, true);
                 } catch (IllegalStateException e) {

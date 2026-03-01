@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.ai.core;
 
 import lombok.Getter;
-import net.microfalx.bootstrap.jdbc.jpa.JpaPersistence;
-import net.microfalx.bootstrap.jdbc.jpa.NaturalIdEntityUpdater;
 import net.microfalx.bootstrap.ai.api.AiException;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Provider;
 import net.microfalx.bootstrap.ai.core.jpa.*;
+import net.microfalx.bootstrap.jdbc.jpa.JpaPersistence;
+import net.microfalx.bootstrap.jdbc.jpa.NaturalIdEntityUpdater;
 import net.microfalx.lang.CollectionUtils;
 import net.microfalx.resource.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ import java.io.IOException;
 import static net.microfalx.lang.CollectionUtils.setToString;
 
 @Component
-class AiPersistence extends JpaPersistence {
+public class AiPersistence extends JpaPersistence {
 
     @Getter
     @Autowired

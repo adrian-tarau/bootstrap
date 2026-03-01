@@ -47,7 +47,7 @@ public class OllamaProviderFactory extends AbstractProviderFactory {
                         "Qwen3 (1.7b)", "qwen3:1.7b").maximumContextLength(40_000)
                 .canThink().hasTools().tag("alibaba").tag("qwen"));
         builder.model((Model.Builder) Model.create("qwen3_4b",
-                        "Qwen3 (4b)", "qwen3:4b").maximumContextLength(40_000)
+                        "Qwen3 (4b)", "qwen3:4b").maximumContextLength(256_000)
                 .canThink().hasTools().tag("alibaba").tag("qwen"));
         builder.model((Model.Builder) Model.create("qwen3_8b",
                         "Qwen3 (8b)", "qwen3:8b").maximumContextLength(40_000)
@@ -56,7 +56,7 @@ public class OllamaProviderFactory extends AbstractProviderFactory {
                         "Qwen3 (14b)", "qwen3:14b").maximumContextLength(40_000)
                 .canThink().hasTools().tag("alibaba").tag("qwen"));
         builder.model((Model.Builder) Model.create("qwen3_30b",
-                        "Qwen3 (30b)", "qwen3:30b").maximumContextLength(40_000)
+                        "Qwen3 (30b)", "qwen3:30b").maximumContextLength(256_000)
                 .canThink().hasTools().tag("alibaba").tag("qwen"));
 
         // DeepSeek R1

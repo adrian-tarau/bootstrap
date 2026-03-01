@@ -178,6 +178,13 @@ public interface AiService {
     void registerTool(Tool tool);
 
     /**
+     * Registers a tool using annotations specific to the AI implementation.
+     *
+     * @param tool the tool to register
+     */
+    void registerTool(Object tool);
+
+    /**
      * Registers a variable that can be used in prompts.
      * <p>
      * The content of the variable will be loaded from a classpath resource available at ~/ai/variables/{name}.md.
