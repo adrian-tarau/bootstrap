@@ -94,7 +94,7 @@ public class AiProperties {
      * models will only be pulled when they are not already loaded in memory. This is used to optimize performance and reduce
      * the number of requests to providers.
      */
-    private Model.PullStrategy modelPullStrategy = Model.PullStrategy.NEVER;
+    private Model.PullStrategy modelPullStrategy = Model.PullStrategy.WHEN_MISSING;
 
     /**
      * The default provider to use instead of the one selected.
