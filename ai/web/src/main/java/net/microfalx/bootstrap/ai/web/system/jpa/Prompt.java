@@ -9,7 +9,7 @@ import net.microfalx.bootstrap.jdbc.entity.surrogate.NamedAndTaggedAndTimestampe
 import net.microfalx.lang.annotation.*;
 
 @Entity(name = "WebPrompt")
-@Table(name = "ai_prompt")
+@Table(name = "ai_prompts")
 @Name("Prompts")
 @Getter
 @Setter

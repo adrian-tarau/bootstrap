@@ -9,10 +9,10 @@ public class LlamaProviderFactory extends AbstractProviderFactory {
 
     @Override
     public Provider createProvider() {
-        net.microfalx.bootstrap.ai.api.Provider.Builder builder = new net.microfalx.bootstrap.ai.api.Provider.Builder("djl");
+        net.microfalx.bootstrap.ai.api.Provider.Builder builder = new net.microfalx.bootstrap.ai.api.Provider.Builder("llama");
         builder.name("Llama").description("An embeddable LLM inference");
         builder.version("b8189").author("Llama Team").license("MIT")
-                .chatFactory(new LlamaChatFactory());
+                .chatFactory(new LlamaChatFactory()).tag("llama");
         registerModels(builder);
         return builder.build();
     }
@@ -22,11 +22,12 @@ public class LlamaProviderFactory extends AbstractProviderFactory {
         builder.model((Model.Builder) Model.create("qwen2_5_0_5b",
                         "Qwen2.5 (0.5b)", "qwen2.5:0.5b").maximumContextLength(32_000)
                 .downloadUri("https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf?download=true")
-                .canThink().hasTools().tag("alibaba").tag("qwen")
+                .canThink().hasTools().asDefault().tag("alibaba").tag("qwen")
         );
         builder.model((Model.Builder) Model.create("qwen3_1_7b",
                         "Qwen2.5 (1.5b)", "qwen2.5:1.5b").maximumContextLength(32_000)
                 .downloadUri("https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf?download=true")
                 .canThink().hasTools().tag("alibaba").tag("qwen"));
+
     }
 }

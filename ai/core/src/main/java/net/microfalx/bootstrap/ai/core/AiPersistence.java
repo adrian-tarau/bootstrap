@@ -66,10 +66,15 @@ public class AiPersistence extends JpaPersistence {
         jpaModel.setFrequencyPenalty(model.getFrequencyPenalty());
         jpaModel.setPresencePenalty(model.getPresencePenalty());
         jpaModel.setMaximumOutputTokens(model.getMaximumOutputTokens());
-        if (jpaModel.getUri() == null) {
+        if (model.getUri() == null) {
             jpaModel.setUri(null);
         } else {
             jpaModel.setUri(model.getUri(false).toASCIIString());
+        }
+        if (model.getDownloadUri() == null) {
+            jpaModel.setDownloadUri(null);
+        } else {
+            jpaModel.setDownloadUri(model.getDownloadUri().toASCIIString());
         }
         jpaModel.setTemperature(model.getTemperature());
         jpaModel.setTopK(model.getTopK());

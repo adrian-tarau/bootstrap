@@ -3,20 +3,20 @@ package net.microfalx.bootstrap.ai.web.system.jpa;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import net.microfalx.bootstrap.ai.api.ResponseFormat;
+import net.microfalx.bootstrap.ai.core.AiProperties;
 import net.microfalx.bootstrap.dataset.annotation.Component;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.Tabs;
 import net.microfalx.bootstrap.dataset.formatter.Formatter;
 import net.microfalx.bootstrap.jdbc.entity.surrogate.NamedAndTaggedAndTimestampedIdentityAware;
 import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.ai.api.ResponseFormat;
-import net.microfalx.bootstrap.ai.core.AiProperties;
 import net.microfalx.lang.annotation.*;
 
 import static net.microfalx.bootstrap.dataset.formatter.FormatterUtils.basicFormatting;
 
 @Entity(name = "WebModel")
-@Table(name = "ai_model")
+@Table(name = "ai_models")
 @Name("Models")
 @Getter
 @Setter

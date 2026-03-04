@@ -6,6 +6,7 @@
     </definition>
     <definition name="Models" type="mysql" path="02_ai_models.sql">
         <table>ai_models</table>
+        <migration path="01_ai_model_add_download_uri.sql" condition="column ai_models.download_uri not exists"/>
     </definition>
     <definition name="Chats" type="mysql" path="03_ai_chats.sql">
         <table>ai_chats</table>

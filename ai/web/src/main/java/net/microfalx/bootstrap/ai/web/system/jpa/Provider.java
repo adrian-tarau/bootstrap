@@ -10,7 +10,7 @@ import net.microfalx.bootstrap.jdbc.entity.surrogate.NamedAndTaggedAndTimestampe
 import net.microfalx.lang.annotation.*;
 
 @Entity(name = "WebProvider")
-@Table(name = "ai_provider")
+@Table(name = "ai_providers")
 @Name("Providers")
 @Getter
 @Setter

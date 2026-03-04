@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+import static net.microfalx.lang.ArgumentUtils.requireBounded;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FileUtils.validateDirectoryExists;
 
@@ -30,12 +31,13 @@ public class LlamaServerFactory {
     private static volatile LlamaServerFactory instance = new LlamaServerFactory();
 
     private final Map<String, LlamaServer> servers = new ConcurrentHashMap<>();
-    private Function<Model, File> repository = new RepositoryImpl();
-    private File nativeDirectory;
-    private volatile File nativeExecutable;
+    private volatile Function<Model, File> repository = new RepositoryImpl();
     private volatile ThreadPool threadPool;
-    private File cacheDirectory;
-    private File logsDirectory;
+    private volatile int maximumServers = 1;
+    private volatile File nativeExecutable;
+    private volatile File nativeDirectory;
+    private volatile File cacheDirectory;
+    private volatile File logsDirectory;
 
     public static LlamaServerFactory getInstance() {
         if (instance == null) {
@@ -59,6 +61,17 @@ public class LlamaServerFactory {
         for (LlamaServer server : servers.values()) {
             server.stop();
         }
+    }
+
+    /**
+     * Changes the maximum numbers of servers allowed to be created.
+     *
+     * @param maximumServers a positive integer, greater or equal to 1
+     */
+    public LlamaServerFactory setMaximumServers(int maximumServers) {
+        requireBounded(maximumServers, 1, 20);
+        this.maximumServers = maximumServers;
+        return this;
     }
 
     /**
@@ -92,6 +105,7 @@ public class LlamaServerFactory {
      */
     public LlamaServer start(Chat chat) {
         requireNonNull(chat);
+        if (servers.size() >= maximumServers) throw new AiException("Reached AI server limit at " + maximumServers);
         LOGGER.info("Start server for chat '{}'", chat.getId());
         LlamaServer server = new LlamaServer(this, chat);
         server.start();

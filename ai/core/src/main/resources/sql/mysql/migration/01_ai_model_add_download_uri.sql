@@ -1,0 +1,1 @@
+alter table ai_models add column download_uri varchar(1000)

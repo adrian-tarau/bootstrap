@@ -1,12 +1,12 @@
 package net.microfalx.bootstrap.ai.core;
 
-import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.ai.api.AiNotFoundException;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Prompt;
 import net.microfalx.bootstrap.ai.api.Provider;
 import net.microfalx.bootstrap.ai.core.jpa.ModelRepository;
 import net.microfalx.bootstrap.ai.core.jpa.PromptRepository;
+import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.lang.CollectionUtils;
 import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
@@ -147,7 +147,8 @@ public class AiCache extends ApplicationContextSupport {
                 .presencePenalty(modelJpa.getPresencePenalty())
                 .temperature(defaultIfNull(modelJpa.getTemperature(), properties.getDefaultTemperature()));
         builder.uri(parseUri(modelJpa.getUri()))
-                .apyKey(modelJpa.getApiKey());
+                .apyKey(modelJpa.getApiKey())
+                .downloadUri(modelJpa.getDownloadUri());
         builder.topK(defaultIfNull(modelJpa.getTopK(), properties.getDefaultTopK()))
                 .topP(defaultIfNull(modelJpa.getTopP(), properties.getDefaultTopP()))
                 .responseFormat(modelJpa.getResponseFormat()).setDefault(modelJpa.isDefault())

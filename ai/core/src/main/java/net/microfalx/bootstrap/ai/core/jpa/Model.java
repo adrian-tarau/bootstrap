@@ -30,6 +30,9 @@ public class Model extends NamedAndTaggedAndTimestampedIdentityAware<Integer> {
     @Column(name = "api_key", nullable = false, length = 500)
     private String apiKey;
 
+    @Column(name = "download_uri", length = 1000)
+    private String downloadUri;
+
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 

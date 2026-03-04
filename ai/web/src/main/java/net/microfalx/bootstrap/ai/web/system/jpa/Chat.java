@@ -12,7 +12,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity(name = "WebChatModel")
-@Table(name = "ai_chat")
+@Table(name = "ai_chats")
 @Name("Chats")
 @Getter
 @Setter

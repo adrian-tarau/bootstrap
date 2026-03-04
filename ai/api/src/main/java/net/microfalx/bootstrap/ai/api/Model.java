@@ -3,7 +3,6 @@ package net.microfalx.bootstrap.ai.api;
 import lombok.ToString;
 import net.microfalx.lang.IdentityAware;
 import net.microfalx.lang.NamedAndTaggedIdentifyAware;
-import net.microfalx.lang.StringUtils;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -13,6 +12,7 @@ import java.util.Set;
 
 import static java.util.Collections.unmodifiableSet;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
  * Represents an AI model.
@@ -355,7 +355,7 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
         }
 
         public Builder downloadUri(String downloadUri) {
-            if (StringUtils.isNotEmpty(downloadUri)) {
+            if (isNotEmpty(downloadUri)) {
                 return this.downloadUri(URI.create(downloadUri));
             } else {
                 this.downloadUri = null;
