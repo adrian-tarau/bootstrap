@@ -80,6 +80,7 @@ public abstract class AbstractScript implements Script {
                 if (isEndOfStatement(line)) createStatement(statements, builder);
             }
         }
+        if (!builder.isEmpty()) createStatement(statements, builder);
         return statements;
     }
 
