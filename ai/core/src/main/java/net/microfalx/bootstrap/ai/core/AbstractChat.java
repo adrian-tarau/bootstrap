@@ -19,6 +19,7 @@ import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.data.domain.Page;
 import reactor.core.publisher.Flux;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.time.Duration;
@@ -157,13 +158,13 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     @Override
     public String ask(String message) {
         validate();
-            StringBuilder builder = new StringBuilder();
-            net.microfalx.bootstrap.ai.api.TokenStream stream = chat(message);
-            while (stream.hasNext()) {
-                Token token = stream.next();
-                builder.append(token.getText());
-            }
-            return builder.toString();
+        StringBuilder builder = new StringBuilder();
+        net.microfalx.bootstrap.ai.api.TokenStream stream = chat(message);
+        while (stream.hasNext()) {
+            Token token = stream.next();
+            builder.append(token.getText());
+        }
+        return builder.toString();
     }
 
     @Override
@@ -281,8 +282,16 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         return this;
     }
 
+    protected void ping() {
+        // subclasses might implement some sort of ping with the model
+    }
+
     protected void doClose() throws IOException {
         // default implementation does nothing
+    }
+
+    protected final File resolveModel() {
+        return service.resolve(model);
     }
 
     private void validate() {
@@ -393,6 +402,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
 
     private void updateLastActivity() {
         lastActivity.set(System.currentTimeMillis());
+        ping();
     }
 
     private int getNextChatIndex() {

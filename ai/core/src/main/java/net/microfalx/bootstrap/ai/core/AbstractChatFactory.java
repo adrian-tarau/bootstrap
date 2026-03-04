@@ -3,11 +3,11 @@ package net.microfalx.bootstrap.ai.core;
 import lombok.Getter;
 import lombok.Setter;
 import net.microfalx.bootstrap.ai.api.Chat;
-import net.microfalx.lang.FileUtils;
 import net.microfalx.lang.JvmUtils;
 
 import java.io.File;
 
+import static net.microfalx.lang.FileUtils.validateDirectoryExists;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
@@ -23,13 +23,20 @@ public abstract class AbstractChatFactory implements Chat.Factory {
     private AiProperties properties = new AiProperties();
 
     /**
+     * Holds a reference to the AI Service
+     */
+    @Getter
+    @Setter
+    private AiServiceImpl aiService;
+
+    /**
      * Returns a directory used to cache models.
      *
      * @param name the name of the provider
      * @return a non-null instance
      */
     protected final File getModelCacheDirectory(String name) {
-        return FileUtils.validateDirectoryExists(new File(getModelCacheDirectory(), toIdentifier(name)));
+        return validateDirectoryExists(new File(getModelCacheDirectory(), toIdentifier(name)));
     }
 
     /**
@@ -38,7 +45,7 @@ public abstract class AbstractChatFactory implements Chat.Factory {
      * @return a non-null instance
      */
     protected final File getModelCacheDirectory() {
-        return FileUtils.validateDirectoryExists(new File(getCacheDirectory(), "models"));
+        return validateDirectoryExists(new File(getCacheDirectory(), "models"));
     }
 
     /**
@@ -48,7 +55,7 @@ public abstract class AbstractChatFactory implements Chat.Factory {
      * @return a non-null instance
      */
     protected final File getWorkingDirectory(String name) {
-        return FileUtils.validateDirectoryExists(new File(getWorkingDirectory(), toIdentifier(name)));
+        return validateDirectoryExists(new File(getWorkingDirectory(), toIdentifier(name)));
     }
 
     /**
@@ -57,7 +64,7 @@ public abstract class AbstractChatFactory implements Chat.Factory {
      * @return a non-null instance
      */
     protected final File getWorkingDirectory() {
-        return FileUtils.validateDirectoryExists(new File(getCacheDirectory(), "workspace"));
+        return validateDirectoryExists(new File(getCacheDirectory(), "workspace"));
     }
 
     /**
@@ -65,6 +72,6 @@ public abstract class AbstractChatFactory implements Chat.Factory {
      * @return a non-null instance
      */
     protected final File getCacheDirectory() {
-        return FileUtils.validateDirectoryExists(JvmUtils.getCacheDirectory("ai"));
+        return validateDirectoryExists(JvmUtils.getCacheDirectory("ai"));
     }
 }

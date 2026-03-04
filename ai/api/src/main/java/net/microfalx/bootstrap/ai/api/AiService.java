@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.ai.api;
 import net.microfalx.resource.Resource;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Collection;
@@ -128,6 +129,15 @@ public interface AiService {
     Model getModel(String id);
 
     /**
+     * Resolves the model to a file (or a directory if the model is made out multiple files), which can
+     * be used to load the model.
+     *
+     * @param model the model
+     * @return a non-null instance
+     */
+    File resolve(Model model);
+
+    /**
      * Returns the active chat sessions.
      *
      * @return a non-null instance
@@ -147,6 +157,13 @@ public interface AiService {
      * @return a non-null instance
      */
     Collection<Provider> getProviders();
+
+    /**
+     * Returns a provider with a given identifier.
+     * @param id the provider identifier
+     * @return a non-null instance
+     */
+    Provider getProvider(String id);
 
     /**
      * Registers a provider.

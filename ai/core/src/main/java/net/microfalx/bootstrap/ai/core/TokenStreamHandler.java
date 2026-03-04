@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.ai.core;
 import net.microfalx.bootstrap.ai.api.FinishReason;
 import net.microfalx.bootstrap.ai.api.Token;
 import net.microfalx.bootstrap.core.utils.Failure;
+import net.microfalx.lang.StringUtils;
 import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,6 @@ class TokenStreamHandler extends AbstractTokenStream {
     private final long startedNanos = System.nanoTime();
     private volatile Duration timeToFirstToken;
     private volatile FinishReason finishReason = FinishReason.OTHER;
-
 
     TokenStreamHandler(AiServiceImpl service, AbstractChat chat, Flux<ChatResponse> tokenStream) {
         requireNonNull(service);
@@ -106,12 +106,17 @@ class TokenStreamHandler extends AbstractTokenStream {
         return Token.create(Token.Type.ANSWER, response.getResult().getOutput().getText());
     }
 
+    private boolean isNotEmpty(ChatResponse response) {
+        return StringUtils.isNotEmpty(response.getResult().getOutput().getText());
+    }
+
     private Iterator<Token> initTokens(Flux<ChatResponse> tokenStream) {
         return tokenStream
                 .doOnSubscribe(this::onSubscribe)
                 .doOnNext(this::onNext)
                 .doOnComplete(this::onComplete)
                 .doOnError(this::onError)
+                .filter(this::isNotEmpty)
                 .map(this::mapToken)
                 .timeout(this.properties.getChatRequestTimeout())
                 .retryWhen(Retry.backoff(2, Duration.ofSeconds(1)).jitter(0.2).filter(this::isTransient))

@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.ai.api;
 import lombok.ToString;
 import net.microfalx.lang.IdentityAware;
 import net.microfalx.lang.NamedAndTaggedIdentifyAware;
+import net.microfalx.lang.StringUtils;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -43,6 +44,7 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
 
     private URI uri;
     private String apyKey;
+    private URI downloadUri;
     private boolean enabled;
     private boolean _default;
     private boolean embedding;
@@ -138,6 +140,15 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
      */
     public String getApyKey() {
         return getApyKey(false);
+    }
+
+    /**
+     * Returns the URI to download the model, if available.
+     *
+     * @return the URI, null if not available
+     */
+    public URI getDownloadUri() {
+        return downloadUri;
     }
 
     /**
@@ -303,6 +314,7 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
 
         private URI uri;
         private String apyKey;
+        private URI downloadUri;
         private boolean enabled = true;
         private boolean _default;
 
@@ -337,10 +349,22 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
         }
 
         public Builder uri(URI uri, String apyKey) {
-            requireNonNull(uri);
-            requireNonNull(apyKey);
             this.uri = uri;
             this.apyKey = apyKey;
+            return this;
+        }
+
+        public Builder downloadUri(String downloadUri) {
+            if (StringUtils.isNotEmpty(downloadUri)) {
+                return this.downloadUri(URI.create(downloadUri));
+            } else {
+                this.downloadUri = null;
+                return this;
+            }
+        }
+
+        public Builder downloadUri(URI downloadUri) {
+            this.downloadUri = downloadUri;
             return this;
         }
 
@@ -463,6 +487,7 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
             Model model = (Model) super.build();
             model.uri = uri;
             model.apyKey = apyKey;
+            model.downloadUri = downloadUri;
             model.enabled = enabled;
             model._default = _default;
             model.embedding = embedding;

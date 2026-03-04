@@ -24,24 +24,36 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-ai-provider</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>bootstrap-ai-provider-llama</artifactId>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap-ai</artifactId>
+        <artifactId>bootstrap-ai-provider</artifactId>
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: AI :: Providers</name>
+    <name>Bootstrap :: AI :: Providers :: Llama</name>
 
-    <modules>
-        <module>hugging-face</module>
-        <module>ollama</module>
-        <module>openai</module>
-        <module>github</module>
-        <module>llama</module>
-    </modules>
+    <dependencies>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-ai-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-test</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+    </dependencies>
 
 </project>

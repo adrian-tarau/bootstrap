@@ -10,9 +10,16 @@ import net.microfalx.bootstrap.ai.api.Provider;
 public abstract class AbstractProviderFactory implements Provider.Factory {
 
     /**
-     * Properties to be used with the provider factory.
+     * Properties to be used with the chat factory.
      */
     @Getter
     @Setter
     private AiProperties properties = new AiProperties();
+
+    /**
+     * Holds a reference to the AI Service
+     */
+    @Getter
+    @Setter
+    private AiServiceImpl aiService;
 }

@@ -4,6 +4,7 @@ import jakarta.annotation.PreDestroy;
 import lombok.AccessLevel;
 import lombok.Getter;
 import net.microfalx.bootstrap.ai.api.*;
+import net.microfalx.bootstrap.ai.core.repository.LocalRepository;
 import net.microfalx.bootstrap.ai.lucene.LuceneEmbeddingModel;
 import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
@@ -50,6 +51,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.unmodifiableCollection;
@@ -57,7 +59,9 @@ import static net.microfalx.bootstrap.ai.core.AiUtils.CREATE_CHAT_METRICS;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ExceptionUtils.rethrowException;
+import static net.microfalx.lang.FileUtils.getFileName;
 import static net.microfalx.lang.FileUtils.validateDirectoryExists;
+import static net.microfalx.lang.FormatterUtils.formatBytes;
 import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.millisSince;
 
@@ -83,6 +87,9 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     private AiProperties properties = new AiProperties();
 
     private File variableDirectory;
+    private File cacheDirectory;
+    private File modelCacheDirectory;
+    private LocalRepository localRepository = new LocalRepository(new RepositoryProxy());
     private EmbeddingModel embeddingModel;
     private ChatMemory chatMemory;
     private volatile AiCache cache = new AiCache(this, null);
@@ -90,6 +97,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     private final Map<String, Object> variables = new ConcurrentHashMap<>();
 
     private final Collection<AiListener> listeners = new CopyOnWriteArrayList<>();
+    private final Collection<ModelRepository> modelRepositories = new CopyOnWriteArrayList<>();
     private final Collection<Provider.Factory> providerFactories = new CopyOnWriteArrayList<>();
     private final Map<String, net.microfalx.bootstrap.ai.api.Chat> activeChats = new ConcurrentHashMap<>();
     private final Collection<net.microfalx.bootstrap.ai.api.Chat> closedChats = new CopyOnWriteArrayList<>();
@@ -232,6 +240,31 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     }
 
     @Override
+    public File resolve(Model model) {
+        requireNonNull(model);
+        String cacheFileName = model.getId();
+        if (model.getDownloadUri() != null) cacheFileName = getFileName(model.getDownloadUri().getPath());
+        File modelCacheFile = new File(cacheDirectory, cacheFileName);
+        if (modelCacheFile.exists()) {
+            LOGGER.debug("Return model file from cache: {}", modelCacheFile);
+            return modelCacheFile;
+        }
+        Resource resource = fireResolveModel(model);
+        if (resource == null) {
+            throw new AiNotFoundException("Model '" + model.getId() + "' cannot be resolved in any model repository");
+        }
+        LOGGER.info("Download model file from '{}' for model '{}'", resource.toURI(), model.getName());
+        try {
+            Resource.file(modelCacheFile).copyFrom(resource);
+        } catch (IOException e) {
+            throw new AiException("Failed to cache model '" + model.getId() + "' to file " + modelCacheFile, e);
+        }
+        LOGGER.info("Download model file to '{}', file size {}", modelCacheFile,
+                formatBytes(modelCacheFile.length()));
+        return modelCacheFile;
+    }
+
+    @Override
     public Collection<net.microfalx.bootstrap.ai.api.Chat> getActiveChats() {
         return unmodifiableCollection(activeChats.values());
     }
@@ -247,10 +280,19 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     }
 
     @Override
+    public Provider getProvider(String id) {
+        return cache.getProvider(id);
+    }
+
+    @Override
     public void registerProvider(Provider provider) {
         requireNonNull(provider);
         cache.registerProvider(provider);
         persistProvider(provider);
+        if (provider.getChatFactory() instanceof AbstractChatFactory chatFactory) {
+            chatFactory.setProperties(properties);
+            chatFactory.setAiService(this);
+        }
     }
 
     @Override
@@ -304,7 +346,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
 
     @Override
     public Resource applyTemplate(Resource resource, Map<String, Object> variables) throws IOException {
-        ArgumentUtils.requireNonNull(resource);
+        requireNonNull(resource);
         variables = ObjectUtils.defaultIfNull(variables, Collections.emptyMap());
         Map<String, Object> currentVariables = new HashMap<>(this.variables);
         currentVariables.putAll(variables);
@@ -387,6 +429,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         initThreadPools();
         initDirectories();
         initListeners();
+        initModelRepositories();
         initProviderFactories();
         registerProviders();
         registerDefaultVariables();
@@ -557,6 +600,9 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
 
     private void initDirectories() {
         variableDirectory = JvmUtils.getVariableDirectory("ai");
+        cacheDirectory = JvmUtils.getCacheDirectory("ai");
+        modelCacheDirectory = FileUtils.validateDirectoryExists(new File(cacheDirectory, "models"));
+        localRepository.setCacheDirectory(modelCacheDirectory);
     }
 
     private void initListeners() {
@@ -568,6 +614,18 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
                 applicationContextAware.setApplicationContext(getApplicationContext());
             }
             this.listeners.add(listener);
+        }
+    }
+
+    private void initModelRepositories() {
+        Collection<ModelRepository> loadedModelRepositories = ClassUtils.resolveProviderInstances(ModelRepository.class);
+        LOGGER.info("Register {} model repositories", loadedModelRepositories.size());
+        for (ModelRepository modelRepository : loadedModelRepositories) {
+            LOGGER.debug(" - {}", ClassUtils.getName(loadedModelRepositories));
+            if (modelRepository instanceof ApplicationContextAware applicationContextAware) {
+                applicationContextAware.setApplicationContext(getApplicationContext());
+            }
+            this.modelRepositories.add(modelRepository);
         }
     }
 
@@ -661,6 +719,21 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         return null;
     }
 
+    private Resource fireResolveModel(Model model) {
+        for (ModelRepository modelRepository : modelRepositories) {
+            try {
+                if (modelRepository.supports(model)) {
+                    Resource resource = modelRepository.resolve(model);
+                    if (resource != null) return resource;
+                }
+            } catch (Exception e) {
+                LOGGER.atError().setCause(e).log("Failed to resolve model {} with listener {}",
+                        model.getName(), ClassUtils.getName(modelRepository));
+            }
+        }
+        return null;
+    }
+
     private void updateToolsVariable(Chat chat, Map<String, Object> variables) {
         ToolsBuilder builder = new ToolsBuilder(this, chat);
         variables.put("TOOLS", builder.getVariable());
@@ -675,6 +748,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
             try {
                 if (providerFactory instanceof AbstractProviderFactory abstractProviderFactory) {
                     abstractProviderFactory.setProperties(properties);
+                    abstractProviderFactory.setAiService(this);
                 }
                 Provider provider = providerFactory.createProvider();
                 if (provider == null) {
@@ -750,6 +824,14 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
             } catch (Exception e) {
                 LOGGER.atError().setCause(e).log("Failed to process pending chats");
             }
+        }
+    }
+
+    class RepositoryProxy implements Function<Model, Resource> {
+
+        @Override
+        public Resource apply(Model model) {
+            return fireResolveModel(model);
         }
     }
 

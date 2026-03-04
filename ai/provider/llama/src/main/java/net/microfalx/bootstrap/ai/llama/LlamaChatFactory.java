@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.ai.openai;
+package net.microfalx.bootstrap.ai.llama;
 
 import net.microfalx.bootstrap.ai.api.AiNotFoundException;
 import net.microfalx.bootstrap.ai.api.Chat;
@@ -10,15 +10,18 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 
-public class OpenAiChatFactory extends AbstractChatFactory {
+public class LlamaChatFactory extends AbstractChatFactory {
 
     @Override
     public Chat createChat(Prompt prompt, Model model) {
         if (StringUtils.isEmpty(model.getModelName())) {
             throw new AiNotFoundException("The model name is required for OpenAI");
         }
+        LlamaChat chat = new LlamaChat(prompt, model);
+        LlamaServer server = LlamaServerFactory.getInstance().start(chat);
+        chat.setServer(server);
         OpenAiApi api = OpenAiApi.builder()
-                .baseUrl(getProperties().getOpenAiUri()).apiKey(getProperties().getOpenAiApiKey())
+                .baseUrl(server.getUri(true).toASCIIString()).apiKey("dummy")
                 .build();
         OpenAiChatOptions options = OpenAiChatOptions.builder()
                 .model(model.getModelName())
@@ -27,6 +30,7 @@ public class OpenAiChatFactory extends AbstractChatFactory {
                 .openAiApi(api)
                 .defaultOptions(options)
                 .build();
-        return new OpenAiChat(prompt, model).setChatModel(chatModel);
+        chat.setChatModel(chatModel);
+        return chat;
     }
 }
