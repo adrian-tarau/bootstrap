@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.ai.api;
 
 /**
- * An exception for indicating that a requested resource was not found.
+ * An exception for indicating that a requested AI resource was not found.
  */
 public class AiNotFoundException extends AiException {
 

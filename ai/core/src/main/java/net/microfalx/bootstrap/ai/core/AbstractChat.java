@@ -352,13 +352,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     private ChatOptions createChatOptions() {
         ChatOptions.Builder builder = ChatOptions.builder()
                 .model(model.getModelName())
-                .topP(model.getTopP())
-                .topK(model.getTopK())
-                .stopSequences(model.getStopSequences().stream().toList())
                 .temperature(model.getTemperature());
-        if (model.getMaximumOutputTokens() != null) {
-            builder.maxTokens(model.getMaximumOutputTokens());
-        }
         return builder.build();
     }
 

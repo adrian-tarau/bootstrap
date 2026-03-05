@@ -20,13 +20,21 @@ public class OpenAiChatFactory extends AbstractChatFactory {
         OpenAiApi api = OpenAiApi.builder()
                 .baseUrl(getProperties().getOpenAiUri()).apiKey(getProperties().getOpenAiApiKey())
                 .build();
-        OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model(model.getModelName())
-                .build();
         OpenAiChatModel chatModel = OpenAiChatModel.builder()
                 .openAiApi(api)
-                .defaultOptions(options)
+                .defaultOptions(createOptions(model))
                 .build();
         return new OpenAiChat(prompt, model).setChatModel(chatModel);
+    }
+
+    private OpenAiChatOptions createOptions(Model model) {
+        OpenAiChatOptions.Builder builder = OpenAiChatOptions.builder()
+                .model(model.getModelName())
+                .temperature(model.getTemperature())
+                .topP(model.getTopP());
+        if (model.getMaximumOutputTokens() != null) {
+            builder.maxTokens(model.getMaximumOutputTokens());
+        }
+        return builder.build();
     }
 }

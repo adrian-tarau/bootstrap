@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.ai.core.provider.onnx;
 
-import net.microfalx.bootstrap.ai.api.AiException;
+import net.microfalx.bootstrap.ai.api.AiNotAvailableException;
 import net.microfalx.bootstrap.ai.api.Embedding;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.core.AbstractEmbeddingFactory;
@@ -32,7 +32,7 @@ public class OnnxEmbeddingFactory extends AbstractEmbeddingFactory {
         try {
             embeddingModel.afterPropertiesSet();
         } catch (Exception e) {
-            throw new AiException("Failed to initialize embedding model", e);
+            throw new AiNotAvailableException("Failed to initialize embedding model", e);
         }
         this.embeddingModel = embeddingModel;
         return embeddingModel;

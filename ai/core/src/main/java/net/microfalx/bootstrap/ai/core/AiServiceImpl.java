@@ -166,7 +166,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         requireNonNull(id);
         Chat chat = activeChats.get(toIdentifier(id));
         if (chat == null) {
-            throw new AiException("Chat '" + id + "' not found");
+            throw new AiNotAvailableException("Chat '" + id + "' not found");
         }
         return chat;
     }
@@ -257,7 +257,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         try {
             Resource.file(modelCacheFile).copyFrom(resource);
         } catch (IOException e) {
-            throw new AiException("Failed to cache model '" + model.getId() + "' to file " + modelCacheFile, e);
+            throw new AiNotFoundException("Failed to cache model '" + model.getId() + "' to file " + modelCacheFile, e);
         }
         LOGGER.info("Download model file to '{}', file size {}", modelCacheFile,
                 formatBytes(modelCacheFile.length()));
@@ -583,7 +583,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     private net.microfalx.bootstrap.ai.api.Chat createChat(Prompt prompt, Model model, boolean internal) {
         requireNonNull(prompt);
         requireNonNull(model);
-        if (model.isEmbedding()) throw new AiException("Model '" + model.getId() + "' does not support chatting");
+        if (model.isEmbedding()) throw new AiNotAvailableException("Model '" + model.getId() + "' does not support chatting");
         net.microfalx.bootstrap.ai.api.Chat result = CREATE_CHAT_METRICS.time(model.getName(), () -> {
             Chat.Factory chatFactory = model.getProvider().getChatFactory();
             net.microfalx.bootstrap.ai.api.Chat chat = chatFactory.createChat(prompt, model);

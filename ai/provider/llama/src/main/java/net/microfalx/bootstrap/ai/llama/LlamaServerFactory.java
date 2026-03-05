@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.ai.llama;
 
 import lombok.extern.slf4j.Slf4j;
-import net.microfalx.bootstrap.ai.api.AiException;
+import net.microfalx.bootstrap.ai.api.AiNotAvailableException;
 import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.core.repository.LocalRepository;
@@ -105,7 +105,7 @@ public class LlamaServerFactory {
      */
     public LlamaServer start(Chat chat) {
         requireNonNull(chat);
-        if (servers.size() >= maximumServers) throw new AiException("Reached AI server limit at " + maximumServers);
+        if (servers.size() >= maximumServers) throw new AiNotAvailableException("Reached AI server limit at " + maximumServers);
         LOGGER.info("Start server for chat '{}'", chat.getId());
         LlamaServer server = new LlamaServer(this, chat);
         server.start();
@@ -180,7 +180,7 @@ public class LlamaServerFactory {
                 }
             }
         } catch (IOException e) {
-            throw new AiException("Failed to setup native executable to: " + targetDirectory, e);
+            throw new AiNotAvailableException("Failed to setup native executable to: " + targetDirectory, e);
         }
         return ResourceUtils.toFile(targetExecutable);
     }

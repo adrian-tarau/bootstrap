@@ -53,36 +53,36 @@ class LlamaChatTest extends AbstractBootstrapServiceTestCase {
         prompt = Prompt.empty();
         aiService.registerProvider(new LlamaProviderFactory().createProvider());
         aiService.registerTool(new DateTimeTools());
-        provider = aiService.getProvider("djl");
+        provider = aiService.getProvider("llama");
     }
 
     @Test
     void ask() {
-        Chat chat = aiService.createChat(prompt, loadChat("djl_qwen2_5_0_5b"));
+        Chat chat = aiService.createChat(prompt, loadChat("llama_qwen2_5_0_5b"));
         ask(chat, "Tell me a joke about Java");
     }
 
     @Test
     void replyWithOk() {
-        Chat chat = aiService.createChat(prompt, loadChat("djl_qwen2_5_0_5b"));
+        Chat chat = aiService.createChat(prompt, loadChat("llama_qwen2_5_0_5b"));
         ask(chat, "Reply with exactly the word: OK");
     }
 
     @Test
     void replyWithJson() {
-        Chat chat = aiService.createChat(prompt, loadChat("djl_qwen2_5_0_5b"));
+        Chat chat = aiService.createChat(prompt, loadChat("llama_qwen2_5_0_5b"));
         ask(chat, "Return JSON with { status: 'up' }");
     }
 
     @Test
     void summarize() {
-        Chat chat = aiService.createChat(prompt, loadChat("djl_qwen2_5_0_5b"));
+        Chat chat = aiService.createChat(prompt, loadChat("llama_qwen2_5_0_5b"));
         ask(chat, "Summarize Domain Events in one sentence");
     }
 
     @Test
     void handleSchema() {
-        Chat chat = aiService.createChat(prompt, loadChat("djl_qwen2_5_0_5b"));
+        Chat chat = aiService.createChat(prompt, loadChat("llama_qwen2_5_0_5b"));
         ask(chat, """
                 Return ONLY valid JSON.
                 {
@@ -97,20 +97,20 @@ class LlamaChatTest extends AbstractBootstrapServiceTestCase {
     @Test
     void checkAddressTool() {
         aiService.registerTool(new AddressTools());
-        Chat chat = aiService.createChat(prompt, loadChat("djl_qwen2_5_0_5b"));
+        Chat chat = aiService.createChat(prompt, loadChat("llama_qwen2_5_0_5b"));
         ask(chat, "Check if 123 Main St, Middletown, OH 45044 exists.");
     }
 
     @Test
     void checkTime() {
         aiService.registerTool(new AddressTools());
-        Chat chat = aiService.createChat(prompt, loadChat("djl_qwen2_5_0_5b"));
+        Chat chat = aiService.createChat(prompt, loadChat("llama_qwen2_5_0_5b"));
         ask(chat, "What time is right now?");
     }
 
     @Test
     void chat() {
-        Chat chat = aiService.createChat(prompt, loadChat("djl_qwen2_5_0_5b"));
+        Chat chat = aiService.createChat(prompt, loadChat("llama_qwen2_5_0_5b"));
         chat(chat, "Tell me a joke about Java");
     }
 

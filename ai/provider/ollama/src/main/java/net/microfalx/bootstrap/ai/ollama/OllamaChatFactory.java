@@ -20,10 +20,6 @@ public class OllamaChatFactory extends AbstractChatFactory {
         if (StringUtils.isEmpty(model.getModelName())) {
             throw new AiNotFoundException("The model name is required for Ollama");
         }
-        OllamaChatOptions options = new OllamaChatOptions();
-        options.setModel(model.getModelName());
-        options.setThinkOption(new ThinkOption.ThinkBoolean(getProperties().isThinkingEnabled() && model.isThinking()));
-        options.setMaxTokens(getProperties().getMaximumInputEvents());
         OllamaApi api = OllamaApi.builder()
                 .baseUrl(model.getUri().toASCIIString())
                 .build();
@@ -32,7 +28,7 @@ public class OllamaChatFactory extends AbstractChatFactory {
                 .maxRetries(getProperties().getModelPullRetryCount())
                 .build();
         OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(api)
-                .defaultOptions(options)
+                .defaultOptions(createOptions(model))
                 .modelManagementOptions(modelManagementOptions)
                 .build();
         return new OllamaChat(prompt, model).setChatModel(chatModel);
@@ -44,5 +40,12 @@ public class OllamaChatFactory extends AbstractChatFactory {
             case NEVER -> PullModelStrategy.NEVER;
             default -> PullModelStrategy.WHEN_MISSING;
         };
+    }
+
+    private OllamaChatOptions createOptions(Model model) {
+        OllamaChatOptions.Builder builder = OllamaChatOptions.builder()
+                .model(model.getModelName())
+                .thinkOption(new ThinkOption.ThinkBoolean(getProperties().isThinkingEnabled() && model.isThinking()));
+        return builder.build();
     }
 }

@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.ai.llama;
 
 import lombok.extern.slf4j.Slf4j;
-import net.microfalx.bootstrap.ai.api.AiException;
+import net.microfalx.bootstrap.ai.api.AiNotAvailableException;
 import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.JvmUtils;
@@ -100,7 +100,7 @@ public class LlamaServer implements Identifiable<String> {
         try {
             process = builder.start();
         } catch (Exception e) {
-            throw new AiException("Failed to start llama server", e);
+            throw new AiNotAvailableException("Failed to start llama server", e);
         }
         factory.getThreadPool().execute(new Worker());
     }

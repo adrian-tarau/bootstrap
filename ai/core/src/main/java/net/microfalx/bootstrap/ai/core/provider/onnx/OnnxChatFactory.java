@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.ai.core.provider.onnx;
 
-import net.microfalx.bootstrap.ai.api.AiException;
+import net.microfalx.bootstrap.ai.api.AiNotAvailableException;
 import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Prompt;
@@ -10,6 +10,6 @@ public class OnnxChatFactory extends AbstractChatFactory {
 
     @Override
     public Chat createChat(Prompt prompt, Model model) {
-        throw new AiException("ONNX provider does not support chat models yet");
+        throw new AiNotAvailableException("ONNX provider does not support chat models yet");
     }
 }
