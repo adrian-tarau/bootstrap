@@ -74,4 +74,14 @@ public abstract class PageController implements AuthenticatedController {
     protected final void updateUserMessage(Model model, String message) {
         model.addAttribute(MESSAGE_ATTR, message);
     }
+
+    /**
+     * Returns the message which will be displayed to the user.
+     *
+     * @param model the model
+     * @return the message, null if there is no message
+     */
+    protected final String getUserMessage(Model model) {
+        return (String) model.getAttribute(MESSAGE_ATTR);
+    }
 }

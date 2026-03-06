@@ -126,7 +126,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         Page<M> page = processParams(dataSet, model, pageParameter, rangeParameter, queryParameter, sortParameter);
         response.addHeader("X-DATASET-PAGE-INFO", DataSetTool.getPageInfo(page));
         response.addHeader("X-DATASET-PAGE-INFO-EXTENDED", DataSetTool.getPageAndRecordInfo(page));
-        if (model.containsAttribute(MESSAGE_ATTR)) {
+        if (isNotEmpty(getUserMessage(model))) {
             response.addHeader("X-DATASET-MESSAGE", (String) model.getAttribute(MESSAGE_ATTR));
         }
         beforeBrowse(dataSet, model, null);
@@ -182,7 +182,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
                     model.addAttribute("readOnlyFields", READ_ONLY_FIELDS.get());
                     return "dataset/view::#dataset-modal";
                 } else {
-                    String message = (String) model.getAttribute(MESSAGE_ATTR);
+                    String message = getUserMessage(model);
                     if (isEmpty(message)) message = "Changing the entry is not allowed";
                     throw new DataSetAbortException(message);
                 }
@@ -277,8 +277,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         DataSet<M, Field<M>, ID> dataSet = getDataSet();
         log(dataSet, "upload", 0, null, null, null);
         upload(dataSet, model, StreamResource.create(file::getInputStream, file.getOriginalFilename()));
-        String message = "File '" + file.getOriginalFilename() + "' was successfully uploaded";
-        updateUserMessage(model, message);
+        String message = getUserMessage(model);
+        if (isEmpty(message)) {
+            message = "File '" + file.getOriginalFilename() + "' was successfully uploaded";
+            updateUserMessage(model, message);
+        }
     }
 
     @GetMapping(value = "{id}/download")
@@ -889,7 +892,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     private Object convert(DataSet<M, Field<M>, ID> dataSet, M model, Field<M> field, String value) {
         if (field.getDataType() == Field.DataType.MODEL) {
-            if (StringUtils.isEmpty(value)) {
+            if (isEmpty(value)) {
                 return null;
             } else {
                 return findModel(dataSet, model, field, field.getDataClass(), value);
@@ -1216,7 +1219,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
     private <J extends JsonResponse<J>> J updateResponse(Model model, J response) {
-        String message = (String) model.getAttribute(MESSAGE_ATTR);
+        String message = getUserMessage(model);
         if (isNotEmpty(message)) {
             response.setSuccess(false).setMessage(message).setErrorCode(JsonResponse.ABORT_ERROR);
         }
