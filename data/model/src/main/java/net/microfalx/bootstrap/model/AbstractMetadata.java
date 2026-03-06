@@ -229,6 +229,7 @@ public abstract class AbstractMetadata<M, F extends Field<M>, ID> implements Met
             if (!builder.isEmpty()) builder.append(separator);
             if (glueAnnot != null && isNotEmpty(glueAnnot.before())) builder.append(glueAnnot.before());
             Object value = nameField.get(model);
+            if (value == null) return EMPTY_STRING;
             if (ClassUtils.isBaseClass(value)) {
                 builder.append(value);
             } else {
