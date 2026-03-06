@@ -20,7 +20,7 @@ class LlamaServerTest {
 
     @BeforeEach
     void setup() {
-        model = Model.create("qwen2_5_0_5b", "Qwen2.5 (0.5b)", "qwen2.5:0.5b")
+        model = Model.create( "Qwen2.5 (0.5b)", "qwen2.5:0.5b")
                 .maximumContextLength(32_000)
                 .downloadUri("https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf?download=true")
                 .build();

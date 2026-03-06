@@ -29,23 +29,23 @@ public class OpenAiProviderFactory extends AbstractProviderFactory {
     }
 
     private void registerModels(net.microfalx.bootstrap.ai.api.Provider.Builder builder) {
-        builder.model((Model.Builder) Model.create("o4-mini", "O4 Mini",
-                "o4-mini").maximumContextLength(128_000).tag("openai").tag("mini"));
-        builder.model((Model.Builder) Model.create("o3", "O3",
-                "o3").maximumContextLength(128_000).tag("openai").tag("o3"));
-        builder.model((Model.Builder) Model.create("o3-mini", "O3 Mini",
-                "o3-mini").maximumContextLength(128_000).tag("openai").tag("mini"));
-        builder.model((Model.Builder) Model.create("o1", "O1",
-                "o1").maximumContextLength(128_000).tag("openai").tag("o1"));
-        builder.model((Model.Builder) Model.create("gpt_4.1", "GPT 4.1",
-                "gpt-4.1").maximumContextLength(128_000).tag("openai").tag("gpt"));
-        builder.model((Model.Builder) Model.create("gpt-4o", "GPT 4o",
-                "gpt-4o").maximumContextLength(128_000).tag("openai").tag("gpt"));
-        builder.model((Model.Builder) Model.create("gpt_4.1_mini", "GPT 4.1 Mini",
-                "gpt-4.1-mini").maximumContextLength(128_000).tag("openai").tag("gpt").tag("mini"));
-        builder.model((Model.Builder) Model.create("gpt_4o_mini", "GPT 4o Mini",
-                "gpt-4o-mini").maximumContextLength(128_000).tag("openai").tag("gpt").tag("mini"));
-        builder.model((Model.Builder) Model.create("gpt_4.1_nano", "GPT 4.1 Nano",
-                "gpt-4.1-nano").maximumContextLength(128_000).tag("openai").tag("gpt").tag("nano"));
+        builder.model((Model.Builder) Model.create("O4 Mini", "o4-mini")
+                .maximumContextLength(128_000).tag("openai").tag("mini"));
+        builder.model((Model.Builder) Model.create("O3", "o3")
+                .maximumContextLength(128_000).tag("openai").tag("o3"));
+        builder.model((Model.Builder) Model.create("O3 Mini", "o3-mini")
+                .maximumContextLength(128_000).tag("openai").tag("mini"));
+        builder.model((Model.Builder) Model.create("O1", "o1")
+                .maximumContextLength(128_000).tag("openai").tag("o1"));
+        builder.model((Model.Builder) Model.create("GPT 4.1", "gpt-4.1")
+                .maximumContextLength(128_000).tag("openai").tag("gpt"));
+        builder.model((Model.Builder) Model.create("GPT 4o", "gpt-4o")
+                .maximumContextLength(128_000).tag("openai").tag("gpt"));
+        builder.model((Model.Builder) Model.create("GPT 4.1 Mini", "gpt-4.1-mini")
+                .maximumContextLength(128_000).tag("openai").tag("gpt").tag("mini"));
+        builder.model((Model.Builder) Model.create("GPT 4o Mini", "gpt-4o-mini")
+                .maximumContextLength(128_000).tag("openai").tag("gpt").tag("mini"));
+        builder.model((Model.Builder) Model.create("GPT 4.1 Nano", "gpt-4.1-nano")
+                .maximumContextLength(128_000).tag("openai").tag("gpt").tag("nano"));
     }
 }

@@ -12,7 +12,9 @@ import java.util.Set;
 
 import static java.util.Collections.unmodifiableSet;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
  * Represents an AI model.
@@ -64,12 +66,10 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
     @ToString.Exclude
     Provider provider;
 
-    public static Builder create(String id, String name) {
-        return (Builder) new Builder(id).name(name);
-    }
-
-    public static Builder create(String id, String name, String modelName) {
-        return (Builder) new Builder(id).modelName(modelName).name(name);
+    public static Builder create(String name, String modelName) {
+        requireNotEmpty(name);
+        requireNotEmpty(modelName);
+        return (Builder) new Builder(toIdentifier(modelName)).modelName(modelName).name(name);
     }
 
     /**

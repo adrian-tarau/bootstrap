@@ -16,10 +16,10 @@ class InternetModelRepositoryTest {
 
     @BeforeEach
     void setup() {
-        missingModel = Model.create("missing", "Missing Model", "missing01")
+        missingModel = Model.create("Missing Model", "missing01")
                 .downloadUri("https://huggingface.co/dummy.gguf?download=true")
                 .build();
-        smallModel = Model.create("test", "Test Model", "test01")
+        smallModel = Model.create("Test Model", "test01")
                 .downloadUri("https://huggingface.co/mradermacher/Tiny-Moe-GGUF/resolve/main/Tiny-Moe.Q4_K_M.gguf?download=true")
                 .build();
     }

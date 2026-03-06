@@ -6,15 +6,15 @@ import lombok.ToString;
 import net.microfalx.bootstrap.ai.api.Content;
 import net.microfalx.bootstrap.ai.api.Tool;
 import net.microfalx.bootstrap.ai.core.ContentImpl;
+import net.microfalx.bootstrap.ai.core.ToolExecutors;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
-import net.microfalx.lang.StringUtils;
 import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
 import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.ai.tool.execution.DefaultToolCallResultConverter;
 
 import java.io.IOException;
 
-import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 
 /**
  * Base class for tool executors that provides common functionality and integrates with the application context.
@@ -24,18 +24,12 @@ public abstract class AbstractToolExecutor extends ApplicationContextSupport imp
     /**
      * Wraps the response from a tool execution in a standardized format.
      *
+     * @param tool the tool who produced the response
      * @param response the response from the tool execution
      * @return the final response
      */
-    protected final String wrapResponse(String response) {
-        StringBuilder builder = new StringBuilder();
-        if (isNotEmpty(response)) {
-            builder.append("Observation: The tool returned the data bellow. Answer the user's original question naturally, using this data.\n\n");
-            builder.append(response);
-        } else {
-            builder.append("Observation: The tool returned not data, maybe use a different tool.");
-        }
-        return builder.toString();
+    protected final String wrapResponse(Tool tool, String response) {
+        return ToolExecutors.wrapResponse(tool, null, response, null);
     }
 
     /**
@@ -52,21 +46,23 @@ public abstract class AbstractToolExecutor extends ApplicationContextSupport imp
     /**
      * Creates a tool execution response with the given content and count.
      *
+     * @param tool the tool who produced the response
      * @param content   the context
      * @param itemCount the items returned by the tool
      * @return a non-null instance
      */
-    protected final Tool.ExecutionResponse createResponse(String content, int itemCount, String name) {
-        return new ToolExecutionResponse(name, ContentImpl.from(wrapResponse(content)), itemCount);
+    protected final Tool.ExecutionResponse createResponse(Tool tool, String content, int itemCount, String name) {
+        return new ToolExecutionResponse(name, ContentImpl.from(wrapResponse(tool, content)), itemCount);
     }
 
     /**
      * Creates an empty tool execution response with the given content and count.
      *
+     * @param tool the tool who produced the response
      * @return a non-null instance
      */
-    protected final Tool.ExecutionResponse createEmptyResponse() {
-        return createResponse(StringUtils.EMPTY_STRING, 0, "Empty");
+    protected final Tool.ExecutionResponse createEmptyResponse(Tool tool) {
+        return createResponse(tool, EMPTY_STRING, 0, "Empty");
     }
 
     /**
@@ -76,7 +72,7 @@ public abstract class AbstractToolExecutor extends ApplicationContextSupport imp
      * @return the string representation of the result
      */
     protected final String convert(Object result) {
-        if (result == null) return StringUtils.EMPTY_STRING;
+        if (result == null) return EMPTY_STRING;
         DefaultToolCallResultConverter converter = new DefaultToolCallResultConverter();
         return converter.convert(converter, result.getClass());
     }

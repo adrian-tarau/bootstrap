@@ -4,7 +4,6 @@ import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Tool;
 import org.springframework.ai.tool.ToolCallback;
-import org.springframework.ai.tool.definition.ToolDefinition;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +17,6 @@ import static net.microfalx.lang.StringUtils.isNotEmpty;
 class ToolsBuilder {
 
     private static final String NO_TOOLS_AVAILABLE = "No tools available";
-
 
     private final AiServiceImpl service;
     private final Chat chat;
@@ -42,7 +40,9 @@ class ToolsBuilder {
         Map<String, ToolCallback> tools = new HashMap<>();
         for (Tool tool : service.getTools()) {
             ToolCallback toolCallback = AiTools.callbackFromTool(tool);
-            if (toolCallback == null) toolCallback = new ToolCallbackImpl(tool, new ToolExecutor(service, chat, tool));
+            if (toolCallback == null) {
+                toolCallback = new ToolExecutors.ToolCallbackImpl(chat, tool);
+            }
             tools.put(tool.getName(), toolCallback);
         }
         return tools.values().toArray(new ToolCallback[0]);
@@ -70,33 +70,6 @@ class ToolsBuilder {
         }
         String variableDescription = builder.toString();
         return isNotEmpty(variableDescription) ? variableDescription : NO_TOOLS_AVAILABLE;
-    }
-
-
-    private static class ToolCallbackImpl implements ToolCallback {
-
-        private final Tool tool;
-        private final ToolExecutor toolExecutor;
-
-        public ToolCallbackImpl(Tool tool, ToolExecutor toolExecutor) {
-            this.tool = tool;
-            this.toolExecutor = toolExecutor;
-        }
-
-        @Override
-        public ToolDefinition getToolDefinition() {
-            return ToolDefinition.builder().name(tool.getName())
-                    .description(tool.getDescription())
-                    .inputSchema(AiTools.generateSchema(tool))
-                    .build();
-        }
-
-        @Override
-        public String call(String toolInput) {
-            Tool.ExecutionResponse response = tool.getExecutor().execute(null);
-            return "No data";
-        }
-
     }
 
 

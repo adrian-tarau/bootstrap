@@ -1,6 +1,9 @@
 package net.microfalx.bootstrap.model;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import jodd.time.TimeUtil;
+import jodd.typeconverter.TypeConversionException;
 import jodd.typeconverter.TypeConverter;
 import jodd.typeconverter.TypeConverterManager;
 import jodd.typeconverter.impl.LocalDateTimeConverter;
@@ -8,8 +11,12 @@ import jodd.util.StringUtil;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ObjectUtils;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.time.*;
 import java.time.temporal.Temporal;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Hosts a collection of converters.
@@ -17,6 +24,8 @@ import java.time.temporal.Temporal;
 class Converters {
 
     static final TypeConverterManager TYPE_CONVERTER_MANAGER = TypeConverterManager.get();
+
+    private static volatile ObjectMapper objectMapper;
 
     /**
      * Converts an object to a target type.
@@ -90,6 +99,30 @@ class Converters {
     static {
         TYPE_CONVERTER_MANAGER.register(ZonedDateTime.class, new ZonedDateTimeConverter());
         TYPE_CONVERTER_MANAGER.register(OffsetDateTime.class, new OffsetDateTimeConverter());
+        TYPE_CONVERTER_MANAGER.register(Map.class, new MapConverter());
+    }
+
+    @SuppressWarnings("rawtypes")
+    static class MapConverter implements TypeConverter<Map> {
+
+        @Override
+        public Map<?, ?> convert(Object value) {
+            if (value == null) return Collections.emptyMap();
+            ObjectMapper objectMapper = getObjectMapper();
+            if (value instanceof Map) {
+                return (Map<?, ?>) value;
+            } else if (value instanceof String valueAsString) {
+                if (valueAsString.isEmpty()) return Collections.emptyMap();
+                try {
+                    return objectMapper.readValue(new StringReader(valueAsString), Map.class);
+                } catch (IOException e) {
+                    throw new TypeConversionException("Failed to decode JSON", e);
+                }
+            } else {
+                throwConversionException(value, Map.class, null);
+            }
+            return Map.of();
+        }
     }
 
     static class ZonedDateTimeConverter implements TypeConverter<ZonedDateTime> {
@@ -142,5 +175,15 @@ class Converters {
                 return localDateTime.atZone(ZoneId.systemDefault()).toOffsetDateTime();
             }
         }
+    }
+
+    private static ObjectMapper getObjectMapper() {
+        if (objectMapper == null) {
+            objectMapper = new ObjectMapper();
+            objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+            objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        }
+        return objectMapper;
     }
 }

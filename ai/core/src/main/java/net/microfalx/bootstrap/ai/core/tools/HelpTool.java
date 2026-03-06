@@ -24,7 +24,7 @@ public class HelpTool extends AbstractToolExecutor {
     @Override
     public Tool.ExecutionResponse execute(Tool.ExecutionRequest request) {
         List<Toc> tocs = search(request);
-        return render(request.getChat(), tocs);
+        return render(request.getChat(), request.getTool(), tocs);
     }
 
     private List<Toc> search(Tool.ExecutionRequest request) {
@@ -40,7 +40,7 @@ public class HelpTool extends AbstractToolExecutor {
         return query.trim();
     }
 
-    private Tool.ExecutionResponse render(Chat chat, List<Toc> tocs) {
+    private Tool.ExecutionResponse render(Chat chat, Tool tool, List<Toc> tocs) {
         HelpService helpService = getBean(HelpService.class);
         StringBuilder contentBuilder = new StringBuilder();
         StringBuilder nameBuilder = new StringBuilder();
@@ -61,6 +61,6 @@ public class HelpTool extends AbstractToolExecutor {
                 }
             }
         }
-        return createResponse(contentBuilder.toString(), tocs.size(), nameBuilder.toString());
+        return createResponse(tool, contentBuilder.toString(), tocs.size(), nameBuilder.toString());
     }
 }
