@@ -6,6 +6,8 @@ import net.microfalx.lang.annotation.Name;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ui.Model;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+
 /**
  * A controller for an application page.
  *
@@ -45,6 +47,7 @@ public abstract class PageController implements AuthenticatedController {
      * @see Help
      */
     protected final void updateHelp(Model model) {
+        requireNonNull(model);
         Help helpAnnot = AnnotationUtils.getAnnotation(this, Help.class);
         if (helpAnnot != null) {
             model.addAttribute("help", helpAnnot.value());
@@ -58,6 +61,17 @@ public abstract class PageController implements AuthenticatedController {
      * @see #getTitle()
      */
     protected final void updateTitle(Model model) {
+        requireNonNull(model);
         model.addAttribute("title", getTitle());
+    }
+
+    /**
+     * Updates the model with a message which will be displayed to the user.
+     *
+     * @param model   the controller model
+     * @param message the message to display
+     */
+    protected final void updateUserMessage(Model model, String message) {
+        model.addAttribute(MESSAGE_ATTR, message);
     }
 }

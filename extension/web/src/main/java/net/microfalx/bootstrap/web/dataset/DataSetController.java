@@ -278,7 +278,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         log(dataSet, "upload", 0, null, null, null);
         upload(dataSet, model, StreamResource.create(file::getInputStream, file.getOriginalFilename()));
         String message = "File '" + file.getOriginalFilename() + "' was successfully uploaded";
-        model.addAttribute(MESSAGE_ATTR, message);
+        updateUserMessage(model, message);
     }
 
     @GetMapping(value = "{id}/download")
@@ -594,7 +594,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      */
     protected final void cancel(String message) {
         requireNotEmpty(message);
-        getCurrentModel().addAttribute(MESSAGE_ATTR, message);
+        updateUserMessage(getCurrentModel(), message);
         CANCELED.set(true);
         throw new CanceledException();
     }
@@ -983,7 +983,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             filter = Filter.create(queryParser.parse());
         } else {
             String reason = queryParser.validate();
-            model.addAttribute(MESSAGE_ATTR, INVALID_FILTER_PREFIX + reason);
+            updateUserMessage(model, INVALID_FILTER_PREFIX + reason);
             LOGGER.warn("Failed to parse query '{}', reason: {}", query, reason);
         }
         try {
@@ -991,7 +991,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         } catch (Exception e) {
             filter = null;
             String reason = e.getMessage();
-            model.addAttribute(MESSAGE_ATTR, INVALID_FILTER_PREFIX + reason);
+            updateUserMessage(model, INVALID_FILTER_PREFIX + reason);
             String message = "Failed to validate query '" + query + "', reason: " + reason;
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(message, e);
@@ -1008,7 +1008,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
         if (rangeParts.length == 0) rangeParts = getDefaultRange(dataSet);
         if (rangeParts.length == 0) return filter;
         if (!(rangeParts.length == 1 || rangeParts.length == 2)) {
-            model.addAttribute(MESSAGE_ATTR, INVALID_FILTER_PREFIX + "date/time range requires two components");
+            updateUserMessage(model, INVALID_FILTER_PREFIX + "date/time range requires two components");
         } else {
             Field<M> timestampField = dataSet.getMetadata().findTimestampField();
             ZonedDateTime startTime;
