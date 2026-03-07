@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import jodd.time.TimeUtil;
@@ -15,8 +16,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.time.*;
 import java.time.temporal.Temporal;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Hosts a collection of converters.
@@ -97,9 +100,31 @@ class Converters {
     private static final int DATE_TIME_MIN_LENGTH = 12;
 
     static {
+        TYPE_CONVERTER_MANAGER.register(String.class, new StringConverter());
         TYPE_CONVERTER_MANAGER.register(ZonedDateTime.class, new ZonedDateTimeConverter());
         TYPE_CONVERTER_MANAGER.register(OffsetDateTime.class, new OffsetDateTimeConverter());
         TYPE_CONVERTER_MANAGER.register(Map.class, new MapConverter());
+        TYPE_CONVERTER_MANAGER.register(Collection.class, new CollectionConverter());
+        TYPE_CONVERTER_MANAGER.register(Set.class, new SetConverter());
+    }
+
+    static class StringConverter implements TypeConverter<String> {
+
+        private final TypeConverter<String> original = new jodd.typeconverter.impl.StringConverter();
+
+        @Override
+        public String convert(Object value) {
+            if (value == null) return null;
+            if (value instanceof Collection || value instanceof Map || value.getClass().isArray()) {
+                try {
+                    return getObjectMapper().writeValueAsString(value);
+                } catch (JsonProcessingException e) {
+                    return throwConversionException(value, String.class, e);
+                }
+            } else {
+                return original.convert(value);
+            }
+        }
     }
 
     @SuppressWarnings("rawtypes")
@@ -119,9 +144,52 @@ class Converters {
                     throw new TypeConversionException("Failed to decode JSON", e);
                 }
             } else {
-                throwConversionException(value, Map.class, null);
+                return throwConversionException(value, Map.class, null);
             }
-            return Map.of();
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    static class CollectionConverter implements TypeConverter<Collection> {
+
+        @Override
+        public Collection<?> convert(Object value) {
+            if (value == null) return Collections.emptyList();
+            ObjectMapper objectMapper = getObjectMapper();
+            if (value instanceof Collection) {
+                return (Collection<?>) value;
+            } else if (value instanceof String valueAsString) {
+                if (valueAsString.isEmpty()) return Collections.emptyList();
+                try {
+                    return objectMapper.readValue(new StringReader(valueAsString), Collection.class);
+                } catch (IOException e) {
+                    throw new TypeConversionException("Failed to decode JSON", e);
+                }
+            } else {
+                return throwConversionException(value, Collection.class, null);
+            }
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    static class SetConverter implements TypeConverter<Set> {
+
+        @Override
+        public Set<?> convert(Object value) {
+            if (value == null) return Collections.emptySet();
+            ObjectMapper objectMapper = getObjectMapper();
+            if (value instanceof Set) {
+                return (Set<?>) value;
+            } else if (value instanceof String valueAsString) {
+                if (valueAsString.isEmpty()) return Collections.emptySet();
+                try {
+                    return objectMapper.readValue(new StringReader(valueAsString), Set.class);
+                } catch (IOException e) {
+                    throw new TypeConversionException("Failed to decode JSON", e);
+                }
+            } else {
+                return throwConversionException(value, Set.class, null);
+            }
         }
     }
 
