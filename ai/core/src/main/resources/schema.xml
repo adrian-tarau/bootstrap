@@ -8,6 +8,7 @@
         <table>ai_models</table>
         <migration path="01_ai_model_add_download_uri.sql" condition="column ai_models.download_uri not exists"/>
         <migration path="02_ai_model_size_and_params.sql" condition="column ai_models.size not exists"/>
+        <migration path="04_ai_reset_models.sql"/>
     </definition>
     <definition name="Chats" type="mysql" path="03_ai_chats.sql">
         <table>ai_chats</table>
