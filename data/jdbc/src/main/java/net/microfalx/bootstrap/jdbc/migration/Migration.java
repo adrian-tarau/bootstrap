@@ -7,6 +7,7 @@ import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 
 @Getter
 @ToString
@@ -24,7 +25,7 @@ public final class Migration implements Identifiable<String>, Nameable {
         this.definition = definition;
         Hashing hashing = Hashing.create();
         hashing.update(definition.getId());
-        hashing.update(definition.getPath());
+        hashing.update(toIdentifier(path));
         hashing.update(definition.getDatabaseType());
         this.id = hashing.asString();
         this.path = path;

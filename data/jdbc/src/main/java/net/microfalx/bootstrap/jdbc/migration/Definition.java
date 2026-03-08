@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.toIdentifier;
 
 @Getter
 @ToString
@@ -33,7 +34,7 @@ public final class Definition implements Identifiable<String>, Nameable {
         requireNonNull(name);
         Hashing hashing = Hashing.create();
         hashing.update(module.getId());
-        hashing.update(path);
+        hashing.update(toIdentifier(path));
         hashing.update(databaseType);
         this.id = hashing.asString();
         this.module = module;
