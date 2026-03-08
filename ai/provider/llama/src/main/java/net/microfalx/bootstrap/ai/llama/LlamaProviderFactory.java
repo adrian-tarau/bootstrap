@@ -36,11 +36,11 @@ public class LlamaProviderFactory extends AbstractProviderFactory {
         builder.model((Model.Builder) Model.create("Qwen3.5 (0.8b)", "qwen3.5:0.8b").maximumContextLength(256000)
                 .downloadUri("https://huggingface.co/AaryanK/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B.q4_k_m.gguf?download=true")
                 .numberOfParameters(800_000_000L).quantization(Model.Quantization.Q4)
-                .canThink().hasTools().asDefault().tag("alibaba").tag("qwen"));
+                .canThink().hasTools().tag("alibaba").tag("qwen"));
         builder.model((Model.Builder) Model.create("Qwen3.5 (2b)", "qwen3.5:2b").maximumContextLength(256000)
                 .downloadUri("https://huggingface.co/AaryanK/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B.q4_k_m.gguf?download=true")
                 .numberOfParameters(2_000_000_000L).quantization(Model.Quantization.Q4)
-                .canThink().hasTools().asDefault().tag("alibaba").tag("qwen").tag("summary"));
+                .canThink().hasTools().tag("alibaba").tag("qwen").tag("summary"));
 
     }
 }
