@@ -33,10 +33,10 @@ public class Model extends NamedAndTaggedAndTimestampedIdentityAware<Integer> {
     @Column(name = "download_uri", length = 1000)
     private String downloadUri;
 
-    @Column(name = "enabled", nullable = false)
+    @Column(name = "enabled", nullable = false, updatable = false)
     private boolean enabled;
 
-    @Column(name = "default", nullable = false)
+    @Column(name = "default", nullable = false, updatable = false)
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private boolean _default;
