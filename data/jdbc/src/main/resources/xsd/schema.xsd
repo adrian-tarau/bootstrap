@@ -44,7 +44,7 @@
     <xs:element name="migration">
         <xs:complexType>
             <xs:attribute name="path" use="required"/>
-            <xs:attribute name="condition" use="required"/>
+            <xs:attribute name="condition"/>
         </xs:complexType>
     </xs:element>
 

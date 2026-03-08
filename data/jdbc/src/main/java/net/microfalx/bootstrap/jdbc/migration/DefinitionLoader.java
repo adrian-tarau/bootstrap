@@ -150,7 +150,7 @@ public class DefinitionLoader {
         List<Element> migrationElements = definitionElement.elements("migration");
         for (Element migrationElement : migrationElements) {
             Migration migration = new Migration(definition, getRequiredAttribute(migrationElement, "path"));
-            String condition = getRequiredAttribute(migrationElement, "condition");
+            String condition = getAttribute(migrationElement, "condition", (String) null);
             migration.condition = new Condition(migration, condition);
             definition.addMigration(migration);
         }

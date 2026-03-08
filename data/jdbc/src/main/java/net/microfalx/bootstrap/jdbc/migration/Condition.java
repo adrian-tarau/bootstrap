@@ -40,7 +40,7 @@ public final class Condition implements Nameable {
     }
 
     public boolean evaluate(Schema schema) {
-        if (StringUtils.isEmpty(value)) return true;
+        if (StringUtils.isEmpty(value)) return false;
         Queue<String> conditionStack = new ArrayDeque<>(asList(split(value, StringUtils.SPACE, true)));
         String objectType = conditionStack.poll();
         if (objectType == null) {
