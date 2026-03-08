@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.ai.api;
 import lombok.ToString;
 import net.microfalx.lang.*;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -95,12 +96,33 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
          * @param <T> the type of the value
          */
         <T> T getArgument(String name, Class<T> type);
+
+        /**
+         * Returns the time when the execution request was made.
+         *
+         * @return a non-null instance
+         */
+        LocalDateTime getRequestedAt();
     }
 
     /**
      * An interface representing a response from executing a tool.
      */
     public interface ExecutionResponse extends Nameable {
+
+        /**
+         * Returns the chat context in which the tool is being executed.
+         *
+         * @return a non-null instance
+         */
+        Chat getChat();
+
+        /**
+         * Returns the tool to be executed.
+         *
+         * @return a non-null instance
+         */
+        Tool getTool();
 
         /**
          * Returns the number of items resulted from the execution of the tool.
@@ -115,6 +137,20 @@ public class Tool extends NamedAndTaggedIdentifyAware<String> {
          * @return a non-null instance
          */
         int getTokenCount();
+
+        /**
+         * Returns the time when the execution of the tool was completed.
+         *
+         * @return a non-null instance
+         */
+        LocalDateTime getExecutedAt();
+
+        /**
+         * Returns the time taken to execute the tool.
+         *
+         * @return a non-null instance
+         */
+        Duration getDuration();
 
         /**
          * Returns the content resulted from the execution of the tool.

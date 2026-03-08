@@ -30,13 +30,20 @@ public class Chat extends NamedAndTaggedIdentityAware<String> {
     @Column(name = "finish_at", nullable = false)
     private LocalDateTime finishAt;
 
-    @Column(name = "resource", nullable = false)
-    private String resource;
-
     @Column(name = "token_count", nullable = false)
     private int tokenCount;
+
+    @Column(name = "time_to_first_token", nullable = false)
+    @Convert(converter = DurationConverter.class)
+    private Duration timeToFirstToken;
 
     @Column(name = "duration", nullable = false)
     @Convert(converter = DurationConverter.class)
     private Duration duration;
+
+    @Column(name = "memory_uri", nullable = false)
+    private String memoryUri;
+
+    @Column(name = "logs_uri", nullable = false)
+    private String logsUri;
 }

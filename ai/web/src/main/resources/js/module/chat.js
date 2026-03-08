@@ -163,6 +163,7 @@ Chat.receive = function (chatId, target) {
     let textElement = target.find('.ai-chat-text');
     let thinkingMarkdown = "Thinking...";
     let answerMarkdown = "";
+    let thinking = true;
     Application.Sse.start(me.getPath("tokens", chatId), function (data, event) {
         let json = JSON.parse(data);
         let token = json.token;
@@ -175,7 +176,14 @@ Chat.receive = function (chatId, target) {
             html = marked.parse(thinkingMarkdown);
         } else if (type === "A") {
             answerMarkdown += token;
+            let thinking = false;
             html = marked.parse(answerMarkdown);
+        } else if (type === "P") {
+            if (thinking) {
+                html = marked.parse(answerMarkdown);
+            } else {
+                // do nothing, we treat ping as a "keep alive"
+            }
         }
         textElement.html(html);
         me.focusMessage();

@@ -38,7 +38,7 @@ class ToolsBuilder {
     ToolCallback[] getTools() {
         if (!model.getTags().contains(Model.TOOLS_TAG)) return new ToolCallback[0];
         Map<String, ToolCallback> tools = new HashMap<>();
-        for (Tool tool : service.getTools()) {
+        for (Tool tool : chat.getTools()) {
             ToolCallback toolCallback = AiTools.callbackFromTool(tool);
             if (toolCallback == null) {
                 toolCallback = new ToolExecutors.ToolCallbackImpl(chat, tool);

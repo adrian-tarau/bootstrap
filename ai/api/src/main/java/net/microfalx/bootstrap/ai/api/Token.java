@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.ai.api;
 
 import lombok.Getter;
 import lombok.ToString;
-import net.microfalx.lang.ArgumentUtils;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
@@ -38,6 +37,7 @@ public class Token {
     }
 
     public enum Type {
+        PING,
         THINKING,
         QUESTION,
         ANSWER

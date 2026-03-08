@@ -10,6 +10,7 @@ import net.microfalx.lang.ObjectUtils;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -101,11 +102,14 @@ public class ToolExecutors {
 
         @Override
         public String call(String toolInput) {
+            Tool.ExecutionRequest request = null;
             try {
-                Tool.ExecutionRequest request = ToolExecutors.createRequest(chat, tool, toolInput);
+                request = ToolExecutors.createRequest(chat, tool, toolInput);
                 Tool.ExecutionResponse response = tool.getExecutor().execute(request);
+                ((AbstractChat) chat).registerToolExecution(request, response);
                 return response.getContent().getResource().loadAsString();
             } catch (Exception e) {
+                if (request != null) ((AbstractChat) chat).registerToolExecution(request, e);
                 LOGGER.atError().setCause(e).log("Tool '{}' failed for input", toolInput);
                 return "Observation: The tool failed, maybe use a different tool.";
             }
@@ -120,6 +124,7 @@ public class ToolExecutors {
         private final Tool tool;
         private final String id = UUID.randomUUID().toString();
         private final Map<String, Object> arguments;
+        private final LocalDateTime timestamp = LocalDateTime.now();
 
         ExecutionRequestImpl(Chat chat, Tool tool, Map<String, Object> arguments) {
             requireNonNull(chat);
@@ -175,6 +180,11 @@ public class ToolExecutors {
         @Override
         public <T> T getArgument(String name, Class<T> type) {
             return Field.from(arguments.get(name), type);
+        }
+
+        @Override
+        public LocalDateTime getRequestedAt() {
+            return timestamp;
         }
 
         @Override

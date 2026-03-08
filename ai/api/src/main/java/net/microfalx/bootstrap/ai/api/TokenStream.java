@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.ai.api;
 
+import java.time.Duration;
 import java.util.Iterator;
 
 /**
@@ -27,6 +28,13 @@ public interface TokenStream extends Iterator<Token>, TokenUsage {
      * @return a non-null instance of {@link FinishReason}
      */
     FinishReason getFinishReason();
+
+    /**
+     * Returns the time taken to receive the first token in the stream.
+     *
+     * @return a non-null instance
+     */
+    Duration getTimeToFirstToken();
 
     /**
      * Returns whether the AI is currently thinking.

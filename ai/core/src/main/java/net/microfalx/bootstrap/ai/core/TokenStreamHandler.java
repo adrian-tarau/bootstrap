@@ -35,8 +35,7 @@ class TokenStreamHandler extends AbstractTokenStream {
 
     private final AtomicBoolean firstSeen = new AtomicBoolean(false);
     private final long startedNanos = System.nanoTime();
-    private volatile Duration timeToFirstToken;
-    private volatile FinishReason finishReason = FinishReason.OTHER;
+    private volatile Duration timeToFirstToken = Duration.ZERO;
 
     TokenStreamHandler(AiServiceImpl service, AbstractChat chat, Flux<ChatResponse> tokenStream) {
         requireNonNull(service);
@@ -58,6 +57,11 @@ class TokenStreamHandler extends AbstractTokenStream {
     @Override
     public Token next() {
         return tokens.next();
+    }
+
+    @Override
+    public Duration getTimeToFirstToken() {
+        return timeToFirstToken;
     }
 
     @Override
@@ -88,6 +92,7 @@ class TokenStreamHandler extends AbstractTokenStream {
     }
 
     private void onComplete() {
+        if (timeToFirstToken.isZero()) timeToFirstToken = Duration.ofNanos(System.nanoTime() - startedNanos);
         chat.streamCompleted(this);
         completed.set(true);
     }
@@ -103,7 +108,9 @@ class TokenStreamHandler extends AbstractTokenStream {
     }
 
     private Token mapToken(ChatResponse response) {
-        return Token.create(Token.Type.ANSWER, response.getResult().getOutput().getText());
+        String text = response.getResult().getOutput().getText();
+        answerBuilder.append(text);
+        return Token.create(Token.Type.ANSWER, text);
     }
 
     private boolean isNotEmpty(ChatResponse response) {

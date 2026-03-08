@@ -5,6 +5,7 @@ import net.microfalx.bootstrap.dataset.DataSetRequest;
 import net.microfalx.bootstrap.security.SecurityContext;
 import net.microfalx.lang.NamedAndTaggedIdentifyAware;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -14,6 +15,8 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
+import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.data.domain.Page;
@@ -57,11 +60,13 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
 
     private ChatMemory chatMemory;
     private ChatClient client;
+    private TokenCountEstimator tokenCountEstimator;
     private AiServiceImpl service;
 
     private boolean disableTools;
     private final Set<String> disabledTools = new CopyOnWriteArraySet<>();
     private final Set<Tool> tools = new CopyOnWriteArraySet<>();
+    private final net.microfalx.lang.Logger logger = net.microfalx.lang.Logger.create();
 
     private volatile Principal principal;
     private volatile String systemMessage;
@@ -70,12 +75,16 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     final AtomicLong lastActivity = new AtomicLong(System.currentTimeMillis());
     private final AtomicInteger inputTokenCount = new AtomicInteger();
     private final AtomicInteger outputTokenCount = new AtomicInteger();
+    private final AtomicLong timeToFirstTokenTotal = new AtomicLong();
+    private final AtomicInteger timeToFirstTokenCount = new AtomicInteger();
+    private final AtomicBoolean nameChanged = new AtomicBoolean();
+    private final AtomicBoolean nameChangePending = new AtomicBoolean();
     private final Set<Object> features = new CopyOnWriteArraySet<>();
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     private final Map<Tool.ExecutionRequest, Tool.ExecutionResponse> toolExecutions = new ConcurrentHashMap<>();
+    private final Map<Tool.ExecutionRequest, Throwable> toolExecutionFailures = new ConcurrentHashMap<>();
     final AtomicBoolean changed = new AtomicBoolean();
     final AtomicBoolean internal = new AtomicBoolean(false);
-
 
     private static final Map<String, AtomicInteger> CHAT_COUNTERS = new ConcurrentHashMap<>();
 
@@ -123,6 +132,17 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     @Override
     public int getTokenCount() {
         return inputTokenCount.get() + outputTokenCount.get();
+    }
+
+    @Override
+    public int getTokenCount(String text) {
+        if (StringUtils.isEmpty(text)) return 0;
+        return tokenCountEstimator.estimate(text);
+    }
+
+    @Override
+    public Duration getTimeToFirstToken() {
+        return timeToFirstTokenCount.get() == 0 ? Duration.ZERO : Duration.ofMillis(timeToFirstTokenTotal.get() / timeToFirstTokenCount.get());
     }
 
     @Override
@@ -192,12 +212,19 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
 
     @Override
     public Collection<Tool> getTools() {
-        return service.getTools().stream().filter(tool -> !hasTool(tool.getName())).toList();
+        Collection<Tool> allTools = new ArrayList<>(service.getTools());
+        allTools.addAll(tools);
+        return allTools.stream().filter(tool -> !hasTool(tool.getName())).toList();
     }
 
     @Override
     public Map<Tool.ExecutionRequest, Tool.ExecutionResponse> getToolExecutions() {
         return unmodifiableMap(toolExecutions);
+    }
+
+    @Override
+    public Map<Tool.ExecutionRequest, Throwable> getToolExecutionFailures() {
+        return unmodifiableMap(toolExecutionFailures);
     }
 
     @Override
@@ -273,6 +300,17 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         return attributes.containsKey(name.toLowerCase());
     }
 
+    @Override
+    public Resource getLogs() {
+        net.microfalx.lang.Logger finalLogger = net.microfalx.lang.Logger.create();
+        finalLogger.info("#### Session");
+        finalLogger.append(logger);
+        finalLogger.append(getToolsDescription());
+        collectMessages(logger);
+        collectProcessLogs(logger);
+        return Resource.text(finalLogger.getOutput());
+    }
+
     public void updateName(String name) {
         if (StringUtils.isNotEmpty(name)) setName(name);
     }
@@ -282,12 +320,21 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         return this;
     }
 
-    protected void ping() {
+    public void ping() {
         // subclasses might implement some sort of ping with the model
+        updateLastActivity();
     }
 
     protected void doClose() throws IOException {
         // default implementation does nothing
+    }
+
+    protected void collectMessages(net.microfalx.lang.Logger logger) {
+
+    }
+
+    protected void collectProcessLogs(net.microfalx.lang.Logger logger) {
+        // subclasses can return other likes, like external process execution logs,  etc.
     }
 
     protected final File resolveModel() {
@@ -318,6 +365,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         initializePrincipal();
         this.service = service;
         this.chatMemory = service.getChatMemory();
+        this.tokenCountEstimator = new JTokkitTokenCountEstimator();
         client = createClient();
         streamCompleted(new TokenStreamImpl(Collections.emptyIterator()));
         if (isNotEmpty(prompt.getQuestion())) summarize(prompt.getQuestion());
@@ -327,8 +375,12 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         requireNonNull(tokenStream);
         inputTokenCount.addAndGet(tokenStream.getInputTokenCount());
         outputTokenCount.addAndGet(tokenStream.getOutputTokenCount());
+        timeToFirstTokenTotal.addAndGet(tokenStream.getTimeToFirstToken().toMillis());
+        timeToFirstTokenCount.incrementAndGet();
+        summarize();
         updateDescription();
         changed.set(true);
+        service.persistChatAsync(this);
     }
 
     void registerToolExecution(Tool.ExecutionRequest request, Tool.ExecutionResponse response) {
@@ -337,16 +389,44 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         toolExecutions.put(request, response);
     }
 
+    void registerToolExecution(Tool.ExecutionRequest request, Throwable throwable) {
+        requireNonNull(request);
+        toolExecutionFailures.put(request, throwable);
+    }
+
     private void initializePrincipal() {
         principal = SecurityContext.get().getPrincipal();
         setName(DEFAULT_NAME + String.format(" %03d", getNextChatIndex()));
     }
 
     private void summarize(String text) {
+        if (nameChanged.get() || internal.get() || !nameChangePending.compareAndSet(false, true)) {
+            return;
+        }
         service.getChatPool().execute(() -> {
-            String summarize = service.summarize(text, true);
-            updateName(summarize);
+            try {
+                String summarize = service.summarize(text, true);
+                updateName(summarize);
+                nameChanged.set(true);
+            } finally {
+                nameChangePending.set(false);
+            }
         });
+    }
+
+    private void summarize() {
+        if (nameChanged.get()) return;
+        Iterator<String> iterator = getMessages(false).stream().filter(message -> message.getType() == Message.Type.USER)
+                .map(Message::getText).filter(StringUtils::isNotEmpty).iterator();
+        StringBuilder builder = new StringBuilder();
+        if (iterator.hasNext()) {
+            builder.append("First Question: ").append(iterator.next());
+        }
+        if (iterator.hasNext()) {
+            builder.append("\nSecond Question: ").append(iterator.next());
+        }
+        if (builder.isEmpty()) return;
+        summarize(builder.toString().trim());
     }
 
     private ChatOptions createChatOptions() {
@@ -396,7 +476,6 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
 
     private void updateLastActivity() {
         lastActivity.set(System.currentTimeMillis());
-        ping();
     }
 
     private int getNextChatIndex() {

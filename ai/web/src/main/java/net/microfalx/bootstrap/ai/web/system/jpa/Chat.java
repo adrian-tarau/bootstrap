@@ -39,26 +39,42 @@ public class Chat extends NamedAndTaggedIdentityAware<String> {
     private LocalDateTime startAt;
 
     @Column(name = "finish_at", nullable = false)
-    @Position(25)
+    @Position(21)
     @Description("The finish time of chat")
+    @Visible(false)
     private LocalDateTime finishAt;
 
-    @Column(name = "resource", nullable = false)
-    @Position(30)
-    @Description("The content of the chat")
-    @Visible(false)
-    private String content;
+    @Column(name = "duration", nullable = false)
+    @Position(22)
+    @Description("The total duration of the chat")
+    @Convert(converter = DurationConverter.class)
+    @Width("80px")
+    private Duration duration;
 
     @Column(name = "token_count", nullable = false)
-    @Position(35)
+    @Position(30)
     @Description("The token count of the chat")
     @Width("100px")
     private int tokenCount;
 
-    @Column(name = "duration", nullable = false)
-    @Position(40)
-    @Description("The duration of the chat")
+    @Column(name = "time_to_first_token", nullable = false)
     @Convert(converter = DurationConverter.class)
-    @Width("80px")
-    private Duration duration;
+    @Position(30)
+    @Description("The average time between a question being asked and the first token")
+    @Width("100px")
+    private Duration timeToFirstToken;
+
+    @Column(name = "memory_uri", nullable = false)
+    @Position(30)
+    @Description("The content of the chat memory")
+    @Visible(false)
+    private String memoryUri;
+
+    @Column(name = "logs_uri", nullable = false)
+    @Position(30)
+    @Description("The content of the chat logs")
+    @Visible(false)
+    private String logsUri;
+
+
 }

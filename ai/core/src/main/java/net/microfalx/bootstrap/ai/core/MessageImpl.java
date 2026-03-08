@@ -9,6 +9,7 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.content.MediaContent;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -73,18 +74,23 @@ public class MessageImpl implements Message {
     }
 
     private static List<Content> getContent(org.springframework.ai.chat.messages.Message message) {
+        if (message == null) return emptyList();
         if (message instanceof SystemMessage systemMessage) {
             return List.of(ContentImpl.from(systemMessage.getText()));
-        } else if (message instanceof UserMessage userMessage) {
-            return userMessage.getMedia().stream().map(ContentImpl::from).toList();
-        } else if (message instanceof AssistantMessage assistantMessage) {
-            return assistantMessage.getMedia().stream().map(ContentImpl::from).toList();
+        } else if (message instanceof MediaContent mediaContent) {
+            return getContent(mediaContent);
         } else if (message instanceof ToolResponseMessage toolResponseMessage) {
             return List.of(ContentImpl.from(toolResponseMessage.getText()));
-        } else if (message == null) {
-            return emptyList();
         } else {
-            throw new IllegalArgumentException();
+            return List.of(ContentImpl.from(message.getText()));
+        }
+    }
+
+    private static List<Content> getContent(MediaContent mediaContent) {
+        if (mediaContent.getMedia().isEmpty()) {
+            return List.of(ContentImpl.from(mediaContent.getText()));
+        } else {
+            return mediaContent.getMedia().stream().map(ContentImpl::from).toList();
         }
     }
 

@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.ai.api;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
+import net.microfalx.resource.Resource;
 
 import java.security.Principal;
 import java.time.Duration;
@@ -142,19 +143,44 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
     <F> F getFeature(Class<F> featureType);
 
     /**
+     * Estimatest the number of tokens exchanged with the current model.
+     *
+     * @param text the text
+     * @return the number of tokens
+     */
+    int getTokenCount(String text);
+
+    /**
+     * Returns the time taken to receive the first token in the stream.
+     *
+     * @return a non-null instance
+     */
+    Duration getTimeToFirstToken();
+
+    /**
      * Returns the tools available to the chat session.
+     *
      * @return a non-null collection
      */
     Collection<Tool> getTools();
 
     /**
      * Returns the tool executions performed during the chat session.
+     *
      * @return a non-null map
      */
     Map<Tool.ExecutionRequest, Tool.ExecutionResponse> getToolExecutions();
 
     /**
+     * Returns the tool execution failures that occurred during the chat session.
+     *
+     * @return a non-null map
+     */
+    public Map<Tool.ExecutionRequest, Throwable> getToolExecutionFailures();
+
+    /**
      * Returns a Markdown description of the tools available and their invocations in the chat session.
+     *
      * @return a non-null string containing the description
      */
     String getToolsDescription();
@@ -210,6 +236,20 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
      * @return {@code true} if the attribute exists, {@code false} otherwise
      */
     boolean hasAttribute(String name);
+
+    /**
+     * Pings the chat session to keep it active and prevent it from being closed due to inactivity.
+     */
+    void ping();
+
+    /**
+     * Returns the logs of the chat session, including messages, tool executions, and other relevant information.
+     * <p>
+     * Logs should be formated using Markdown syntax.
+     *
+     * @return a non-null instance
+     */
+    Resource getLogs();
 
     /**
      * Completes the chat session and records the chat in the history.

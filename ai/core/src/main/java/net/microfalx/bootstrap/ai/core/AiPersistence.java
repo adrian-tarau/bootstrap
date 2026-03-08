@@ -88,6 +88,9 @@ public class AiPersistence extends JpaPersistence {
         jpaModel.setDefault(model.isDefault());
         jpaModel.setEnabled(model.isEnabled());
         jpaModel.setEmbedding(model.isEmbedding());
+        jpaModel.setSize(model.getSize());
+        jpaModel.setNumberOfParameters(model.getNumberOfParameters());
+        jpaModel.setQuantization(model.getQuantization());
         jpaModel.setProvider(execute(model.getProvider()));
         jpaModel.setDescription(model.getDescription());
         jpaModel.setTags(CollectionUtils.setToString(model.getTags()));
@@ -98,11 +101,17 @@ public class AiPersistence extends JpaPersistence {
 
     void execute(net.microfalx.bootstrap.ai.api.Chat chat) {
         if (chat.getMessageCount() == 0) return;
-        Resource resource;
+        Resource memoryUri;
         try {
-            resource = aiService.writeChatMessages(chat);
+            memoryUri = aiService.writeChatMemory(chat);
         } catch (IOException e) {
-            throw new AiException("Failed to write chat messages for " + chat.getId(), e);
+            throw new AiException("Failed to extract chat memory for " + chat.getId(), e);
+        }
+        Resource logsUri;
+        try {
+            logsUri = aiService.writeChatLogs(chat);
+        } catch (IOException e) {
+            throw new AiException("Failed to write chat logs for " + chat.getId(), e);
         }
         Chat jpaChat = chatRepository.findById(chat.getId()).orElse(null);
         if (jpaChat == null) {
@@ -112,11 +121,13 @@ public class AiPersistence extends JpaPersistence {
             jpaChat.setUser(chat.getUser().getName());
         }
         jpaChat.setName(chat.getName());
-        jpaChat.setResource(resource.toURI().toASCIIString());
+        jpaChat.setMemoryUri(memoryUri.toURI().toASCIIString());
+        jpaChat.setLogsUri(logsUri.toURI().toASCIIString());
         jpaChat.setDuration(chat.getDuration());
         jpaChat.setFinishAt(chat.getFinishAt());
         jpaChat.setStartAt(chat.getStartAt());
         jpaChat.setTokenCount(chat.getTokenCount());
+        jpaChat.setTimeToFirstToken(chat.getTimeToFirstToken());
         chatRepository.save(jpaChat);
     }
 

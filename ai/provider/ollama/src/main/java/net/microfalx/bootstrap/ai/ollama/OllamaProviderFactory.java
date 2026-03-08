@@ -40,6 +40,16 @@ public class OllamaProviderFactory extends AbstractProviderFactory {
                 .maximumContextLength(128_000).tag("google").tag("gemma"));
 
         // AlliBaba Qwen
+        builder.model((Model.Builder) Model.create("Qwen2.5 (0.5b)", "qwen2.5:0.5b")
+                .maximumContextLength(32_000)
+                .canThink().hasTools().tag("alibaba").tag("qwen").tag("summary"));
+        builder.model((Model.Builder) Model.create("Qwen2.5 (1.5b)", "qwen2.5:1.5b")
+                .maximumContextLength(32_000)
+                .canThink().hasTools().tag("alibaba").tag("qwen").tag("summary"));
+        builder.model((Model.Builder) Model.create("Qwen2.5 (3b)", "qwen2.5:3b")
+                .maximumContextLength(32_000)
+                .canThink().hasTools().tag("alibaba").tag("qwen").tag("summary"));
+
         builder.model((Model.Builder) Model.create("Qwen3 (0.6b)", "qwen3:0.6b")
                 .maximumContextLength(40_000)
                 .canThink().hasTools().tag("alibaba").tag("qwen"));

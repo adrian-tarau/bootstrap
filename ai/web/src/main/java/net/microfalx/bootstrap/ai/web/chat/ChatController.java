@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static net.microfalx.bootstrap.ai.api.Token.Type.*;
 import static net.microfalx.bootstrap.ai.core.AiUtils.getChatThreadPool;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
@@ -43,6 +44,8 @@ import static net.microfalx.lang.ExceptionUtils.rethrowException;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.lang.ThreadUtils.sleepMillis;
+import static net.microfalx.lang.TimeUtils.FIVE_SECONDS;
+import static net.microfalx.lang.TimeUtils.millisSince;
 
 @Controller()
 @RequestMapping("/ai/chat")
@@ -285,6 +288,8 @@ public class ChatController extends PageController {
         private final ObjectMapper objectMapper;
         private final AtomicBoolean completed = new AtomicBoolean(false);
         private volatile Throwable throwable;
+        private volatile long lastTokenSent = System.currentTimeMillis();
+        private volatile long lastPingSent = System.currentTimeMillis();
 
         public ChatMessageTask(SseEmitter emitter, net.microfalx.bootstrap.ai.api.Chat chat, TokenStream stream) {
             this.emitter = emitter;
@@ -321,15 +326,30 @@ public class ChatController extends PageController {
         }
 
         private String getPrefix(net.microfalx.bootstrap.ai.api.Token token) {
-            if (token.getType() == net.microfalx.bootstrap.ai.api.Token.Type.ANSWER) {
+            if (token.getType() == ANSWER) {
                 return "A:";
-            } else if (token.getType() == net.microfalx.bootstrap.ai.api.Token.Type.THINKING) {
+            } else if (token.getType() == THINKING) {
                 return "T:";
-            } else if (token.getType() == net.microfalx.bootstrap.ai.api.Token.Type.QUESTION) {
+            } else if (token.getType() == QUESTION) {
                 return "Q:";
+            } else if (token.getType() == PING) {
+                return "P:";
             } else {
                 return EMPTY_STRING;
             }
+        }
+
+        private void sendPingIfNeeded() {
+            net.microfalx.bootstrap.ai.api.Token token = net.microfalx.bootstrap.ai.api.Token.create(PING, ".");
+            if (millisSince(lastPingSent) > FIVE_SECONDS) {
+                sendToken(getEncodedToken(token), true);
+                chat.ping();
+                lastPingSent = System.currentTimeMillis();
+            }
+        }
+
+        private String getEncodedToken(net.microfalx.bootstrap.ai.api.Token token) {
+            return getPrefix(token) + token.getText();
         }
 
         @Override
@@ -340,9 +360,10 @@ public class ChatController extends PageController {
                 try {
                     while (!(stream.isComplete() || completed.get())) {
                         while (stream.hasNext()) {
-                            net.microfalx.bootstrap.ai.api.Token token = stream.next();
-                            sendToken(getPrefix(token) + token.getText(), false);
+                            sendToken(getEncodedToken(stream.next()), false);
+                            lastTokenSent = System.currentTimeMillis();
                         }
+                        sendPingIfNeeded();
                         sleepMillis(50);
                     }
                     if (stream.isComplete()) sendToken(END_OF_DATA, true);

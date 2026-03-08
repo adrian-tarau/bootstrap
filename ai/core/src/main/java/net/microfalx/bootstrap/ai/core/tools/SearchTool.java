@@ -6,6 +6,6 @@ public class SearchTool extends AbstractToolExecutor {
 
     @Override
     public Tool.ExecutionResponse execute(Tool.ExecutionRequest request) {
-        return createEmptyResponse(request.getTool());
+        return createEmptyResponse(request);
     }
 }

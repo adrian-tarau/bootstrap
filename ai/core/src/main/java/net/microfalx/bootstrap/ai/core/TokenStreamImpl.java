@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.ai.core;
 
 import net.microfalx.bootstrap.ai.api.Token;
 
+import java.time.Duration;
 import java.util.Iterator;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -27,5 +28,10 @@ public class TokenStreamImpl extends AbstractTokenStream {
         Token token = streams.next();
         answerBuilder.append(token);
         return token;
+    }
+
+    @Override
+    public Duration getTimeToFirstToken() {
+        return Duration.ZERO;
     }
 }

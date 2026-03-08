@@ -74,11 +74,42 @@ public class Model extends NamedAndTaggedAndTimestampedIdentityAware<Integer> {
 
     @Position(25)
     @Column(name = "model_name", length = 100)
+    @Label(group = "Model", value = "Name")
     @Description("A reference to the model name")
     @Visible(value = false)
     @ReadOnly
     @Width("100px")
     private String modelName;
+
+    @Position(26)
+    @Column(name = "size")
+    @Label(group = "Model", value = "Size")
+    @Description("The size of the model in bytes.")
+    @Visible(value = false)
+    @ReadOnly
+    @Width("100px")
+    @Formattable(unit = Formattable.Unit.BYTES)
+    private Long size;
+
+    @Position(27)
+    @Column(name = "number_of_parameters")
+    @Label(group = "Model", value = "Parameters")
+    @Description("The number of parameters the model has.")
+    @Visible(value = false)
+    @ReadOnly
+    @Width("100px")
+    @Formattable(unit = Formattable.Unit.COUNT)
+    private Long numberOfParameters;
+
+    @Position(28)
+    @Column(name = "quantization")
+    @Enumerated(EnumType.STRING)
+    @Label(group = "Model", value = "Quantization")
+    @Description("The quantization of the model.")
+    @Visible(value = false)
+    @ReadOnly
+    @Width("100px")
+    private net.microfalx.bootstrap.ai.api.Model.Quantization quantization;
 
     @Position(30)
     @Column(name = "temperature")

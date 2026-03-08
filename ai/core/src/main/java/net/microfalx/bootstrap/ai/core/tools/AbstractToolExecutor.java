@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.ai.core.tools;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.Content;
 import net.microfalx.bootstrap.ai.api.Tool;
 import net.microfalx.bootstrap.ai.core.ContentImpl;
@@ -13,6 +14,8 @@ import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.ai.tool.execution.DefaultToolCallResultConverter;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 
@@ -35,34 +38,35 @@ public abstract class AbstractToolExecutor extends ApplicationContextSupport imp
     /**
      * Creates a tool execution response with the given content and count.
      *
+     * @param request the request for which the response is being created
      * @param content   the context
      * @param itemCount the number of items returned by the tool
      * @return a itemCount-null instance
      */
-    protected final Tool.ExecutionResponse createResponse(Content content, int itemCount, String name) {
-        return new ToolExecutionResponse(name, content, itemCount);
+    protected final Tool.ExecutionResponse createResponse(Tool.ExecutionRequest request, Content content, int itemCount) {
+        return new ToolExecutionResponse(request, content, itemCount);
     }
 
     /**
      * Creates a tool execution response with the given content and count.
      *
-     * @param tool the tool who produced the response
+     * @param request the request for which the response is being created
      * @param content   the context
      * @param itemCount the items returned by the tool
      * @return a non-null instance
      */
-    protected final Tool.ExecutionResponse createResponse(Tool tool, String content, int itemCount, String name) {
-        return new ToolExecutionResponse(name, ContentImpl.from(wrapResponse(tool, content)), itemCount);
+    protected final Tool.ExecutionResponse createResponse(Tool.ExecutionRequest request, String content, int itemCount) {
+        return new ToolExecutionResponse(request, ContentImpl.from(wrapResponse(request.getTool(), content)), itemCount);
     }
 
     /**
      * Creates an empty tool execution response with the given content and count.
      *
-     * @param tool the tool who produced the response
+     * @param request the request for which the response is being created
      * @return a non-null instance
      */
-    protected final Tool.ExecutionResponse createEmptyResponse(Tool tool) {
-        return createResponse(tool, EMPTY_STRING, 0, "Empty");
+    protected final Tool.ExecutionResponse createEmptyResponse(Tool.ExecutionRequest request) {
+        return createResponse(request, EMPTY_STRING, 0);
     }
 
     /**
@@ -82,9 +86,20 @@ public abstract class AbstractToolExecutor extends ApplicationContextSupport imp
     @ToString
     private static class ToolExecutionResponse implements Tool.ExecutionResponse {
 
-        private final String name;
+        private final Tool.ExecutionRequest request;
         private final Content content;
         private final int itemCount;
+        private final LocalDateTime executedAt = LocalDateTime.now();
+
+        @Override
+        public Chat getChat() {
+            return request.getChat();
+        }
+
+        @Override
+        public Tool getTool() {
+            return request.getTool();
+        }
 
         @Override
         public int getTokenCount() {
@@ -94,6 +109,17 @@ public abstract class AbstractToolExecutor extends ApplicationContextSupport imp
             } catch (IOException e) {
                 return -1;
             }
+        }
+
+        @Override
+        public String getName() {
+            return request.getTool().getName();
+        }
+
+
+        @Override
+        public Duration getDuration() {
+            return Duration.between(request.getRequestedAt(), executedAt);
         }
     }
 }

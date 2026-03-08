@@ -63,6 +63,7 @@ import static net.microfalx.lang.FileUtils.getFileName;
 import static net.microfalx.lang.FileUtils.validateDirectoryExists;
 import static net.microfalx.lang.FormatterUtils.formatBytes;
 import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.TimeUtils.ONE_MINUTE;
 import static net.microfalx.lang.TimeUtils.millisSince;
 
 @Service
@@ -104,13 +105,17 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
 
     private volatile Model defaultModel;
     private volatile Model defaultEmbeddingModel;
+    private volatile Model defaultSummaryModel;
+    private volatile Chat summaryChat;
+    private volatile long lastSummaryRequest = TimeUtils.oneHourAgo();
 
     private String defaultPromptId;
 
     private ThreadPool chatPool;
     private ThreadPool embeddingPool;
 
-    private Resource chatsResource;
+    private Resource chatMemoryResource;
+    private Resource chatLogsResource;
     private static final Map<String, Long> lastAutoSave = new ConcurrentHashMap<>();
 
     public AiServiceImpl() {
@@ -184,18 +189,14 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     @Override
     public String summarize(String text, boolean shortMessage) {
         if (StringUtils.isEmpty(text)) return EMPTY_STRING;
-        return AiUtils.MISC_METRICS.time("Summarize", () -> {
-            Chat chat = createChat(Prompt.empty(), getDefaultModel(), true);
-            chat.disableTools();
-            try {
-                String question = shortMessage ? properties.getSummaryWords() : properties.getSummarySentence();
-                question += "\n\nText to summarize:\n```\n" + text + "\n```";
-                TokenStream stream = chat.chat(question);
-                return stream.getAnswerMessage().getText();
-            } finally {
-                chat.close();
-            }
-        });
+        String instructions = shortMessage ? properties.getSummaryWords() : properties.getSummarySentence();
+        return AiUtils.MISC_METRICS.time("Summarize", () -> doSummary(text, instructions));
+    }
+
+    @Override
+    public String summarize(String text, String instructions) {
+        if (StringUtils.isEmpty(text)) return EMPTY_STRING;
+        return AiUtils.MISC_METRICS.time("Summarize", () -> doSummary(text, instructions));
     }
 
     public Embedding createEmbedding(Model model, String text) {
@@ -227,6 +228,11 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         defaultEmbeddingModel = getModels().stream().filter(model -> model.isDefault() && model.isEmbedding()).findFirst().orElseThrow(
                 () -> new AiNotFoundException("No default embedding model found"));
         return defaultEmbeddingModel;
+    }
+
+    @Override
+    public Model getDefaultSumarizeModel() {
+        return getDefaultModel();
     }
 
     @Override
@@ -380,6 +386,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         cache.load();
         this.defaultModel = null;
         this.defaultEmbeddingModel = null;
+        this.defaultSummaryModel = null;
         this.cache = cache;
     }
 
@@ -562,22 +569,72 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     /**
      * Stores the chat messages serialized in an external resource.
      *
-     * @param chat the snapshot
-     * @return the resource where the snapshot was stored
+     * @param chat the chat to store the messages for
+     * @return the resource where the messages are stored
      * @throws IOException I/O exception if snapshot cannot be stored
      */
-    Resource writeChatMessages(Chat chat) throws IOException {
-        Resource directory = chatsResource.resolve(DIRECTORY_DATE_FORMATTER.format(LocalDateTime.now()), Resource.Type.DIRECTORY);
-        Resource target = directory.resolve(String.format(FILE_NAME_FORMAT, getNextSequence()));
-        if (!directory.exists()) directory.create();
-        return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Messages", () -> {
+    Resource writeChatMemory(Chat chat) throws IOException {
+        Resource resource = createResource(chatMemoryResource);
+        return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Memory", () -> {
             List<Message> messages = chatMemory.get(chat.getId());
             // TODO - optimize by writing directly to the output stream instead of building a string in memory
             String json = "";//ChatMessageSerializer.messagesToJson(messages);
-            IOUtils.appendStream(target.getWriter(), new StringReader(json));
-            return target;
+            IOUtils.appendStream(resource.getWriter(), new StringReader(json));
+            return resource;
         });
+    }
 
+    /**
+     * stores the chat logs serialized in an external resource.
+     *
+     * @param chat the chat to store the logs for
+     * @return the resource where the logs are stored
+     * @throws IOException I/O exception if snapshot cannot be stored
+     */
+    Resource writeChatLogs(Chat chat) throws IOException {
+        Resource resource = createResource(chatLogsResource);
+        return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Logs", () -> {
+            resource.copyFrom(chat.getLogs());
+            return resource;
+        });
+    }
+
+    /**
+     * Persists the chat memory and logs asynchronously.
+     *
+     * @param chat the chat
+     */
+    void persistChatAsync(Chat chat) {
+        chatPool.execute(() -> persistChat(chat));
+    }
+
+    private String doSummary(String text, String instructions) {
+        Chat chat = getSummaryChat();
+        instructions += "\n\nTEXT:\n```\n" + text + "\n```";
+        return chat.ask(instructions);
+    }
+
+    private Chat getSummaryChat() {
+        lastSummaryRequest = System.currentTimeMillis();
+        if (summaryChat != null) return summaryChat;
+        synchronized (this) {
+            if (summaryChat == null) {
+                summaryChat = createChat(Prompt.empty(), getDefaultModel(), true);
+                summaryChat.disableTools();
+            }
+        }
+        return summaryChat;
+    }
+
+    private boolean isSummaryChatExpired() {
+        return millisSince(lastSummaryRequest) > ONE_MINUTE;
+    }
+
+    private Resource createResource(Resource parent) throws IOException {
+        Resource directory = parent.resolve(DIRECTORY_DATE_FORMATTER.format(LocalDateTime.now()), Resource.Type.DIRECTORY);
+        Resource target = directory.resolve(String.format(FILE_NAME_FORMAT, getNextSequence()));
+        if (!directory.exists()) directory.create();
+        return target;
     }
 
     private net.microfalx.bootstrap.ai.api.Chat createChat(Prompt prompt, Model model, boolean internal) {
@@ -594,7 +651,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
             }
             return chat;
         });
-        if (!internal) ThreadPool.get().execute(() -> persistence.execute(result));
+        if (!internal) persistChatAsync(result);
         return result;
     }
 
@@ -657,19 +714,33 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     }
 
     private void initResources() {
-        chatsResource = getSharedResource().resolve("chats", Resource.Type.DIRECTORY);
-        if (chatsResource.isLocal()) {
-            LOGGER.info("Chat messages are stored in a RocksDB database: {}", chatsResource);
-            Resource dbStatementsResource = RocksDbResource.create(chatsResource);
+        chatMemoryResource = getSharedResource().resolve("memory", Resource.Type.DIRECTORY);
+        if (chatMemoryResource.isLocal()) {
+            LOGGER.info("Chat memory are stored in a RocksDB database: {}", chatMemoryResource);
+            Resource dbChatMemoryResource = RocksDbResource.create(chatMemoryResource);
             try {
-                dbStatementsResource.create();
+                dbChatMemoryResource.create();
             } catch (IOException e) {
-                LOGGER.error("Failed to initialize statement store", e);
+                LOGGER.error("Failed to initialize chat memory store", e);
                 System.exit(10);
             }
-            ResourceFactory.registerSymlink("ai/chats", dbStatementsResource);
+            ResourceFactory.registerSymlink("ai/memory", dbChatMemoryResource);
         } else {
-            LOGGER.info("Database statements are stored in a remote storage: {}", chatsResource);
+            LOGGER.info("Chats memory is stored in a remote storage: {}", chatMemoryResource);
+        }
+        chatLogsResource = getSharedResource().resolve("logs", Resource.Type.DIRECTORY);
+        if (chatMemoryResource.isLocal()) {
+            LOGGER.info("Chat logs are stored in a RocksDB database: {}", chatLogsResource);
+            Resource dbChatLogsResource = RocksDbResource.create(chatLogsResource);
+            try {
+                dbChatLogsResource.create();
+            } catch (IOException e) {
+                LOGGER.error("Failed to initialize chat logs store", e);
+                System.exit(10);
+            }
+            ResourceFactory.registerSymlink("ai/logs", dbChatLogsResource);
+        } else {
+            LOGGER.info("Chat logs are stored in a remote storage: {}", chatLogsResource);
         }
     }
 
@@ -788,7 +859,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
             boolean changed = ((AbstractChat) chat).changed.get();
             long lastAutoSaveForChat = lastAutoSave.computeIfAbsent(chat.getId(), s -> TimeUtils.oneHourAgo());
             if (changed && millisSince(lastAutoSaveForChat) > properties.getChatAutoSaveInterval().toMillis()) {
-                persistence.execute(chat);
+                persistChatAsync(chat);
                 lastAutoSave.put(chat.getId(), currentTimeMillis());
                 ((AbstractChat) chat).changed.set(false);
             }
@@ -796,6 +867,23 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
                 LOGGER.info("Closing chat {} due to inactivity", chat.getId());
                 chat.close();
             }
+        }
+        if (summaryChat != null && isSummaryChatExpired()) {
+            LOGGER.info("Closing summary chat due to inactivity");
+            synchronized (this) {
+                if (isSummaryChatExpired()) {
+                    summaryChat.close();
+                    summaryChat = null;
+                }
+            }
+        }
+    }
+
+    private void persistChat(Chat chat) {
+        try {
+            persistence.execute(chat);
+        } catch (Exception e) {
+            LOGGER.atError().setCause(e).log("Failed to persist chat {}", chat.getId());
         }
     }
 

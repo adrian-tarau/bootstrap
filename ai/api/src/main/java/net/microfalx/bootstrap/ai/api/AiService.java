@@ -91,12 +91,25 @@ public interface AiService {
     Embedding embed(String modelId, String text);
 
     /**
-     * Summarizes the text content using the default model.
+     * Summarizes the text content using the best available model for summarization.
      *
      * @param text the text to summarize.
+     * @param shortMessage {@code true} to generate a short summary, {@code false} to generate a long summary.
      * @return the summary of the text.
      */
     String summarize(String text, boolean shortMessage);
+
+    /**
+     * Summarizes the text content using the best available model for summarization.
+     * <p>
+     * The instructions should contain only guidance on how to summarize the text, and should not contain any information
+     * about the text itself, as the text will be provided separately.
+     *
+     * @param text         the text to summarize.
+     * @param instructions the instructions to use for summarization, e.g. "Summarize the text in one sentence".
+     * @return the summary of the text.
+     */
+    String summarize(String text, String instructions);
 
     /**
      * Returns the default model.
@@ -111,6 +124,13 @@ public interface AiService {
      * @return a non-null instance
      */
     Model getDefaultEmbeddingModel();
+
+    /**
+     * Returns the default model used for creating summaries.
+     *
+     * @return a non-null instance
+     */
+    Model getDefaultSumarizeModel();
 
     /**
      * Returns registered chat models.

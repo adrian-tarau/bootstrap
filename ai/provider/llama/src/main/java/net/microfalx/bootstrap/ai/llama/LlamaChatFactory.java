@@ -18,7 +18,7 @@ public class LlamaChatFactory extends AbstractChatFactory {
             throw new AiNotFoundException("The model name is required for OpenAI");
         }
         LlamaChat chat = new LlamaChat(prompt, model);
-        LlamaServer server = LlamaServerFactory.getInstance().start(chat);
+        LlamaServer server = LlamaServerFactory.getInstance().startAsync(chat);
         chat.setServer(server);
         OpenAiApi api = OpenAiApi.builder()
                 .baseUrl(server.getUri(true).toASCIIString()).apiKey("dummy")

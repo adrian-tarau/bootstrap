@@ -24,7 +24,7 @@ public class HelpTool extends AbstractToolExecutor {
     @Override
     public Tool.ExecutionResponse execute(Tool.ExecutionRequest request) {
         List<Toc> tocs = search(request);
-        return render(request.getChat(), request.getTool(), tocs);
+        return render(request, tocs);
     }
 
     private List<Toc> search(Tool.ExecutionRequest request) {
@@ -40,10 +40,10 @@ public class HelpTool extends AbstractToolExecutor {
         return query.trim();
     }
 
-    private Tool.ExecutionResponse render(Chat chat, Tool tool, List<Toc> tocs) {
+    private Tool.ExecutionResponse render(Tool.ExecutionRequest request, List<Toc> tocs) {
         HelpService helpService = getBean(HelpService.class);
+        Chat chat = request.getChat();
         StringBuilder contentBuilder = new StringBuilder();
-        StringBuilder nameBuilder = new StringBuilder();
         tocs = tocs.stream().
                 filter(toc -> !chat.hasAttribute(TOC_ATTR_PREFIX + toc.getId()))
                 .toList();
@@ -55,12 +55,11 @@ public class HelpTool extends AbstractToolExecutor {
                     Resource resource = helpService.transform(toc, RenderingOptions.builder().navigation(true).build());
                     contentBuilder.append(resource.loadAsString()).append("\n");
                     chat.addAttribute(TOC_ATTR_PREFIX + toc.getId(), Boolean.TRUE);
-                    StringUtils.append(nameBuilder, toc.getName());
                 } catch (IOException e) {
                     LOGGER.warn("Failed to load content for TOC '{}', root cause: {}", toc.getPath(), getRootCauseDescription(e));
                 }
             }
         }
-        return createResponse(tool, contentBuilder.toString(), tocs.size(), nameBuilder.toString());
+        return createResponse(request, contentBuilder.toString(), tocs.size());
     }
 }

@@ -50,6 +50,9 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
     private boolean enabled;
     private boolean _default;
     private boolean embedding;
+    private Long size;
+    private Quantization quantization;
+    private Long numberOfParameters;
 
     private String modelName;
     private Double temperature;
@@ -97,6 +100,35 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
      */
     public boolean isEmbedding() {
         return embedding;
+    }
+
+    /**
+     * Returns the weight of the model, in bytes. This is used to estimate the cost of using the model and to decide
+     * which model to use when multiple models are available.
+     *
+     * @return the size of the model in bytes, null if not available
+     */
+    public Long getSize() {
+        return size;
+    }
+
+    /**
+     * Returns the number of parameters of the model.
+     *
+     * @return the number of parameters of the model, null if not available
+     */
+    public Long getNumberOfParameters() {
+        return numberOfParameters;
+    }
+
+    /**
+     * Returns the quantization level of the model, in bits. This is used to estimate the cost of using
+     * the model and to decide which model to use when multiple models are available.
+     *
+     * @return a non-null integer representing the quantization level in bits, null if not available
+     */
+    public Quantization getQuantization() {
+        return quantization;
     }
 
     /**
@@ -285,6 +317,75 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
     }
 
     /**
+     * Returns the memory footprint of the model, in bytes. This is used to estimate the cost of using the
+     * model and to decide which model to use when multiple models are available.
+     *
+     * @return the estimated memory footprint of the model in bytes, -1 if not available
+     */
+    public long getMemoryFootprint() {
+        long weight;
+        if (size != null) {
+            weight = size;
+        } else if (numberOfParameters != null && quantization != null) {
+            weight = (long) (numberOfParameters * quantization.bitCount / 8f);
+        } else {
+            return -1;
+        }
+        float ratio = 1;
+        if (maximumContextLength < 64_000) {
+            ratio = 1.1f;
+        } else if (maximumContextLength < 128_000) {
+            ratio = 1.2f;
+        } else if (maximumContextLength < 256_000) {
+            ratio = 1.3f;
+        } else {
+            ratio = 1.5f;
+        }
+        ;
+        return (long) (weight * ratio);
+    }
+
+    /**
+     * An enum for the quantization level of the model, in bits. This is used to estimate the cost of using
+     */
+    public enum Quantization {
+
+        /**
+         * 16-bit floating point quantization, which is the standard for most models. It provides a good balance
+         * between performance and accuracy.
+         */
+        FP16(16),
+
+        /**
+         * 8-bit integer quantization, which can significantly reduce the model size and increase inference speed,
+         * but might lead to a decrease in accuracy. It is suitable for models that are already small or for applications
+         * where speed is more important than accuracy.
+         */
+        Q8(8),
+
+        /**
+         * 5-bit integer quantization, even less precisions compared with {@link #Q8}
+         */
+        Q6(6),
+
+        /**
+         * 5-bit integer quantization, even less precisions compared with {@link #Q6}
+         */
+        Q5(5),
+
+        /**
+         * 4-bit integer quantization, even less precisions compared with {@link #Q5}
+         */
+        Q4(4);
+
+        private final int bitCount;
+
+        Quantization(int bitCount) {
+            this.bitCount = bitCount;
+        }
+    }
+
+    /**
      * An enum representing the strategy to use when pulling a model from the internet.
      */
     public enum PullStrategy {
@@ -317,6 +418,9 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
         private URI downloadUri;
         private boolean enabled = true;
         private boolean _default;
+        private Long size;
+        private Quantization quantization = Quantization.FP16;
+        private Long numberOfParameters;
 
         private String modelName;
         private Double temperature;
@@ -325,7 +429,7 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
         private Double frequencyPenalty;
         private Double presencePenalty;
         private boolean thinking = true;
-        private int maximumContextLength = 64 * 1028; // 64K tokens
+        private int maximumContextLength = 64 * 1028;
         private Integer maximumOutputTokens;
         private final Set<String> stopSequences = new HashSet<>();
         private ResponseFormat responseFormat = ResponseFormat.TEXT;
@@ -370,6 +474,21 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
 
         public Builder enabled(boolean enabled) {
             this.enabled = enabled;
+            return this;
+        }
+
+        public Builder size(Long size) {
+            this.size = size;
+            return this;
+        }
+
+        public Builder numberOfParameters(Long numberOfParameters) {
+            this.numberOfParameters = numberOfParameters;
+            return this;
+        }
+
+        public Builder quantization(Quantization quantization) {
+            this.quantization = quantization;
             return this;
         }
 
@@ -502,6 +621,9 @@ public class Model extends NamedAndTaggedIdentifyAware<String> {
             model.maximumOutputTokens = maximumOutputTokens;
             model.stopSequences = stopSequences;
             model.responseFormat = responseFormat;
+            model.size = size;
+            model.numberOfParameters = numberOfParameters;
+            model.quantization = quantization;
             model.provider = provider;
 
             return model;

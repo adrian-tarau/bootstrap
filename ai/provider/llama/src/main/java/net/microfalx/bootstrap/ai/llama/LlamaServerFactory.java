@@ -5,6 +5,7 @@ import net.microfalx.bootstrap.ai.api.AiNotAvailableException;
 import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.core.repository.LocalRepository;
+import net.microfalx.jvm.model.Server;
 import net.microfalx.lang.JvmUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
@@ -21,6 +22,7 @@ import java.util.function.Function;
 import static net.microfalx.lang.ArgumentUtils.requireBounded;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.FileUtils.validateDirectoryExists;
+import static net.microfalx.lang.FormatterUtils.formatBytes;
 
 /**
  * A server wrapper around the Llama Server.
@@ -33,7 +35,7 @@ public class LlamaServerFactory {
     private final Map<String, LlamaServer> servers = new ConcurrentHashMap<>();
     private volatile Function<Model, File> repository = new RepositoryImpl();
     private volatile ThreadPool threadPool;
-    private volatile int maximumServers = 1;
+    private volatile int maximumSessions = -1;
     private volatile File nativeExecutable;
     private volatile File nativeDirectory;
     private volatile File cacheDirectory;
@@ -66,11 +68,11 @@ public class LlamaServerFactory {
     /**
      * Changes the maximum numbers of servers allowed to be created.
      *
-     * @param maximumServers a positive integer, greater or equal to 1
+     * @param maximumSessions a positive integer, greater or equal to 1
      */
-    public LlamaServerFactory setMaximumServers(int maximumServers) {
-        requireBounded(maximumServers, 1, 20);
-        this.maximumServers = maximumServers;
+    public LlamaServerFactory setMaximumSessions(int maximumSessions) {
+        requireBounded(maximumSessions, 1, 20);
+        this.maximumSessions = maximumSessions;
         return this;
     }
 
@@ -103,12 +105,34 @@ public class LlamaServerFactory {
      * @param chat the chat session
      * @return a non-null instance
      */
-    public LlamaServer start(Chat chat) {
+    public LlamaServer startAsync(Chat chat) {
+        return doStart(chat, true);
+    }
+
+    /**
+     * Starts a new server to support a chat session.
+     *
+     * @param chat the chat session
+     * @return a non-null instance
+     */
+    public LlamaServer startSync(Chat chat) {
+        return doStart(chat, false);
+    }
+
+    /**
+     * Starts a new server to support a chat session.
+     *
+     * @param chat the chat session
+     * @return a non-null instance
+     */
+    private LlamaServer doStart(Chat chat, boolean async) {
         requireNonNull(chat);
-        if (servers.size() >= maximumServers) throw new AiNotAvailableException("Reached AI server limit at " + maximumServers);
-        LOGGER.info("Start server for chat '{}'", chat.getId());
+        Model model = chat.getModel();
+        checkLimits(model);
+        LOGGER.info("Start server for chat '{}', model '{}', model memory footprint {}, free memory {}",
+                chat.getId(), model.getName(), formatBytes(model.getMemoryFootprint()), formatBytes(getFreeMemory()));
         LlamaServer server = new LlamaServer(this, chat);
-        server.start();
+        server.start(async);
         LOGGER.info("Server for chat '{}' started at {}", chat.getId(), server.getUri(true));
         servers.put(server.getId(), server);
         return server;
@@ -166,6 +190,24 @@ public class LlamaServerFactory {
             cacheDirectory = validateDirectoryExists(JvmUtils.getCacheDirectory("llama"));
         }
         return cacheDirectory;
+    }
+
+    private void checkLimits(Model model) {
+        boolean limitReached = maximumSessions > 0 && servers.size() >= maximumSessions;
+        String limitReason = "maximum " + maximumSessions + " sessions";
+        if (!limitReached) {
+            long freeMemory = getFreeMemory();
+            limitReached = model.getMemoryFootprint() > freeMemory;
+            limitReason = "low memory ";
+        }
+        if (limitReached) {
+            throw new AiNotAvailableException("Reached AI session limit, reason " + limitReason);
+        }
+    }
+
+    private long getFreeMemory() {
+        Server server = Server.get(true);
+        return (long) (((float) server.getMemoryTotal() - server.getMemoryActuallyUsed()) * 0.9f);
     }
 
     private File copyExecutable() {

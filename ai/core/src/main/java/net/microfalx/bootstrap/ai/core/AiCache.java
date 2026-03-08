@@ -154,6 +154,8 @@ public class AiCache extends ApplicationContextSupport {
                 .responseFormat(modelJpa.getResponseFormat()).setDefault(modelJpa.isDefault())
                 .maximumContextLength(modelJpa.getMaximumContextLength())
                 .enabled(modelJpa.isEnabled()).embedding(modelJpa.isEmbedding()).thinking(modelJpa.isThinking());
+        builder.size(modelJpa.getSize()).numberOfParameters(modelJpa.getNumberOfParameters())
+                .quantization(modelJpa.getQuantization());
         builder.tags(setFromString(modelJpa.getTags())).name(modelJpa.getName())
                 .description(modelJpa.getDescription());
         return builder;

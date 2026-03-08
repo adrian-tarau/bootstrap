@@ -47,6 +47,16 @@ public class Model extends NamedAndTaggedAndTimestampedIdentityAware<Integer> {
     @Column(name = "model_name", length = 100)
     private String modelName;
 
+    @Column(name = "size")
+    private Long size;
+
+    @Column(name = "number_of_parameters")
+    private Long numberOfParameters;
+
+    @Column(name = "quantization")
+    @Enumerated(EnumType.STRING)
+    private net.microfalx.bootstrap.ai.api.Model.Quantization quantization;
+
     @Column(name = "temperature")
     private Double temperature;
 

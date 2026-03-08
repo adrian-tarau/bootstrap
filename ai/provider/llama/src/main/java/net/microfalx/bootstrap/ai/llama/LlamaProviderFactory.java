@@ -21,21 +21,26 @@ public class LlamaProviderFactory extends AbstractProviderFactory {
         // AlliBaba Qwen 2.5
         builder.model((Model.Builder) Model.create("Qwen2.5 (0.5b)", "qwen2.5:0.5b").maximumContextLength(32_000)
                 .downloadUri("https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf?download=true")
-                .canThink().hasTools().asDefault().tag("alibaba").tag("qwen")
-        );
+                .numberOfParameters(500_000_000L).quantization(Model.Quantization.Q4)
+                .canThink().hasTools().tag("alibaba").tag("qwen").tag("summary"));
         builder.model((Model.Builder) Model.create("Qwen2.5 (1.5b)", "qwen2.5:1.5b").maximumContextLength(32_000)
                 .downloadUri("https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf?download=true")
+                .numberOfParameters(1_500_000_000L).quantization(Model.Quantization.Q4)
+                .canThink().hasTools().asDefault().tag("alibaba").tag("qwen").tag("summary"));
+        builder.model((Model.Builder) Model.create("Qwen2.5 (3b)", "qwen2.5:3b").maximumContextLength(32_000)
+                .downloadUri("https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf?download=true")
+                .numberOfParameters(3_000_000_000L).quantization(Model.Quantization.Q4)
                 .canThink().hasTools().tag("alibaba").tag("qwen"));
 
         // AlliBaba Qwen 3.5
         builder.model((Model.Builder) Model.create("Qwen3.5 (0.8b)", "qwen3.5:0.8b").maximumContextLength(256000)
                 .downloadUri("https://huggingface.co/AaryanK/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B.q4_k_m.gguf?download=true")
-                .canThink().hasTools().asDefault().tag("alibaba").tag("qwen")
-        );
+                .numberOfParameters(800_000_000L).quantization(Model.Quantization.Q4)
+                .canThink().hasTools().asDefault().tag("alibaba").tag("qwen"));
         builder.model((Model.Builder) Model.create("Qwen3.5 (2b)", "qwen3.5:2b").maximumContextLength(256000)
                 .downloadUri("https://huggingface.co/AaryanK/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B.q4_k_m.gguf?download=true")
-                .canThink().hasTools().asDefault().tag("alibaba").tag("qwen")
-        );
+                .numberOfParameters(2_000_000_000L).quantization(Model.Quantization.Q4)
+                .canThink().hasTools().asDefault().tag("alibaba").tag("qwen").tag("summary"));
 
     }
 }
