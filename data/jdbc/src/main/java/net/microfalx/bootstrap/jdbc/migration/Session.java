@@ -156,7 +156,7 @@ public final class Session implements Identifiable<String> {
             executeDefinition(definition);
         }
         if (statementCount > 0) {
-            LOGGER.info("Database migration completed in {}, {} scripts executed, {} statements executed",
+            LOGGER.info("Database migration completed in {}, {} scripts executed ({} statements executed)",
                     formatDuration(getDuration()), scriptCount, statementCount);
         } else {
             LOGGER.info("No migration required, database is up-to-date");
