@@ -108,6 +108,13 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
     Set<String> getTags();
 
     /**
+     * Updates the chat name to be different from the generated one. If the name is null or empty, it will be ignored.
+     *
+     * @param name the new name
+     */
+    void updateName(String name);
+
+    /**
      * Asks a question to the AI model and returns the answer.
      *
      * @param message the message to send to the model
@@ -176,7 +183,7 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
      *
      * @return a non-null map
      */
-    public Map<Tool.ExecutionRequest, Throwable> getToolExecutionFailures();
+    Map<Tool.ExecutionRequest, Throwable> getToolExecutionFailures();
 
     /**
      * Returns a Markdown description of the tools available and their invocations in the chat session.
@@ -211,6 +218,20 @@ public interface Chat extends Identifiable<String>, Nameable, Descriptable {
      * Disables all tools associated with this chat session.
      */
     void disableTools();
+
+    /**
+     * Returns the variables registered in the chat session. Variables can be used in prompts to provide dynamic content.
+     * @return a non-null instance
+     */
+    Map<String, Object> getVariables();
+
+    /**
+     * Registers a variable that can be used in prompts.
+     *
+     * @param name  the name of the variable
+     * @param value the value of the variable
+     */
+    void addVariable(String name, Object value);
 
     /**
      * Adds an attribute to the chat session. Attributes can be used to store additional information

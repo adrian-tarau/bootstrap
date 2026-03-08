@@ -1,13 +1,14 @@
 package net.microfalx.bootstrap.ai.core;
 
 import lombok.Getter;
-import net.microfalx.bootstrap.ai.api.AiException;
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Provider;
 import net.microfalx.bootstrap.ai.core.jpa.*;
 import net.microfalx.bootstrap.jdbc.jpa.JpaPersistence;
 import net.microfalx.bootstrap.jdbc.jpa.NaturalIdEntityUpdater;
 import net.microfalx.lang.CollectionUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import java.io.IOException;
 
 import static net.microfalx.lang.CollectionUtils.setToString;
 
+@Slf4j
 @Component
 public class AiPersistence extends JpaPersistence {
 
@@ -101,17 +103,30 @@ public class AiPersistence extends JpaPersistence {
 
     void execute(net.microfalx.bootstrap.ai.api.Chat chat) {
         if (chat.getMessageCount() == 0) return;
-        Resource memoryUri;
+        Resource NA = Resource.text(StringUtils.NA_STRING);
+        Resource promptsUri = NA;
+        try {
+            promptsUri = aiService.writeChatPrompt(chat);
+        } catch (IOException e) {
+            LOGGER.atError().setCause(e).log("Failed to extract chat prompt for {}", chat.getId());
+        }
+        Resource memoryUri = NA;
         try {
             memoryUri = aiService.writeChatMemory(chat);
         } catch (IOException e) {
-            throw new AiException("Failed to extract chat memory for " + chat.getId(), e);
+            LOGGER.atError().setCause(e).log("Failed to extract chat memory for {}", chat.getId());
         }
-        Resource logsUri;
+        Resource logsUri = NA;
         try {
             logsUri = aiService.writeChatLogs(chat);
         } catch (IOException e) {
-            throw new AiException("Failed to write chat logs for " + chat.getId(), e);
+            LOGGER.atError().setCause(e).log("Failed to extract chat logs for {}", chat.getId());
+        }
+        Resource toolsUri = NA;
+        try {
+            toolsUri = aiService.writeChatTools(chat);
+        } catch (IOException e) {
+            LOGGER.atError().setCause(e).log("Failed to extract chat tools for {}", chat.getId());
         }
         Chat jpaChat = chatRepository.findById(chat.getId()).orElse(null);
         if (jpaChat == null) {
@@ -121,8 +136,10 @@ public class AiPersistence extends JpaPersistence {
             jpaChat.setUser(chat.getUser().getName());
         }
         jpaChat.setName(chat.getName());
+        jpaChat.setPromptUri(promptsUri.toURI().toASCIIString());
         jpaChat.setMemoryUri(memoryUri.toURI().toASCIIString());
         jpaChat.setLogsUri(logsUri.toURI().toASCIIString());
+        jpaChat.setToolsUri(toolsUri.toURI().toASCIIString());
         jpaChat.setDuration(chat.getDuration());
         jpaChat.setFinishAt(chat.getFinishAt());
         jpaChat.setStartAt(chat.getStartAt());

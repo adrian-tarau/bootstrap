@@ -29,7 +29,7 @@ public class MessageImpl implements Message {
     private final String id = UUID.randomUUID().toString();
     private final Type type;
     private final List<Content> contents = new ArrayList<>();
-    private ZonedDateTime timestamp = ZonedDateTime.now();
+    private final ZonedDateTime timestamp = ZonedDateTime.now();
 
     public static Message create(org.springframework.ai.chat.messages.Message message) {
         return new MessageImpl(getType(message), getContent(message));

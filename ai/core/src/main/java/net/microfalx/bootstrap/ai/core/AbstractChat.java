@@ -66,6 +66,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     private boolean disableTools;
     private final Set<String> disabledTools = new CopyOnWriteArraySet<>();
     private final Set<Tool> tools = new CopyOnWriteArraySet<>();
+    private final Map<String, Object> variables = new ConcurrentHashMap<>();
     private final net.microfalx.lang.Logger logger = net.microfalx.lang.Logger.create();
 
     private volatile Principal principal;
@@ -98,6 +99,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         updateTags(prompt.getTags());
         updateTags(model.getTags());
     }
+
 
     @Override
     public final Model getModel() {
@@ -282,6 +284,17 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     }
 
     @Override
+    public Map<String, Object> getVariables() {
+        return unmodifiableMap(variables);
+    }
+
+    @Override
+    public void addVariable(String name, Object value) {
+        requireNonNull(name);
+        variables.put(name.toLowerCase(), value);
+    }
+
+    @Override
     public void addAttribute(String name, Object value) {
         requireNotEmpty(name);
         attributes.put(name.toLowerCase(), value);
@@ -312,7 +325,8 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
     }
 
     public void updateName(String name) {
-        if (StringUtils.isNotEmpty(name)) setName(name);
+        doUpdateName(name);
+        nameChanged.set(true);
     }
 
     public final <CM extends ChatModel> AbstractChat setChatModel(CM chatModel) {
@@ -399,6 +413,10 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         setName(DEFAULT_NAME + String.format(" %03d", getNextChatIndex()));
     }
 
+    private void doUpdateName(String name) {
+        if (StringUtils.isNotEmpty(name)) setName(name);
+    }
+
     private void summarize(String text) {
         if (nameChanged.get() || internal.get() || !nameChangePending.compareAndSet(false, true)) {
             return;
@@ -406,7 +424,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         service.getChatPool().execute(() -> {
             try {
                 String summarize = service.summarize(text, true);
-                updateName(summarize);
+                doUpdateName(summarize);
                 nameChanged.set(true);
             } finally {
                 nameChangePending.set(false);

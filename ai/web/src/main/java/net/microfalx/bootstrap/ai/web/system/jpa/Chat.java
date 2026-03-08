@@ -64,17 +64,29 @@ public class Chat extends NamedAndTaggedIdentityAware<String> {
     @Width("100px")
     private Duration timeToFirstToken;
 
-    @Column(name = "memory_uri", nullable = false)
+    @Column(name = "prompt_uri", nullable = false)
     @Position(30)
+    @Description("The content of the chat prompt (system message)")
+    @Visible(false)
+    private String promptUri;
+
+    @Column(name = "memory_uri", nullable = false)
+    @Position(31)
     @Description("The content of the chat memory")
     @Visible(false)
     private String memoryUri;
 
     @Column(name = "logs_uri", nullable = false)
-    @Position(30)
+    @Position(32)
     @Description("The content of the chat logs")
     @Visible(false)
     private String logsUri;
+
+    @Column(name = "tools_uri", nullable = false)
+    @Position(33)
+    @Description("The tools available of the chat and their usage")
+    @Visible(false)
+    private String toolsUri;
 
 
 }

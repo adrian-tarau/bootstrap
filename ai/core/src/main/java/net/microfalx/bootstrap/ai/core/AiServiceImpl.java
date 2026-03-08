@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.template.ValidationMode;
@@ -114,8 +113,10 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     private ThreadPool chatPool;
     private ThreadPool embeddingPool;
 
+    private Resource chatPromptsResource;
     private Resource chatMemoryResource;
     private Resource chatLogsResource;
+    private Resource chatToolsResource;
     private static final Map<String, Long> lastAutoSave = new ConcurrentHashMap<>();
 
     public AiServiceImpl() {
@@ -576,16 +577,15 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     Resource writeChatMemory(Chat chat) throws IOException {
         Resource resource = createResource(chatMemoryResource);
         return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Memory", () -> {
-            List<Message> messages = chatMemory.get(chat.getId());
-            // TODO - optimize by writing directly to the output stream instead of building a string in memory
-            String json = "";//ChatMessageSerializer.messagesToJson(messages);
+            Collection<Message> messages = chat.getMessages();
+            String json = Field.from(messages, String.class);
             IOUtils.appendStream(resource.getWriter(), new StringReader(json));
             return resource;
         });
     }
 
     /**
-     * stores the chat logs serialized in an external resource.
+     * Stores the chat logs serialized in an external resource.
      *
      * @param chat the chat to store the logs for
      * @return the resource where the logs are stored
@@ -595,6 +595,36 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         Resource resource = createResource(chatLogsResource);
         return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Logs", () -> {
             resource.copyFrom(chat.getLogs());
+            return resource;
+        });
+    }
+
+    /**
+     * Stores the chat tools serialized in an external resource.
+     *
+     * @param chat the chat to store the logs for
+     * @return the resource where the logs are stored
+     * @throws IOException I/O exception if snapshot cannot be stored
+     */
+    Resource writeChatTools(Chat chat) throws IOException {
+        Resource resource = createResource(chatToolsResource);
+        return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Tools", () -> {
+            resource.copyFrom(Resource.text(chat.getToolsDescription()));
+            return resource;
+        });
+    }
+
+    /**
+     * Stores the chat tools serialized in an external resource.
+     *
+     * @param chat the chat to store the logs for
+     * @return the resource where the logs are stored
+     * @throws IOException I/O exception if snapshot cannot be stored
+     */
+    Resource writeChatPrompt(Chat chat) throws IOException {
+        Resource resource = createResource(chatPromptsResource);
+        return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Prompts", () -> {
+            resource.copyFrom(Resource.text(chat.getToolsDescription()));
             return resource;
         });
     }
@@ -714,6 +744,20 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     }
 
     private void initResources() {
+        chatPromptsResource = getSharedResource().resolve("prompts", Resource.Type.DIRECTORY);
+        if (chatPromptsResource.isLocal()) {
+            LOGGER.info("Chat prompts are stored in a RocksDB database: {}", chatPromptsResource);
+            Resource dbChatToolsResource = RocksDbResource.create(chatPromptsResource);
+            try {
+                dbChatToolsResource.create();
+            } catch (IOException e) {
+                LOGGER.error("Failed to initialize chat prompts store", e);
+                System.exit(10);
+            }
+            ResourceFactory.registerSymlink("ai/prompts", dbChatToolsResource);
+        } else {
+            LOGGER.info("Chat prompts are stored in a remote storage: {}", chatToolsResource);
+        }
         chatMemoryResource = getSharedResource().resolve("memory", Resource.Type.DIRECTORY);
         if (chatMemoryResource.isLocal()) {
             LOGGER.info("Chat memory are stored in a RocksDB database: {}", chatMemoryResource);
@@ -741,6 +785,20 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
             ResourceFactory.registerSymlink("ai/logs", dbChatLogsResource);
         } else {
             LOGGER.info("Chat logs are stored in a remote storage: {}", chatLogsResource);
+        }
+        chatToolsResource = getSharedResource().resolve("tools", Resource.Type.DIRECTORY);
+        if (chatToolsResource.isLocal()) {
+            LOGGER.info("Chat tools are stored in a RocksDB database: {}", chatToolsResource);
+            Resource dbChatToolsResource = RocksDbResource.create(chatToolsResource);
+            try {
+                dbChatToolsResource.create();
+            } catch (IOException e) {
+                LOGGER.error("Failed to initialize chat tools store", e);
+                System.exit(10);
+            }
+            ResourceFactory.registerSymlink("ai/tools", dbChatToolsResource);
+        } else {
+            LOGGER.info("Chat tools are stored in a remote storage: {}", chatToolsResource);
         }
     }
 

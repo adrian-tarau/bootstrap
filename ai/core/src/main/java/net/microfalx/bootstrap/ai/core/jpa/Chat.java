@@ -41,9 +41,15 @@ public class Chat extends NamedAndTaggedIdentityAware<String> {
     @Convert(converter = DurationConverter.class)
     private Duration duration;
 
+    @Column(name = "prompt_uri", nullable = false)
+    private String promptUri;
+
     @Column(name = "memory_uri", nullable = false)
     private String memoryUri;
 
     @Column(name = "logs_uri", nullable = false)
     private String logsUri;
+
+    @Column(name = "tools_uri", nullable = false)
+    private String toolsUri;
 }
