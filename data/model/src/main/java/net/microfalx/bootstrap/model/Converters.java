@@ -115,14 +115,14 @@ class Converters {
         @Override
         public String convert(Object value) {
             if (value == null) return null;
-            if (value instanceof Collection || value instanceof Map || value.getClass().isArray()) {
+            if (ClassUtils.isJdkClass(value.getClass()) && !value.getClass().isArray()) {
+                return original.convert(value);
+            } else {
                 try {
                     return getObjectMapper().writeValueAsString(value);
                 } catch (JsonProcessingException e) {
                     return throwConversionException(value, String.class, e);
                 }
-            } else {
-                return original.convert(value);
             }
         }
     }
@@ -245,7 +245,7 @@ class Converters {
         }
     }
 
-    private static ObjectMapper getObjectMapper() {
+    static ObjectMapper getObjectMapper() {
         if (objectMapper == null) {
             objectMapper = new ObjectMapper();
             objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
