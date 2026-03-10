@@ -81,7 +81,7 @@ class TypesTest {
 
     @Test
     void asObject() {
-        Model1 model = Types.asObject("{\"name\":\"name1\",\"description\":\"description1\"}",
+        Model1 model = Types.asObject("{\"name\":\"name1\",\"description\":\"description1\", dummy : 1}",
                 Model1.class);
         assertModel(model);
     }
