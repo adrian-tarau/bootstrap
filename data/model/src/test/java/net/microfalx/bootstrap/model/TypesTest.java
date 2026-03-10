@@ -6,6 +6,7 @@ import lombok.ToString;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,10 +58,21 @@ class TypesTest {
                   "name" : "name1",
                   "description" : "description1"
                 }""");
+        value = Types.asString(List.of(new Model1().setName("name1").setDescription("description1")));
+        org.assertj.core.api.Assertions.assertThat(value).isEqualToNormalizingNewlines("""
+                [ {
+                  "name" : "name1",
+                  "description" : "description1"
+                } ]""");
         value = Types.asString(new String[]{"a", "1"});
         assertEquals("[ \"a\", \"1\" ]", value);
         value = Types.asString(Map.of("a", 1));
-        assertEquals("{a=1}", value);
+        org.assertj.core.api.Assertions.assertThat(value).isEqualToNormalizingNewlines("""
+                {
+                  "a" : 1
+                }""");
+
+
     }
 
     @Test

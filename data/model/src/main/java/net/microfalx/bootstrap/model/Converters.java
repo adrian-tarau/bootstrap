@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Hosts a collection of converters.
@@ -30,6 +31,7 @@ class Converters {
     static final TypeConverterManager TYPE_CONVERTER_MANAGER = TypeConverterManager.get();
 
     private static volatile ObjectMapper objectMapper;
+    private static volatile Set<Class<?>> simpleTypes = new CopyOnWriteArraySet<>();
 
     /**
      * Converts an object to a target type.
@@ -86,6 +88,16 @@ class Converters {
         }
     }
 
+    /**
+     * Returns whether the type is a simple type (primitive, wrapper, String, Temporal).
+     *
+     * @param type the type
+     * @return {@code }
+     */
+    public static boolean isBaseClass(Class<?> type) {
+        return ClassUtils.isBaseClass(type) || simpleTypes.contains(type);
+    }
+
     private static <T> T convert(Object value, Class<T> target) {
         try {
             return TYPE_CONVERTER_MANAGER.convertType(value, target);
@@ -100,15 +112,6 @@ class Converters {
 
     private static final int DATE_TIME_MIN_LENGTH = 12;
 
-    static {
-        TYPE_CONVERTER_MANAGER.register(String.class, new StringConverter());
-        TYPE_CONVERTER_MANAGER.register(ZonedDateTime.class, new ZonedDateTimeConverter());
-        TYPE_CONVERTER_MANAGER.register(OffsetDateTime.class, new OffsetDateTimeConverter());
-        TYPE_CONVERTER_MANAGER.register(Map.class, new MapConverter());
-        TYPE_CONVERTER_MANAGER.register(Collection.class, new CollectionConverter());
-        TYPE_CONVERTER_MANAGER.register(Set.class, new SetConverter());
-    }
-
     static class StringConverter implements TypeConverter<String> {
 
         private final TypeConverter<String> original = new jodd.typeconverter.impl.StringConverter();
@@ -116,7 +119,7 @@ class Converters {
         @Override
         public String convert(Object value) {
             if (value == null) return null;
-            if (ClassUtils.isJdkClass(value.getClass()) && !value.getClass().isArray()) {
+            if (isBaseClass(value.getClass()) && !value.getClass().isArray()) {
                 return original.convert(value);
             } else {
                 try {
@@ -255,5 +258,14 @@ class Converters {
             objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         }
         return objectMapper;
+    }
+
+    static {
+        TYPE_CONVERTER_MANAGER.register(String.class, new StringConverter());
+        TYPE_CONVERTER_MANAGER.register(ZonedDateTime.class, new ZonedDateTimeConverter());
+        TYPE_CONVERTER_MANAGER.register(OffsetDateTime.class, new OffsetDateTimeConverter());
+        TYPE_CONVERTER_MANAGER.register(Map.class, new MapConverter());
+        TYPE_CONVERTER_MANAGER.register(Collection.class, new CollectionConverter());
+        TYPE_CONVERTER_MANAGER.register(Set.class, new SetConverter());
     }
 }
