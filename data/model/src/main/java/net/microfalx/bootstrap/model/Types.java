@@ -73,7 +73,7 @@ public class Types {
      * @return the converted collection
      */
     public static <T> Collection<T> asCollection(Object value, Class<T> elementType) {
-        ObjectMapper objectMapper = Converters.getObjectMapper();
+        ObjectMapper objectMapper = Jackson.getObjectMapper();
         CollectionType collectionType = objectMapper.getTypeFactory().constructCollectionType(Collection.class, elementType);
         try {
             return objectMapper.readValue(getReader(value), collectionType);
@@ -90,7 +90,7 @@ public class Types {
      */
     public static Set<?> asSet(Object value) {
         if (ObjectUtils.isEmpty(value)) return Collections.emptySet();
-        ObjectMapper objectMapper = Converters.getObjectMapper();
+        ObjectMapper objectMapper = Jackson.getObjectMapper();
         try {
             return objectMapper.readValue(getReader(value), Set.class);
         } catch (IOException e) {
@@ -107,7 +107,7 @@ public class Types {
      * @return the converted collection
      */
     static <T> Set<T> asSet(Object value, Class<T> elementType) {
-        ObjectMapper objectMapper = Converters.getObjectMapper();
+        ObjectMapper objectMapper = Jackson.getObjectMapper();
         CollectionType collectionType = objectMapper.getTypeFactory().constructCollectionType(Set.class, elementType);
         try {
             return objectMapper.readValue(getReader(value), collectionType);
@@ -122,9 +122,10 @@ public class Types {
      * @param value the value
      * @return the converted collection
      */
-    public static Map<?, ?> asMap(Object value) {
+    @SuppressWarnings("unchecked")
+    public static <T> Map<String, T> asMap(Object value) {
         if (ObjectUtils.isEmpty(value)) return Collections.emptyMap();
-        ObjectMapper objectMapper = Converters.getObjectMapper();
+        ObjectMapper objectMapper = Jackson.getObjectMapper();
         try {
             return objectMapper.readValue(getReader(value), Map.class);
         } catch (IOException e) {
@@ -140,8 +141,8 @@ public class Types {
      * @param <T>         the element type
      * @return the converted collection
      */
-    static <T> T asObject(Object value, Class<T> elementType) {
-        ObjectMapper objectMapper = Converters.getObjectMapper();
+    public static <T> T asObject(Object value, Class<T> elementType) {
+        ObjectMapper objectMapper = Jackson.getObjectMapper();
         try {
             return objectMapper.readValue(getReader(value), elementType);
         } catch (IOException e) {

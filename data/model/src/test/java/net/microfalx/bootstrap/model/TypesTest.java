@@ -98,6 +98,13 @@ class TypesTest {
         assertModel(model);
     }
 
+    @Test
+    void resource() {
+        Model1 model = Types.asObject("{\"name\":\"name1\",\"description\":\"description1\", dummy : 1}",
+                Model1.class);
+        assertModel(model);
+    }
+
     private void assertModel(Model1 model) {
         assertEquals("name1", model.getName());
         assertEquals("description1", model.getDescription());
