@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.ai.llama;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.ai.api.AiNotAvailableException;
 import net.microfalx.bootstrap.ai.api.Chat;
-import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Types;
 import net.microfalx.lang.*;
 import net.microfalx.resource.Resource;
 
@@ -146,7 +146,7 @@ public class LlamaServer implements Identifiable<String> {
         try (HttpClient client = HttpClient.newHttpClient()) {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                properties = Field.from(response.body(), Map.class);
+                properties = Types.asMap(response.body());
             } else {
                 properties = Collections.emptyMap();
                 LOGGER.error("Failed to get properties from server {}, status code {}, body {}", getId(), response.statusCode(), response.body());

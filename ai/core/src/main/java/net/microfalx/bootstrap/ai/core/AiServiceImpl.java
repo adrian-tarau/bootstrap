@@ -12,6 +12,7 @@ import net.microfalx.bootstrap.dataset.DataSetExport;
 import net.microfalx.bootstrap.dataset.DataSetRequest;
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Types;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.search.IndexListener;
 import net.microfalx.bootstrap.search.IndexService;
@@ -578,7 +579,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
         Resource resource = createResource(chatMemoryResource);
         return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Memory", () -> {
             Collection<Message> messages = chat.getMessages();
-            String json = Field.from(messages, String.class);
+            String json = Types.asString(messages);
             IOUtils.appendStream(resource.getWriter(), new StringReader(json));
             return resource;
         });
@@ -624,7 +625,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     Resource writeChatPrompt(Chat chat) throws IOException {
         Resource resource = createResource(chatPromptsResource);
         return AiUtils.MISC_METRICS.timeCallable("Serialize Chat Prompts", () -> {
-            resource.copyFrom(Resource.text(chat.getToolsDescription()));
+            resource.copyFrom(Resource.text(chat.getSystemMessage().getText()));
             return resource;
         });
     }

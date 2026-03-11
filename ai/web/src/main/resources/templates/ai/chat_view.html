@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="fields">
+    <div class="container-fluid">
+        <div class="row border rounded bg-body-secondary mb-1 p-1 fs-6">
+            <div class="row">
+                <div class="col-md-8"><span class="fw-bold">Name: </span><span class="fst-italic" th:text="${model.name}"></span></div>
+                <div class="col-md-4"><span class="fw-bold">Model: </span><span class="fst-italic" th:text="${model.model.name}"></span></div>
+            </div>
+            <div class="row">
+                <div class="col-md-3"><span class="fw-bold">User: </span><span class="fst-italic" th:text="${model.user}"></span></div>
+                <div class="col-md-3"><span class="fw-bold">Time To First Token: </span><span class="fst-italic" th:text="${#formats.format(model.timeToFirstToken)}"></span></div>
+                <div class="col-md-3"><span class="fw-bold">Started At: </span><span class="fst-italic" th:text="${#formats.format(model.startAt)}"></span></div>
+                <div class="col-md-3"><span class="fw-bold">Duration: </span><span class="fst-italic" th:text="${#formats.format(model.duration)}"></span></div>
+            </div>
+        </div>
+        <div class="row mb-1 p-1 fs-6">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item active">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#history" type="button">History</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#prompt" type="button">Prompt</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tools" type="button">Tools</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#logs" type="button">Logs</button>
+                </li>
+            </ul>
+            <div class="tab-content h-100 overflow-auto">
+                <div class="tab-pane fade show active" id="history">
+
+                </div>
+                <div class="tab-pane fade" id="prompt">
+                    <div class="help" th:utext="${prompt}"></div>
+                </div>
+                <div class="tab-pane fade" id="tools">
+                    <div class="help" th:utext="${tools}"></div>
+                </div>
+                <div class="tab-pane fade" id="logs">
+                    <div class="help" th:utext="${logs}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

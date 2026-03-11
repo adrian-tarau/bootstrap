@@ -4,7 +4,7 @@ import lombok.Setter;
 import net.microfalx.bootstrap.ai.api.Model;
 import net.microfalx.bootstrap.ai.api.Prompt;
 import net.microfalx.bootstrap.ai.core.AbstractChat;
-import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Types;
 import net.microfalx.lang.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,7 @@ public class LlamaChat extends AbstractChat {
         logger.info("#### Llama Server Properties ####");
         logger.info("-------");
         try {
-            logger.append(Field.from(server.getProperties(), String.class));
+            logger.append(Types.asString(server.getProperties()));
         } catch (Exception e) {
             logger.error("Unable to load logs for server " + server.getId(), e);
         }

@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.ai.api.AiException;
 import net.microfalx.bootstrap.ai.api.Chat;
 import net.microfalx.bootstrap.ai.api.Tool;
-import net.microfalx.bootstrap.model.Field;
+import net.microfalx.bootstrap.model.Types;
 import net.microfalx.lang.ObjectUtils;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
@@ -71,7 +71,7 @@ public class ToolExecutors {
     public static Tool.ExecutionRequest createRequest(Chat chat, Tool tool, String input) {
         requireNonNull(chat);
         requireNonNull(tool);
-        Map<?, ?> parameterValues = Field.from(input, Map.class);
+        Map<?, ?> parameterValues = Types.asMap(input);
         Map<String, Object> arguments = new HashMap<>();
         Map<String, Tool.Parameter> parameters = tool.getParameters();
         for (Map.Entry<String, Tool.Parameter> entry : parameters.entrySet()) {
@@ -179,7 +179,7 @@ public class ToolExecutors {
 
         @Override
         public <T> T getArgument(String name, Class<T> type) {
-            return Field.from(arguments.get(name), type);
+            return Types.asObject(arguments.get(name), type);
         }
 
         @Override

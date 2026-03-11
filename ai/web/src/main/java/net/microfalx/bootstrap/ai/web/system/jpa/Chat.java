@@ -36,6 +36,7 @@ public class Chat extends NamedAndTaggedIdentityAware<String> {
     @Position(20)
     @Description("The start time of chat")
     @OrderBy(OrderBy.Direction.DESC)
+    @Label("Started At")
     private LocalDateTime startAt;
 
     @Column(name = "finish_at", nullable = false)
