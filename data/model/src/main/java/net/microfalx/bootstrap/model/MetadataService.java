@@ -2,11 +2,16 @@ package net.microfalx.bootstrap.model;
 
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
 import java.util.*;
@@ -25,13 +30,12 @@ public class MetadataService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataService.class);
 
-    @Autowired
-    private Validator validator;
+    @Autowired(required = false) private Validator validator;
+    @Autowired(required = false) private I18nService i18nService;
+    @Autowired ApplicationContext applicationContext;
 
-    @Autowired
-    private I18nService i18nService;
-
-    private final List<MetadataProvider<?, ?, ?>> providers = new CopyOnWriteArrayList<>();
+    private final List<MetadataProvider<?, ?, ?>> metadataProviders = new CopyOnWriteArrayList<>();
+    private final List<MapperProvider> mapperProviders = new CopyOnWriteArrayList<>();
     private final Map<Class<?>, Metadata<?, ? extends Field<?>, ?>> metadataCache = new ConcurrentHashMap<>();
 
     /**
@@ -79,7 +83,7 @@ public class MetadataService implements InitializingBean {
      * @return a non-null instance
      */
     public Collection<MetadataProvider<?, ?, ?>> getProviders() {
-        return Collections.unmodifiableCollection(providers);
+        return Collections.unmodifiableCollection(metadataProviders);
     }
 
     /**
@@ -132,6 +136,7 @@ public class MetadataService implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         initialize();
+
     }
 
     protected I18nService getI18nService() {
@@ -139,30 +144,81 @@ public class MetadataService implements InitializingBean {
     }
 
     protected void initialize() {
+        initializeValidator();
         initializeI18n();
-        discoverProviders();
+        discoverMetadataProviders();
+        Mapper.initialize(this);
+        discoverMapperProviders();
+        discoverMappers();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private <M, F extends Field<M>, ID> MetadataProvider<M, F, ID> find(Class modelClass) {
-        for (MetadataProvider<?, ?, ?> provider : providers) {
+        for (MetadataProvider<?, ?, ?> provider : metadataProviders) {
             if (provider.supports(modelClass)) return (MetadataProvider<M, F, ID>) provider;
         }
         throw new ModelException("A metadata provider is not registered for model " + ClassUtils.getName(modelClass));
     }
 
+    private void initializeValidator() {
+        if (i18nService == null) {
+            LOGGER.warn("Validator is not available, disable validation");
+            validator = new NoOpValidator();
+        }
+    }
+
     private void initializeI18n() {
+        if (i18nService == null) {
+            LOGGER.info("I18n service is not available, initializing default implementation");
+            i18nService = new I18nService();
+            try {
+                i18nService.afterPropertiesSet();
+            } catch (Exception e) {
+                ExceptionUtils.rethrowException(e);
+            }
+        }
     }
 
     @SuppressWarnings("rawtypes")
-    private void discoverProviders() {
+    private void discoverMetadataProviders() {
         LOGGER.debug("Discover metadata providers:");
         ServiceLoader<MetadataProvider> scannedProviders = ServiceLoader.load(MetadataProvider.class);
         for (MetadataProvider<?, ?, ?> scannedProvider : scannedProviders) {
             LOGGER.debug(" - {}", ClassUtils.getName(scannedProvider));
-            providers.add(scannedProvider);
+            metadataProviders.add(scannedProvider);
         }
-        sort(providers);
-        LOGGER.info("Discovered {} metadata providers", providers.size());
+        sort(metadataProviders);
+        LOGGER.info("Discovered {} metadata providers", metadataProviders.size());
+    }
+
+    private void discoverMapperProviders() {
+        LOGGER.debug("Discover mapper providers:");
+        Collection<MapperProvider> scannedMapperProviders = ClassUtils.resolveProviderInstances(MapperProvider.class);
+        for (MapperProvider scannedProvider : scannedMapperProviders) {
+            LOGGER.debug(" - {}", ClassUtils.getName(scannedProvider));
+            if (scannedProvider instanceof ApplicationContextAware aca) {
+                aca.setApplicationContext(applicationContext);
+            }
+            this.mapperProviders.add(scannedProvider);
+        }
+        LOGGER.info("Discovered {} mapper providers", mapperProviders.size());
+    }
+
+    private void discoverMappers() {
+        for (MapperProvider mapperProvider : mapperProviders) {
+            mapperProvider.onInitializing();
+        }
+    }
+
+    private static final class NoOpValidator implements Validator {
+
+        @Override
+        public boolean supports(Class<?> clazz) {
+            return false;
+        }
+
+        @Override
+        public void validate(@Nullable Object target, Errors errors) {
+        }
     }
 }

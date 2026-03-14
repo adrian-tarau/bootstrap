@@ -2,10 +2,7 @@ package net.microfalx.bootstrap.jdbc.jpa;
 
 import net.microfalx.bootstrap.core.config.RetryConfig;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
-import net.microfalx.bootstrap.model.Field;
-import net.microfalx.bootstrap.model.Metadata;
-import net.microfalx.bootstrap.model.MetadataService;
-import net.microfalx.bootstrap.model.ModelComparator;
+import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.AnnotationUtils;
 import net.microfalx.lang.ClassUtils;
 import org.hibernate.annotations.NaturalId;
@@ -15,6 +12,7 @@ import org.springframework.retry.support.RetryTemplate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import static net.microfalx.bootstrap.jdbc.jpa.JpaUtils.getCurrentUserName;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -33,7 +31,7 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
     private RetryTemplate retryTemplate;
     private Metadata<M, Field<M>, ID> metadata;
     private final Map<String, UpdateStrategy> updateStrategies = new HashMap<>();
-    private Map<String, Boolean> updateable = new HashMap<>();
+    private final Map<String, Boolean> updateable = new HashMap<>();
 
     public NaturalIdEntityUpdater(MetadataService metadataService, NaturalJpaRepository<M, ID> repository) {
         requireNonNull(metadataService);
@@ -120,6 +118,21 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
      * <p>
      * If the entity exists but an attribute has changed, updates the entity.
      *
+     * @param source the source instance
+     * @return the entity
+     */
+    public <S> M findByNaturalIdAndUpdateFrom(S source) {
+        requireNonNull(source);
+        Mapper<S, M> mapper = Mapper.get(source, metadata.getModel());
+        M entity = mapper.to(source);
+        return findByNaturalIdOrCreate(entity);
+    }
+
+    /**
+     * Finds an entity by its natural identifier.
+     * <p>
+     * If the entity exists but an attribute has changed, updates the entity.
+     *
      * @param entity the entity
      * @return the entity
      */
@@ -135,6 +148,16 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
             });
         }
         return persistedEntity;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", NaturalIdEntityUpdater.class.getSimpleName() + "[", "]")
+                .add("metadata=" + metadata)
+                .add("updateStrategies=" + updateStrategies)
+                .add("updateable=" + updateable)
+                .add("repository=" + repository)
+                .toString();
     }
 
     private M find(M entity) {

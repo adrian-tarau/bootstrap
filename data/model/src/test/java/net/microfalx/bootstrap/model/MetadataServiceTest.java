@@ -1,13 +1,13 @@
 package net.microfalx.bootstrap.model;
 
-import net.microfalx.bootstrap.core.i18n.I18nService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Spy;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
 
 import java.util.Collection;
 
@@ -16,20 +16,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class MetadataServiceTest {
 
-    @InjectMocks
-    private MetadataService metadataService;
-
-    @Spy
-    private I18nService i18nService;
+    @Mock private ApplicationContext applicationContext;
+    @InjectMocks private MetadataService metadataService;
 
     @BeforeEach
-    void before() {
-        metadataService.initialize();
+    void before() throws Exception {
+        metadataService.afterPropertiesSet();
     }
 
     @Test
     void loadProviders() {
-        assertEquals(2, metadataService.getProviders().size());
+        assertEquals(3, metadataService.getProviders().size());
     }
 
     @Test
@@ -39,7 +36,7 @@ class MetadataServiceTest {
         assertSame(metadata.getClass(), PojoMetadataProvider.DefaultPojoMetadata.class);
         assertEquals(1, metadata.getIdFields().size());
         assertEquals("id", metadata.findIdField().getName());
-        assertEquals(5, metadata.getFields().size());
+        assertEquals(6, metadata.getFields().size());
     }
 
     @Test

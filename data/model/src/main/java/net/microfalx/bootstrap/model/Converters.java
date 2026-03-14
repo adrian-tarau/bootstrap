@@ -13,6 +13,7 @@ import net.microfalx.lang.ObjectUtils;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 import java.time.*;
 import java.time.temporal.Temporal;
 import java.util.Collection;
@@ -21,6 +22,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+
 /**
  * Hosts a collection of converters.
  */
@@ -28,8 +31,7 @@ class Converters {
 
     static final TypeConverterManager TYPE_CONVERTER_MANAGER = TypeConverterManager.get();
 
-
-    private static volatile Set<Class<?>> simpleTypes = new CopyOnWriteArraySet<>();
+    private static final Set<Class<?>> SIMPLE_TYPES = new CopyOnWriteArraySet<>();
 
     /**
      * Converts an object to a target type.
@@ -93,7 +95,13 @@ class Converters {
      * @return {@code }
      */
     public static boolean isBaseClass(Class<?> type) {
-        return ClassUtils.isBaseClass(type) || simpleTypes.contains(type);
+        return ClassUtils.isBaseClass(type) || SIMPLE_TYPES.contains(type);
+    }
+
+    public static <T> void register(Class<T> type, Converter<T> converter) {
+        requireNonNull(type);
+        requireNonNull(converter);
+        TYPE_CONVERTER_MANAGER.register(String.class, new StringConverter());
     }
 
     private static <T> T convert(Object value, Class<T> target) {
@@ -110,15 +118,46 @@ class Converters {
 
     private static final int DATE_TIME_MIN_LENGTH = 12;
 
+    static class TagsConverter implements Converter<String> {
+
+        @Override
+        public String convert(Object value) {
+            return "";
+        }
+    }
+
+    static class JoddConverter<T> implements TypeConverter<T> {
+
+        private final Converter<T> delegate;
+
+        public JoddConverter(Converter<T> delegate) {
+            requireNonNull(delegate);
+            this.delegate = delegate;
+        }
+
+        @Override
+        public T convert(Object value) {
+            return delegate.convert(value);
+        }
+    }
+
     static class StringConverter implements TypeConverter<String> {
 
         private final TypeConverter<String> original = new jodd.typeconverter.impl.StringConverter();
+
+        private String convertJdk(Object value) {
+            if (value instanceof URI) {
+                return ((URI) value).toASCIIString();
+            } else {
+                return original.convert(value);
+            }
+        }
 
         @Override
         public String convert(Object value) {
             if (value == null) return null;
             if (isBaseClass(value.getClass()) && !value.getClass().isArray()) {
-                return original.convert(value);
+                return convertJdk(value);
             } else {
                 try {
                     return getObjectMapper().writeValueAsString(value);
