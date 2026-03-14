@@ -9,6 +9,7 @@ import net.microfalx.bootstrap.jdbc.jpa.JpaPersistence;
 import net.microfalx.bootstrap.jdbc.jpa.NaturalIdEntityUpdater;
 import net.microfalx.lang.CollectionUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.TextUtils;
 import net.microfalx.resource.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -38,6 +39,10 @@ public class AiPersistence extends JpaPersistence {
     private ChatRepository chatRepository;
 
     AiServiceImpl aiService;
+
+    Chat findChat(String id) {
+        return chatRepository.findById(id).orElse(null);
+    }
 
     net.microfalx.bootstrap.ai.core.jpa.Provider execute(Provider provider) {
         NaturalIdEntityUpdater<net.microfalx.bootstrap.ai.core.jpa.Provider, Integer> updater = getUpdater(providerRepository);
@@ -133,9 +138,10 @@ public class AiPersistence extends JpaPersistence {
             jpaChat = new Chat();
             jpaChat.setId(chat.getId());
             jpaChat.setModel(execute(chat.getModel()));
+            jpaChat.setPrompt(execute(chat.getPrompt()));
             jpaChat.setUser(chat.getUser().getName());
         }
-        jpaChat.setName(chat.getName());
+        jpaChat.setName(TextUtils.abbreviateMiddle(chat.getName(), 100));
         jpaChat.setPromptUri(promptsUri.toURI().toASCIIString());
         jpaChat.setMemoryUri(memoryUri.toURI().toASCIIString());
         jpaChat.setLogsUri(logsUri.toURI().toASCIIString());
@@ -148,7 +154,7 @@ public class AiPersistence extends JpaPersistence {
         chatRepository.save(jpaChat);
     }
 
-    void execute(net.microfalx.bootstrap.ai.api.Prompt prompt) {
+    Prompt execute(net.microfalx.bootstrap.ai.api.Prompt prompt) {
         NaturalIdEntityUpdater<Prompt, Integer> updater = getUpdater(promptRepository);
         Prompt jpaPrompt = new Prompt();
         jpaPrompt.setNaturalId(prompt.getId());
@@ -167,7 +173,7 @@ public class AiPersistence extends JpaPersistence {
         jpaPrompt.setSystem(prompt.isSystem());
         jpaPrompt.setInstructions(prompt.getInstructions());
         if (prompt.getModel() != null) jpaPrompt.setModel(execute(prompt.getModel()));
-        updater.findByNaturalIdAndUpdate(jpaPrompt);
+        return updater.findByNaturalIdAndUpdate(jpaPrompt);
     }
 
 }

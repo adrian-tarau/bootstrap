@@ -24,6 +24,10 @@ public class Chat extends NamedAndTaggedIdentityAware<String> {
     @JoinColumn(name = "model_id", nullable = false)
     private Model model;
 
+    @ManyToOne
+    @JoinColumn(name = "prompt_id", nullable = false)
+    private Prompt prompt;
+
     @Column(name = "start_at", nullable = false)
     private LocalDateTime startAt;
 

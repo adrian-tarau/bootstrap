@@ -3,6 +3,7 @@ create table ai_chats
     id                  varchar(100) not null primary key,
     user_id             varchar(50)  not null,
     model_id            int          not null,
+    prompt_id           int          not null,
     name                varchar(100) not null,
 
     start_at            datetime     not null,
@@ -19,6 +20,7 @@ create table ai_chats
 
     tags                varchar(500),
     description         varchar(1000),
-    constraint fk$ai_chats$user_id foreign key (user_id) references security_users (username),
-    constraint fk$ai_chats$model_id foreign key (model_id) references ai_models (id)
+    constraint fk$ai_chats$user foreign key (user_id) references security_users (username),
+    constraint fk$ai_chats$model foreign key (model_id) references ai_models (id),
+    constraint fk$ai_chats$prompt foreign key (prompt_id) references ai_prompts (id)
 ) ENGINE = InnoDB;

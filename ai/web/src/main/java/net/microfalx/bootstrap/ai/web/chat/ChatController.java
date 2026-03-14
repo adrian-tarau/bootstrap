@@ -12,7 +12,6 @@ import net.microfalx.bootstrap.help.HelpService;
 import net.microfalx.bootstrap.help.HelpUtilities;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.security.SecurityContext;
-import net.microfalx.bootstrap.security.SecurityUtils;
 import net.microfalx.bootstrap.web.component.Item;
 import net.microfalx.bootstrap.web.component.Menu;
 import net.microfalx.bootstrap.web.controller.PageController;
@@ -57,16 +56,13 @@ public class ChatController extends PageController {
     private static final String END_OF_DATA = "$END_OF_DATA$";
     private static final Map<String, TokenStream> chatAnswer = new ConcurrentHashMap<>();
 
-    @Autowired
-    private HelpService helpService;
-    @Autowired
-    private AiService aiService;
-    @Autowired
-    private DataSetService dataSetService;
+    @Autowired private HelpService helpService;
+    @Autowired private AiService aiService;
+    @Autowired private DataSetService dataSetService;
 
     @GetMapping("")
     public String start(Model model) {
-        return doStart(model, aiService.getDefaultPrompt(), Mode.DASHBOARD, null, null);
+        return doStart(model, aiService.getDefaultPrompt(), ChatTools.Mode.DASHBOARD, null, null);
     }
 
     @GetMapping("prompt/{id}")
@@ -76,7 +72,7 @@ public class ChatController extends PageController {
         model.addAttribute("title", prompt.getName());
         model.addAttribute("question", renderMarkdown(prompt.getQuestion()));
         DataSetRequest<?, ?, ?> request = getDataSetRequest(dataSetId);
-        return doStart(model, prompt, Mode.DIALOG, null, request);
+        return doStart(model, prompt, ChatTools.Mode.DIALOG, null, request);
     }
 
     @GetMapping("model/{id}")
@@ -87,7 +83,7 @@ public class ChatController extends PageController {
         model.addAttribute("title", chatModel.getName());
         Prompt prompt = isNotEmpty(promptId) ? aiService.getPrompt(promptId) : aiService.getDefaultPrompt();
         DataSetRequest<?, ?, ?> request = getDataSetRequest(dataSetId);
-        return doStart(model, prompt, Mode.DIALOG, chatModel, request);
+        return doStart(model, prompt, ChatTools.Mode.DIALOG, chatModel, request);
     }
 
     @GetMapping("info/model/{id}")
@@ -145,7 +141,7 @@ public class ChatController extends PageController {
         return emitter;
     }
 
-    private String doStart(Model model, Prompt prompt, Mode mode, net.microfalx.bootstrap.ai.api.Model chatModel,
+    private String doStart(Model model, Prompt prompt, ChatTools.Mode mode, net.microfalx.bootstrap.ai.api.Model chatModel,
                            DataSetRequest<?, ?, ?> request) {
         if (chatModel == null) {
             if (prompt.getModel() != null) {
@@ -159,7 +155,7 @@ public class ChatController extends PageController {
         updateModel(model, chat);
         updateIntro(model);
         model.addAttribute("mode", mode);
-        if (mode == Mode.DASHBOARD) {
+        if (mode == ChatTools.Mode.DASHBOARD) {
             return "ai/dashboard";
         } else {
             return "ai/chat::dialog";
@@ -193,7 +189,7 @@ public class ChatController extends PageController {
         Collection<Chat> chats = aiService.getChats(SecurityContext.get().getPrincipal(), false);
         model.addAttribute("chat", chat);
         model.addAttribute("chats", chats);
-        model.addAttribute("chatTools", new ChatTools(chat));
+        model.addAttribute("chatTools", new ChatTools(aiService, helpService, chat));
         updateMenu(model);
     }
 
@@ -217,58 +213,6 @@ public class ChatController extends PageController {
         menu.add(new Item().setAction("chat.info.prompt").setText("Prompt").setIcon("fa-solid fa-terminal")
                 .setDescription("Displays information about the prompt"));
         model.addAttribute("chatInfoMenu", menu);
-    }
-
-    public enum Mode {
-        DASHBOARD, DIALOG
-    }
-
-    public class ChatTools {
-
-        private final Chat chat;
-
-        public ChatTools(Chat chat) {
-            this.chat = chat;
-        }
-
-        public String getMessageCssClass(Message message) {
-            if (message.getType() == Message.Type.USER) {
-                return EMPTY_STRING;
-            } else {
-                return "end";
-            }
-        }
-
-        public String getMessageImageCssClass(Message message) {
-            return switch (message.getType()) {
-                case USER -> "fa-solid fa-user-tie";
-                case MODEL -> "fa-solid fa-robot";
-                case SYSTEM -> "fa-solid fa-terminal";
-                case CUSTOM -> "fa-solid fa-comment";
-                default -> EMPTY_STRING;
-            };
-        }
-
-        public Collection<Message> getMessages(Chat chat) {
-            return chat.getMessages();
-        }
-
-        public String getUser(Message message) {
-            if (message.getType() == Message.Type.USER) {
-                return SecurityUtils.getDisplayName(chat.getUser());
-            } else {
-                return aiService.getName();
-            }
-        }
-
-        public String renderMessageText(Message message) {
-            try {
-                return helpService.render(Resource.text(message.getText()));
-            } catch (IOException e) {
-                LOGGER.error("Failed to render message text for chat: {}", chat.getId(), e);
-                return "#Error: failed to render message text";
-            }
-        }
     }
 
     @AllArgsConstructor

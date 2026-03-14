@@ -19,6 +19,6 @@ create table ai_prompts
     modified_at           datetime,
     tags                  varchar(500),
     description           varchar(1000),
-    constraint nk$ai_prompts$natural_id unique key (natural_id),
-    constraint fk$ai_prompts$model_id foreign key (model_id) references ai_models (id)
+    constraint nk$ai_prompts$natural unique key (natural_id),
+    constraint fk$ai_prompts$model foreign key (model_id) references ai_models (id)
 ) ENGINE = InnoDB;

@@ -28,6 +28,6 @@ create table ai_models
     modified_at            datetime,
     tags                   varchar(500),
     description            varchar(1000),
-    constraint nk$ai_models$natural_id unique key (natural_id),
-    constraint fk$ai_models$provider_id foreign key (provider_id) references ai_providers (id)
+    constraint nk$ai_models$natural unique key (natural_id),
+    constraint fk$ai_models$provider foreign key (provider_id) references ai_providers (id)
 ) ENGINE = InnoDB;

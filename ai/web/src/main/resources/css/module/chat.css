@@ -12,6 +12,10 @@
 
 }
 
+.ai-content {
+
+}
+
 .ai-chat-body {
     min-height: 450px;
 }
@@ -168,4 +172,20 @@
 .ai-chat-text p {
     margin-top: 0.2rem;
     margin-bottom: 0.2rem;
+}
+
+.ai-content .help h1 {
+    font-size: 1.8rem;
+}
+
+.ai-content .help h2 {
+    font-size: 1.6rem;
+}
+
+.ai-content .help h3 {
+    font-size: 1.4rem;
+}
+
+.ai-content .help h4 {
+    font-size: 1.2rem;
 }

@@ -6,15 +6,11 @@
     </definition>
     <definition name="Models" type="mysql" path="02_ai_models.sql">
         <table>ai_models</table>
-        <migration path="01_ai_model_add_download_uri.sql" condition="column ai_models.download_uri not exists"/>
-        <migration path="02_ai_model_size_and_params.sql" condition="column ai_models.size not exists"/>
-        <migration path="04_ai_reset_models.sql"/>
     </definition>
-    <definition name="Chats" type="mysql" path="03_ai_chats.sql">
-        <table>ai_chats</table>
-        <migration path="03_ai_chat_logs.sql" condition="column ai_chats.logs_uri not exists"/>
-    </definition>
-    <definition name="Prompts" type="mysql" path="04_ai_prompts.sql">
+    <definition name="Prompts" type="mysql" path="03_ai_prompts.sql">
         <table>ai_prompts</table>
+    </definition>
+    <definition name="Chats" type="mysql" path="04_ai_chats.sql">
+        <table>ai_chats</table>
     </definition>
 </schema>

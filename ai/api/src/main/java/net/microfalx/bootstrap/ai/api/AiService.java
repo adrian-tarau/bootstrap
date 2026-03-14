@@ -68,6 +68,9 @@ public interface AiService {
     /**
      * Returns a chat session with a given identifier.
      *
+     * If the chat session is active, it will be returned from the active sessions, otherwise it will be returned
+     * from the historical sessions.
+     *
      * @param id the chat session identifier
      * @return a non-null instance
      */

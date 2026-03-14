@@ -12,5 +12,5 @@ create table ai_providers
     modified_at datetime,
     tags        varchar(500),
     description varchar(1000),
-    constraint nk$ai_providers$natural_id unique key (natural_id)
+    constraint nk$ai_providers$natural unique key (natural_id)
 ) ENGINE = InnoDB;

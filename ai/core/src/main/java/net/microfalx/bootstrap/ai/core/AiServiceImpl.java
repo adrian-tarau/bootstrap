@@ -17,6 +17,7 @@ import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.search.IndexListener;
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.bootstrap.search.SearchService;
+import net.microfalx.bootstrap.security.user.UserService;
 import net.microfalx.lang.*;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
@@ -71,18 +72,13 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AiService.class);
 
-    @Autowired
-    private IndexService indexService;
-    @Autowired
-    private SearchService searchService;
-    @Autowired
-    private ResourceService resourceService;
-    @Autowired
-    private DataSetService dataSetService;
+    @Autowired private IndexService indexService;
+    @Autowired private SearchService searchService;
+    @Autowired private ResourceService resourceService;
+    @Autowired private DataSetService dataSetService;
+    @Autowired private UserService userService;
 
-    @Autowired
-    private AiPersistence persistence;
-
+    @Autowired private AiPersistence persistence;
     @Autowired(required = false)
     @Getter(AccessLevel.PROTECTED)
     private AiProperties properties = new AiProperties();
@@ -172,6 +168,9 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
     public Chat getChat(String id) {
         requireNonNull(id);
         Chat chat = activeChats.get(toIdentifier(id));
+        if (chat == null) {
+            chat = loadChat(id);
+        }
         if (chat == null) {
             throw new AiNotAvailableException("Chat '" + id + "' not found");
         }
@@ -943,6 +942,23 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
             persistence.execute(chat);
         } catch (Exception e) {
             LOGGER.atError().setCause(e).log("Failed to persist chat {}", chat.getId());
+        }
+    }
+
+    private Chat loadChat(String id) {
+        try {
+            net.microfalx.bootstrap.ai.core.jpa.Chat chatJpa = persistence.findChat(id);
+            Prompt prompt = getPrompt(chatJpa.getPrompt().getNaturalId());
+            Model model = getModel(chatJpa.getModel().getNaturalId());
+            Chat chat = createChat(prompt, model);
+            if (chat instanceof AbstractChat abstractChat) {
+                // TODO locate the principal
+                //abstractChat.setPrincipal(userService.findPrincipal(chatJpa.getUser()));
+            }
+            return chat;
+        } catch (Exception e) {
+            LOGGER.atError().setCause(e).log("Failed to load chat {}", id);
+            return null;
         }
     }
 

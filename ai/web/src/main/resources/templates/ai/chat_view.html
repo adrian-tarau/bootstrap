@@ -5,8 +5,8 @@
     <div class="container-fluid">
         <div class="row border rounded bg-body-secondary mb-1 p-1 fs-6">
             <div class="row">
-                <div class="col-md-8"><span class="fw-bold">Name: </span><span class="fst-italic" th:text="${model.name}"></span></div>
-                <div class="col-md-4"><span class="fw-bold">Model: </span><span class="fst-italic" th:text="${model.model.name}"></span></div>
+                <div class="col-md-9"><span class="fw-bold">Name: </span><span class="fst-italic" th:text="${model.name}"></span></div>
+                <div class="col-md-3"><span class="fw-bold">Model: </span><span class="fst-italic" th:text="${model.model.name}"></span></div>
             </div>
             <div class="row">
                 <div class="col-md-3"><span class="fw-bold">User: </span><span class="fst-italic" th:text="${model.user}"></span></div>
@@ -30,9 +30,15 @@
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#logs" type="button">Logs</button>
                 </li>
             </ul>
-            <div class="tab-content h-100 overflow-auto">
+            <div class="tab-content h-100 overflow-auto ai-content">
                 <div class="tab-pane fade show active" id="history">
-
+                    <div class="ai-chat m-2">
+                        <div class="ai-chat-body">
+                            <th:block th:each="message : ${messages}">
+                                <div th:replace="~{ fragments/ai/chat :: render-message(${message})}"></div>
+                            </th:block>
+                        </div>
+                    </div>
                 </div>
                 <div class="tab-pane fade" id="prompt">
                     <div class="help" th:utext="${prompt}"></div>

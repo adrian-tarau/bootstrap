@@ -21,6 +21,9 @@ public class HelpUtilities {
     public static final String MARKDOWN_EXTENSION = "md";
     public static final String HTML_EXTENSION = "html";
 
+    public static final String TEXT_BLOCK_START = "```text";
+    public static final String TEXT_BLOCK_END = "```";
+
     /**
      * Resolves the path to a help related resource
      *

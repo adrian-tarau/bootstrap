@@ -26,17 +26,25 @@ public class Chat extends NamedAndTaggedIdentityAware<String> {
     @Width("200px")
     private Model model;
 
+    @ManyToOne
+    @Position(10)
+    @JoinColumn(name = "prompt_id", nullable = false)
+    @Description("The prompt used by this chat session")
+    @Width("200px")
+    private Prompt prompt;
+
     @Position(15)
     @Column(name = "user_id", nullable = false)
     @Description("The user that created the chat")
-    @Width("100px")
+    @Width("120px")
     private String user;
 
     @Column(name = "start_at", nullable = false)
     @Position(20)
+    @Label("Started At")
     @Description("The start time of chat")
     @OrderBy(OrderBy.Direction.DESC)
-    @Label("Started At")
+    @ModifiedAt
     private LocalDateTime startAt;
 
     @Column(name = "finish_at", nullable = false)

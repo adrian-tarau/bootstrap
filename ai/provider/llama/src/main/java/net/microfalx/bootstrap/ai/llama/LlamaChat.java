@@ -6,13 +6,14 @@ import net.microfalx.bootstrap.ai.api.Prompt;
 import net.microfalx.bootstrap.ai.core.AbstractChat;
 import net.microfalx.bootstrap.model.Types;
 import net.microfalx.lang.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import static net.microfalx.bootstrap.help.HelpUtilities.TEXT_BLOCK_END;
+import static net.microfalx.bootstrap.help.HelpUtilities.TEXT_BLOCK_START;
+
 public class LlamaChat extends AbstractChat {
 
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(LlamaChat.class);
     @Setter private LlamaServer server;
 
     public LlamaChat(Prompt prompt, Model model) {
@@ -26,21 +27,22 @@ public class LlamaChat extends AbstractChat {
 
     @Override
     protected void collectProcessLogs(Logger logger) {
-        logger.info("#### Llama Server Properties ####");
-        logger.info("-------");
+        logger.info("#### Llama Server Properties");
+        logger.ln().append(TEXT_BLOCK_START);
         try {
             logger.append(Types.asString(server.getProperties()));
         } catch (Exception e) {
             logger.error("Unable to load logs for server " + server.getId(), e);
         }
-        logger.info("#### Llama Server Logs ####");
-        logger.info("-------");
+        logger.info(TEXT_BLOCK_END);
+        logger.info("#### Llama Server Logs");
+        logger.ln().append(TEXT_BLOCK_START);
         try {
             logger.append(server.getLogs().loadAsString());
         } catch (IOException e) {
             logger.error("Unable to load logs for server " + server.getId(), e);
         }
-        logger.info("-------");
+        logger.info(TEXT_BLOCK_END);
     }
 
     @Override

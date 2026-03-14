@@ -116,6 +116,10 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         return principal;
     }
 
+    void setPrincipal(Principal principal) {
+        this.principal = principal;
+    }
+
     @Override
     public String getContent() {
         return null;
@@ -241,8 +245,7 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
                     #### Requests
                     
                     | Invocation | Items | Tokens | Size |
-                    | ---------- | ----- | ------ | ---- |                    
-                    """);
+                    | ---------- | ----- | ------ | ---- |""");
             for (Map.Entry<Tool.ExecutionRequest, Tool.ExecutionResponse> entry : toolExecutions.entrySet()) {
                 Tool.ExecutionRequest request = entry.getKey();
                 Tool.ExecutionResponse response = entry.getValue();
@@ -252,6 +255,11 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
                         .append("|").append(formatBytes(response.getContent().getSize()))
                         .append("|\n");
             }
+        } else {
+            sb.append("""
+                    #### Requests
+                    
+                    No tool has been invoked during this chat session.""");
         }
         return sb.toString();
     }
@@ -319,8 +327,8 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
         finalLogger.info("#### Session");
         finalLogger.append(logger);
         finalLogger.append(getToolsDescription());
-        collectMessages(logger);
-        collectProcessLogs(logger);
+        collectMessages(finalLogger);
+        collectProcessLogs(finalLogger);
         return Resource.text(finalLogger.getOutput());
     }
 
