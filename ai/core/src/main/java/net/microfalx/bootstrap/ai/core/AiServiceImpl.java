@@ -809,6 +809,7 @@ public class AiServiceImpl extends ApplicationContextSupport implements AiServic
 
     private void persistProvider(Provider provider) {
         if (!properties.isPersistenceEnabled()) return;
+        persistence.execute(provider);
         for (Model model : provider.getModels()) {
             persistence.execute(model);
         }

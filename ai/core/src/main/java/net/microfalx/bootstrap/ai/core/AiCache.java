@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.CollectionUtils.setFromString;
 import static net.microfalx.lang.ObjectUtils.defaultIfNull;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.toIdentifier;
@@ -156,7 +155,7 @@ public class AiCache extends ApplicationContextSupport {
                 .enabled(modelJpa.isEnabled()).embedding(modelJpa.isEmbedding()).thinking(modelJpa.isThinking());
         builder.size(modelJpa.getSize()).numberOfParameters(modelJpa.getNumberOfParameters())
                 .quantization(modelJpa.getQuantization());
-        builder.tags(setFromString(modelJpa.getTags())).name(modelJpa.getName())
+        builder.tags(modelJpa.getTags()).name(modelJpa.getName())
                 .description(modelJpa.getDescription());
         return builder;
     }
@@ -177,7 +176,7 @@ public class AiCache extends ApplicationContextSupport {
         builder.uri(parseUri(providerJpa.getUri()))
                 .apyKey(providerJpa.getApiKey())
                 .license(providerJpa.getLicense()).version(providerJpa.getVersion());
-        builder.tags(CollectionUtils.setFromString(providerJpa.getTags()))
+        builder.tags(providerJpa.getTags())
                 .name(providerJpa.getName()).description(providerJpa.getDescription());
         builder.chatFactory(oldProvider.getChatFactory());
         try {
@@ -210,7 +209,7 @@ public class AiCache extends ApplicationContextSupport {
             builder.model(getModel(promptJpa.getModel().getNaturalId()));
         }
         builder.useOnlyContext(promptJpa.isUseOnlyContext())
-                .tags(CollectionUtils.setFromString(promptJpa.getTags()))
+                .tags(promptJpa.getTags())
                 .name(promptJpa.getName()).description(promptJpa.getDescription())
                 .id(promptJpa.getNaturalId());
         return builder.build();
