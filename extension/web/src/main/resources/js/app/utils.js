@@ -378,6 +378,16 @@ Utils.intercept = function (value, interceptor) {
 }
 
 /**
+* Clears all the properties from the given object
+* @param {Object} object the object to clear
+*/
+Utils.clear = function(object) {
+    if (object) {
+        Object.keys(object).forEach(key => { delete object[key]; });
+    }
+}
+
+/**
  * Copies all the properties of `source` to the specified `target`.
  *
  * @param {Object} target The receiver of the properties.
