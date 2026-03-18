@@ -15,7 +15,7 @@ import net.microfalx.lang.annotation.Width;
 @Getter
 @Setter
 @ToString(callSuper = true)
-public abstract class NamedTaggedAndTimestampedIdentityAware extends NamedAndTimestampedIdentityAware {
+public abstract class NamedTaggedAndTimestampedIdentityAware<T> extends NamedAndTimestampedIdentityAware<T> {
 
     @Position(400)
     @Component(Component.Type.TEXT_AREA)
