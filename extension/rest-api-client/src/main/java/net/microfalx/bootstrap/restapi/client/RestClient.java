@@ -251,7 +251,7 @@ public class RestClient implements Identifiable<String>, Nameable, Descriptable 
             if (!response.isSuccessful()) throw map(response);
             return response.body();
         } catch (IOException e) {
-            throw new ServerErrorException(500, new ApiError().setStatus(500).setMessage(e.getMessage()));
+            throw new ServerErrorException(503, new ApiError().setHttpStatus(503).setMessage(e.getMessage()));
         } finally {
             CLIENT.remove();
         }
@@ -326,7 +326,7 @@ public class RestClient implements Identifiable<String>, Nameable, Descriptable 
         if (apiError == null) {
             apiError = new ApiError().setMessage(response.message());
         }
-        apiError.setStatus(status);
+        apiError.setHttpStatus(status);
         return switch (status) {
             case 400, 405, 406, 422 -> new BadRequestException(status, apiError);
             case 409 -> new ConflictException(status, apiError);

@@ -67,7 +67,7 @@ class RestApiCallWrapper<A, R> implements InvocationHandler {
         } catch (ApiException e) {
             throw e;
         } catch (Throwable e) {
-            throw new ServerErrorException(500, new ApiError().setStatus(500).setMessage(e.getMessage()), e);
+            throw new ServerErrorException(500, new ApiError().setHttpStatus(500).setMessage(e.getMessage()), e);
         }
 
     }
