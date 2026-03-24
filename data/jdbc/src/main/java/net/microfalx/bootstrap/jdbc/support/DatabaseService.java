@@ -141,6 +141,18 @@ public class DatabaseService implements InitializingBean {
     }
 
     /**
+     * Returns the default database.
+     *
+     * @return the data source
+     */
+    public Database getDefaultDatabase() {
+        if (defaultDataSource == null) {
+            throw new IllegalStateException("No default data source is configured");
+        }
+        return getDatabase(defaultDataSource);
+    }
+
+    /**
      * Returns a database by its identifier.
      *
      * @param id the identifier

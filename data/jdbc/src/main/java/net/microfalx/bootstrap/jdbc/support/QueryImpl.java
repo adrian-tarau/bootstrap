@@ -4,11 +4,15 @@ import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.NumberUtils;
 import net.microfalx.lang.ObjectUtils;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
+import java.util.List;
 import java.util.StringJoiner;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ClassUtils.isSubClassOf;
 
 final class QueryImpl implements Query {
@@ -20,7 +24,7 @@ final class QueryImpl implements Query {
 
     QueryImpl(Schema schema, String sql) {
         requireNonNull(schema);
-        requireNonNull(sql);
+        requireNotEmpty(sql);
         this.schema = schema;
         this.sql = sql;
         this.client = JdbcClient.create(schema.getDatabase().getDataSource().unwrap());
@@ -30,6 +34,11 @@ final class QueryImpl implements Query {
     @Override
     public Schema getSchema() {
         return schema;
+    }
+
+    @Override
+    public JdbcClient getClient() {
+        return client;
     }
 
     @Override
@@ -62,9 +71,14 @@ final class QueryImpl implements Query {
         return this;
     }
 
+    @Override
+    public <T> T selectOne(ResultSetExtractor<T> extractor) {
+        return statementSpec.query(extractor);
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public <T> T selectOne(Class<?> type) {
+    public <T> T selectOne(Class<T> type) {
         requireNonNull(type);
         Class<?> finalType = isSubClassOf(type, Enum.class) ? String.class : type;
         Object value = statementSpec.query(finalType).single();
@@ -75,14 +89,17 @@ final class QueryImpl implements Query {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T> T selectOne(Class<?> type, T defaultValue) {
+    public <T> T selectOne(Class<T> type, T defaultValue) {
         try {
             return (T) statementSpec.query(type).single();
         } catch (EmptyResultDataAccessException | IllegalArgumentException e) {
             return defaultValue;
         }
+    }
+
+    public <T> List<T> selectMany(RowMapper<T> rowMapper) {
+        return statementSpec.query(rowMapper).list();
     }
 
     @Override
