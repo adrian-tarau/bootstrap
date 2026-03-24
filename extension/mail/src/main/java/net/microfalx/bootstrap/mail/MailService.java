@@ -6,11 +6,15 @@ import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.support.report.Issue;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.TimeUtils;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.metrics.Timer;
 import net.microfalx.resource.Resource;
+import net.microfalx.threadpool.ThreadPool;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
@@ -20,14 +24,19 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.bootstrap.mail.MailProperties.DEFAULT_FROM;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.SecretUtils.maskSecret;
 import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.TimeUtils.FIVE_MINUTE;
+import static net.microfalx.lang.TimeUtils.THIRTY_SECONDS;
 import static net.microfalx.resource.MimeType.TEXT_HTML;
 
 @Service
@@ -39,8 +48,22 @@ public class MailService implements InitializingBean {
 
     private JavaMailSenderImpl mailSender;
 
+    private ThreadPool threadPool;
+    private final PriorityQueue<FailedMessage> retryQueue = new PriorityQueue<>();
+    private final Map<String, Mail> mails = new ConcurrentHashMap<>();
+
+    /**
+     * Returns a collection of mails sent or being sent by this service.
+     *
+     * @return a non-null instance
+     */
+    public Collection<Mail> getMails() {
+        return unmodifiableCollection(mails.values());
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
+        initThreadPool();
         initMailSender();
     }
 
@@ -51,10 +74,10 @@ public class MailService implements InitializingBean {
      * @throws IOException   if an I/O error occurs while reading the resource
      * @throws MailException if an error occurs while sending the MIME message
      */
-    public void send(Resource resource) throws IOException, MailException {
+    public Future<Mail> send(Resource resource) throws IOException, MailException {
         requireNonNull(resource);
         MimeMessage mimeMessage = mailSender.createMimeMessage(resource.getInputStream());
-        doSend(mimeMessage);
+        return enqueue(mimeMessage);
     }
 
     /**
@@ -64,8 +87,8 @@ public class MailService implements InitializingBean {
      * @throws IOException   if an I/O error occurs while reading the resource
      * @throws MailException if an error occurs while sending the MIME message
      */
-    public void send(MimeMessage mimeMessage) throws IOException, MailException {
-        doSend(mimeMessage);
+    public Future<Mail> send(MimeMessage mimeMessage) throws IOException, MailException {
+        return enqueue(mimeMessage);
     }
 
     /**
@@ -84,8 +107,8 @@ public class MailService implements InitializingBean {
      * @param subject a non-null subject
      * @param body    a non-null body
      */
-    public void send(String to, String subject, Resource body) {
-        send(to, subject, body, Collections.emptyList());
+    public Future<Mail> send(String to, String subject, Resource body) {
+        return send(to, subject, body, Collections.emptyList());
     }
 
     /**
@@ -96,12 +119,14 @@ public class MailService implements InitializingBean {
      * @param body        a non-null body
      * @param attachments a collection of attachments
      */
-    public void send(String to, String subject, Resource body, Collection<Resource> attachments) {
+    public Future<Mail> send(String to, String subject, Resource body, Collection<Resource> attachments) {
         requireNotEmpty(to);
         requireNonNull(subject);
         requireNonNull(body);
         requireNonNull(attachments);
         MimeMessage mimeMessage = null;
+        Future<Mail> future;
+        Throwable throwable = null;
         try {
             mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
@@ -115,18 +140,37 @@ public class MailService implements InitializingBean {
                 helper.addAttachment(resource.getFileName(), new UrlResource(resource.toURL()));
             }
         } catch (Exception e) {
+            throwable = e;
             registerFailure(mimeMessage, e);
         }
-        if (mimeMessage != null) doSend(mimeMessage);
+        if (mimeMessage != null) {
+            future = enqueue(mimeMessage);
+        } else {
+            future = CompletableFuture.failedFuture(throwable);
+        }
+        return future;
     }
 
-    private void doSend(MimeMessage mimeMessage) {
+    private Future<Mail> enqueue(MimeMessage mimeMessage) {
         requireNonNull(mimeMessage);
+        Mail mail = new Mail(mimeMessage);
+        mails.put(mail.getId(), mail);
+        return threadPool.submit(() -> {
+            doSend(mail);
+            return mail;
+        });
+    }
+
+    private void doSend(Mail mail) {
+        requireNonNull(mail);
+        MimeMessage mimeMessage = mail.getMimeMessage();
         String address = getFirstAddress(mimeMessage);
         try (Timer ignored = MAIL_SENDING.startTimer(address)) {
             mailSender.send(mimeMessage);
+            mail.sent();
             Arrays.stream(mimeMessage.getAllRecipients()).forEach(a -> MAIL_SENT.count(getAddress(a)));
         } catch (Exception e) {
+            mail.failed(e);
             registerFailure(mimeMessage, e);
         }
     }
@@ -141,6 +185,11 @@ public class MailService implements InitializingBean {
                 .withDescription(e, "Failed to send email to ''{0}''", address)
                 .withSeverity(Issue.Severity.HIGH).withAttributeCounter(address)
                 .register();
+    }
+
+    private void initThreadPool() {
+        threadPool = ThreadPoolFactory.create("Mail").setRatio(0.5f).create();
+        threadPool.scheduleAtFixedRate(new MaintenanceTask(), properties.getRetryInterval());
     }
 
     private void initMailSender() {
@@ -188,5 +237,75 @@ public class MailService implements InitializingBean {
     private static final Metrics MAIL_SENDING = MAIL.withGroup("Sending");
     private static final Metrics MAIL_SENT = MAIL.withGroup("Sent");
     private static final Metrics MAIL_FAILED = MAIL.withGroup("Failed");
+
+    private class MaintenanceTask implements Runnable {
+
+        private void send() {
+            int rescheduled = 0;
+            while (!retryQueue.isEmpty()) {
+                FailedMessage failedMessage = retryQueue.poll();
+                if (!failedMessage.isExpired()) {
+                    rescheduled++;
+                    doSend(failedMessage.mail);
+                } else {
+                    break;
+                }
+            }
+            if (rescheduled > 0) {
+                LOGGER.info("Rescheduled {} failed messages for retry", rescheduled);
+            }
+        }
+
+        private void cleanup() {
+            LocalDateTime threshold = LocalDateTime.now().minus(properties.getRetention());
+            Collection<String> toBeRemoved = mails.values().stream()
+                    .filter(mail -> mail.getCreatedAt().isBefore(threshold))
+                    .map(Mail::getId).toList();
+            toBeRemoved.forEach(mails::remove);
+            if (!toBeRemoved.isEmpty()) {
+                LOGGER.info("Removed {} mails from history", toBeRemoved.size());
+            }
+        }
+
+        @Override
+        public void run() {
+            send();
+            cleanup();
+        }
+    }
+
+    private static class FailedMessage implements Delayed {
+
+        private final Mail mail;
+        private final long delay;
+
+        FailedMessage(Mail mail) {
+            this.mail = mail;
+            this.delay = mail.getRetryCount() == 0 ? 0 : getDelay(mail.getRetryCount());
+        }
+
+        @Override
+        public long getDelay(@NotNull TimeUnit unit) {
+            return TimeUnit.MILLISECONDS.convert(delay, unit);
+        }
+
+        @Override
+        public int compareTo(@NotNull Delayed o) {
+            if (!(o instanceof FailedMessage)) return -1;
+            return this.mail.getCreatedAt().compareTo(((FailedMessage) o).mail.getCreatedAt());
+        }
+
+        private boolean isExpired() {
+            return TimeUtils.millisSince(this.mail.getCreatedAt()) >= TimeUtils.ONE_HOUR;
+        }
+
+        private long getDelay(int retryCount) {
+            return Math.max(MAX_INTERVAL, (long) (INITIAL_INTERVAL * Math.pow(MULTIPLIER, retryCount - 1)));
+        }
+    }
+
+    private static final long INITIAL_INTERVAL = THIRTY_SECONDS;
+    private static final double MULTIPLIER = 2.0;
+    private static final long MAX_INTERVAL = FIVE_MINUTE;
 
 }
