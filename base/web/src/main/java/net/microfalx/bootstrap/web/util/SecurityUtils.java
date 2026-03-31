@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.web.util;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -70,7 +71,7 @@ public class SecurityUtils {
                 userName = ((Principal) principal).getName();
             } else if (principal instanceof String) {
                 userName = principal.toString();
-            } else if (principal != null){
+            } else if (principal != null) {
                 userName = principal.toString();
             }
         }
@@ -144,6 +145,34 @@ public class SecurityUtils {
     public static boolean isAuthenticated(Authentication authentication) {
         return authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)
                 && !isAnonymous(authentication.getName());
+    }
+
+    /**
+     * Returns whether the {@link Authentication} attached to the current thread has at least one of the given roles.
+     *
+     * @param roles the role
+     * @return {@code true} if it has the role, {@code false} otherwise
+     */
+    public static boolean hasRoleAtLeastOne(String... roles) {
+        for (String role : roles) {
+            if (hasRole(role)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether the {@link Authentication} attached to the current thread has a given role.
+     *
+     * @param role the role
+     * @return {@code true} if it has the role, {@code false} otherwise
+     */
+    public static boolean hasRole(String role) {
+        Authentication authentication = getAuthentication();
+        if (authentication == null) return false;
+        for (GrantedAuthority authority : authentication.getAuthorities()) {
+            if (authority.getAuthority().equalsIgnoreCase(role)) return true;
+        }
+        return false;
     }
 
     /**

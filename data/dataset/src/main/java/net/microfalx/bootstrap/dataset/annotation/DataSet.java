@@ -94,6 +94,27 @@ public @interface DataSet {
     boolean canDelete() default true;
 
     /**
+     * Returns the roles required to allow a record to be added.
+     *
+     * @return the roles, empty to allow for all users
+     */
+    String[] addRoles() default {};
+
+    /**
+     * Returns the roles required to allow a record to be deleted.
+     *
+     * @return the roles, empty to allow for all users
+     */
+    String[] deleteRoles() default {};
+
+    /**
+     * Returns the roles required to allow a record to be added, edited or deleted.
+     *
+     * @return the roles, empty to allow for all users
+     */
+    String[] changeRoles() default {};
+
+    /**
      * Returns the default time range.
      * <p>
      * By default, if the data set has a time component, a default range will be used using todays date.

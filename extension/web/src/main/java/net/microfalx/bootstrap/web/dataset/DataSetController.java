@@ -23,6 +23,7 @@ import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.util.FieldHistory;
 import net.microfalx.bootstrap.web.util.JsonFormResponse;
 import net.microfalx.bootstrap.web.util.JsonResponse;
+import net.microfalx.bootstrap.web.util.SecurityUtils;
 import net.microfalx.lang.*;
 import net.microfalx.lang.annotation.CreatedAt;
 import net.microfalx.lang.annotation.ModifiedAt;
@@ -378,7 +379,6 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     }
 
 
-
     /**
      * Updates the toolbar with additional actions.
      *
@@ -488,7 +488,7 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
 
     /**
      * Invoked before delete is performed.
-     *
+     * <p>
      * Subclasses can call {$link #cancel(Model, String)} to cancel the delete operation.
      *
      * @param dataSet         the data set
@@ -557,6 +557,61 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
      */
     protected void afterPersist(DataSet<M, Field<M>, ID> dataSet, M model, State state) {
         // empty by default
+    }
+
+    /**
+     * Returns whether the data set should be read-only.
+     * <p>
+     * This method allows a data set to use roles or configuration to make a dashboard read-only
+     *
+     * @param dataSet the data set
+     * @return @{code true} if read-only, {@code false} otherwise
+     */
+    protected boolean isReadOnly(DataSet<M, Field<M>, ID> dataSet) {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = getDataSetAnnotation();
+        if (dataSetAnnot.changeRoles().length > 0) {
+            return SecurityUtils.hasRoleAtLeastOne(dataSetAnnot.changeRoles());
+        } else {
+            return dataSet.isReadOnly();
+        }
+    }
+
+    /**
+     * Returns whether the data set allows the user to add manually a new entry.
+     * <p>
+     * This method allows a data set to use roles or configuration to make a dashboard read-only
+     *
+     * @param dataSet the data set
+     * @return @{code true} if read-only, {@code false} otherwise
+     */
+    protected boolean canAdd(DataSet<M, Field<M>, ID> dataSet) {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = getDataSetAnnotation();
+        if (dataSetAnnot.addRoles().length > 0) {
+            return SecurityUtils.hasRoleAtLeastOne(dataSetAnnot.addRoles());
+        } else if (dataSetAnnot.changeRoles().length > 0) {
+            return SecurityUtils.hasRoleAtLeastOne(dataSetAnnot.changeRoles());
+        } else {
+            return getDataSetAnnotation().canAdd();
+        }
+    }
+
+    /**
+     * Returns whether the data set allows the user to remove entries.
+     * <p>
+     * This method allows a data set to use roles or configuration to make a dashboard read-only
+     *
+     * @param dataSet the data set
+     * @return @{code true} if read-only, {@code false} otherwise
+     */
+    protected boolean canDelete(DataSet<M, Field<M>, ID> dataSet) {
+        net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnot = getDataSetAnnotation();
+        if (dataSetAnnot.addRoles().length > 0) {
+            return SecurityUtils.hasRoleAtLeastOne(dataSetAnnot.deleteRoles());
+        } else if (dataSetAnnot.changeRoles().length > 0) {
+            return SecurityUtils.hasRoleAtLeastOne(dataSetAnnot.changeRoles());
+        } else {
+            return getDataSetAnnotation().canDelete();
+        }
     }
 
     /**
@@ -717,11 +772,11 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private Toolbar getToolBar(DataSet<M, Field<M>, ID> dataSet) {
         Toolbar toolbar = new Toolbar().setId("toolbar");
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
-        if (!dataSet.isReadOnly() && dataSetAnnotation.canAdd()) {
+        if (!isReadOnly() && canAdd()) {
             toolbar.add(new Button().setAction("dataset.add").setText("Add").setIcon("fa-solid fa-plus").setPosition(1)
                     .setDescription("Adds a new " + dataSet.getName()));
         }
-        if (!dataSet.isReadOnly() && dataSetAnnotation.canUpload()) {
+        if (!isReadOnly() && dataSetAnnotation.canUpload()) {
             toolbar.add(new Button().setAction("dataset.upload").setText("Upload").setIcon("fa-solid fa-upload")
                     .setCssClass("dataset-drop-zone").setPosition(2).setDescription("Uploads a new " + dataSet.getName()));
         }
@@ -740,13 +795,13 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
     private Menu getMenu(DataSet<M, Field<M>, ID> dataSet) {
         Menu menu = new Menu().setId("actions");
         net.microfalx.bootstrap.dataset.annotation.DataSet dataSetAnnotation = getDataSetAnnotation();
-        if (!dataSet.isReadOnly()) {
+        if (!isReadOnly()) {
             menu.add(new Item().setAction("dataset.view").setText("View").setIcon("fa-solid fa-eye").setDescription("Views the " + dataSet.getName()));
             menu.add(new Item().setAction("dataset.edit").setText("Edit").setIcon("fa-solid fa-pen-to-square").setDescription("Edits the " + dataSet.getName()));
             if (dataSetAnnotation.canClone()) {
                 menu.add(new Item().setAction("dataset.clone").setText("Clone").setIcon("fa-solid fa-clone").setDescription("Clones the " + dataSet.getName()));
             }
-            if (dataSetAnnotation.canDelete()) {
+            if (canDelete()) {
                 menu.add(new Item().setAction("dataset.delete").setText("Delete").setIcon("fa-solid fa-trash-can").setDescription("Deletes the " + dataSet.getName()));
             }
             if (dataSetAnnotation.canDownload()) {
@@ -1085,6 +1140,18 @@ public abstract class DataSetController<M, ID> extends NavigableController<M, ID
             }
         }
         return range;
+    }
+
+    private boolean isReadOnly() {
+        return isReadOnly(getDataSet());
+    }
+
+    private boolean canAdd() {
+        return canAdd(getDataSet());
+    }
+
+    private boolean canDelete() {
+        return canDelete(getDataSet());
     }
 
     private boolean hasTimeRange(DataSet<M, Field<M>, ID> dataSet) {
