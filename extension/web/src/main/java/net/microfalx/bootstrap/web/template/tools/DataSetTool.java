@@ -599,11 +599,12 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
 
     /**
      * Returns whether a field is supposed to be rendered as a name.
+     *
      * @param field the field
      * @return {@code true} if it is a name field, {@code false} otherwise
      */
     public boolean isName(Field<M> field) {
-        return  field.isName() && !field.findAnnotation(Name.class).secondary();
+        return field.isName() && !field.findAnnotation(Name.class).secondary();
     }
 
     /**
@@ -842,6 +843,16 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the class to be used with a header cell group.
+     *
+     * @param group the field group
+     * @return the class
+     */
+    public String getHeaderClass(ColumnGroup<M, F, ID> group) {
+        return getHeaderClass(group.getField(), group.isGroup());
+    }
+
+    /**
      * Returns the class to be used with a header cell.
      *
      * @param field the field
@@ -869,6 +880,16 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
     }
 
     /**
+     * Returns the custom styles to be used with a header cell group.
+     *
+     * @param group the field group
+     * @return the class
+     */
+    public String getHeaderStyle(ColumnGroup<M, F, ID> group) {
+        return "min-width : " + DataSetUtils.getMinimumWidth(group.getFields());
+    }
+
+    /**
      * Returns the custom styles to be used with a header cell.
      *
      * @param field the field
@@ -884,8 +905,8 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
                 if (isNotEmpty(widthAnnot.min())) {
                     builder.append("min-width: ").append(widthAnnot.min());
                 }
-                if (isNotEmpty(widthAnnot.min())) {
-                    StringUtils.append(builder, "min-width: " + widthAnnot.min(), STYLE_SEPARATOR);
+                if (isNotEmpty(widthAnnot.max())) {
+                    StringUtils.append(builder, "max-width: " + widthAnnot.max(), STYLE_SEPARATOR);
                 }
             }
         }
@@ -1389,8 +1410,12 @@ public class DataSetTool<M, F extends Field<M>, ID> extends AbstractTool {
             return !isField();
         }
 
+        public List<F> getFields() {
+            return fields;
+        }
+
         public F getField() {
-            return fields.get(0);
+            return fields.getFirst();
         }
 
         public int getColSpan() {

@@ -4,9 +4,12 @@ import net.microfalx.bootstrap.core.i18n.I18n;
 import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.lang.EnumUtils;
+import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.annotation.Width;
 import net.microfalx.metrics.Metrics;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joor.Reflect;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,7 +23,10 @@ import java.util.Collection;
 import java.util.List;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.ClassUtils.isAssignable;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * Various utilities around data sets.
@@ -106,9 +112,9 @@ public class DataSetUtils {
     /**
      * Sorts a list of models.
      *
-     * @param metadata   the metadata
-     * @param models the models
-     * @param sort   the sort
+     * @param metadata the metadata
+     * @param models   the models
+     * @param sort     the sort
      * @return a non-null instance
      */
     public static <M, F extends Field<M>, ID> List<M> sort(Metadata<M, F, ID> metadata, Iterable<M> models, Sort sort) {
@@ -122,7 +128,7 @@ public class DataSetUtils {
     /**
      * Paginates a list of models.
      *
-     * @param metadata   the metadata
+     * @param metadata the metadata
      * @param models   the models
      * @param pageable the page information
      * @return a page of models
@@ -216,10 +222,41 @@ public class DataSetUtils {
     }
 
     /**
+     * Calculates the minimum width of a collection of columns.
+     *
+     * @param fields the field list
+     * @param <M>    the model type
+     * @param <F>    the field type
+     * @return the minimum width, "auto" if it cannot be determined
+     */
+    public static <M, F extends Field<M>> String getMinimumWidth(Collection<F> fields) {
+        if (ObjectUtils.isEmpty(fields)) return "auto";
+        String unit = null;
+        int width = 0;
+        for (F field : fields) {
+            Width widthAnnot = field.findAnnotation(Width.class);
+            if (widthAnnot == null) continue;
+            Pair<Integer, String> pair = null;
+            if (isNotEmpty(widthAnnot.value())) {
+                pair = parseNumberWithUnit(widthAnnot.value());
+            } else {
+                if (isNotEmpty(widthAnnot.min())) {
+                    pair = parseNumberWithUnit(widthAnnot.min());
+                }
+            }
+            if (pair != null) {
+                width += pair.getLeft();
+                if (isEmpty(unit)) unit = pair.getValue();
+            }
+        }
+        return width + EMPTY_STRING + unit;
+    }
+
+    /**
      * Creates a data set sort form a Spring Data sort.
      *
      * @param sort the initial sort
-     * @return a non-null instanace
+     * @return a non-null instance
      */
     static net.microfalx.bootstrap.model.Sort from(Sort sort) {
         List<net.microfalx.bootstrap.model.Sort.Order> orders = new ArrayList<>();
@@ -237,7 +274,7 @@ public class DataSetUtils {
      * Creates a data set sort form a Spring Data sort.
      *
      * @param sort the initial sort
-     * @return a non-null instanace
+     * @return a non-null instance
      */
     static Sort from(net.microfalx.bootstrap.model.Sort sort) {
         List<Sort.Order> orders = new ArrayList<>();
@@ -275,6 +312,19 @@ public class DataSetUtils {
             case NULLS_FIRST -> Sort.NullHandling.NULLS_FIRST;
             case NULLS_LAST -> Sort.NullHandling.NULLS_LAST;
         };
+    }
+
+    private static Pair<Integer, String> parseNumberWithUnit(String value) {
+        int position = 0;
+        for (; position < value.length(); position++) {
+            char c = value.charAt(position);
+            if (!Character.isDigit(c)) break;
+        }
+        String unit = StringUtils.EMPTY;
+        if (position == 0) return Pair.of(0, unit);
+        int number = Integer.parseInt(value.substring(0, position));
+        if (position < value.length()) unit = value.substring(position);
+        return Pair.of(number, unit);
     }
 
     private static final int[] STEP_LIMIT = {0, 1, 5, 60, 60 * 24};

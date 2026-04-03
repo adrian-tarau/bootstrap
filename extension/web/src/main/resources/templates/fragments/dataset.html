@@ -5,7 +5,7 @@
 <thead class="table-light" th:fragment="grid-header">
 <tr th:if="${#dataset.hasColumnGroups()}">
     <th scope="col" class="text-right align-middle" rowspan="2">#</th>
-    <th scope="col" th:each="group : ${#dataset.getColumnGroupsFirstRow()}" th:class="${#dataset.getHeaderClass(group.getField(), group.isGroup())}" th:style="${#dataset.getHeaderStyle(group.getField())}"
+    <th scope="col" th:each="group : ${#dataset.getColumnGroupsFirstRow()}" th:class="${#dataset.getHeaderClass(group)}" th:style="${#dataset.getHeaderStyle(group)}"
         th:attr="field_name=${group.getField().name},field_index=${#dataset.getFieldIndex(group.getField())}" component:tooltip="${group.getField()}" th:colspan="${group.getColSpan()}" th:rowspan="${group.getRowSpan()}">
         <span th:utext="${group.label}"></span>
     </th>
