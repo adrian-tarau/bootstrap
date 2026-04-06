@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.model;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
+import net.microfalx.lang.Logger;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
@@ -227,24 +228,42 @@ public final class Mapper<S, D> implements Cloneable {
     }
 
     private void initialize() {
+        Logger logger = Logger.create();
         sourceMetadata = getMetadata(sourceType);
         destinationMetadata = getMetadata(destinationType);
         for (Field<S> sourceField : sourceMetadata.getFields()) {
             if (shouldIgnore(sourceField)) {
+                logger.info(" - ''{0}'' ignored by name or annotation", sourceField.getName());
                 ignoredFieldMappers.add(new FieldMapperImpl<>(this, sourceField, null));
-            } else if (!ignoreComplexTypes || ClassUtils.isBaseClass(sourceField.getDataClass())) {
+            } else if (!ignoreComplexTypes || isBaseClass(sourceField)) {
                 String destinationFieldName = mappedFields.get(toIdentifier(sourceField.getName()));
                 if (destinationFieldName == null) destinationFieldName = sourceField.getName();
                 Field<D> destinationField = destinationMetadata.find(destinationFieldName);
                 if (destinationField != null) {
+                    logger.info(" - ''{0}'' mapped", sourceField.getName());
                     fieldMappers.add(new FieldMapperImpl<>(this, sourceField, destinationField));
+                } else {
+                    logger.info(" - ''{0}'' ignored, no target field", sourceField.getName());
                 }
+            } else {
+                logger.info(" - ''{0}'' ignored, complex type", sourceField.getName());
             }
         }
+        LOGGER.debug("Registered mapping between {} -> {}, fields:\n{}", ClassUtils.getName(sourceType),
+                ClassUtils.getName(destinationType), logger.getOutput());
+    }
+
+    private boolean isBaseClass(Field<S> sourceField) {
+        Class<?> dataClass = sourceField.getDataClass();
+        return ClassUtils.isBaseClass(dataClass) || dataClass.isEnum()
+                || ClassUtils.isSubClassOf(dataClass, Collection.class)
+                || ClassUtils.isSubClassOf(dataClass, Map.class);
     }
 
     private boolean shouldIgnore(Field<S> field) {
-        if (ignoreFields.contains(toIdentifier(field.getName()))) return true;
+        if (ignoreFields.contains(toIdentifier(field.getName()))) {
+            return true;
+        }
         return ignoreAnnotations.stream().anyMatch(annotation -> field.findAnnotation(annotation) != null);
     }
 

@@ -19,8 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ExtendWith(MockitoExtension.class)
 class MapperTest {
 
-    @Mock private ApplicationContext applicationContext;
-    @InjectMocks private MetadataService metadataService;
+    @Mock
+    private ApplicationContext applicationContext;
+    @InjectMocks
+    private MetadataService metadataService;
 
     @BeforeEach
     void before() throws Exception {
@@ -30,9 +32,10 @@ class MapperTest {
 
     @Test
     void simpleTypes() {
-        SimpleDestination destination = Mapper.get(SimpleSource.class, SimpleDestination.class).to(new SimpleSource().setName("John").setAge(30).setDummy1(100));
+        SimpleDestination destination = Mapper.get(SimpleSource.class, SimpleDestination.class).to(new SimpleSource().setName("John").setAge(30).setType(Type.T1).setDummy1(100));
         assertEquals("John", destination.getName());
         assertEquals(30, destination.getAge());
+        assertEquals(Type.T1, destination.getType());
         assertEquals(0, destination.getDummy2());
         destination = new SimpleDestination();
         Mapper.get(SimpleSource.class, SimpleDestination.class).copy(new SimpleSource().setName("John").setAge(30).setDummy1(100), destination);
@@ -50,12 +53,17 @@ class MapperTest {
         assertEquals(100, personJpa.getAge());
     }
 
+    public enum Type {
+        T1, T2
+    }
+
     @Getter
     @Setter
     @ToString
     public static class SimpleSource {
 
         private String name;
+        private Type type;
         private int age;
         private int dummy1;
     }
@@ -66,6 +74,7 @@ class MapperTest {
     public static class SimpleDestination {
 
         private String name;
+        private Type type;
         private int age;
         private int dummy2;
 
