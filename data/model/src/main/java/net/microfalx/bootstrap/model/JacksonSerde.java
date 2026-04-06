@@ -39,7 +39,7 @@ class JacksonSerde {
     }
 
     static void initialize() {
-        Jackson.registerSerde(Resource.class, new ResourceSerializer(), new ResourceDeserializer());
+        net.microfalx.bootstrap.core.utils.Jackson.registerSerde(Resource.class, new ResourceSerializer(), new ResourceDeserializer());
     }
 
 }

@@ -287,7 +287,7 @@ class Converters {
     }
 
     static ObjectMapper getObjectMapper() {
-        return Jackson.getObjectMapper();
+        return net.microfalx.bootstrap.core.utils.Jackson.getObjectMapper();
     }
 
     static {

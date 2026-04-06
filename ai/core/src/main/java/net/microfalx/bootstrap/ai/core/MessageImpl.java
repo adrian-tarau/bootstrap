@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.ToString;
 import net.microfalx.bootstrap.ai.api.Content;
 import net.microfalx.bootstrap.ai.api.Message;
-import net.microfalx.bootstrap.model.Jackson;
+import net.microfalx.bootstrap.core.utils.Jackson;
 import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.StringUtils;
 import org.springframework.ai.chat.messages.AssistantMessage;
