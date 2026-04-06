@@ -6,6 +6,7 @@
     </definition>
     <definition name="Models" type="mysql" path="02_ai_models.sql">
         <table>ai_models</table>
+        <migration path="01_ai_models_update_stop_words.sql"/>
     </definition>
     <definition name="Prompts" type="mysql" path="03_ai_prompts.sql">
         <table>ai_prompts</table>
