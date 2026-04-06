@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration xmlns="https://net.microfalx/xsd/configuration-1.0.xsd">
+
+    <group key="group1" name="Group 1">
+        <group key="group12" name="Group 1-2" description="Group 1 description">
+            <item key="item1" name="Item 1" default="20" description="Item 1 description"/>
+            <item key="item2" name="Item 2" data-type="number" minimum="1.5" maximum="5.5" default="2.3" description="Item 2 description"/>
+        </group>
+        <item key="item1" name="Item 1" data-type="integer" minimum="0" maximum="100" default="20" description="Item 1 description"/>
+    </group>
+
+    <group key="group2" name="Group 2">
+
+    </group>
+
+</configuration>

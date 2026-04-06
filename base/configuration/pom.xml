@@ -24,30 +24,33 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-base</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>bootstrap-base-configuration</artifactId>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap</artifactId>
+        <artifactId>bootstrap-base</artifactId>
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Base</name>
-	
-	<modules>
-        <module>core</module>
-        <module>logger</module>
-        <module>resource</module>
-        <module>metrics</module>
-        <module>registry</module>
-        <module>configuration</module>
-        <module>store</module>
-        <module>support</module>
-        <module>feature</module>
-        <module>security</module>
-        <module>web</module>
-    </modules>
+    <name>Bootstrap :: Base :: Configuration</name>
+
+    <dependencies>
+
+        <!-- Runtime -->
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-registry</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+    </dependencies>
 
 </project>
