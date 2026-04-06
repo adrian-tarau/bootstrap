@@ -65,7 +65,7 @@ public interface Schema extends Identifiable<String>, Nameable {
     /**
      * Returns a database specific query.
      *
-     * @param path the relative ( to ~/sql/DATABASE_TYPE/) path
+     * @param path the relative ( to ~/sql/DATABASE_TYPE/queries) path
      * @return a non-null instance
      */
     Query getQuery(String path);

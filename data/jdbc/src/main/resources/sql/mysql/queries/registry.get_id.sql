@@ -1,0 +1,1 @@
+select id from registry_nodes where natural_id = ?

@@ -1,9 +1,6 @@
 package net.microfalx.bootstrap.jdbc.support;
 
-import net.microfalx.resource.Resource;
-
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.StringUtils.addStartSlash;
 
 class QueryProviderImpl implements QueryProvider {
 
@@ -17,8 +14,8 @@ class QueryProviderImpl implements QueryProvider {
     }
 
     @Override
-    public Query withResource(String resource) {
-        return null;
+    public Query withResource(String path) {
+        return this.schema.getQuery(path);
     }
 
     @Override
@@ -26,7 +23,11 @@ class QueryProviderImpl implements QueryProvider {
         return Query.create(schema, sql);
     }
 
-    private Resource getResource(String path) {
-        return schema.getResource("queries" + addStartSlash(path));
+    @Override
+    public String toString() {
+        return "QueryProviderImpl{" +
+                "schema=" + schema.getName() +
+                ", database=" + database.getType() +
+                '}';
     }
 }

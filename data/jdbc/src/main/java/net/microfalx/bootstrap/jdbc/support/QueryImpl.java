@@ -3,7 +3,7 @@ package net.microfalx.bootstrap.jdbc.support;
 import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.NumberUtils;
 import net.microfalx.lang.ObjectUtils;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -76,6 +76,11 @@ final class QueryImpl implements Query {
         return statementSpec.query(extractor);
     }
 
+    @Override
+    public <T> T selectOne(RowMapper<T> mapper) {
+        return statementSpec.query(mapper).single();
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public <T> T selectOne(Class<T> type) {
@@ -93,7 +98,7 @@ final class QueryImpl implements Query {
     public <T> T selectOne(Class<T> type, T defaultValue) {
         try {
             return (T) statementSpec.query(type).single();
-        } catch (EmptyResultDataAccessException | IllegalArgumentException e) {
+        } catch (IncorrectResultSizeDataAccessException | IllegalArgumentException e) {
             return defaultValue;
         }
     }

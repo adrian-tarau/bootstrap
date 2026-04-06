@@ -1,0 +1,1 @@
+select id, natural_id, path, update_count, version, created_at, modified_at from registry_nodes where natural_id = ?

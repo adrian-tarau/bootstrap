@@ -1,0 +1,1 @@
+select data from registry_data where id = ?

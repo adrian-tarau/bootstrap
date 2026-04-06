@@ -1,0 +1,1 @@
+delete from registry_nodes where id = ?

@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Represents a database query.
- *
+ * <p>
  * A query can be created using the {@link QueryProvider} and executed to retrieve results or update data.
  */
 public interface Query {
@@ -86,9 +86,19 @@ public interface Query {
      * @param extractor the value extractor
      * @param <T>       the type of the result
      * @return the value
-     * @throws org.springframework.dao.EmptyResultDataAccessException if there is no result
+     * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if there is no result
      */
     <T> T selectOne(ResultSetExtractor<T> extractor);
+
+    /**
+     * Executes the query and returns a single result.
+     *
+     * @param mapper the value extractor
+     * @param <T>       the type of the result
+     * @return the value
+     * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if there is no result
+     */
+    <T> T selectOne(RowMapper<T> mapper);
 
     /**
      * Executes the query and returns a single result.
@@ -96,11 +106,9 @@ public interface Query {
      * @param type the type of the result
      * @param <T>  the type of the result
      * @return the value
-     * @throws org.springframework.dao.EmptyResultDataAccessException if there is no result
+     * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if there is no result
      */
     <T> T selectOne(Class<T> type);
-
-
 
     /**
      * Executes the query and returns a single result.
@@ -110,7 +118,7 @@ public interface Query {
      * @param type the type of the result
      * @param <T>  the type of the result
      * @return the value
-     * @throws org.springframework.dao.EmptyResultDataAccessException if there is no result
+     * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if there is no result
      */
     <T> T selectOne(Class<T> type, T defaultValue);
 
