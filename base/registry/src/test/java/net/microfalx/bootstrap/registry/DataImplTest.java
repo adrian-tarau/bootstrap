@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.registry;
 
+import lombok.Data;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -71,6 +72,14 @@ class DataImplTest {
         String testValue = "test string";
         dataImpl.set(testValue);
         assertEquals(testValue, dataImpl.get());
+    }
+
+    @Test
+    void setAndGetComplex() {
+        dataImpl = new DataImpl(testNode, true);
+        Person person = new Person().setName("Alice").setAge(30);
+        dataImpl.set(person);
+        assertEquals(person, dataImpl.get());
     }
 
     @Test
@@ -260,6 +269,14 @@ class DataImplTest {
 
         assertEquals("dataValue", dataImpl.get());
         assertEquals("customValue", dataImpl.getAttribute("customAttr"));
+    }
+
+    @Data
+    static class Person {
+
+        private String name;
+        private Integer age;
+
     }
 
 }
