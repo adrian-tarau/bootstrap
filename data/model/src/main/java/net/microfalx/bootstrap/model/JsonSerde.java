@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.model;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
+import net.microfalx.bootstrap.core.utils.Json;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
 
@@ -11,7 +12,7 @@ import java.io.IOException;
 /**
  * Various serializers and deserializers for JSON content using the Jackson library.
  */
-class JacksonSerde {
+class JsonSerde {
 
     private static class ResourceSerializer extends JsonSerializer<Resource> {
 
@@ -39,7 +40,7 @@ class JacksonSerde {
     }
 
     static void initialize() {
-        net.microfalx.bootstrap.core.utils.Jackson.registerSerde(Resource.class, new ResourceSerializer(), new ResourceDeserializer());
+        Json.registerSerde(Resource.class, new ResourceSerializer(), new ResourceDeserializer());
     }
 
 }

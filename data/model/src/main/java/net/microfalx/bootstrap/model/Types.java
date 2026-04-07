@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.model;
 
-import net.microfalx.bootstrap.core.utils.Jackson;
+import net.microfalx.bootstrap.core.utils.Json;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -51,7 +51,7 @@ public class Types {
      */
     public static Collection<?> asCollection(Object value) {
         try {
-            return Jackson.asCollection(value);
+            return Json.asCollection(value);
         } catch (IOException e) {
             throw new ModelException("Failed to convert value to collection", e);
         }
@@ -67,7 +67,7 @@ public class Types {
      */
     public static <T> Collection<T> asCollection(Object value, Class<T> elementType) {
         try {
-            return Jackson.asCollection(value, elementType);
+            return Json.asCollection(value, elementType);
         } catch (IOException e) {
             throw new ModelException("Failed to convert value to collection of " + elementType.getName(), e);
         }
@@ -81,7 +81,7 @@ public class Types {
      */
     public static Set<?> asSet(Object value) {
         try {
-            return Jackson.asSet(value);
+            return Json.asSet(value);
         } catch (IOException e) {
             throw new ModelException("Failed to convert value to collection", e);
         }
@@ -97,7 +97,7 @@ public class Types {
      */
     static <T> Set<T> asSet(Object value, Class<T> elementType) {
         try {
-            return Jackson.asSet(value, elementType);
+            return Json.asSet(value, elementType);
         } catch (IOException e) {
             throw new ModelException("Failed to convert value to collection of " + elementType.getName(), e);
         }
@@ -111,7 +111,7 @@ public class Types {
      */
     public static <T> Map<String, T> asMap(Object value) {
         try {
-            return Jackson.asMap(value);
+            return Json.asMap(value);
         } catch (IOException e) {
             throw new ModelException("Failed to convert value to collection", e);
         }
@@ -127,7 +127,7 @@ public class Types {
      */
     public static <T> T asObject(Object value, Class<T> elementType) {
         try {
-            return Jackson.asObject(value, elementType);
+            return Json.asObject(value, elementType);
         } catch (IOException e) {
             throw new ModelException("Failed to convert value to object of " + elementType.getName(), e);
         }

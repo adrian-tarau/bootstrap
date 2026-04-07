@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.core.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -17,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 
 /**
  * A facade for Jackson ObjectMapper and related classes.
@@ -26,7 +28,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * <p>
  * Any null or empty string or empty bytes[] will be deserialized as a null value or empty collection.
  */
-public class Jackson {
+public class Json {
 
     private static volatile ObjectMapper cachedObjectMapper;
     private static volatile SimpleModule cachedModule;
@@ -67,9 +69,13 @@ public class Jackson {
      * @param value the value to convert
      * @return the converted value
      */
-    public static String asString(Object value) throws IOException {
+    public static String asString(Object value) {
         if (value == null) return null;
-        return getObjectMapper().writeValueAsString(value);
+        try {
+            return getObjectMapper().writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            return rethrowExceptionAndReturn(e);
+        }
     }
 
     /**
@@ -78,9 +84,13 @@ public class Jackson {
      * @param value the value to convert
      * @return the converted value
      */
-    public static byte[] asBytes(Object value) throws IOException {
+    public static byte[] asBytes(Object value) {
         if (value == null) return null;
-        return getObjectMapper().writeValueAsBytes(value);
+        try {
+            return getObjectMapper().writeValueAsBytes(value);
+        } catch (JsonProcessingException e) {
+            return rethrowExceptionAndReturn(e);
+        }
     }
 
     /**
@@ -131,7 +141,7 @@ public class Jackson {
      */
     public static <T> Set<T> asSet(Object value, Class<T> elementType) throws IOException {
         if (ObjectUtils.isEmpty(value)) return Collections.emptySet();
-        ObjectMapper objectMapper = net.microfalx.bootstrap.core.utils.Jackson.getObjectMapper();
+        ObjectMapper objectMapper = Json.getObjectMapper();
         CollectionType collectionType = objectMapper.getTypeFactory().constructCollectionType(Set.class, elementType);
         return objectMapper.readValue(getReader(value), collectionType);
     }
@@ -145,7 +155,7 @@ public class Jackson {
     @SuppressWarnings("unchecked")
     public static <T> Map<String, T> asMap(Object value) throws IOException {
         if (ObjectUtils.isEmpty(value)) return Collections.emptyMap();
-        ObjectMapper objectMapper = net.microfalx.bootstrap.core.utils.Jackson.getObjectMapper();
+        ObjectMapper objectMapper = Json.getObjectMapper();
         return objectMapper.readValue(getReader(value), Map.class);
 
     }
@@ -171,7 +181,7 @@ public class Jackson {
      */
     public static ObjectMapper getObjectMapper() {
         if (cachedObjectMapper == null) {
-            synchronized (Jackson.class) {
+            synchronized (Json.class) {
                 if (cachedObjectMapper == null) {
                     cachedObjectMapper = createObjectMapper();
                 }
@@ -208,6 +218,8 @@ public class Jackson {
             objectMapper.registerModule(module);
         }
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.disable(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS);
         return objectMapper;
     }
 

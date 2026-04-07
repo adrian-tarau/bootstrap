@@ -8,7 +8,7 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class JacksonTest {
+class JsonSerdeTest {
 
     @Test
     void resource() throws IOException {

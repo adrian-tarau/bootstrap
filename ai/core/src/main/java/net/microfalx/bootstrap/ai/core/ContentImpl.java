@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import lombok.ToString;
 import net.microfalx.bootstrap.ai.api.Content;
-import net.microfalx.bootstrap.core.utils.Jackson;
+import net.microfalx.bootstrap.core.utils.Json;
 import net.microfalx.lang.EnumUtils;
 import net.microfalx.resource.MimeType;
 import net.microfalx.resource.Resource;
@@ -147,6 +147,6 @@ public class ContentImpl implements Content {
     }
 
     static {
-        Jackson.registerSerde(Content.class, new Serializer(), new Deserializer());
+        Json.registerSerde(Content.class, new Serializer(), new Deserializer());
     }
 }

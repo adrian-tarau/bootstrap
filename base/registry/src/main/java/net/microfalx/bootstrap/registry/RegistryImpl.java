@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.registry;
 
-import net.microfalx.bootstrap.core.utils.Jackson;
+import net.microfalx.bootstrap.core.utils.Json;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -87,12 +87,8 @@ final class RegistryImpl implements Registry {
         requireNonNull(data);
         String path = normalizePath(data.getNode().getPath());
         Storage storage = getStorage();
-        try {
-            byte[] json = Jackson.asBytes(((DataImpl) data).attributes);
-            storage.put(path, json);
-        } catch (IOException e) {
-            throw new RegistryException("Failed to serialize data for node '" + path + "'", e);
-        }
+        byte[] json = Json.asBytes(((DataImpl) data).attributes);
+        storage.put(path, json);
     }
 
     private boolean walkInternal(String path, int depth, BiFunction<String, Node, Boolean> visitor, Storage storage) {
@@ -113,7 +109,7 @@ final class RegistryImpl implements Registry {
         Storage storage = getStorage();
         byte[] dataBytes = storage.get(node.getPath());
         try {
-            Map<String, Object> attributes = Jackson.asMap(dataBytes);
+            Map<String, Object> attributes = Json.asMap(dataBytes);
             return new DataImpl(nodeImpl, attributes);
         } catch (IOException e) {
             throw new RegistryException("Failed to deserialize data for node '" + node.getPath() + "'", e);

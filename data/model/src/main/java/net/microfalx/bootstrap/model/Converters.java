@@ -8,6 +8,7 @@ import jodd.typeconverter.TypeConverter;
 import jodd.typeconverter.TypeConverterManager;
 import jodd.typeconverter.impl.LocalDateTimeConverter;
 import jodd.util.StringUtil;
+import net.microfalx.bootstrap.core.utils.Json;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ObjectUtils;
 
@@ -287,7 +288,7 @@ class Converters {
     }
 
     static ObjectMapper getObjectMapper() {
-        return net.microfalx.bootstrap.core.utils.Jackson.getObjectMapper();
+        return Json.getObjectMapper();
     }
 
     static {
@@ -297,5 +298,6 @@ class Converters {
         TYPE_CONVERTER_MANAGER.register(Map.class, new MapConverter());
         TYPE_CONVERTER_MANAGER.register(Collection.class, new CollectionConverter());
         TYPE_CONVERTER_MANAGER.register(Set.class, new SetConverter());
+        JsonSerde.initialize();
     }
 }

@@ -2,12 +2,14 @@ package net.microfalx.bootstrap.registry;
 
 import lombok.Getter;
 import lombok.ToString;
+import net.microfalx.bootstrap.core.utils.Json;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 @Getter
 @ToString
@@ -50,15 +52,29 @@ final class DataImpl implements Data {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get() {
-        return (T) attributes.get(DATA_VALUE_ATTR);
+        String valueAsString = (String) attributes.get(DATA_VALUE_ATTR);
+        if (isNotEmpty(valueAsString)) {
+            String dataTypeClassName = (String) attributes.get(DATA_TYPE_ATTR);
+            try {
+                Class<?> dataTypeClass = getClass().getClassLoader().loadClass(dataTypeClassName);
+                return Json.asObject(valueAsString, (Class<T>) dataTypeClass);
+            } catch (ClassNotFoundException e) {
+                throw new RegistryException("Cannot load class " + dataTypeClassName, e);
+            } catch (Exception e) {
+                throw new RegistryException("Cannot deserialize class " + dataTypeClassName, e);
+            }
+        } else {
+            return null;
+        }
     }
 
     @Override
     public <T> void set(T value) {
-        attributes.put(DATA_VALUE_ATTR, value);
         if (value != null) {
+            attributes.put(DATA_VALUE_ATTR, Json.asString(value));
             attributes.put(DATA_TYPE_ATTR, value.getClass().getName());
         } else {
+            attributes.remove(DATA_VALUE_ATTR);
             attributes.remove(DATA_TYPE_ATTR);
         }
     }

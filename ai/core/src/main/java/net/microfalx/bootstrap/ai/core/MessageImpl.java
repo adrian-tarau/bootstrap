@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.ToString;
 import net.microfalx.bootstrap.ai.api.Content;
 import net.microfalx.bootstrap.ai.api.Message;
-import net.microfalx.bootstrap.core.utils.Jackson;
+import net.microfalx.bootstrap.core.utils.Json;
 import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.StringUtils;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -163,7 +163,7 @@ public class MessageImpl implements Message {
 
 
     static {
-        Jackson.registerSerde(Message.class, new Serializer(), new Deserializer());
+        Json.registerSerde(Message.class, new Serializer(), new Deserializer());
     }
 
     private static final TypeReference<List<Content>> CONTENT_LIST_TYPE = new TypeReference<List<Content>>() {
