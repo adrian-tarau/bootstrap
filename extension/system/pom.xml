@@ -24,30 +24,42 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-extension</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>bootstrap-extension-system</artifactId>
     <version>0.8.5-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap</artifactId>
+        <artifactId>bootstrap-extension</artifactId>
         <version>0.8.5-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Extension</name>
-	
-	<modules>
-        <module>help</module>
-        <module>search</module>
-        <module>template</module>
-        <module>mail</module>
-        <module>web</module>
-        <module>dos</module>
-		<module>rest-api</module>
-		<module>rest-api-client</module>
-        <module>security</module>
-        <module>system</module>
-        <module>support</module>
-    </modules>
+    <name>Bootstrap :: Extension :: System</name>
+
+    <dependencies>
+
+        <!-- Bootstrap -->
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-extension-web</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-support</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Runtime -->
+
+        <!-- Testing -->
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>
