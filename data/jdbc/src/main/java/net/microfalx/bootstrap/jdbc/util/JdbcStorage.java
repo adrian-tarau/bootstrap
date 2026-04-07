@@ -4,7 +4,7 @@ import net.microfalx.bootstrap.jdbc.support.Query;
 import net.microfalx.bootstrap.jdbc.support.QueryProvider;
 import net.microfalx.bootstrap.registry.AbstractStorage;
 import net.microfalx.bootstrap.registry.Node;
-import net.microfalx.bootstrap.registry.RegistryUtils;
+import net.microfalx.lang.UriUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -13,14 +13,10 @@ import org.springframework.stereotype.Component;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static net.microfalx.bootstrap.registry.RegistryUtils.getNaturalId;
-import static net.microfalx.bootstrap.registry.RegistryUtils.normalizePath;
+import static net.microfalx.bootstrap.registry.RegistryUtils.*;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Component
@@ -60,7 +56,7 @@ public class JdbcStorage extends AbstractStorage {
     public Optional<Node> getNode(String path) {
         String normalizedPath = normalizePath(path);
         Query query = queryProvider.withResource("registry.get_node.sql")
-                .parameter(1, RegistryUtils.getNaturalId(normalizedPath));
+                .parameter(1, getNaturalId(normalizedPath));
         try {
             AbstractStorage.StorageNode node = query.selectOne((rs, rowNum) -> mapToStorageNode(rs));
             if (node != null) {
@@ -101,15 +97,9 @@ public class JdbcStorage extends AbstractStorage {
     @Override
     public void put(String path, byte[] data, int version) {
         String normalizedPath = normalizePath(path);
-        Long parentId = getParentId(normalizedPath);
-        LocalDateTime now = LocalDateTime.now();
-        Query nodeQuery = queryProvider.withResource("registry.put_node.sql");
-        nodeQuery.parameters(parentId, getNaturalId(normalizedPath), normalizedPath, version, 1, now, now);
-        nodeQuery.update();
-        Long id = getId(normalizedPath);
-        Query dataQuery = queryProvider.withResource("registry.put_data.sql");
-        dataQuery.parameters(id, data);
-        dataQuery.update();
+        Long parentId = createParentId(normalizedPath);
+        createOrUpdateNode(parentId, normalizedPath, version);
+        createOrUpdateData(getId(normalizedPath), data);
     }
 
     @Override
@@ -145,12 +135,35 @@ public class JdbcStorage extends AbstractStorage {
     }
 
     private Long getParentId(String path) {
-        String parentPath = RegistryUtils.getParent(path);
+        String parentPath = getParent(path);
         return getId(parentPath);
     }
 
+    private Long createParentId(String path) {
+        Long parentId = getParentId(path);
+        if (parentId != null) return parentId;
+        String parentPath = getParent(path);
+        if (UriUtils.isRoot(path)) return null;
+        Stack<String> paths = new Stack<>();
+        while (!UriUtils.isRoot(parentPath)) {
+            paths.push(parentPath);
+            parentPath = getParent(parentPath);
+        }
+        Long lastParentId = null;
+        while (!paths.empty()) {
+            parentPath = paths.pop();
+            parentId = getId(parentPath);
+            if (parentId == null) createOrUpdateNode(lastParentId, parentPath, 1);
+            lastParentId = getId(parentPath);
+            if (lastParentId == null) {
+                throw new IllegalStateException("Cannot find node id after creating node, path: " + path);
+            }
+        }
+        return getParentId(path);
+    }
+
     private Long getId(String path) {
-        String naturalId = RegistryUtils.getNaturalId(path);
+        String naturalId = getNaturalId(path);
         Long id = nodeIds.get(naturalId);
         if (id == null) {
             try {
@@ -163,5 +176,18 @@ public class JdbcStorage extends AbstractStorage {
         }
         if (id != null) nodeIds.put(naturalId, id);
         return id;
+    }
+
+    private void createOrUpdateNode(Long parentId, String path, int version) {
+        LocalDateTime now = LocalDateTime.now();
+        Query nodeQuery = queryProvider.withResource("registry.put_node.sql");
+        nodeQuery.parameters(parentId, getNaturalId(path), path, now, now);
+        nodeQuery.update();
+    }
+
+    private void createOrUpdateData(long id, byte[] data) {
+        Query dataQuery = queryProvider.withResource("registry.put_data.sql");
+        dataQuery.parameters(id, data);
+        dataQuery.update();
     }
 }
