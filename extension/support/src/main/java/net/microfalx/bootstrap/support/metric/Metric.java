@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.system.metric;
+package net.microfalx.bootstrap.support.metric;
 
 import lombok.Getter;
 import lombok.Setter;

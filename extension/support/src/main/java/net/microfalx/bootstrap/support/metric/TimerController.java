@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.system.metric;
+package net.microfalx.bootstrap.support.metric;
 
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
@@ -8,12 +8,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping(value = "/support/metric/counter")
-@DataSet(model = Counter.class)
-@Help("admin/metric/counter")
-public class CounterController  extends DataSetController<Counter, String>  {
+@RequestMapping(value = "/support/metric/timer")
+@DataSet(model = Timer.class)
+@Help("admin/metric/timer")
+public class TimerController extends DataSetController<Timer, String> {
 
-    public CounterController(DataSetService dataSetService) {
+    public TimerController(DataSetService dataSetService) {
         super(dataSetService);
     }
 }

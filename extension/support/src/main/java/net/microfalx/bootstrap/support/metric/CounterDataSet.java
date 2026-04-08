@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.system.metric;
+package net.microfalx.bootstrap.support.metric;
 
 import net.microfalx.bootstrap.dataset.DataSetFactory;
 import net.microfalx.bootstrap.dataset.PojoDataSet;
@@ -14,15 +14,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Provider
-public class GaugeDataSet extends PojoDataSet<Gauge, PojoField<Gauge>, String> {
+public class CounterDataSet extends PojoDataSet<Counter, PojoField<Counter>, String> {
 
-    public GaugeDataSet(DataSetFactory<Gauge, PojoField<Gauge>, String> factory, Metadata<Gauge, PojoField<Gauge>, String> metadata) {
+    public CounterDataSet(DataSetFactory<Counter, PojoField<Counter>, String> factory, Metadata<Counter, PojoField<Counter>, String> metadata) {
         super(factory, metadata);
     }
 
     @Override
-    protected Page<Gauge> doFindAll(Pageable pageable, Filter filterable) {
-        List<Gauge> timers = Metrics.ROOT.getGauges().stream().map(Gauge::from).collect(Collectors.toList());
+    protected Page<Counter> doFindAll(Pageable pageable, Filter filterable) {
+        List<Counter> timers = Metrics.ROOT.getCounters().stream().map(Counter::from).collect(Collectors.toList());
         return getPage(timers, pageable, filterable);
     }
 }

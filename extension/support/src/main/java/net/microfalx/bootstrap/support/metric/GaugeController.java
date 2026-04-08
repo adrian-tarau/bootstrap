@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.system.metric;
+package net.microfalx.bootstrap.support.metric;
 
 import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.dataset.annotation.DataSet;
