@@ -10,7 +10,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * A controller for an application page.
- *
+ * <p>
  * By default, all pages require authentication. Use {@link @PermitAll} to allow anonymous access.
  */
 public abstract class PageController implements AuthenticatedController {

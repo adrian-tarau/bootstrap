@@ -82,6 +82,7 @@ class ConfigurationLoader {
                 getRequiredAttribute(groupElement, "name"));
         loadOrder(metadata, groupElement);
         loadDescription(metadata, groupElement);
+        metadata.section = getAttribute(groupElement, "section", (String) null);
         register(metadata);
         metadataStack.push(metadata);
         groupCount++;

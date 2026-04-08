@@ -27,6 +27,7 @@
             </xs:sequence>
             <xs:attribute name="key" use="required"/>
             <xs:attribute name="name" use="required"/>
+            <xs:attribute name="section"/>
             <xs:attribute name="order"/>
             <xs:attribute name="description"/>
         </xs:complexType>

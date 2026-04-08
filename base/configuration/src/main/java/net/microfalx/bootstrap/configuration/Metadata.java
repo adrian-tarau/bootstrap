@@ -27,6 +27,7 @@ public class Metadata implements Identifiable<String>, Nameable, Descriptable {
     private String id;
     private final String name;
 
+    String section;
     String defaultValue;
     String description;
     int order;
