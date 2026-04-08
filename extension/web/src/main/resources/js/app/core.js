@@ -241,6 +241,11 @@ Application.ajax = function (type, path, params, callback, options) {
     let timeout = Utils.defaultIfNotDefinedOrNull(options.timeout, APP_AJAX_DEFAULT_TIMEOUT);
     let uri = this.getUri(path, {}, options);
     let data = type === 'POST' && Utils.isNotEmpty(options.data) ? options.data : params;
+    if (options.contentType === 'json') {
+        debugger;
+        options.contentType = 'application/json; charset=UTF-8';
+        data = data ? JSON.stringify(data) : null;
+    }
     Logger.log(options.background ? "info" : "trace", "Ajax Request: " + uri + ", params: " + Utils.toString(params) + ", data type " + options.dataType);
     if (options.mask) me.mask(options.mask, options.maskMessage);
     let headers = me.getHeaders();
