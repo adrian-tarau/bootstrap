@@ -100,7 +100,7 @@ public class FormatterUtils {
             if (formattable != null && formattable.maximumLines() > 0) {
                 return StringUtils.getMaximumLines(valueAsString, formattable.maximumLines());
             } else if (formattable != null && formattable.maximumLength() > 0) {
-                return org.apache.commons.lang3.StringUtils.abbreviateMiddle(valueAsString, "...",formattable.maximumLength());
+                return org.apache.commons.lang3.StringUtils.abbreviateMiddle(valueAsString, "...", formattable.maximumLength());
             } else {
                 return valueAsString;
             }
@@ -167,7 +167,12 @@ public class FormatterUtils {
         } else if (value instanceof Enum) {
             return EnumUtils.toLabel((Enum) value);
         } else if (value instanceof Temporal) {
-            return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value, getTimeZone());
+            boolean elapsed = formattable != null && formattable.elapsed();
+            if (elapsed) {
+                return net.microfalx.lang.FormatterUtils.formatElapsed(value, getTimeZone(), true);
+            } else {
+                return net.microfalx.lang.FormatterUtils.formatTemporal((Temporal) value, getTimeZone());
+            }
         } else if (value instanceof Duration) {
             String zeroValue = formattable != null ? (Formattable.AUTO.equals(formattable.zeroValue()) ? null : Formattable.NA) : null;
             return net.microfalx.lang.FormatterUtils.formatDuration(value, Formattable.NA, false, zeroValue);

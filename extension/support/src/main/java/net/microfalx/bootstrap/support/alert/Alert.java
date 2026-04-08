@@ -3,11 +3,15 @@ package net.microfalx.bootstrap.support.alert;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.dataset.model.Formatters;
 import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.bootstrap.logger.AlertEvent;
 import net.microfalx.bootstrap.logger.LoggerEvent;
 import net.microfalx.lang.annotation.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -20,11 +24,17 @@ public class Alert extends IdentityAware<String> {
 
     @Position(1)
     @Description("The time when the alert started to fire")
+    @CreatedDate
+    @CreatedAt
+    @Formattable(tooltip = Formatters.CreatedAtTooltip.class, elapsed = true)
     private LocalDateTime createdAt;
 
     @Position(2)
     @Description("The last time when the alert fired")
     @OrderBy(OrderBy.Direction.DESC)
+    @Formattable(tooltip = Formatters.ModifiedAtTooltip.class, elapsed = true)
+    @LastModifiedDate
+    @ModifiedAt
     @Timestamp
     private LocalDateTime modifiedAt;
 
@@ -35,7 +45,7 @@ public class Alert extends IdentityAware<String> {
     @Position(10)
     @Name
     @Description("The message associated with the alert")
-    @Width("30%")
+    @Width("40%")
     private String message;
 
     @Position(11)

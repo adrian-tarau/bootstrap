@@ -3,7 +3,9 @@ package net.microfalx.bootstrap.ai.web.system.jpa;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.dataset.model.Formatters;
 import net.microfalx.bootstrap.jdbc.entity.natural.NamedAndTaggedIdentityAware;
 import net.microfalx.bootstrap.jdbc.jpa.DurationConverter;
 import net.microfalx.lang.annotation.*;
@@ -44,7 +46,8 @@ public class Chat extends NamedAndTaggedIdentityAware<String> {
     @Label("Started At")
     @Description("The start time of chat")
     @OrderBy(OrderBy.Direction.DESC)
-    @ModifiedAt
+    @CreatedAt
+    @Formattable(tooltip = Formatters.ModifiedAtTooltip.class, elapsed = true)
     private LocalDateTime startAt;
 
     @Column(name = "finish_at", nullable = false)

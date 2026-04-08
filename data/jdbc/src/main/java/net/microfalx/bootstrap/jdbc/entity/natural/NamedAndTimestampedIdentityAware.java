@@ -10,7 +10,7 @@ import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
-import net.microfalx.bootstrap.jdbc.entity.EntityFormatters;
+import net.microfalx.bootstrap.dataset.model.Formatters;
 import net.microfalx.lang.Timestampable;
 import net.microfalx.lang.annotation.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -31,9 +31,9 @@ public abstract class NamedAndTimestampedIdentityAware<T extends Serializable> e
     @Column(name = "created_at", nullable = false, updatable = false)
     @NotNull
     @Position(500)
-    @Visible(modes = {Visible.Mode.BROWSE})
+    @Visible(value = false)
     @Description("The timestamp when the {name} was created")
-    @Formattable(tooltip = EntityFormatters.CreatedAtTooltip.class)
+    @Formattable(tooltip = Formatters.CreatedAtTooltip.class, elapsed = true)
     @OrderBy(OrderBy.Direction.DESC)
     @CreatedDate
     @CreatedAt
@@ -43,7 +43,7 @@ public abstract class NamedAndTimestampedIdentityAware<T extends Serializable> e
     @Position(501)
     @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was last time modified")
-    @Formattable(tooltip = EntityFormatters.ModifiedAtTooltip.class)
+    @Formattable(tooltip = Formatters.ModifiedAtTooltip.class, elapsed = true)
     @LastModifiedDate
     @ModifiedAt
     private LocalDateTime modifiedAt;

@@ -5,7 +5,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.dataset.model.Formatters;
 import net.microfalx.bootstrap.jdbc.entity.surrogate.IdentityAware;
 import net.microfalx.lang.annotation.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -44,6 +46,7 @@ public class Audit extends IdentityAware<Integer> {
     @Position(30)
     @Description("The timestamp when the audit entry was created")
     @net.microfalx.bootstrap.dataset.annotation.OrderBy(OrderBy.Direction.DESC)
+    @Formattable(tooltip = Formatters.CreatedAtTooltip.class, elapsed = true)
     @CreatedDate
     @CreatedAt
     @Width("180px")

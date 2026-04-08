@@ -3,7 +3,9 @@ package net.microfalx.bootstrap.support.pool;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
+import net.microfalx.bootstrap.dataset.model.Formatters;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.annotation.*;
@@ -23,6 +25,7 @@ public class CompletedTask extends AbstractTask {
     @Label(value = "Started At")
     @Description("The timestamp when the task was started")
     @OrderBy(OrderBy.Direction.DESC)
+    @Formattable(tooltip = Formatters.StartedAtTooltip.class, elapsed = true)
     @CreatedDate
     @CreatedAt
     private LocalDateTime startedAt;

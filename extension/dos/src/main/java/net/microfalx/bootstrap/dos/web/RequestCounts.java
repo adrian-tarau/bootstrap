@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.model.Formatters;
 import net.microfalx.lang.annotation.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -82,11 +84,18 @@ public class RequestCounts {
     @Position(100)
     @Description("The timestamp of the first request")
     @Width("180px")
+    @Visible(false)
+    @Formattable(tooltip = Formatters.CreatedAtTooltip.class, elapsed = true)
+    @CreatedDate
+    @CreatedAt
     private LocalDateTime createdAt;
 
     @Position(101)
     @Description("The timestamp of the last request")
     @Width("180px")
+    @Formattable(tooltip = Formatters.ModifiedAtTooltip.class, elapsed = true)
+    @CreatedDate
+    @CreatedAt
     private LocalDateTime modifiedAt;
 
 }

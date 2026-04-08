@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.dataset.model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
 import net.microfalx.lang.Timestampable;
 import net.microfalx.lang.annotation.*;
@@ -27,9 +28,10 @@ public abstract class TimestampAware implements Timestampable<LocalDateTime>, Se
     private static final long serialVersionUID = 1541768280285586132L;
 
     @Position(500)
-    @Visible(modes = {Visible.Mode.BROWSE})
+    @Visible(value = false)
     @Description("The timestamp when the {name} was created")
     @OrderBy(OrderBy.Direction.DESC)
+    @Formattable(tooltip = Formatters.CreatedAtTooltip.class, elapsed = true)
     @CreatedDate
     @CreatedAt
     private LocalDateTime createdAt;
@@ -37,6 +39,7 @@ public abstract class TimestampAware implements Timestampable<LocalDateTime>, Se
     @Position(501)
     @Visible(modes = {Visible.Mode.BROWSE})
     @Description("The timestamp when the {name} was last time modified")
+    @Formattable(tooltip = Formatters.ModifiedAtTooltip.class, elapsed = true)
     @Timestamp
     @LastModifiedDate
     @ModifiedAt

@@ -79,6 +79,13 @@ public @interface Formattable {
     boolean prettyPrint() default true;
 
     /**
+     * Returns whether a temporal is displayed as "time since"
+     *
+     * @return {@code true} if should shows as elapsed, {@code false} otherwise (absolute time)
+     */
+    boolean elapsed() default false;
+
+    /**
      * Returns the minimum number of digits used to format decimals.
      * <p>
      * By default, the number is printed as is.

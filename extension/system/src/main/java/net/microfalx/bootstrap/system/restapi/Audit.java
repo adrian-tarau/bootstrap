@@ -9,7 +9,7 @@ import lombok.ToString;
 import net.microfalx.bootstrap.dataset.Alert;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
 import net.microfalx.bootstrap.dataset.annotation.OrderBy;
-import net.microfalx.bootstrap.jdbc.entity.EntityFormatters;
+import net.microfalx.bootstrap.dataset.model.Formatters;
 import net.microfalx.bootstrap.jdbc.entity.surrogate.IdentityAware;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.lang.annotation.*;
@@ -91,8 +91,9 @@ public class Audit extends IdentityAware<Integer> {
     @NotNull
     @Position(500)
     @Visible(modes = {Visible.Mode.BROWSE})
+    @Label(value = "Created At")
     @Description("The timestamp when the request was started")
-    @Formattable(tooltip = EntityFormatters.CreatedAtTooltip.class)
+    @Formattable(tooltip = Formatters.StartedAtTooltip.class, elapsed = true)
     @net.microfalx.bootstrap.dataset.annotation.OrderBy(OrderBy.Direction.DESC)
     @CreatedDate
     @CreatedAt
@@ -103,7 +104,7 @@ public class Audit extends IdentityAware<Integer> {
     @Position(501)
     @Visible(value = false)
     @Description("The timestamp when the request has ended")
-    @Formattable(tooltip = EntityFormatters.ModifiedAtTooltip.class)
+    @Formattable(elapsed = true)
     private LocalDateTime endedAt;
 
     @Column(name = "duration")

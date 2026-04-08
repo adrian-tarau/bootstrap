@@ -3,9 +3,13 @@ package net.microfalx.bootstrap.system.metric;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.model.Formatters;
 import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.lang.annotation.*;
 import net.microfalx.metrics.Meter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -17,7 +21,7 @@ public abstract class Metric extends IdentityAware<String> {
 
     @Position(2)
     @Description("The group of the timer")
-    @Width("15%")
+    @Width("20%")
     private String group;
 
     @Position(3)
@@ -28,10 +32,16 @@ public abstract class Metric extends IdentityAware<String> {
 
     @Position(101)
     @Description("The timestamp when the metric was accessed first time")
+    @CreatedDate
+    @CreatedAt
+    @Formattable(tooltip = Formatters.FirstAccessedTooltip.class, elapsed = true)
     private LocalDateTime firstAccess;
 
     @Position(102)
     @Description("The timestamp when the metric was accessed last time")
+    @Formattable(tooltip = Formatters.LastAccessedTooltip.class, elapsed = true)
+    @LastModifiedDate
+    @ModifiedAt
     private LocalDateTime lastAccess;
 
     static void update(Metric model, Meter meter) {

@@ -6,6 +6,7 @@ import lombok.ToString;
 import net.microfalx.bootstrap.broker.Broker;
 import net.microfalx.bootstrap.broker.Topic;
 import net.microfalx.bootstrap.dataset.annotation.Formattable;
+import net.microfalx.bootstrap.dataset.model.Formatters;
 import net.microfalx.bootstrap.dataset.model.IdentityAware;
 import net.microfalx.lang.annotation.*;
 
@@ -90,6 +91,7 @@ public class BrokerConsumer extends IdentityAware<String> {
     @Position(101)
     @Description("The timestamp when the consumer was created")
     @CreatedAt
+    @Formattable(tooltip = Formatters.CreatedAtTooltip.class, elapsed = true)
     private LocalDateTime createdAt;
 
     /**
