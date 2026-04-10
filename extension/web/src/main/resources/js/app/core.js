@@ -242,7 +242,6 @@ Application.ajax = function (type, path, params, callback, options) {
     let uri = this.getUri(path, {}, options);
     let data = type === 'POST' && Utils.isNotEmpty(options.data) ? options.data : params;
     if (options.contentType === 'json') {
-        debugger;
         options.contentType = 'application/json; charset=UTF-8';
         data = data ? JSON.stringify(data) : null;
     }
