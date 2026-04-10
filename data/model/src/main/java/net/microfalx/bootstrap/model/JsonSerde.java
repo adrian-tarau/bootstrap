@@ -20,34 +20,6 @@ import java.time.format.DateTimeFormatter;
  */
 public class JsonSerde {
 
-    public static class SystemZoneLocalDateTimeSerializer extends JsonSerializer<LocalDateTime> {
-
-        @Override
-        public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider serializers)
-                throws IOException {
-
-            if (value == null) {
-                gen.writeNull();
-            } else {
-                ZonedDateTime zoned = value.atZone(ZoneId.systemDefault());
-                // ISO format with zone (recommended)
-                gen.writeString(zoned.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-            }
-        }
-    }
-
-    public static class SystemZoneLocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
-
-        @Override
-        public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-            String text = p.getText();
-            if (StringUtils.isEmpty(text)) return null;
-            // Parse as OffsetDateTime (safer than ZonedDateTime for JSON)
-            OffsetDateTime odt = OffsetDateTime.parse(text, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-            return odt.atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
-        }
-    }
-
     private static class ResourceSerializer extends JsonSerializer<Resource> {
 
         @Override

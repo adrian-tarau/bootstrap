@@ -11,6 +11,7 @@ import net.microfalx.lang.ObjectUtils;
 import net.microfalx.resource.Resource;
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -212,11 +213,17 @@ public class Json {
         objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.registerModule(new JavaTimeModule());
+
         objectMapper.registerModule(getModule());
         for (Module module : modules) {
             objectMapper.registerModule(module);
         }
+
+        JavaTimeModule timeModule = new JavaTimeModule();
+        timeModule.addSerializer(LocalDateTime.class, new JsonSerde.SystemZoneLocalDateTimeSerializer());
+        timeModule.addDeserializer(LocalDateTime.class, new JsonSerde.SystemZoneLocalDateTimeDeserializer());
+        objectMapper.registerModule(timeModule);
+
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.disable(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS);
