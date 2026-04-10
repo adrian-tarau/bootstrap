@@ -72,6 +72,26 @@ public class ConfigurationController extends SystemPageController {
                 return StringUtils.EMPTY_STRING;
             }
         }
+
+        public boolean isTextField(Metadata metadata) {
+            return !metadata.isMultiline() && isTextBased(metadata);
+        }
+
+        public boolean isTextArea(Metadata metadata) {
+            return metadata.isMultiline() && isTextField(metadata);
+        }
+
+        public boolean isCheckboxField(Metadata metadata) {
+            return metadata.getDataType() == Metadata.DataType.BOOLEAN;
+        }
+
+        private boolean isTextBased(Metadata metadata) {
+            return metadata.getDataType() != Metadata.DataType.BOOLEAN;
+        }
+
+        public String getFieldClass(Metadata metadata) {
+            return "";
+        }
     }
 
 

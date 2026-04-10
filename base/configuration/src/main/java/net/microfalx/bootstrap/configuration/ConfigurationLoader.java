@@ -98,6 +98,7 @@ class ConfigurationLoader {
             metadata.dataType = EnumUtils.fromName(Metadata.DataType.class,
                     getAttribute(itemElement, "data-type", (String) null), Metadata.DataType.STRING);
             loadRange(metadata, itemElement);
+            loadComponent(metadata, itemElement);
             register(metadata);
             itemCount++;
         }
@@ -125,6 +126,11 @@ class ConfigurationLoader {
 
     private void loadDescription(Metadata metadata, Element element) {
         metadata.description = getAttribute(element, "description", (String) null);
+    }
+
+    private void loadComponent(Metadata metadata, Element element) {
+        metadata.lineCount = getAttribute(element, "line-count", 0);
+        metadata.multiline = metadata.lineCount > 1;
     }
 
     private void register(Metadata metadata) {

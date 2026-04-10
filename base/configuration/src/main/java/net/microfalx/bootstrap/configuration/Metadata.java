@@ -31,6 +31,8 @@ public class Metadata implements Identifiable<String>, Nameable, Descriptable {
     String defaultValue;
     String description;
     int order;
+    boolean multiline;
+    int lineCount;
     DataType dataType = DataType.STRING;
     Number minimum;
     Number maximum;
@@ -81,6 +83,7 @@ public class Metadata implements Identifiable<String>, Nameable, Descriptable {
         STRING,
         INTEGER,
         NUMBER,
+        BOOLEAN,
         DURATION
     }
 }
