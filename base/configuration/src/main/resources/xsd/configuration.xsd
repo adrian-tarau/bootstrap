@@ -52,6 +52,7 @@
             <xs:attribute name="minimum"/>
             <xs:attribute name="maximum"/>
             <xs:attribute name="default"/>
+            <xs:attribute name="client" type="xs:boolean" default="false"/>
             <xs:attribute name="order"/>
             <xs:attribute name="description"/>
         </xs:complexType>

@@ -28,7 +28,7 @@ import java.util.zip.GZIPOutputStream;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.*;
 
 /**
  * Manages the asset bundles.
@@ -134,11 +134,11 @@ final class AssetBundleManager {
                     if (asset.getType() != type) continue;
                     if (asset.getFeature() != null && !featureContext.isEnabled(asset.getFeature())) continue;
                     if (header) {
-                        writer.append("\n\n/*\nAsset: ").append(asset.getName()).append(", path ")
-                                .append(asset.getPath()).append("\n*/\n\n");
+                        writer.append("\n\n/*\nAsset: ").append(asset.getName()).append(", path='")
+                                .append(defaultIfEmpty(asset.getPath(), NA_STRING)).append("'\n*/\n\n");
                     }
                     if (!asset.getResource().exists() && missingAssets.add(asset.getResource().toURI().toASCIIString())) {
-                        LOGGER.error("Asset " + asset.getName() + " (" + asset.getPath() + ") in bundle " + assetBundle.getName()+" could not be located in class path");
+                        LOGGER.error("Asset " + asset.getName() + " (" + asset.getPath() + ") in bundle " + assetBundle.getName() + " could not be located in class path");
                     }
                     writer.append(asset.getResource().loadAsString());
                     if (counter < ids.length - 1) {

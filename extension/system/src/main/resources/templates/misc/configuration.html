@@ -4,17 +4,17 @@
 <body>
 
 <div th:fragment="settings_menu" id="settings_menu" class="accordion">
-    <div th:each="section : ${sections}" class="accordion-item" style="min-height:500px">
+    <div th:each="section : ${sections}" class="accordion-item">
         <h2 class="accordion-header">
             <button class="accordion-button shadow-none" type="button" data-bs-toggle="collapse"
                     th:data-bs-target="'#' + ${section.id}"  th:text="${section.name}">
             </button>
         </h2>
-        <div th:id="${section.id}" class="accordion-collapse collapse show">
+        <div th:id="${section.id}" class="accordion-collapse collapse">
             <div class="accordion-body">
                 <div class="list-group">
                     <th:block th:each="item : ${section.items}">
-                        <a href="#" class="list-group-item list-group-item-action" th:classappend="${settingsHelper.getItemClass(item)}" th:text="${item.name}"></a>
+                        <a href="#" class="list-group-item list-group-item-action" th:classappend="${settingsHelper.getItemClass(item)}" th:data-group-id="${item.fullKey}" th:text="${item.name}" th:attr="onclick=|Configuration.load(this)|"></a>
                     </th:block>
                 </div>
             </div>
@@ -30,7 +30,7 @@
 </div>
 
 <div th:fragment="settings_fields" th:remove="tag">
-    <th:block th:each="field : ${activeMetadata.getChildren()}">
+    <th:block th:each="field : ${settingsHelper.getChildren()}">
         <div th:replace="~{ :: settings_field(${field})}"></div>
     </th:block>
 </div>
@@ -38,7 +38,7 @@
 <div th:fragment="settings_content" class="card mh-100" style="min-height:500px">
     <div class="card-header">
         <div class="d-flex justify-content-between">
-            <h3 id="settings_field_title" class="card-title fs-3" th:text="${activeMetadata.name}"></h3>
+            <h3 id="settings_field_title" class="card-title fs-3" th:text="${settingsHelper.getGroupName()}"></h3>
             <div>
 
             </div>

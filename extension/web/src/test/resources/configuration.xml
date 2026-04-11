@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration xmlns="https://net.microfalx/xsd/configuration-1.0.xsd">
+
+    <group key="test" name="Test" section="Test" description="Mail configuration">
+        <item key="key1" name="Key 1" default="1" client="true"/>
+        <item key="key2" name="Password" default="2" client="true"/>
+    </group>
+
+</configuration>

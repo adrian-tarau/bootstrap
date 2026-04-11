@@ -30,6 +30,9 @@ public class ConfigurationService implements InitializingBean {
     @Autowired
     private Environment environment;
 
+    @Autowired
+    private ThreadPool threadPool;
+
     private final Map<String, Metadata> metadatas = new ConcurrentHashMap<>();
 
     /**
@@ -100,7 +103,7 @@ public class ConfigurationService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         configuration = new SubsetImpl(this, null, EMPTY_STRING, "Root");
         loadMetadata();
-        ThreadPool.get().execute(this::registerMetadata);
+        threadPool.execute(this::registerMetadata);
     }
 
     private void loadMetadata() {

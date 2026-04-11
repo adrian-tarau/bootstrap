@@ -272,7 +272,7 @@ Application.ajax = function (type, path, params, callback, options) {
 /**
  * Returns an object with application required headers.
  */
-Application.getHeaders = function() {
+Application.getHeaders = function () {
     let headers = {
         "X-Application-Id": Application.getId(),
         "X-TimeZone": Application.getTimezoneOffset()
@@ -773,6 +773,13 @@ Application.initTheme = function () {
 }
 
 /**
+ * Initializes the application configuration.
+ */
+Application.initConfiguration = function () {
+    Configuration.initialized(APP_CONFIGURATION ?? {});
+}
+
+/**
  * Initializes the application
  */
 Application.initialize = function () {
@@ -785,6 +792,7 @@ Application.initialize = function () {
  * Starts the application.
  */
 Application.start = function () {
+    this.initConfiguration();
     Logger.debug("Start application");
     this.fire("start");
     User.start();

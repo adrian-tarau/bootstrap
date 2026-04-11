@@ -17,6 +17,7 @@ import java.util.StringJoiner;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.CollectionUtils.immutableMap;
+import static net.microfalx.lang.FileUtils.removeFileExtension;
 import static net.microfalx.lang.StringUtils.*;
 
 /**
@@ -92,7 +93,15 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
 
     @Override
     public String getName() {
-        return resource != null ? resource.getName() : (uri != null ? uri.getHost() : path);
+        if (name != null) {
+            return name;
+        } else if (resource != null) {
+            return resource.getName();
+        } else if (uri != null) {
+            return uri.getHost();
+        } else {
+            return defaultIfEmpty(capitalizeWords(removeFileExtension(path)), NA_STRING);
+        }
     }
 
     @Override
@@ -334,6 +343,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
     public static class Builder {
 
         private String id;
+        private String name;
         private Type type;
         private String path;
         private int order;
@@ -362,6 +372,11 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
         public Builder id(String id) {
             requireNonNull(id);
             this.id = toIdentifier(id);
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
             return this;
         }
 
@@ -433,6 +448,7 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
             }
             Asset asset = new Asset();
             asset.id = id;
+            asset.name = name;
             asset.type = type;
             asset.order = order;
             asset.feature = feature;

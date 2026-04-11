@@ -97,6 +97,8 @@ class ConfigurationLoader {
             loadDescription(metadata, itemElement);
             metadata.dataType = EnumUtils.fromName(Metadata.DataType.class,
                     getAttribute(itemElement, "data-type", (String) null), Metadata.DataType.STRING);
+            metadata.defaultValue = getAttribute(itemElement, "default");
+            metadata.client = getAttribute(itemElement, "client", false);
             loadRange(metadata, itemElement);
             loadComponent(metadata, itemElement);
             register(metadata);
