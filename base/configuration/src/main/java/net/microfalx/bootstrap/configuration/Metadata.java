@@ -31,6 +31,7 @@ public class Metadata implements Identifiable<String>, Nameable, Descriptable {
     String defaultValue;
     String description;
     int order;
+    boolean required;
     boolean multiline;
     boolean client;
     int lineCount;

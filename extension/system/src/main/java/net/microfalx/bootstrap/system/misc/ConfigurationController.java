@@ -144,6 +144,10 @@ public class ConfigurationController extends SystemPageController {
             return EMPTY_STRING;
         }
 
+        public boolean isRequired(Metadata metadata) {
+            return metadata.isRequired();
+        }
+
         public String getFieldClass(Metadata metadata) {
             Metadata.DataType dataType = metadata.getDataType();
             if (dataType.isNumeric()) {

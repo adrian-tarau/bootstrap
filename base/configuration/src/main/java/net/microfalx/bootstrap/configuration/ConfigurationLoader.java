@@ -99,6 +99,7 @@ class ConfigurationLoader {
                     getAttribute(itemElement, "data-type", (String) null), Metadata.DataType.STRING);
             metadata.defaultValue = getAttribute(itemElement, "default");
             metadata.client = getAttribute(itemElement, "client", false);
+            metadata.required = getAttribute(itemElement, "required", true);
             loadRange(metadata, itemElement);
             loadComponent(metadata, itemElement);
             register(metadata);
