@@ -85,6 +85,18 @@ public class Metadata implements Identifiable<String>, Nameable, Descriptable {
         INTEGER,
         NUMBER,
         BOOLEAN,
-        DURATION
+        DURATION;
+
+        public boolean isString() {
+            return this == STRING || this == DURATION;
+        }
+
+        public boolean isBoolean() {
+            return this == BOOLEAN;
+        }
+
+        public boolean isNumeric() {
+            return this == INTEGER || this == NUMBER;
+        }
     }
 }

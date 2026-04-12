@@ -3,6 +3,7 @@
 
     <!-- Application  -->
     <update-asset-bundle id="controller">
+        <asset path="configuration.css" type="stylesheet"/>
         <asset path="configuration.js" type="script"/>
 
     </update-asset-bundle>

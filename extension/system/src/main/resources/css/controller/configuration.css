@@ -1,0 +1,7 @@
+.form-control-number {
+    max-width: 120px !important;
+}
+
+.form-control-duration {
+    max-width: 60px !important;
+}

@@ -38,6 +38,11 @@ abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
+    public String get(String key) {
+        return get(key, null);
+    }
+
+    @Override
     public String get(String key, String defaultValue) {
         String registryKey = getRegistryKey(key);
         Optional<Data> data = getRegistry().get(registryKey);

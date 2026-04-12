@@ -22,11 +22,11 @@
     </div>
 </div>
 
-<div th:fragment="settings_field(field)" class="input-group mb-1">
+<div th:fragment="settings_field(field)" class="input-group input-group-sm mb-1" th:classappend="${settingsHelper.getFieldGroupClass(field)}">
     <label class="input-group-text" th:text="${field.name}" style="min-width : 250px"></label>
-    <input th:if="${settingsHelper.isTextField(field)}" type="text" class="form-control"></input>
-    <input th:if="${settingsHelper.isCheckboxField(field)}" class="form-check-input m-3" type="checkbox"></input>
-    <textarea th:if="${settingsHelper.isTextArea(field)}" class="form-control"></textarea>
+    <input th:if="${settingsHelper.isTextField(field)}" th:type="${settingsHelper.getTextFieldType(field)}" class="form-control" th:classappend="${settingsHelper.getFieldClass(field)}" th:value="${settingsHelper.getValue(field)}"></input>
+    <input th:if="${settingsHelper.isCheckboxField(field)}" class="form-check-input m-2" type="checkbox" th:classappend="${settingsHelper.getFieldClass(field)}" th:checked="${settingsHelper.isChecked(field)}"></input>
+    <textarea th:if="${settingsHelper.isTextArea(field)}" class="form-control" th:classappend="${settingsHelper.getFieldClass(field)}" th:value="${settingsHelper.getValue(field)}"></textarea>
 </div>
 
 <div th:fragment="settings_fields" th:remove="tag">

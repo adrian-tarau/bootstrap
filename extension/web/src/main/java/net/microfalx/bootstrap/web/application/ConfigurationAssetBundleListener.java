@@ -69,7 +69,7 @@ public class ConfigurationAssetBundleListener extends ApplicationContextSupport 
                 return "null";
             }
         }
-        if (dataType == Metadata.DataType.INTEGER || dataType == Metadata.DataType.NUMBER) {
+        if (dataType.isNumeric()) {
             return value;
         } else {
             return "'" + value + "'";

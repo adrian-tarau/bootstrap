@@ -18,6 +18,14 @@ public interface Configuration {
     /**
      * Returns the String value for a given key.
      *
+     * @param key the key
+     * @return the value, default is missing
+     */
+    String get(String key);
+
+    /**
+     * Returns the String value for a given key.
+     *
      * @param key          the key
      * @param defaultValue the default value
      * @return the value, default is missing
