@@ -240,7 +240,10 @@ Application.ajax = function (type, path, params, callback, options) {
     type = Utils.defaultIfNotDefinedOrNull(type, "GET");
     let timeout = Utils.defaultIfNotDefinedOrNull(options.timeout, APP_AJAX_DEFAULT_TIMEOUT);
     let uri = this.getUri(path, {}, options);
-    let data = type === 'POST' && Utils.isNotEmpty(options.data) ? options.data : params;
+    let data = null;
+    if (type === 'POST' || type === 'PUT') {
+        data = Utils.defaultIfNotDefinedOrNull(options.data, params);
+    }
     if (options.contentType === 'json') {
         options.contentType = 'application/json; charset=UTF-8';
         data = data ? JSON.stringify(data) : null;
