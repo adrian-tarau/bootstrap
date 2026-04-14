@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration xmlns="https://net.microfalx/xsd/configuration-1.0.xsd">
+
+    <group key="bootstrap.security" name="Security" section="System" description="Security configuration">
+        <item key="terms" name="Terms" data-type="boolean" default="false" description="Indicates whether the terms of use are listed on login page"/>
+
+        <item key="loginMessage" name="Login Message" default="Sign in to start your session" description="The message displayed to the users on the login screen"/>
+    </group>
+
+    <group key="bootstrap.security.oauth2" name="OAuth2/OIDC" section="System" description="OAuth2 configuration">
+        <item key="useLocalAuthorization" name="Use Local Authorization" data-type="boolean" default="true" description="Indicates whether the users will have their groups managed locally with the application"/>
+
+        <item key="googleClientId" name="Client Id" separator="Google" description="The client identifier for Google"/>
+        <item key="googleClientSecret" name="Client Secret" description="The client secret for Google"/>
+        <item key="googleClientDomain" name="Client Domain" description="The domain to restrict client for Google"/>
+
+        <item key="githubClientId" name="Client Id" separator="Github" description="The client identifier for Github"/>
+        <item key="githubClientSecret" name="Client Secret" description="The client secret for Github"/>
+
+        <item key="azureTenantId" name="Tenant Id" separator="Microsoft Azure" description="The client identifier for Microsoft Azure"/>
+        <item key="azureClientId" name="Client Id" description="The client secret for Microsoft Azure"/>
+        <item key="azureClientSecret" name="Client Secret" description="The client secret for Microsoft Azure"/>
+    </group>
+
+
+
+</configuration>
