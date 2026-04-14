@@ -54,6 +54,7 @@
             <xs:attribute name="default"/>
             <xs:attribute name="client" type="xs:boolean" default="false"/>
             <xs:attribute name="required" type="xs:boolean" default="true"/>
+            <xs:attribute name="separator"/>
             <xs:attribute name="order"/>
             <xs:attribute name="description"/>
         </xs:complexType>

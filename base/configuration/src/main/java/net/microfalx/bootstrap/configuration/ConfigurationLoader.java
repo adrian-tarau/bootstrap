@@ -98,6 +98,7 @@ class ConfigurationLoader {
             metadata.dataType = EnumUtils.fromName(Metadata.DataType.class,
                     getAttribute(itemElement, "data-type", (String) null), Metadata.DataType.STRING);
             metadata.defaultValue = getAttribute(itemElement, "default");
+            metadata.separator = getAttribute(itemElement, "separator");
             metadata.client = getAttribute(itemElement, "client", false);
             metadata.required = getAttribute(itemElement, "required", true);
             loadRange(metadata, itemElement);

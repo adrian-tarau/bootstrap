@@ -62,7 +62,7 @@ public class ConfigurationController extends SystemPageController {
         for (Metadata metadata : configurationService.getRootMetadata().getChildren()) {
             String name = metadata.getSection();
             if (isEmpty(name)) continue;
-            String id = StringUtils.toIdentifier(name);
+            String id = toIdentifier(name);
             Section section = sections.computeIfAbsent(id, s -> new Section(id, name));
             section.items.add(metadata);
         }
@@ -73,6 +73,7 @@ public class ConfigurationController extends SystemPageController {
 
         private final ConfigurationService configurationService;
         private final Metadata activeMetadata;
+        private final Set<String> separatorSeen = new HashSet<>();
 
         Helper(ConfigurationService configurationService) {
             this.configurationService = configurationService;
@@ -109,6 +110,12 @@ public class ConfigurationController extends SystemPageController {
 
         public Collection<Metadata> getChildren() {
             return activeMetadata != null ? activeMetadata.getChildren() : Collections.emptyList();
+        }
+
+        public boolean hasSeparator(Metadata metadata) {
+            boolean hasSeparator = isNotEmpty(metadata.getSeparator());
+            return hasSeparator && separatorSeen.add(toIdentifier(metadata.getId()
+                    + "_" + metadata.getSeparator()));
         }
 
         public boolean isTextField(Metadata metadata) {
