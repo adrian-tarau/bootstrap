@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <configuration xmlns="https://net.microfalx/xsd/configuration-1.0.xsd">
 
-    <group key="bootstrap.support.report" name="Support Report" section="System" description="System report configuration">
-        <item key="enabled" name="Enabled" data-type="boolean" default="true" description="Indicates whether the support email is enabled"/>
+    <group key="bootstrap.support.report" name="Support" section="System" description="System report configuration">
+        <item key="enabled" name="Enabled" separator="Flags" data-type="boolean" default="true" description="Indicates whether the support email is enabled"/>
         <item key="onBoot" name="On Boot" data-type="boolean" default="true" description="Indicates whether the a support email is sent on boot"/>
 
-        <item key="dailySchedule" name="Daily Schedule" default="0 0 0 * * ?" description="The daily report daily schedule in CRON format."/>
-        <item key="withIssuesSchedule" name="With Issues Schedule" default="0 0 0/6 ? * * *" description="The regular issues report schedule in CRON format."/>
-        <item key="withCriticalIssuesSchedule" name="With Critical Issues Schedule" default="0 0/15 * ? * * *" description="The critical report schedule in CRON format."/>
+        <item key="dailySchedule" name="Daily" separator="Schedules" default="0 0 0 * * ?" description="The daily report daily schedule in CRON format."/>
+        <item key="withIssuesSchedule" name="With Issues" default="0 0 0/6 ? * * *" description="The regular issues report schedule in CRON format."/>
+        <item key="withCriticalIssuesSchedule" name="With Critical Issues" default="0 0/15 * ? * * *" description="The critical report schedule in CRON format."/>
 
-        <item key="highIssuesThreshold" name="High Issues Threshold" data-type="integer" default="10" description="The threshold of issues less than critical to trigger the report."/>
-        <item key="criticalIssuesThreshold" name="Critical Issues Threshold" data-type="integer" default="1" description="The threshold of critical issues to trigger the report."/>
+        <item key="highIssuesThreshold" name="High Issues" separator="Thresholds" data-type="integer" default="10" description="The threshold of issues less than critical to trigger the report."/>
+        <item key="criticalIssuesThreshold" name="Critical Issues" data-type="integer" default="1" description="The threshold of critical issues to trigger the report."/>
 
-        <item key="recipients" name="Recipient" default="0 0 0/6 ? * * *" description="A comma-separated list of report recipients (email addresses)."/>
+        <item key="recipients" name="Recipient" separator="Other" default="0 0 0/6 ? * * *" description="A comma-separated list of report recipients (email addresses)."/>
         <item key="password" name="Password" default="WzeXYN1j4S675lLsL4Vy" description="The password used to encrypt the report attachment."/>
-        <item key="systemName" name="Password" default="Bootstrap" description="A name of the reporting system."/>
+        <item key="systemName" name="System Name" default="Bootstrap" description="A name of the reporting system."/>
     </group>
 
 </configuration>
