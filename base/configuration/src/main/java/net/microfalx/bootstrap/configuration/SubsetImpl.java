@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import static net.microfalx.bootstrap.configuration.ConfigurationUtils.SEPARATOR;
-import static net.microfalx.lang.StringUtils.isEmpty;
+import static net.microfalx.lang.StringUtils.*;
 
 @Getter
 @ToString
@@ -15,7 +15,7 @@ class SubsetImpl extends AbstractConfiguration implements Subset {
 
     SubsetImpl(ConfigurationService configurationService, Configuration parent, String prefix, String title) {
         super(configurationService, parent);
-        this.prefix = prefix;
+        this.prefix = defaultIfNull(prefix, EMPTY_STRING);
         this.title = title;
     }
 
@@ -28,6 +28,10 @@ class SubsetImpl extends AbstractConfiguration implements Subset {
 
     @Override
     protected String getFinalKey(String key) {
-        return prefix + SEPARATOR + key;
+        if (isNotEmpty(prefix)) {
+            return prefix + SEPARATOR + key;
+        } else {
+            return key;
+        }
     }
 }

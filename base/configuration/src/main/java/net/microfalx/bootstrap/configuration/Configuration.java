@@ -39,7 +39,7 @@ public interface Configuration {
      * @param defaultValue the default value
      * @return the value, default is missing
      */
-    int get(String key, boolean defaultValue);
+    boolean get(String key, boolean defaultValue);
 
     /**
      * Returns the integer value for a given key.
@@ -76,6 +76,14 @@ public interface Configuration {
      * @return the value, default is missing
      */
     double get(String key, double defaultValue);
+
+    /**
+     * Changes a configuration entry. The change is persisted and will be available for other services.
+     *
+     * @param key   the key
+     * @param value the value
+     */
+    void set(String key, String value);
 
     /**
      * Returns the parent configuration.

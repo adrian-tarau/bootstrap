@@ -7,19 +7,22 @@ import net.microfalx.bootstrap.configuration.ConfigurationService;
 import net.microfalx.bootstrap.configuration.Metadata;
 import net.microfalx.bootstrap.help.annotation.Help;
 import net.microfalx.bootstrap.web.controller.SystemPageController;
+import net.microfalx.bootstrap.web.util.JsonFormResponse;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.SecretUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Name;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
 import static net.microfalx.lang.StringUtils.*;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Controller("ConfigurationAdminController")
 @RequestMapping(value = "/system/settings")
@@ -36,6 +39,25 @@ public class ConfigurationController extends SystemPageController {
         return "misc/configuration";
     }
 
+    @PostMapping(value = "{group}", produces = APPLICATION_JSON_VALUE,
+            consumes = APPLICATION_FORM_URLENCODED_VALUE)
+    @ResponseBody
+    public JsonFormResponse<?> set(Model model, @PathVariable("group") String groupId,
+                                   @RequestBody MultiValueMap<String, String> fields) {
+        Metadata metadata = configurationService.getMetadata(groupId);
+        Configuration configuration = configurationService.getConfiguration();
+        if (metadata == null) throw new IllegalArgumentException("Invalid group: " + groupId);
+        int changed = 0;
+        for (Map.Entry<String, List<String>> entry : fields.entrySet()) {
+            String key = entry.getKey();
+            String currentValue = getValue(entry.getValue());
+            String previousValue = configuration.get(key);
+            if (!ObjectUtils.equals(currentValue, previousValue)) changed++;
+            configuration.set(key, currentValue);
+        }
+        return JsonFormResponse.success(changed + " entries updated");
+    }
+
     @GetMapping(value = "fields/{group}")
     public String getFields(Model model, @PathVariable("group") String groupId) {
         Metadata metadata = configurationService.getMetadata(groupId);
@@ -43,6 +65,11 @@ public class ConfigurationController extends SystemPageController {
         Helper helper = new Helper(configurationService, metadata);
         updateGroups(model, helper);
         return "misc/configuration :: settings_fields";
+    }
+
+    private String getValue(List<String> values) {
+        if (values == null || values.isEmpty()) return null;
+        return values.getFirst();
     }
 
     private void updateModel(Model model) {
