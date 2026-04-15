@@ -350,45 +350,11 @@ DataSet.sort = function (field, direction) {
 DataSet.save = function () {
     let me = DataSet;
     let path = Utils.isEmpty(me.id) ? "" : me.id;
-    let url = DataSet.getUri(path, {}, {params: false});
-    let headers = Application.getHeaders();
-    let closeModel = false;
-    let form = $('#dataset-form').ajaxSubmit({
-        url: url,
-        type: 'POST',
-        dataType: 'json',
-        headers: headers,
-        beforeSubmit: function (data, form, options) {
-            DataSet.updateFormFields(data);
-            Logger.info("Before form submission, response " + Utils.toString(data));
-            // form data array is an array of objects with name and value properties
-            // [ { name: 'username', value: 'jresig' }, { name: 'password', value: 'secret' } ]
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            Logger.error("An error was encountered which submitting the form to " + url + ", error: " + errorThrown);
-        },
-        success: function (data, textStatus, jqXHR) {
-            Logger.info("Form was submitted successfully, response " + Utils.toString(data));
-            if (data.success) {
-                me.reload();
-            } else {
-                $('#dataset-form input').removeClass('is-invalid').tooltip("dispose");
-                let errors = data.errors || {};
-                if (Utils.isNotEmpty(data.message)) {
-                    Application.showErrorAlert("Validation", data.message);
-                } else {
-                    Application.showErrorAlert("Validation", "Form cannot be submitted with invalid values");
-                    for (let field in errors) {
-                        let message = errors[field];
-                        let formField = $("#dataset-form input[name='" + field + "']");
-                        formField.addClass("is-invalid");
-                        Application.showTooltip(formField, message);
-                    }
-                }
-            }
+    Application.saveForm('#dataset-form', path, {}, {
+        success: function (data) {
+            me.reload();
         }
     });
-    if (closeModel) Application.closeModal();
 }
 
 /**
@@ -405,25 +371,6 @@ DataSet.trend = function () {
  */
 DataSet.trendClick = function (event, chartContext, config) {
     Application.showInfoAlert("Trend Click", Utils.toString(event));
-}
-
-/**
- * Updates for data before it is sent to the server
- * @param {Array} data an array with object, one property "name" with the value
- */
-DataSet.updateFormFields = function (data) {
-    let fieldNames = {};
-    for (let tuple of data) {
-        fieldNames[tuple["name"]] = true;
-    }
-    $('#dataset-form input').each(function (index) {
-        if ($(this).attr("type") === "checkbox") {
-            let name = $(this).attr("name");
-            if (!fieldNames[name]) {
-                data.push({name: name, value: 'off'});
-            }
-        }
-    });
 }
 
 /**

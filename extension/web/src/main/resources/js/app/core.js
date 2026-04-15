@@ -338,6 +338,83 @@ Application.getHashUrl = function () {
 }
 
 /**
+ * Saves a form.
+ *
+ * @param {Element|String} selector the element or selector for form
+ * @param {String} path the path where to send the form
+ * @param {Object} params the query parameters for the form
+ * @param {Object} [options] the used to control the form
+ */
+Application.saveForm = function (selector, path, params, options) {
+    Utils.requireNonNull(selector);
+    let me = Application;
+    options = options || {};
+    let form = $(selector);
+    let url = this.getUri(path, params, {params: false});
+    let headers = this.getHeaders();
+    let before = options.before;
+    let success = options.success;
+    form.ajaxSubmit({
+        url: url,
+        type: 'POST',
+        dataType: 'json',
+        headers: headers,
+        beforeSubmit: function (data, form, options) {
+            me.updateFormFields(form, data);
+            if (before) before.apply(this, [data]);
+            Logger.info("Before form submission, response " + Utils.toString(data));
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            let message = "An error was encountered which submitting the form to '" + url + "'";
+            me.showErrorAlert("Submit", message);
+            message += ", error: " + errorThrown;
+            Logger.error(message);
+        },
+        success: function (data, textStatus, jqXHR) {
+            Logger.info("Form was submitted successfully, response " + Utils.toString(data));
+            if (data.success) {
+                if (success) success.apply(this, [data]);
+            } else {
+                form.find('input').removeClass('is-invalid').tooltip("dispose");
+                let errors = data.errors || {};
+                if (Utils.isNotEmpty(data.message)) {
+                    me.showErrorAlert("Validation", data.message);
+                } else {
+                    me.showErrorAlert("Validation", "Form cannot be submitted with invalid values");
+                    for (let field in errors) {
+                        let message = errors[field];
+                        let formField = el.find("input[name='" + field + "']");
+                        formField.addClass("is-invalid");
+                        me.showTooltip(formField, message);
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Updates for data before it is sent to the server.
+ *
+ * @param {JQuery} el the form element
+ * @param {Array} data an array with object, one property "name" with the value
+ */
+Application.updateFormFields = function (el, data) {
+    let fieldNames = {};
+    for (let tuple of data) {
+        fieldNames[tuple["name"]] = true;
+    }
+    el.find('input').each(function (index) {
+        if ($(this).attr("type") === "checkbox") {
+            let name = $(this).attr("name");
+            if (!fieldNames[name]) {
+                data.push({name: name, value: 'off'});
+            }
+        }
+    });
+}
+
+/**
  * Closes all open popups.
  */
 Application.closePopups = function () {
