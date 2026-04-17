@@ -243,7 +243,10 @@ Application.ajax = function (type, path, params, callback, options) {
     let data = null;
     if (type === 'POST' || type === 'PUT') {
         data = Utils.defaultIfNotDefinedOrNull(options.data, params);
+    } else {
+        data = params;
     }
+
     if (options.contentType === 'json') {
         options.contentType = 'application/json; charset=UTF-8';
         data = data ? JSON.stringify(data) : null;
