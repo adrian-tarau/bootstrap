@@ -16,7 +16,7 @@ import org.springframework.validation.beanvalidation.OptionalValidatorFactoryBea
 import java.lang.annotation.*;
 
 /**
- * An annotation which enables various internal services.
+ * An annotation used with integration tests which enables various internal services to test a service.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -24,9 +24,8 @@ import java.lang.annotation.*;
 @Inherited
 @ContextConfiguration(classes = {I18nService.class, ResourceService.class, ResourceProperties.class, OptionalValidatorFactoryBean.class, MetadataService.class})
 @Import({I18nProperties.class, AsynchronousConfig.class})
-//@TestExecutionListeners(MockitoAnswersExecutionListener.class)
 @OverrideAutoConfiguration(enabled = false)
 @ImportAutoConfiguration
 @SpringBootTest
-public @interface BootstrapServiceTest {
+public @interface BootstrapServiceIntegrationTest {
 }

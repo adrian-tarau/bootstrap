@@ -17,7 +17,7 @@ import org.springframework.validation.beanvalidation.CustomValidatorBean;
 import java.lang.annotation.*;
 
 /**
- * An annotation which enables services used to build a web application.
+ * An annotation used with integration tests which enables services used to build a web application.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -26,6 +26,6 @@ import java.lang.annotation.*;
 @ContextConfiguration(classes = {I18nService.class, ResourceService.class, ResourceProperties.class, CustomValidatorBean.class, MetadataService.class,
         WebContainerService.class, ApplicationService.class, ApplicationProperties.class,
         IndexService.class, SearchService.class, DataSetService.class, ContentService.class})
-@BootstrapServiceTest
-public @interface BootstrapApplicationTest {
+@BootstrapServiceIntegrationTest
+public @interface BootstrapApplicationIntegrationTest {
 }

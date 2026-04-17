@@ -11,7 +11,7 @@ import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.bootstrap.search.SearchService;
-import net.microfalx.bootstrap.test.AbstractBootstrapServiceTestCase;
+import net.microfalx.bootstrap.test.AbstractBootstrapServiceIntegrationTestCase;
 import net.microfalx.bootstrap.test.answer.RepositoryAnswer;
 import net.microfalx.threadpool.ThreadPool;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration(classes = {AiPersistence.class, AiProperties.class, AiServiceImpl.class,
         MetadataService.class, DataSetService.class})
-class LlamaChatTest extends AbstractBootstrapServiceTestCase {
+class LlamaChatTest extends AbstractBootstrapServiceIntegrationTestCase {
 
     @MockitoBean private ThreadPool threadPool;
 
