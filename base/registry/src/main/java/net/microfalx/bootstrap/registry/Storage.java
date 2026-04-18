@@ -9,6 +9,15 @@ import java.util.Optional;
 public interface Storage {
 
     /**
+     * Creates an in-memory storage implementation
+     *
+     * @return a non-null instance
+     */
+    static Storage create() {
+        return new MemoryStorage();
+    }
+
+    /**
      * Returns whether the storage is enabled.
      *
      * @return {@code true} if enabled, {@code false} otherwise

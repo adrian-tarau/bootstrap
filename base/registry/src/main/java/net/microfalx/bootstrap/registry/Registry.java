@@ -14,6 +14,16 @@ import java.util.function.Function;
 public interface Registry {
 
     /**
+     * Creates a registry instance for a given storage.
+     *
+     * @param storage the storage
+     * @return a non-null instance
+     */
+    static Registry create(Storage storage) {
+        return new RegistryImpl(storage);
+    }
+
+    /**
      * Walks the tree starting with the given path.
      *
      * @param path the path
@@ -78,4 +88,11 @@ public interface Registry {
      * @param data the new data
      */
     void set(Data data);
+
+    /**
+     * Returns the storage used by this registry.
+     *
+     * @return a non-null instance
+     */
+    Storage getStorage();
 }

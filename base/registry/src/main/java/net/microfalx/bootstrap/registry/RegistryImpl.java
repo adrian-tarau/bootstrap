@@ -17,10 +17,18 @@ import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 final class RegistryImpl implements Registry {
 
     private final RegistryService registryService;
+    private final Storage storage;
 
     RegistryImpl(RegistryService registryService) {
         requireNonNull(registryService);
         this.registryService = registryService;
+        this.storage = null;
+    }
+
+    RegistryImpl(Storage storage) {
+        requireNonNull(storage);
+        this.storage = storage;
+        this.registryService = null;
     }
 
     @Override
@@ -116,8 +124,8 @@ final class RegistryImpl implements Registry {
         }
     }
 
-    Storage getStorage() {
-        return registryService.getStorage();
+    public Storage getStorage() {
+        return storage != null ? storage : registryService.getStorage();
     }
 
 }
