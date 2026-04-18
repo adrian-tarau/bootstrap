@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.test.annotation;
 import net.microfalx.bootstrap.test.extension.BootstrapTestExtension;
 import org.instancio.junit.InstancioExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.annotation.*;
 
@@ -13,6 +14,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@ExtendWith({InstancioExtension.class, BootstrapTestExtension.class})
+@ExtendWith({MockitoExtension.class, InstancioExtension.class, BootstrapTestExtension.class})
 public @interface BootstrapServiceUnitTest {
 }

@@ -48,6 +48,7 @@
         <module>feature</module>
         <module>security</module>
         <module>web</module>
+        <module>test</module>
     </modules>
 
 </project>

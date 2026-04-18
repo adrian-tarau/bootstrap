@@ -1,16 +1,9 @@
 package net.microfalx.bootstrap.test.extension;
 
-import net.microfalx.bootstrap.core.i18n.I18nService;
-import net.microfalx.bootstrap.model.MetadataService;
-import net.microfalx.bootstrap.resource.ResourceProperties;
-import net.microfalx.bootstrap.resource.ResourceService;
 import org.mockito.stubbing.Answer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.validation.beanvalidation.OptionalValidatorFactoryBean;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
@@ -51,17 +44,5 @@ public class TestSession {
     private void createObject(Class<?> serviceClass) {
 
     }
-
-    private static final Collection<Class<?>> realProperties = List.of(
-            ResourceProperties.class
-    );
-
-    private static final Collection<Class<?>> realComponent = List.of(
-            OptionalValidatorFactoryBean.class
-    );
-
-    private static final Collection<Class<?>> realServices = List.of(
-            I18nService.class, ResourceService.class, MetadataService.class
-    );
 
 }

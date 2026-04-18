@@ -43,6 +43,7 @@
         <module>content</module>
         <module>dsv</module>
         <module>broker</module>
+        <module>test</module>
     </modules>
 
 </project>

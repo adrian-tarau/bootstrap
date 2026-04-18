@@ -3,7 +3,6 @@ package net.microfalx.bootstrap.test.annotation;
 import net.microfalx.bootstrap.core.async.AsynchronousConfig;
 import net.microfalx.bootstrap.core.i18n.I18nProperties;
 import net.microfalx.bootstrap.core.i18n.I18nService;
-import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.resource.ResourceProperties;
 import net.microfalx.bootstrap.resource.ResourceService;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -22,7 +21,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@ContextConfiguration(classes = {I18nService.class, ResourceService.class, ResourceProperties.class, OptionalValidatorFactoryBean.class, MetadataService.class})
+@ContextConfiguration(classes = {I18nService.class, ResourceService.class, ResourceProperties.class, OptionalValidatorFactoryBean.class})
 @Import({I18nProperties.class, AsynchronousConfig.class})
 @OverrideAutoConfiguration(enabled = false)
 @ImportAutoConfiguration

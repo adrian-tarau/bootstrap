@@ -37,17 +37,18 @@
     <name>Bootstrap :: Extension</name>
 	
 	<modules>
+        <module>mail</module>
+        <module>dos</module>
+        <module>template</module>
         <module>help</module>
         <module>search</module>
-        <module>template</module>
-        <module>mail</module>
         <module>web</module>
-        <module>dos</module>
 		<module>rest-api</module>
 		<module>rest-api-client</module>
         <module>security</module>
         <module>system</module>
         <module>support</module>
+        <module>test</module>
     </modules>
 
 </project>
