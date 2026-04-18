@@ -19,5 +19,5 @@ public @interface AnswerFor {
      *
      * @return a non-null instance
      */
-    Class<?> value();
+    Class<?>[] value();
 }

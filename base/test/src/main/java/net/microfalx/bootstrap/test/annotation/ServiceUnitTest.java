@@ -8,7 +8,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.lang.annotation.*;
 
 /**
- * An annotation used with unit tests which enables various internal services to test a service.
+ * An annotation used with unit tests which enables various internal services (or components) to test
+ * a service (or a component).
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

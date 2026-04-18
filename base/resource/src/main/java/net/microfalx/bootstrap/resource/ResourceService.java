@@ -35,7 +35,7 @@ public class ResourceService implements InitializingBean {
 
     private Resource sharedResource;
 
-    @Autowired
+    @Autowired(required = false)
     private ResourceProperties properties = new ResourceProperties();
 
     /**

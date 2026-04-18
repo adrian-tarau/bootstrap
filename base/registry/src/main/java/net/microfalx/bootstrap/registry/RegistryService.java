@@ -2,13 +2,13 @@ package net.microfalx.bootstrap.registry;
 
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.ClassUtils;
+import net.microfalx.lang.ObjectUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
-import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
 @Service
 @Slf4j
@@ -20,7 +20,7 @@ public class RegistryService implements InitializingBean {
     private Registry registry;
 
     public RegistryService(List<Storage> storages) {
-        requireNotEmpty(storages);
+        if (ObjectUtils.isEmpty(storages)) storages = List.of(new MemoryStorage());
         this.storages = storages;
     }
 

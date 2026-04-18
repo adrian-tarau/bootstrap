@@ -22,7 +22,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
  * This is useful for testing purposes, allowing you to avoid manually setting
  * primary keys in your entities.
  */
-public class RepositoryAnswer implements org.mockito.stubbing.Answer<Object> {
+public class RepositoryAnswer extends AbstractAnswer {
 
     private final AtomicInteger primaryKeyGenerator = new AtomicInteger(10);
 

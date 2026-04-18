@@ -37,14 +37,14 @@ public class StoreService implements InitializingBean, DisposableBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreService.class);
 
+    @Autowired(required = false)
+    private StoreProperties properties = new StoreProperties();
+
     @Autowired
     private ResourceService resourceService;
 
     @Autowired
     private ThreadPool threadPool;
-
-    @Autowired
-    private StoreProperties properties;
 
     private final Map<String, Store<?, ?>> stores = new ConcurrentHashMap<>();
 
