@@ -10,14 +10,14 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * The extension does everything the mockito extension does plus adds supports for smarter mocking using
  * {@link net.microfalx.bootstrap.test.annotation.AnswerFor} and Instancio library ({@link org.instancio.junit.InstancioExtension}.
  */
-public class BootstrapTestExtension implements BeforeEachCallback, AfterEachCallback {
+public class BootstrapExtension implements BeforeEachCallback, AfterEachCallback {
 
-    private TestSession testSession;
+    private Session testSession;
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         Object testInstance = context.getRequiredTestInstance();
-        testSession = new TestSession(testInstance);
+        testSession = new Session(testInstance);
         testSession.setup();
     }
 

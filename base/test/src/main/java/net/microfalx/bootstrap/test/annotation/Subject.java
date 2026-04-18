@@ -11,7 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Marks a field to contain a real object, with other objects injected on creation (or using fields).
  * <p>
- * This annotation is used in combination with {@link BootstrapServiceUnitTest} or other similar meta-annotations
+ * This annotation is used in combination with {@link ServiceUnitTest} or other similar meta-annotations
  * provided by this framework.
  */
 @Target({FIELD, PARAMETER})

@@ -6,7 +6,7 @@ import net.microfalx.bootstrap.search.Document;
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.bootstrap.search.Indexer;
 import net.microfalx.bootstrap.search.SearchService;
-import net.microfalx.bootstrap.test.AbstractBootstrapServiceIntegrationTestCase;
+import net.microfalx.bootstrap.test.ServiceIntegrationTestCase;
 import net.microfalx.lang.JvmUtils;
 import net.microfalx.resource.Resource;
 import org.apache.commons.io.FileUtils;
@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {ContentService.class, IndexService.class, SearchService.class})
-class LuceneEmbeddingModelTest extends AbstractBootstrapServiceIntegrationTestCase {
+class LuceneEmbeddingModelTest extends ServiceIntegrationTestCase {
 
     private static final float[] EMBEDDING1 = {0.1f, 0.2f, 0.3f, 0.4f, 0.5f};
     private static final float[] EMBEDDING2 = {0.5f, 0.4f, 0.3f, 0.2f, 0.1f};

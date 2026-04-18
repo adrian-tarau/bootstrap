@@ -26,6 +26,6 @@ import java.lang.annotation.*;
 @ContextConfiguration(classes = {I18nService.class, ResourceService.class, ResourceProperties.class, CustomValidatorBean.class, MetadataService.class,
         WebContainerService.class, ApplicationService.class, ApplicationProperties.class,
         IndexService.class, SearchService.class, DataSetService.class, ContentService.class})
-@BootstrapServiceIntegrationTest
-public @interface BootstrapApplicationIntegrationTest {
+@ServiceIntegrationTest
+public @interface ApplicationIntegrationTest {
 }

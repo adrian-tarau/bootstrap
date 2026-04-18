@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class InstancioTest extends AbstractBootstrapServiceUnitTestCase {
+public class InstancioTest extends ServiceUnitTestCase {
 
     @Given
     private Person person;

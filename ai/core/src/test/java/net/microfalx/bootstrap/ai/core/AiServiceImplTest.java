@@ -6,7 +6,7 @@ import net.microfalx.bootstrap.ai.core.jpa.ProviderRepository;
 import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.bootstrap.search.IndexService;
 import net.microfalx.bootstrap.search.SearchService;
-import net.microfalx.bootstrap.test.AbstractBootstrapServiceIntegrationTestCase;
+import net.microfalx.bootstrap.test.ServiceIntegrationTestCase;
 import net.microfalx.bootstrap.test.answer.RepositoryAnswer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestPropertySource(properties = "heimdall.llm.persistenceEnabled=false")
 @ContextConfiguration(classes = {AiServiceImpl.class, MetadataService.class, AiProperties.class})
-class AiServiceImplTest extends AbstractBootstrapServiceIntegrationTestCase {
+class AiServiceImplTest extends ServiceIntegrationTestCase {
 
     @TestBean private ModelRepository modelRepository;
     @TestBean private ProviderRepository providerRepository;

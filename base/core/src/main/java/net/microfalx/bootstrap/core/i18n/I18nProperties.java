@@ -1,10 +1,13 @@
 package net.microfalx.bootstrap.core.i18n;
 
+import net.microfalx.lang.ObjectUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static java.util.Collections.emptySet;
 
 @Configuration
 @ConfigurationProperties("bootstrap.i18n")
@@ -17,6 +20,6 @@ public class I18nProperties {
     }
 
     public void setBaseNames(Set<String> baseNames) {
-        this.baseNames = baseNames;
+        this.baseNames = new HashSet<>(ObjectUtils.defaultIfNull(baseNames, emptySet()));
     }
 }

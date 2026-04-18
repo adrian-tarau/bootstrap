@@ -4,7 +4,7 @@ import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.test.annotation.Subject;
 import org.junit.jupiter.api.Test;
 
-public class CoreServicesTest extends AbstractBootstrapServiceUnitTestCase {
+public class CoreServicesTest extends ServiceUnitTestCase {
 
     @Subject
     private ResourceService resourceService;

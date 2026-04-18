@@ -26,5 +26,5 @@ import java.lang.annotation.*;
 @OverrideAutoConfiguration(enabled = false)
 @ImportAutoConfiguration
 @SpringBootTest
-public @interface BootstrapServiceIntegrationTest {
+public @interface ServiceIntegrationTest {
 }
