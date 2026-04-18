@@ -7,6 +7,7 @@ import net.microfalx.bootstrap.registry.RegistryService;
 import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.store.StoreService;
 
+@SuppressWarnings("unused")
 public class CoreServicesDiscovery implements ComponentDiscovery {
 
     @Override

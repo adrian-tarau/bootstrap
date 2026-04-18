@@ -27,6 +27,9 @@ public class CoreServicesTest extends ServiceUnitTestCase {
     @Subject
     private ResourceService resourceService;
 
+    @Subject
+    private TestService testService;
+
     private Session session;
 
     @Test
@@ -46,9 +49,10 @@ public class CoreServicesTest extends ServiceUnitTestCase {
     @Test
     void checkSubjects() {
         Set<Class<?>> subjectClasses = session.getSubjectClasses();
-        assertEquals(2, subjectClasses.size());
+        assertEquals(3, subjectClasses.size());
         assertTrue(subjectClasses.contains(ResourceService.class));
         assertTrue(subjectClasses.contains(ConfigurationService.class));
+        assertTrue(subjectClasses.contains(TestService.class));
 
         assertNotNull(resourceService);
         assertNotNull(resourceService.getShared("a"));

@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.test.answer;
 
 import net.microfalx.bootstrap.registry.Registry;
 import net.microfalx.bootstrap.registry.RegistryService;
+import net.microfalx.bootstrap.registry.Storage;
 import net.microfalx.bootstrap.test.annotation.AnswerFor;
 import org.mockito.invocation.InvocationOnMock;
 
@@ -13,7 +14,12 @@ public class RegistryAnswer extends AbstractAnswer {
     @Override
     public void initialize(Object... context) {
         super.initialize(context);
-        registry = getSession().lookup(RegistryService.class).getRegistry();
+        RegistryService registryService = getSession().lookup(RegistryService.class);
+        if (registryService != null) {
+            registry = registryService.getRegistry();
+        } else {
+            registry = Registry.create(Storage.create());
+        }
     }
 
     @Override

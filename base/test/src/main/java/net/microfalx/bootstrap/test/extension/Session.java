@@ -1,10 +1,13 @@
 package net.microfalx.bootstrap.test.extension;
 
 import lombok.extern.slf4j.Slf4j;
+import net.microfalx.bootstrap.registry.Registry;
+import net.microfalx.bootstrap.registry.RegistryService;
 import net.microfalx.bootstrap.test.annotation.AnswerFor;
 import net.microfalx.bootstrap.test.annotation.Prepare;
 import net.microfalx.bootstrap.test.annotation.Subject;
 import net.microfalx.bootstrap.test.answer.AbstractAnswer;
+import net.microfalx.bootstrap.test.answer.JpaRepositoryAnswer;
 import net.microfalx.lang.*;
 import net.microfalx.threadpool.ThreadPool;
 import org.atteo.classindex.ClassIndex;
@@ -15,6 +18,7 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -143,8 +147,29 @@ public class Session {
         return unmodifiableSet(mockClasses);
     }
 
+    /**
+     * Looks up an instance by its type.
+     *
+     * @param type the class of the object
+     * @param <T>  the type of object
+     * @return the instance, null if not defined
+     */
     @SuppressWarnings("unchecked")
     public <T> T lookup(Class<T> type) {
+        requireNonNull(type);
+        return (T) objects.get(type);
+    }
+
+    /**
+     * Resolves up an instance by its type.
+     *
+     * @param type the class of the object
+     * @param <T>  the type of object
+     * @return a non-null instance
+     * @throws IllegalArgumentException if such a type is not registered
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T resolve(Class<T> type) {
         requireNonNull(type);
         T instance = (T) objects.get(type);
         if (instance == null) {
@@ -157,7 +182,9 @@ public class Session {
         applicationContext = new AnnotationConfigApplicationContext();
         registerCoreMocksWithContext();
         registerPreparedWithContext();
-        applicationContext.register(getSubjectClasses().toArray(new Class[0]));
+        if (!getSubjectClasses().isEmpty()) {
+            applicationContext.register(getSubjectClasses().toArray(new Class[0]));
+        }
         applicationContext.refresh();
         updateObjectsFromApplicationContext();
     }
@@ -169,6 +196,7 @@ public class Session {
     private <T> void registerPreparedWithContext() {
         for (Class<?> mockClass : mockClasses) {
             registerMockWithContext(mockClass);
+            if (mockClass == RegistryService.class) registerMockWithContext(Registry.class);
         }
     }
 
@@ -197,7 +225,7 @@ public class Session {
         objects.put(type, instance);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private <T> T mock(Class<T> type) {
         T instance = (T) objects.get(type);
         if (instance != null) return instance;
@@ -212,15 +240,13 @@ public class Session {
             } catch (Exception e) {
                 return rethrowExceptionAndReturn(e);
             }
+        } else if (ClassUtils.isSubClassOf(type, JpaRepository.class)) {
+            instance = (T) JpaRepositoryAnswer.mock((Class<JpaRepository>) type);
         } else {
             instance = Mockito.mock(type, Mockito.RETURNS_SMART_NULLS);
         }
         registerObject(type, instance);
         return instance;
-    }
-
-    private void createObject(Class<?> serviceClass) {
-
     }
 
     private void initContext() {
@@ -230,14 +256,14 @@ public class Session {
     }
 
     private void initSettings() {
-
+        // nothing right now
     }
 
     private void initDirectory() {
         workingDirectory = new File(JvmUtils.getWorkingDirectory(), "target");
         if (!workingDirectory.exists()) workingDirectory = JvmUtils.getTemporaryDirectory();
         workingDirectory = validateDirectoryExists(new File(workingDirectory, IdGenerator.get().nextAsString()));
-        LOGGER.info("Working director for '{}' is '{}'", ClassUtils.getName(testClass), workingDirectory);
+        LOGGER.debug("Working director for '{}' is '{}'", ClassUtils.getName(testClass), workingDirectory);
         JvmUtils.setCacheDirectory(workingDirectory);
     }
 
@@ -246,7 +272,7 @@ public class Session {
             componentCreators.add(ClassUtils.create(cc));
         });
         AnnotationUtils.sort(componentCreators);
-        LOGGER.info("Loaded {} component creators", componentCreators.size());
+        LOGGER.debug("Loaded {} component creators", componentCreators.size());
     }
 
     private void discoverAnswersClasses() {
@@ -257,7 +283,7 @@ public class Session {
                 answersClasses.put(componentType, answerClass);
             }
         }
-        LOGGER.info("Loaded {} answers", answersClasses.size());
+        LOGGER.debug("Loaded {} answers", answersClasses.size());
     }
 
     private void scanPrepareAnnotations() {
