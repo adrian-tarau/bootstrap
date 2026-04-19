@@ -1,10 +1,9 @@
 package net.microfalx.bootstrap.model;
 
+import net.microfalx.bootstrap.test.ServiceUnitTestCase;
+import net.microfalx.bootstrap.test.annotation.Subject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,11 +14,11 @@ import static net.microfalx.bootstrap.model.Filter.create;
 import static net.microfalx.bootstrap.model.LogicalExpression.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
-class ModelFilterTest {
+class ModelFilterTest extends ServiceUnitTestCase {
 
-    @InjectMocks
+    @Subject
     private MetadataService metadataService;
+
     private List<Person> persons = new ArrayList<>();
 
     @BeforeEach
@@ -240,7 +239,7 @@ class ModelFilterTest {
         List<Person> result = modelFilter.toList();
         assertIterableEquals(persons, result);
         assertNotNull(modelFilter.toString());
-        assertEquals("(firstName in [Sid, Bob, John] || age = 90)",create(or(in("firstName",
+        assertEquals("(firstName in [Sid, Bob, John] || age = 90)", create(or(in("firstName",
                 "Sid", "Bob", "John"), eq("age", 90))).
                 getExpression().getDescription());
         assertEquals("or(expr=2)", create(or(in("firstName",
@@ -256,9 +255,9 @@ class ModelFilterTest {
         List<Person> result = modelFilter.toList();
         assertEquals(persons.get(1), result.iterator().next());
         assertNotNull(modelFilter.toString());
-        assertEquals("!(firstName contains 'Jo')",create(not(contains("firstName",
+        assertEquals("!(firstName contains 'Jo')", create(not(contains("firstName",
                 "Jo"))).getExpression().getDescription());
-        assertEquals("not(expr=1)",create(not(contains("firstName",
+        assertEquals("not(expr=1)", create(not(contains("firstName",
                 "Jo"))).getExpression().getName());
         assertTrue(not(contains("firstName", "Jo")).equals(not(contains("firstName", "Jo"))));
     }

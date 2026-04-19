@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FilterImplTest {
+
     private Filter emptyFilter;
     private Filter comparisonExpressionFilter;
     private Expression comparisonExpression1;

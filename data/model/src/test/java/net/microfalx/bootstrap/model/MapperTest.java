@@ -3,30 +3,28 @@ package net.microfalx.bootstrap.model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.microfalx.bootstrap.test.ServiceUnitTestCase;
+import net.microfalx.bootstrap.test.annotation.Subject;
 import net.microfalx.lang.annotation.Provider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 
 import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ExtendWith(MockitoExtension.class)
-class MapperTest {
+class MapperTest extends ServiceUnitTestCase {
 
     @Mock
     private ApplicationContext applicationContext;
-    @InjectMocks
+
+    @Subject
     private MetadataService metadataService;
 
     @BeforeEach
     void before() throws Exception {
-        metadataService.afterPropertiesSet();
         Mapper.builder(SimpleSource.class, SimpleDestination.class).mapper(new SimpleMapper()).register();
     }
 

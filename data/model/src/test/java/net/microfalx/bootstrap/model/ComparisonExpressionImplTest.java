@@ -27,7 +27,7 @@ class ComparisonExpressionImplTest {
         assertNotNull(equalExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='name', " +
                 "value=test, operator=Operator{minimumOperands=1, " +
-                "maximumOperands=1, label='='}}", equalExpression.toString());
+                "maximumOperands=1, label='=', name=EQUAL}}", equalExpression.toString());
     }
 
     @Test
@@ -62,7 +62,7 @@ class ComparisonExpressionImplTest {
         assertFalse(notEqualExpression.equals(ComparisonExpression.eq("year", 1900)));
         assertNotEquals(0, notEqualExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='year', value=2000, " +
-                        "operator=Operator{minimumOperands=1, maximumOperands=1, label='<>'}}",
+                        "operator=Operator{minimumOperands=1, maximumOperands=1, label='<>', name=NOT_EQUAL}}",
                 notEqualExpression.toString());
     }
 
@@ -82,7 +82,7 @@ class ComparisonExpressionImplTest {
         assertNotEquals(0, lessExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='speed', " +
                         "value=100, operator=Operator{minimumOperands=1, " +
-                        "maximumOperands=1, label='<'}}",
+                        "maximumOperands=1, label='<', name=LESS}}",
                 lessExpression.toString());
     }
 
@@ -101,7 +101,7 @@ class ComparisonExpressionImplTest {
         assertFalse(greaterExpression.equals(ComparisonExpression.eq("meter", 101)));
         assertNotNull(greaterExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='distance', value=78, " +
-                        "operator=Operator{minimumOperands=1, maximumOperands=1, label='>'}}",
+                        "operator=Operator{minimumOperands=1, maximumOperands=1, label='>', name=GREATER}}",
                 greaterExpression.toString());
     }
 
@@ -121,7 +121,7 @@ class ComparisonExpressionImplTest {
         assertNotNull(lessThanEqualExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='area', value=17.6, " +
                 "operator=Operator{minimumOperands=1, maximumOperands=1, " +
-                "label='<='}}", lessThanEqualExpression.toString());
+                "label='<=', name=LESS_OR_EQUAL}}", lessThanEqualExpression.toString());
     }
 
     @Test
@@ -140,7 +140,7 @@ class ComparisonExpressionImplTest {
         assertNotNull(greaterThanEqualExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='perimeter', value=67, " +
                 "operator=Operator{minimumOperands=1, maximumOperands=1, " +
-                "label='>='}}", greaterThanEqualExpression.toString());
+                "label='>=', name=GREATER_OR_EQUAL}}", greaterThanEqualExpression.toString());
     }
 
     @Test
@@ -191,7 +191,7 @@ class ComparisonExpressionImplTest {
         assertNotNull(notNullExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='apple', value=null, " +
                 "operator=Operator{minimumOperands=0, maximumOperands=0, " +
-                "label='not null'}}", notNullExpression.toString());
+                "label='not null', name=NOT_NULL}}", notNullExpression.toString());
     }
 
     @Test
@@ -210,7 +210,7 @@ class ComparisonExpressionImplTest {
         assertNotNull(nullExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='fruit', value=null, " +
                 "operator=Operator{minimumOperands=0, maximumOperands=0, " +
-                "label='is null'}}", nullExpression.toString());
+                "label='is null', name=NULL}}", nullExpression.toString());
     }
 
     @Test
@@ -229,7 +229,7 @@ class ComparisonExpressionImplTest {
         assertNotNull(containsExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='rainbow', value=rain, " +
                 "operator=Operator{minimumOperands=1, maximumOperands=1, " +
-                "label='contains'}}", containsExpression.toString());
+                "label='contains', name=CONTAINS}}", containsExpression.toString());
     }
 
     @Test
@@ -248,6 +248,6 @@ class ComparisonExpressionImplTest {
         assertNotNull(likeExpression.hashCode());
         assertEquals("ComparisonExpressionImpl{field='car', value=Mazda, " +
                 "operator=Operator{minimumOperands=1, maximumOperands=1, " +
-                "label='like'}}", likeExpression.toString());
+                "label='like', name=LIKE}}", likeExpression.toString());
     }
 }

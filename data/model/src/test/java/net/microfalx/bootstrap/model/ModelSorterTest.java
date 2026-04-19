@@ -1,21 +1,19 @@
 package net.microfalx.bootstrap.model;
 
+import net.microfalx.bootstrap.test.ServiceUnitTestCase;
+import net.microfalx.bootstrap.test.annotation.Subject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
-class ModelSorterTest {
+class ModelSorterTest extends ServiceUnitTestCase {
 
-
-    @InjectMocks
+    @Subject
     private MetadataService metadataService;
+
     private List<PersonJpa> personList;
 
     @BeforeEach
@@ -31,7 +29,7 @@ class ModelSorterTest {
         ModelSorter<PersonJpa> modelSorter = new ModelSorter<>
                 (metadataService.getMetadata(PersonJpa.class), personList, orders);
         List<PersonJpa> people = modelSorter.toList();
-        assertIterableEquals(personList,people);
+        assertIterableEquals(personList, people);
     }
 
     @Test
@@ -42,12 +40,12 @@ class ModelSorterTest {
         ModelSorter<PersonJpa> modelSorter = new ModelSorter<>
                 (metadataService.getMetadata(PersonJpa.class), personList, orders);
         List<PersonJpa> sortedPersonJpaList = modelSorter.toList();
-        assertEquals(personList.get(1).getFirstName(),sortedPersonJpaList.get(0).getFirstName());
-        assertEquals(personList.get(1).getLastName(),sortedPersonJpaList.get(0).getLastName());
-        assertEquals(personList.get(0).getFirstName(),sortedPersonJpaList.get(1).getFirstName());
-        assertEquals(personList.get(0).getLastName(),sortedPersonJpaList.get(1).getLastName());
-        assertEquals(personList.get(2).getFirstName(),sortedPersonJpaList.get(2).getFirstName());
-        assertEquals(personList.get(2).getLastName(),sortedPersonJpaList.get(2).getLastName());
+        assertEquals(personList.get(1).getFirstName(), sortedPersonJpaList.get(0).getFirstName());
+        assertEquals(personList.get(1).getLastName(), sortedPersonJpaList.get(0).getLastName());
+        assertEquals(personList.get(0).getFirstName(), sortedPersonJpaList.get(1).getFirstName());
+        assertEquals(personList.get(0).getLastName(), sortedPersonJpaList.get(1).getLastName());
+        assertEquals(personList.get(2).getFirstName(), sortedPersonJpaList.get(2).getFirstName());
+        assertEquals(personList.get(2).getLastName(), sortedPersonJpaList.get(2).getLastName());
     }
 
     @Test
@@ -57,9 +55,9 @@ class ModelSorterTest {
         ModelSorter<PersonJpa> modelSorter = new ModelSorter<>
                 (metadataService.getMetadata(PersonJpa.class), personList, orders);
         List<PersonJpa> sortedPersonJpaList = modelSorter.toList();
-        assertEquals(personList.get(2).getAge(),sortedPersonJpaList.get(0).getAge());
-        assertEquals(personList.get(0).getAge(),sortedPersonJpaList.get(1).getAge());
-        assertEquals(personList.get(1).getAge(),sortedPersonJpaList.get(2).getAge());
+        assertEquals(personList.get(2).getAge(), sortedPersonJpaList.get(0).getAge());
+        assertEquals(personList.get(0).getAge(), sortedPersonJpaList.get(1).getAge());
+        assertEquals(personList.get(1).getAge(), sortedPersonJpaList.get(2).getAge());
     }
 
     @Test
@@ -69,9 +67,9 @@ class ModelSorterTest {
         ModelSorter<PersonJpa> modelSorter = new ModelSorter<>
                 (metadataService.getMetadata(PersonJpa.class), personList, orders);
         List<PersonJpa> sortedPersonJpaList = modelSorter.toList();
-        assertEquals(personList.get(0).getDescription(),sortedPersonJpaList.get(0).getDescription());
-        assertEquals(personList.get(2).getDescription(),sortedPersonJpaList.get(1).getDescription());
-        assertEquals(personList.get(1).getAge(),sortedPersonJpaList.get(2).getAge());
+        assertEquals(personList.get(0).getDescription(), sortedPersonJpaList.get(0).getDescription());
+        assertEquals(personList.get(2).getDescription(), sortedPersonJpaList.get(1).getDescription());
+        assertEquals(personList.get(1).getAge(), sortedPersonJpaList.get(2).getAge());
     }
 
     private PersonJpa createPersonJPA(int age, String description, String firstName, String lastName) {

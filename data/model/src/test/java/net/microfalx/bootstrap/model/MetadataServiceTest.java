@@ -1,28 +1,23 @@
 package net.microfalx.bootstrap.model;
 
+import net.microfalx.bootstrap.test.ServiceUnitTestCase;
+import net.microfalx.bootstrap.test.annotation.Subject;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
-class MetadataServiceTest {
+class MetadataServiceTest extends ServiceUnitTestCase {
 
-    @Mock private ApplicationContext applicationContext;
-    @InjectMocks private MetadataService metadataService;
+    @Mock
+    private ApplicationContext applicationContext;
 
-    @BeforeEach
-    void before() throws Exception {
-        metadataService.afterPropertiesSet();
-    }
+    @Subject
+    private MetadataService metadataService;
 
     @Test
     void loadProviders() {

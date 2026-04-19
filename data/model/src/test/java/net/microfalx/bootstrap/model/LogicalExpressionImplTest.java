@@ -32,10 +32,7 @@ class LogicalExpressionImplTest {
         assertEquals("!(month = 'July')", not.getDescription());
         assertNotNull(not.hashCode());
         assertFalse(not.equals(LogicalExpression.not(notEqualExpression)));
-        assertEquals("LogicalExpressionImpl{expressions=" +
-                "[ComparisonExpressionImpl{field='month', value=July, " +
-                "operator=Operator{minimumOperands=1, maximumOperands=1, " +
-                "label='='}}], operator=NOT}",not.toString());
+        assertEquals("LogicalExpressionImpl{expressions=[ComparisonExpressionImpl{field='month', value=July, operator=Operator{minimumOperands=1, maximumOperands=1, label='=', name=EQUAL}}], operator=Operator{, label='!', name=NOT}}",not.toString());
     }
 
     @Test
@@ -52,10 +49,7 @@ class LogicalExpressionImplTest {
         assertEquals("or(expr=2)", or2.getName());
         assertFalse(or1.equals(or2));
         assertNotNull(or1.hashCode());
-        assertEquals("LogicalExpressionImpl{expressions=" +
-                "[ComparisonExpressionImpl{field='age', value=10, " +
-                "operator=Operator{minimumOperands=1, maximumOperands=1, " +
-                "label='<>'}}], operator=OR}",or1.toString());
+        assertEquals("LogicalExpressionImpl{expressions=[ComparisonExpressionImpl{field='age', value=10, operator=Operator{minimumOperands=1, maximumOperands=1, label='<>', name=NOT_EQUAL}}], operator=Operator{, label='||', name=OR}}",or1.toString());
     }
 
     @Test
@@ -72,9 +66,6 @@ class LogicalExpressionImplTest {
         assertEquals("and(expr=2)", and2.getName());
         assertFalse(and1.equals(and2));
         assertNotNull(and1.hashCode());
-        assertEquals("LogicalExpressionImpl{expressions=" +
-                "[ComparisonExpressionImpl{field='age', value=10, " +
-                "operator=Operator{minimumOperands=1, maximumOperands=1, " +
-                "label='<>'}}], operator=AND}",and1.toString());
+        assertEquals("LogicalExpressionImpl{expressions=[ComparisonExpressionImpl{field='age', value=10, operator=Operator{minimumOperands=1, maximumOperands=1, label='<>', name=NOT_EQUAL}}], operator=Operator{, label='&&', name=AND}}",and1.toString());
     }
 }

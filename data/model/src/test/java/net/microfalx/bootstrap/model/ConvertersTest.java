@@ -72,7 +72,7 @@ class ConvertersTest {
         assertEquals("1", Converters.from(1L, String.class));
         assertEquals("[ \"1\", \"2\" ]", Converters.from(new String[]{"1", "2"}, String.class));
         assertEquals("[ 1, 2 ]", Converters.from(new int[]{1, 2}, String.class));
-        assertEquals("[ 1, \"a\" ]", Converters.from(Set.of(1, "a"), String.class));
+        assertEquals("[ \"a\", 1 ]", Converters.from(Set.of(1, "a"), String.class));
         Assertions.assertThat(Converters.from(Map.of("a", 1), String.class)).isEqualToNormalizingNewlines("""
                 {
                   "a" : 1
