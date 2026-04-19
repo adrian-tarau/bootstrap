@@ -13,8 +13,7 @@ import static org.mockito.Mockito.when;
 
 class DataSetServiceTest extends AbstractDataSetTestCase {
 
-    @Mock
-    private JpaRepository<PersonJpa, Integer> jpaRepository;
+    @Mock private JpaRepository<PersonJpa, Integer> jpaRepository;
 
     @Test
     void loadFactories() {

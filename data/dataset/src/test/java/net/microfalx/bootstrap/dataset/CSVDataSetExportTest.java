@@ -24,9 +24,11 @@ class CSVDataSetExportTest extends AbstractDataSetTestCase {
         Resource resource = dataSetExport.export(dataSet);
         assertNotNull(resource);
         Assertions.assertThat(resource.loadAsString()).
-                isEqualToIgnoringNewLines("age,description,dummy,firstName,id,lastName\n" +
-                        "25,,,John,1,Doe\n" +
-                        "20,,,Jane,1,Doe\n");
+                isEqualToIgnoringNewLines("""
+                        age,description,dummy,firstName,id,lastName,renamed2
+                        25,,,John,1,Doe,
+                        20,,,Jane,1,Doe,
+                        """);
     }
 
 
