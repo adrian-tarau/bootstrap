@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.test.extension;
 
+import net.microfalx.bootstrap.test.TestContext;
 import org.atteo.classindex.IndexSubclasses;
 
 /**
@@ -20,6 +21,6 @@ public interface ComponentCreator<T> {
      *
      * @return a non-null instance
      */
-    T create(Session session);
+    T create(TestContext testContext);
 
 }

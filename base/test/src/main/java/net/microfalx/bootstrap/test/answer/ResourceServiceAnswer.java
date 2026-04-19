@@ -52,7 +52,7 @@ public class ResourceServiceAnswer extends AbstractAnswer {
 
     public File getWorkspaceDirectory() {
         if (workspaceDirectory == null) {
-            workspaceDirectory = validateDirectoryExists(new File(getSession().getWorkingDirectory(), "resource"));
+            workspaceDirectory = validateDirectoryExists(new File(getContext().getWorkingDirectory(), "resource"));
         }
         return workspaceDirectory;
     }

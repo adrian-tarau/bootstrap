@@ -15,7 +15,7 @@ public class RegistryAnswer extends AbstractAnswer {
     @Override
     public void initialize(Object... context) {
         super.initialize(context);
-        RegistryService registryService = getSession().lookup(RegistryService.class);
+        RegistryService registryService = getContext().lookup(RegistryService.class);
         if (registryService != null) {
             registry = registryService.getRegistry();
         } else {

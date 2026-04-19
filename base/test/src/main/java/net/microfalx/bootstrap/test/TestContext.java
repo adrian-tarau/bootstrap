@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.test.extension;
+package net.microfalx.bootstrap.test;
 
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.registry.Registry;
@@ -8,6 +8,7 @@ import net.microfalx.bootstrap.test.annotation.Prepare;
 import net.microfalx.bootstrap.test.annotation.Subject;
 import net.microfalx.bootstrap.test.answer.AbstractAnswer;
 import net.microfalx.bootstrap.test.answer.JpaRepositoryAnswer;
+import net.microfalx.bootstrap.test.extension.ComponentCreator;
 import net.microfalx.lang.*;
 import net.microfalx.threadpool.ThreadPool;
 import org.atteo.classindex.ClassIndex;
@@ -37,7 +38,7 @@ import static net.microfalx.lang.FileUtils.validateDirectoryExists;
  * Holds instances for a test session
  */
 @Slf4j
-public class Session {
+public class TestContext {
 
     private final Class<?> testClass;
     private final List<Field> testClassFields = new ArrayList<>();
@@ -49,21 +50,22 @@ public class Session {
     private Map<Class<?>, Object> objects = new HashMap<>();
     private final Set<Class<?>> mockClasses = new LinkedHashSet<>();
     private final List<ComponentCreator<?>> componentCreators = new ArrayList<>();
+    private TaskTracker taskTracker = new TaskTracker();
 
     private File workingDirectory;
 
-    static ThreadLocal<Session> CURRENT = new ThreadLocal<>();
+    static ThreadLocal<TestContext> CURRENT = new ThreadLocal<>();
 
     /**
      * Returns the session attached to the current thread.
      *
      * @return a non-null instance
      */
-    public static Optional<Session> current() {
+    public static Optional<TestContext> current() {
         return Optional.ofNullable(CURRENT.get());
     }
 
-    public Session(Class<?> testClass) {
+    public TestContext(Class<?> testClass) {
         requireNonNull(testClass);
         this.testClass = testClass;
     }
@@ -179,6 +181,15 @@ public class Session {
         return instance;
     }
 
+    /**
+     * Returns the tracker for concurrency.
+     *
+     * @return a non-null instance
+     */
+    public TaskTracker getTaskTracker() {
+        return taskTracker;
+    }
+
     private void initCoreServices() {
         applicationContext = new AnnotationConfigApplicationContext();
         registerCoreMocksWithContext();
@@ -253,7 +264,9 @@ public class Session {
     private void initContext() {
         this.applicationContext = new AnnotationConfigApplicationContext();
         this.objects = new HashMap<>();
-        this.objects.put(Session.class, this);
+        this.taskTracker = new TaskTracker();
+        this.objects.put(TestContext.class, this);
+        this.objects.put(TaskTracker.class, taskTracker);
     }
 
     private void initSettings() {

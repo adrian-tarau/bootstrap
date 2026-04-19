@@ -6,7 +6,6 @@ import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.bootstrap.test.annotation.Prepare;
 import net.microfalx.bootstrap.test.annotation.Subject;
-import net.microfalx.bootstrap.test.extension.Session;
 import net.microfalx.threadpool.ThreadPool;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -30,17 +29,17 @@ public class CoreServicesTest extends ServiceUnitTestCase {
     @Subject
     private TestService testService;
 
-    private Session session;
+    private TestContext testContext;
 
     @Test
     void checkSession() {
-        assertNotNull(session);
+        assertNotNull(testContext);
     }
 
     @Test
     void checkMocks() {
         assertNotNull(threadPool);
-        Set<Class<?>> mockClasses = session.getMockClasses();
+        Set<Class<?>> mockClasses = testContext.getMockClasses();
         assertEquals(6, mockClasses.size());
         assertTrue(mockClasses.contains(RegistryService.class));
         assertTrue(mockClasses.contains(StoreService.class));
@@ -48,7 +47,7 @@ public class CoreServicesTest extends ServiceUnitTestCase {
 
     @Test
     void checkSubjects() {
-        Set<Class<?>> subjectClasses = session.getSubjectClasses();
+        Set<Class<?>> subjectClasses = testContext.getSubjectClasses();
         assertEquals(3, subjectClasses.size());
         assertTrue(subjectClasses.contains(ResourceService.class));
         assertTrue(subjectClasses.contains(ConfigurationService.class));

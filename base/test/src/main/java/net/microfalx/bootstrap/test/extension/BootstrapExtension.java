@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.test.extension;
 
+import net.microfalx.bootstrap.test.TestContext;
 import org.junit.jupiter.api.extension.*;
 
 /**
@@ -14,24 +15,24 @@ public class BootstrapExtension implements BeforeAllCallback, AfterAllCallback,
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        Session testSession = new Session(context.getRequiredTestClass());
-        testSession.beforeAll();
+        TestContext testTestContext = new TestContext(context.getRequiredTestClass());
+        testTestContext.beforeAll();
     }
 
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        Session.current().ifPresent(Session::afterAll);
+        TestContext.current().ifPresent(TestContext::afterAll);
     }
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         Object testInstance = context.getRequiredTestInstance();
-        Session.current().ifPresent(session -> session.beforeEach(testInstance));
+        TestContext.current().ifPresent(session -> session.beforeEach(testInstance));
     }
 
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
-        Session.current().ifPresent(Session::afterEach);
+        TestContext.current().ifPresent(TestContext::afterEach);
     }
 
 
