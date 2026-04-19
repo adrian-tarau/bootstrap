@@ -1,28 +1,21 @@
 package net.microfalx.bootstrap.content;
 
-import org.junit.jupiter.api.BeforeEach;
+import net.microfalx.bootstrap.test.ServiceUnitTestCase;
+import net.microfalx.bootstrap.test.annotation.Subject;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ExtendWith(MockitoExtension.class)
-class FragmentLoaderTest {
+class FragmentLoaderTest extends ServiceUnitTestCase {
 
-    @InjectMocks
+    @Subject
     private ContentService contentService;
 
+    @Subject
     private FragmentLoader loader;
-
-    @BeforeEach
-    void setup() {
-        loader = new FragmentLoader(contentService);
-    }
 
     @Test
     void loadSnippet() throws IOException {

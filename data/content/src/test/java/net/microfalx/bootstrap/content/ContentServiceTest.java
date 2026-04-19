@@ -1,14 +1,12 @@
 package net.microfalx.bootstrap.content;
 
+import net.microfalx.bootstrap.test.ServiceUnitTestCase;
+import net.microfalx.bootstrap.test.annotation.Subject;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
@@ -20,18 +18,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
-class ContentServiceTest {
+class ContentServiceTest extends ServiceUnitTestCase {
 
-    @InjectMocks
+    @Subject
     private ContentService contentService;
+
     private final AtomicInteger elementCount = new AtomicInteger();
     private final AtomicInteger textCount = new AtomicInteger();
-
-    @BeforeEach
-    void setup() throws Exception {
-        contentService.afterPropertiesSet();
-    }
 
     @Test
     void detectMimeType() throws IOException {
@@ -198,7 +191,7 @@ class ContentServiceTest {
         }
     }
 
-    private static final String PRETTY_JSON2= "{\r\n" +
+    private static final String PRETTY_JSON2 = "{\r\n" +
             "  \"widget\" : {\r\n" +
             "    \"debug\" : \"on\",\r\n" +
             "    \"window\" : {\r\n" +
