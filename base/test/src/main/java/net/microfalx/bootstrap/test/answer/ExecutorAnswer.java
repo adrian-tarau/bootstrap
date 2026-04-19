@@ -33,7 +33,7 @@ public class ExecutorAnswer extends AbstractAnswer {
         };
     }
 
-    private TaskTracker getTaskTracker() {
+    protected final TaskTracker getTaskTracker() {
         return getContext().getTaskTracker();
     }
 

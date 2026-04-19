@@ -19,6 +19,15 @@ public class TaskTracker {
     private final Map<Class<?>, AtomicInteger> schedules = new ConcurrentHashMap<>();
 
     /**
+     * Returns the number of executions for all task.
+     *
+     * @return a positive integer
+     */
+    public int getExecutionCounts() {
+        return executions.values().stream().mapToInt(AtomicInteger::get).sum();
+    }
+
+    /**
      * Returns the number of executions for a given task type.
      *
      * @param type the task class
@@ -50,7 +59,7 @@ public class TaskTracker {
      */
     public int getScheduleCount(Class<?> type) {
         requireNonNull(type);
-        AtomicInteger counter = submits.get(type);
+        AtomicInteger counter = schedules.get(type);
         return counter == null ? 0 : counter.get();
     }
 
@@ -84,7 +93,7 @@ public class TaskTracker {
      */
     public Future<?> registerSchedule(Object task) {
         requireNonNull(task);
-        submits.computeIfAbsent(task.getClass(), k -> new AtomicInteger()).incrementAndGet();
+        schedules.computeIfAbsent(task.getClass(), k -> new AtomicInteger()).incrementAndGet();
         return new TestScheduledFuture<>(CompletableFuture.completedFuture(null));
     }
 

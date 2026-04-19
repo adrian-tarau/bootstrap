@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.test.answer;
 
 import net.microfalx.bootstrap.test.ServiceUnitTestCase;
 import net.microfalx.bootstrap.test.TaskTracker;
+import net.microfalx.threadpool.ThreadPool;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
@@ -10,16 +11,10 @@ import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class ExecutorAnswerTest extends ServiceUnitTestCase {
+class ThreadPoolAnswerTest extends ServiceUnitTestCase {
 
     @Mock
-    private Executor executor;
-
-    @Mock
-    private ExecutorService executorService;
-
-    @Mock
-    private ScheduledExecutorService scheduledExecutorService;
+    private ThreadPool threadPool;
 
     private final TestRunnable runnable = new TestRunnable();
     private final TestCallable callable = new TestCallable();
@@ -28,27 +23,33 @@ class ExecutorAnswerTest extends ServiceUnitTestCase {
 
     @Test
     void executor() {
-        testAndAssertExecutor(executor);
+        testAndAssertExecutor(threadPool);
         assertEquals(1, taskTracker.getExecutionCount(TestRunnable.class));
     }
 
     @Test
     void executorService() {
-        testAndAssertExecutor(executorService);
+        testAndAssertExecutor(threadPool);
         assertEquals(1, taskTracker.getExecutionCount(TestRunnable.class));
-        testAndAssertExecutorService(executorService);
+        testAndAssertExecutorService(threadPool);
         assertEquals(1, taskTracker.getSubmitCount(TestRunnable.class));
         assertEquals(1, taskTracker.getSubmitCount(TestCallable.class));
     }
 
     @Test
     void scheduledExecutorService() {
-        testAndAssertExecutor(scheduledExecutorService);
+        testAndAssertExecutor(threadPool);
         assertEquals(1, taskTracker.getExecutionCount(TestRunnable.class));
-        testAndAssertExecutorService(scheduledExecutorService);
-        testAndAssertScheduledExecutorService(scheduledExecutorService);
+        testAndAssertExecutorService(threadPool);
+        testAndAssertScheduledExecutorService(threadPool);
         assertEquals(1, taskTracker.getScheduleCount(TestRunnable.class));
         assertEquals(1, taskTracker.getScheduleCount(TestCallable.class));
+    }
+
+    @Test
+    void stats() {
+        assertNotNull(threadPool.getMetrics());
+        assertEquals(0, threadPool.getMetrics().getExecutedTaskCount());
     }
 
     private void testAndAssertExecutor(Executor executor) {
