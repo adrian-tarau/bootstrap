@@ -29,6 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import static java.util.Collections.unmodifiableSet;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ClassUtils.isSubClassOf;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.FileUtils.validateDirectoryExists;
 
@@ -240,7 +241,7 @@ public class Session {
             } catch (Exception e) {
                 return rethrowExceptionAndReturn(e);
             }
-        } else if (ClassUtils.isSubClassOf(type, JpaRepository.class)) {
+        } else if (isSubClassOf(type, JpaRepository.class)) {
             instance = (T) JpaRepositoryAnswer.mock((Class<JpaRepository>) type);
         } else {
             instance = Mockito.mock(type, Mockito.RETURNS_SMART_NULLS);
@@ -276,10 +277,15 @@ public class Session {
     }
 
     private void discoverAnswersClasses() {
+        Set<Class<?>> registeredTypes = new HashSet<>();
         for (Class<?> answerClass : ClassIndex.getAnnotated(AnswerFor.class)) {
             AnswerFor answerForAnnot = answerClass.getAnnotation(AnswerFor.class);
             Class<?>[] componentTypes = answerForAnnot.value();
             for (Class<?> componentType : componentTypes) {
+                if (!registeredTypes.add(componentType)) {
+                    throw new IllegalStateException("Multiple answers (last " + ClassUtils.getName(answerClass)
+                            + ") for component type '" + componentType + "' found");
+                }
                 answersClasses.put(componentType, answerClass);
             }
         }

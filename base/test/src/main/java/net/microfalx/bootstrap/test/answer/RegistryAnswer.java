@@ -6,6 +6,7 @@ import net.microfalx.bootstrap.registry.Storage;
 import net.microfalx.bootstrap.test.annotation.AnswerFor;
 import org.mockito.invocation.InvocationOnMock;
 
+@SuppressWarnings("unused")
 @AnswerFor(Registry.class)
 public class RegistryAnswer extends AbstractAnswer {
 

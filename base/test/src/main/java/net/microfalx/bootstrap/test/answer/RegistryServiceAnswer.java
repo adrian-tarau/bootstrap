@@ -8,6 +8,7 @@ import org.mockito.invocation.InvocationOnMock;
 
 import java.util.List;
 
+@SuppressWarnings("unused")
 @AnswerFor(RegistryService.class)
 public class RegistryServiceAnswer extends AbstractAnswer {
 
