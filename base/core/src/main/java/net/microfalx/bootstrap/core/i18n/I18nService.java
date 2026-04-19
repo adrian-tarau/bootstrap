@@ -86,7 +86,7 @@ public class I18nService implements InitializingBean, I18n {
         try {
             return aggregatedMessageSource.getMessage(key, ObjectUtils.EMPTY_ARRAY, locale);
         } catch (NoSuchMessageException e) {
-            LOGGER.debug("Missing i18n '" + key + "' and locale " + locale);
+            logMissing(key, locale);
             return getSafeText(key, safeText);
         }
     }
@@ -115,7 +115,7 @@ public class I18nService implements InitializingBean, I18n {
         try {
             return aggregatedMessageSource.getMessage(key, arguments, locale);
         } catch (NoSuchMessageException e) {
-            LOGGER.debug("Missing i18n '" + key + "' and locale " + locale);
+            logMissing(key, locale);
             return getSafeText(key, safeText);
         }
     }
@@ -159,6 +159,10 @@ public class I18nService implements InitializingBean, I18n {
         ResourceBundleMessageSource messageSource = new I18MultiModuleMessageSource();
         messageSource.setBasenames(baseNames.toArray(new String[0]));
         return messageSource;
+    }
+
+    private static void logMissing(String key, Locale locale) {
+        LOGGER.debug("Missing i18n '{}' and locale '{}'", key, locale);
     }
 
 
