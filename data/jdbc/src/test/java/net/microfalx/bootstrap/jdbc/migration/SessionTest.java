@@ -2,14 +2,13 @@ package net.microfalx.bootstrap.jdbc.migration;
 
 import net.microfalx.bootstrap.jdbc.support.DataSource;
 import net.microfalx.bootstrap.jdbc.support.Query;
+import net.microfalx.bootstrap.test.ServiceUnitTestCase;
 import net.microfalx.resource.ClassPathResource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 import java.net.URI;
@@ -22,16 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-class SessionTest {
-
-    private final Collection<String> sqls = new ArrayList<>();
+class SessionTest extends ServiceUnitTestCase {
 
     @Mock private DataSource dataSource;
     @Mock private javax.sql.DataSource jdbcDataSource;
     @Mock private Connection connection;
     @Mock private Statement statement;
     @Mock private DatabaseMetaData metaData;
+
+    private final Collection<String> sqls = new ArrayList<>();
 
     @BeforeEach
     void setup() throws SQLException {
