@@ -4,9 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.registry.Data;
 import net.microfalx.bootstrap.registry.Registry;
 import net.microfalx.bootstrap.registry.RegistryService;
+import net.microfalx.lang.EncryptionUtils;
+import net.microfalx.lang.SecretUtils;
 import net.microfalx.threadpool.ThreadPool;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.bind.BindHandler;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static net.microfalx.bootstrap.configuration.ConfigurationUtils.ROOT_METADATA_ID;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.StringUtils.EMPTY_STRING;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 
@@ -33,6 +40,7 @@ public class ConfigurationService implements InitializingBean {
     @Autowired
     private ThreadPool threadPool;
 
+    private Binder binder;
     private final Map<String, Metadata> metadatas = new ConcurrentHashMap<>();
 
     /**
@@ -61,7 +69,14 @@ public class ConfigurationService implements InitializingBean {
      */
     public String getProperty(String key) {
         requireNonNull(key);
-        return environment.getProperty(key);
+        try {
+            ConfigurationPropertyName name = ConfigurationPropertyName.adapt(key, '.');
+            Bindable<String> bindable = Bindable.of(String.class);
+            return binder.bindOrCreate(name, bindable, BindHandler.DEFAULT);
+        } catch (Exception e) {
+            LOGGER.warn("Failed to get the property '{}', root cause: {}", key, getRootCauseDescription(e));
+            return null;
+        }
     }
 
     /**
@@ -103,7 +118,12 @@ public class ConfigurationService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         configuration = new SubsetImpl(this, null, EMPTY_STRING, "Root");
         loadMetadata();
+        initBinder();
         threadPool.execute(this::registerMetadata);
+    }
+
+    private void initBinder() {
+        binder = Binder.get(environment);
     }
 
     private void loadMetadata() {
@@ -129,9 +149,12 @@ public class ConfigurationService implements InitializingBean {
     private boolean registerMetadata(Registry registry, Metadata metadata) {
         Data data = registry.getOrCreate(ConfigurationUtils.getRegistryPath(metadata));
         if (data.exists() || !metadata.isLeaf()) return false;
+        boolean isSecret = SecretUtils.isSecret(metadata.getFullKey());
         data.setAttribute("key", metadata.getFullKey());
         data.setAttribute("name", metadata.getName());
-        data.set(getProperty(metadata.getFullKey()));
+        String value = getProperty(metadata.getFullKey());
+        value = isSecret && !EncryptionUtils.isEncrypted(value) ? EncryptionUtils.encrypt(value) : value;
+        data.set(value);
         registry.set(data);
         return true;
     }

@@ -4,7 +4,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import net.microfalx.bootstrap.registry.Data;
 import net.microfalx.bootstrap.registry.Registry;
+import net.microfalx.lang.EncryptionUtils;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.lang.SecretUtils;
 import net.microfalx.lang.StringUtils;
 
 import java.util.Optional;
@@ -54,6 +56,9 @@ abstract class AbstractConfiguration implements Configuration {
             value = ObjectUtils.toString(data.get().get());
         } else {
             value = getProperty(key);
+        }
+        if (SecretUtils.isSecret(key) && EncryptionUtils.isEncrypted(key)) {
+            value = EncryptionUtils.decrypt(value);
         }
         return value != null ? value : defaultValue;
     }
