@@ -55,6 +55,7 @@ public class ConfigurationController extends SystemPageController {
             if (!ObjectUtils.equals(currentValue, previousValue)) changed++;
             configuration.set(key, currentValue);
         }
+        configurationService.notifyGroupChange(metadata);
         return JsonFormResponse.success(changed + " entries updated");
     }
 
