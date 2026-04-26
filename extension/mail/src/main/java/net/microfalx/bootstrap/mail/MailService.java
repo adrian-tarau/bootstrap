@@ -43,10 +43,10 @@ import static net.microfalx.resource.MimeType.TEXT_HTML;
 @Slf4j
 public class MailService implements InitializingBean {
 
-    @Autowired(required = false)
-    private MailProperties properties = new MailProperties();
+    @Autowired
+    private MailConfiguration configuration;
 
-    private JavaMailSenderImpl mailSender;
+    private volatile JavaMailSenderImpl mailSender;
 
     private ThreadPool threadPool;
     private final PriorityQueue<FailedMessage> retryQueue = new PriorityQueue<>();
@@ -65,6 +65,7 @@ public class MailService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         initThreadPool();
         initMailSender();
+        initListeners();
     }
 
     /**
@@ -130,7 +131,7 @@ public class MailService implements InitializingBean {
         try {
             mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
-            helper.setFrom(defaultIfEmpty(properties.getFrom(), DEFAULT_FROM));
+            helper.setFrom(defaultIfEmpty(configuration.getFrom(), DEFAULT_FROM));
             boolean html = TEXT_HTML.equals(body.getMimeType());
             helper.setText(body.loadAsString(), html);
             helper.setTo(to);
@@ -149,6 +150,10 @@ public class MailService implements InitializingBean {
             future = CompletableFuture.failedFuture(throwable);
         }
         return future;
+    }
+
+    private void reload() {
+        initMailSender();
     }
 
     private Future<Mail> enqueue(MimeMessage mimeMessage) {
@@ -189,25 +194,32 @@ public class MailService implements InitializingBean {
 
     private void initThreadPool() {
         threadPool = ThreadPoolFactory.create("Mail").setRatio(0.5f).create();
-        threadPool.scheduleAtFixedRate(new MaintenanceTask(), properties.getRetryInterval());
+        threadPool.scheduleAtFixedRate(new MaintenanceTask(), configuration.getRetryInterval());
+    }
+
+    private void initListeners() {
+        configuration.addListener(event -> {
+            LOGGER.info("Settings changed for group '{}', reload", event.getKey());
+            reload();
+        });
     }
 
     private void initMailSender() {
         mailSender = new JavaMailSenderImpl();
-        mailSender.setHost(properties.getHost());
-        mailSender.setPort(properties.getPort());
+        mailSender.setHost(configuration.getHost());
+        mailSender.setPort(configuration.getPort());
         Properties props = mailSender.getJavaMailProperties();
-        if (isNotEmpty(properties.getUserName())) {
+        if (isNotEmpty(configuration.getUserName())) {
             props.put("mail.smtp.auth", "true");
-            mailSender.setUsername(properties.getUserName());
-            mailSender.setPassword(properties.getPassword());
+            mailSender.setUsername(configuration.getUserName());
+            mailSender.setPassword(configuration.getPassword());
         } else {
             props.put("mail.smtp.auth", "false");
         }
-        props.put("mail.smtp.ssl.enable", properties.isTls());
-        props.put("mail.smtp.starttls.enable", !properties.isTls());
-        LOGGER.info("SMTP settings: {}, port: {}, user: {}", properties.getHost(), properties.getPort(),
-                maskSecret(properties.getUserName()));
+        props.put("mail.smtp.ssl.enable", configuration.isTls());
+        props.put("mail.smtp.starttls.enable", !configuration.isTls());
+        LOGGER.info("SMTP settings: {}, port: {}, user: {}", configuration.getHost(), configuration.getPort(),
+                maskSecret(configuration.getUserName()));
     }
 
     private static String getFirstAddress(MimeMessage mimeMessage) {
@@ -257,7 +269,7 @@ public class MailService implements InitializingBean {
         }
 
         private void cleanup() {
-            LocalDateTime threshold = LocalDateTime.now().minus(properties.getRetention());
+            LocalDateTime threshold = LocalDateTime.now().minus(configuration.getRetention());
             Collection<String> toBeRemoved = mails.values().stream()
                     .filter(mail -> mail.getCreatedAt().isBefore(threshold))
                     .map(Mail::getId).toList();
