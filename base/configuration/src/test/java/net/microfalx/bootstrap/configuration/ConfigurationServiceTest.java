@@ -1,37 +1,11 @@
 package net.microfalx.bootstrap.configuration;
 
-import net.microfalx.bootstrap.registry.Registry;
-import net.microfalx.bootstrap.registry.RegistryService;
-import net.microfalx.threadpool.ThreadPool;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.env.MockEnvironment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-class ConfigurationServiceTest {
-
-    @Mock private Registry registry;
-    @Mock private RegistryService registryService;
-    @Mock private ThreadPool threadPool;
-
-    @Spy private MockEnvironment environment = new MockEnvironment();
-
-    @InjectMocks
-    private ConfigurationService configurationService;
-
-    @BeforeEach
-    void setup() throws Exception {
-        configurationService.afterPropertiesSet();
-    }
+class ConfigurationServiceTest extends AbstractConfigurationTestCase {
 
     @Test
     void getMetadata() {
@@ -40,7 +14,7 @@ class ConfigurationServiceTest {
 
     @Test
     void getRegistry() {
-        when(registryService.getRegistry()).thenReturn(registry);
+        mockRegistry();
         assertNotNull(configurationService.getRegistry());
     }
 
@@ -64,5 +38,11 @@ class ConfigurationServiceTest {
         environment.setProperty("A", 1);
         assertEquals("1", configurationService.getProperty("a"));
     }
+
+    @Test
+    void convert() {
+        assertEquals(1, configurationService.convert("a", "1", Integer.class));
+    }
+
 
 }

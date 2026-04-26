@@ -6,7 +6,7 @@ import java.util.Set;
  * An interface which exposes the configuration tree and allows services to retrieve and persist
  * configuration entries.
  */
-public interface Configuration {
+public interface Configuration extends ConfigurationListenerAware {
 
     /**
      * Returns all available keys in the configuration (or subset).
@@ -31,6 +31,14 @@ public interface Configuration {
      * @return the value, default is missing
      */
     String get(String key, String defaultValue);
+
+    /**
+     * Returns the value for a given key as a given type.
+     *
+     * @param key the key
+     * @return the value, default is missing
+     */
+    <T> T get(String key, Class<T> type, Object defaultValue);
 
     /**
      * Returns the integer value for a given key.
@@ -83,7 +91,7 @@ public interface Configuration {
      * @param key   the key
      * @param value the value
      */
-    void set(String key, String value);
+    <T> void set(String key, T value);
 
     /**
      * Returns the parent configuration.

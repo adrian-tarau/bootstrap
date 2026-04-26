@@ -1,11 +1,12 @@
 package net.microfalx.bootstrap.configuration;
 
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.registry.Data;
 import net.microfalx.bootstrap.registry.Registry;
 import net.microfalx.bootstrap.registry.RegistryService;
-import net.microfalx.lang.EncryptionUtils;
-import net.microfalx.lang.SecretUtils;
+import net.microfalx.lang.*;
 import net.microfalx.threadpool.ThreadPool;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,35 +14,42 @@ import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import static java.lang.System.currentTimeMillis;
 import static net.microfalx.bootstrap.configuration.ConfigurationUtils.ROOT_METADATA_ID;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
-import static net.microfalx.lang.StringUtils.EMPTY_STRING;
-import static net.microfalx.lang.StringUtils.toIdentifier;
+import static net.microfalx.lang.StringUtils.*;
 
+@SuppressWarnings("unchecked")
 @Slf4j
 @Service
 public class ConfigurationService implements InitializingBean {
 
     private Configuration configuration;
 
-    @Autowired
-    private RegistryService registryService;
+    @Autowired private ApplicationEventPublisher eventPublisher;
+    @Autowired private RegistryService registryService;
+    @Autowired private Environment environment;
+    @Autowired private ConversionService conversionService;
+    @Autowired private ThreadPool threadPool;
 
-    @Autowired
-    private Environment environment;
-
-    @Autowired
-    private ThreadPool threadPool;
-
+    private Duration cacheExpiration = Duration.ofSeconds(5);
     private Binder binder;
     private final Map<String, Metadata> metadatas = new ConcurrentHashMap<>();
+    private final Map<String, CachedValue> cachedValues = new ConcurrentHashMap<>();
+    private final Collection<ConfigurationListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * Returns the registry used to store the configuration.
@@ -59,6 +67,16 @@ public class ConfigurationService implements InitializingBean {
      */
     public Configuration getConfiguration() {
         return configuration;
+    }
+
+    /**
+     * Registers a configuration listener.
+     *
+     * @param listener a non-null instance
+     */
+    public void addListener(ConfigurationListener listener) {
+        requireNonNull(listener);
+        listeners.add(listener);
     }
 
     /**
@@ -114,12 +132,69 @@ public class ConfigurationService implements InitializingBean {
         this.metadatas.put(metadata.getId(), metadata);
     }
 
+    /**
+     * Notifies listeners that a group (all properties under the group) changed.
+     *
+     * @param metadata the metadata of the group
+     */
+    public void notifyGroupChange(Metadata metadata) {
+        requireNonNull(metadata);
+        ConfigurationEvent event = new ConfigurationEvent(configuration, ConfigurationEvent.Type.GROUP, metadata.getFullKey());
+        fireConfigurationEvent(event);
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         configuration = new SubsetImpl(this, null, EMPTY_STRING, "Root");
         loadMetadata();
         initBinder();
         threadPool.execute(this::registerMetadata);
+    }
+
+    void propertyChanged(Configuration configuration, String key, String previousValue, String currentValue) {
+        ConfigurationEvent event = new ConfigurationEvent(configuration, ConfigurationEvent.Type.PROPERTY, key, previousValue, currentValue);
+        fireConfigurationEvent(event);
+    }
+
+    <T> T convert(String key, Object value, Class<T> type) {
+        if (value == null) return null;
+        if (type == Duration.class) {
+            return (T) TimeUtils.parseDuration(value.toString());
+        } else {
+            try {
+                return conversionService.convert(value, type);
+            } catch (Exception e) {
+                throw new ConfigurationException("Failed to convert value '" + value + "' to "
+                        + ClassUtils.getName(type) + " for key '" + key + "'", e);
+            }
+        }
+    }
+
+    String getFromRegistry(Configuration configuration, String key, String defaultValue) {
+        String value = getFromCache(key);
+        if (StringUtils.isEmpty(value)) {
+            String registryKey = getRegistryKey(key);
+            Optional<Data> data = getRegistry().get(registryKey);
+            if (data.isPresent()) {
+                value = ObjectUtils.toString(data.get().get());
+            } else {
+                value = getProperty(key);
+            }
+            cachedValues.put(key, new CachedValue(value));
+        }
+        if (SecretUtils.isSecret(key) && EncryptionUtils.isEncrypted(key)) {
+            value = EncryptionUtils.decrypt(value);
+        }
+        return defaultIfNull(value, defaultValue);
+    }
+
+    void setToRegistry(Configuration configuration, String key, Object value) {
+        String registryKey = getRegistryKey(key);
+        Data data = getRegistry().getOrCreate(registryKey);
+        String previousValue = ObjectUtils.toString(data.get());
+        data.set(value);
+        getRegistry().set(data);
+        propertyChanged(configuration, key, previousValue, ObjectUtils.toString(value));
     }
 
     private void initBinder() {
@@ -157,5 +232,41 @@ public class ConfigurationService implements InitializingBean {
         data.set(value);
         registry.set(data);
         return true;
+    }
+
+    private String getFromCache(String key) {
+        CachedValue cachedValue = cachedValues.get(key);
+        if (cachedValue != null && !cachedValue.isExpired(cacheExpiration)) {
+            return cachedValue.getValue();
+        } else {
+            return null;
+        }
+    }
+
+    private String getRegistryKey(String key) {
+        return ConfigurationUtils.REGISTRY_PATH + "/" + StringUtils.toIdentifier(key);
+    }
+
+    void fireConfigurationEvent(ConfigurationEvent event) {
+        eventPublisher.publishEvent(event);
+        for (ConfigurationListener listener : listeners) {
+            listener.onEvent(event);
+        }
+    }
+
+    @Getter
+    @ToString
+    private static class CachedValue {
+
+        private final String value;
+        private final long created = currentTimeMillis();
+
+        private CachedValue(String value) {
+            this.value = value;
+        }
+
+        boolean isExpired(Duration expiration) {
+            return TimeUtils.millisSince(currentTimeMillis()) > expiration.toMillis();
+        }
     }
 }

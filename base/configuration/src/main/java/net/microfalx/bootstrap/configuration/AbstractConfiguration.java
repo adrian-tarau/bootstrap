@@ -2,18 +2,14 @@ package net.microfalx.bootstrap.configuration;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import net.microfalx.bootstrap.registry.Data;
 import net.microfalx.bootstrap.registry.Registry;
-import net.microfalx.lang.EncryptionUtils;
-import net.microfalx.lang.ObjectUtils;
-import net.microfalx.lang.SecretUtils;
 import net.microfalx.lang.StringUtils;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.StringUtils.isEmpty;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -43,24 +39,22 @@ abstract class AbstractConfiguration implements Configuration {
 
     @Override
     public String get(String key) {
-        return get(getFinalKey(key), null);
+        return get(key, null);
     }
 
     @Override
     public String get(String key, String defaultValue) {
         requireNotEmpty(key);
-        String registryKey = getRegistryKey(key);
-        Optional<Data> data = getRegistry().get(registryKey);
-        String value;
-        if (data.isPresent()) {
-            value = ObjectUtils.toString(data.get().get());
-        } else {
-            value = getProperty(key);
+        return configurationService.getFromRegistry(this, getFinalKey(key), defaultValue);
+    }
+
+    @Override
+    public <T> T get(String key, Class<T> type, Object defaultValue) {
+        String value = get(key, null);
+        if (isEmpty(value)) {
+            return configurationService.convert(key, defaultValue, type);
         }
-        if (SecretUtils.isSecret(key) && EncryptionUtils.isEncrypted(key)) {
-            value = EncryptionUtils.decrypt(value);
-        }
-        return value != null ? value : defaultValue;
+        return configurationService.convert(key, value, type);
     }
 
     @Override
@@ -116,12 +110,14 @@ abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
-    public void set(String key, String value) {
+    public <T> void set(String key, T value) {
         requireNotEmpty(key);
-        String registryKey = getRegistryKey(key);
-        Data data = getRegistry().getOrCreate(registryKey);
-        data.set(value);
-        getRegistry().set(data);
+        configurationService.setToRegistry(this, getFinalKey(key), value);
+    }
+
+    @Override
+    public void addListener(ConfigurationListener listener) {
+        configurationService.addListener(listener);
     }
 
     protected final Registry getRegistry() {
@@ -136,7 +132,5 @@ abstract class AbstractConfiguration implements Configuration {
         return configurationService.getProperty(key);
     }
 
-    protected final String getRegistryKey(String key) {
-        return ConfigurationUtils.REGISTRY_PATH + "/" + StringUtils.toIdentifier(key);
-    }
+
 }
