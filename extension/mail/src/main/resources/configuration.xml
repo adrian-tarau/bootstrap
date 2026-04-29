@@ -8,7 +8,7 @@
         <item key="userName" name="User Name" description="The username used to access the SMTP gateway"/>
         <item key="password" name="Password" description="The password used to access the SMTP gateway"/>
 
-        <item key="from" name="From" separator="Fields" description="The 'from' field for all emails going out"/>
+        <item key="from" name="From" separator="Fields" default="admin@local" description="The 'from' field for all emails going out"/>
 
         <item key="maximumRetryCount" separator="Options" name="Maximum Retry Count" data-type="integer" default="10" description="The 'from' field for all emails going out"/>
         <item key="retryInterval" name="Retry Interval" data-type="duration" default="60s" description="The interval between retries"/>

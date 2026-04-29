@@ -30,7 +30,6 @@ import java.util.concurrent.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.unmodifiableCollection;
-import static net.microfalx.bootstrap.mail.MailProperties.DEFAULT_FROM;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.SecretUtils.maskSecret;
@@ -131,7 +130,7 @@ public class MailService implements InitializingBean {
         try {
             mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
-            helper.setFrom(defaultIfEmpty(configuration.getFrom(), DEFAULT_FROM));
+            helper.setFrom(defaultIfEmpty(configuration.getFrom(), MailConfiguration.DEFAULT_FROM));
             boolean html = TEXT_HTML.equals(body.getMimeType());
             helper.setText(body.loadAsString(), html);
             helper.setTo(to);

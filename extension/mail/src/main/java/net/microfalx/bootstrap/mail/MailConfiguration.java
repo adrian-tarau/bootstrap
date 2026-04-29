@@ -14,12 +14,14 @@ import java.time.Duration;
 @ConfigurationMapping(prefix = "bootstrap.mail")
 public interface MailConfiguration extends ConfigurationListenerAware {
 
+    String DEFAULT_FROM = "admin@local";
+
     /**
      * Returns the hostname of the SMTP gateway
      *
      * @return a non-null string
      */
-    @DefaultValue("locahost")
+    @DefaultValue("localhost")
     String getHost();
 
     /**
@@ -56,6 +58,7 @@ public interface MailConfiguration extends ConfigurationListenerAware {
      *
      * @return a non-null instance
      */
+    @DefaultValue(MailConfiguration.DEFAULT_FROM)
     String getFrom();
 
     /**
