@@ -3,6 +3,8 @@ package net.microfalx.bootstrap.configuration;
 import net.microfalx.bootstrap.configuration.annotation.ConfigurationMapping;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ReflectionUtils;
+import net.microfalx.lang.SecretUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.DefaultValue;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.FactoryBean;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.lang.Character.toLowerCase;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 
 public class ConfigurationMappingFactoryBean<T> implements FactoryBean<T>, InvocationHandler {
 
@@ -25,7 +28,7 @@ public class ConfigurationMappingFactoryBean<T> implements FactoryBean<T>, Invoc
 
     private Subset subset;
     private String prefix;
-    private Map<String, Object> defaultValues = new HashMap<>();
+    private final Map<String, Object> defaultValues = new HashMap<>();
 
     public ConfigurationMappingFactoryBean(Class<T> type) {
         this.type = type;
@@ -49,7 +52,7 @@ public class ConfigurationMappingFactoryBean<T> implements FactoryBean<T>, Invoc
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         if (methodName.equals("toString")) {
-            return "Configuration{prefix=" + prefix + "}";
+            return "Configuration{prefix=" + prefix + ",entries=" + describeEntries() + "}";
         } else if (methodName.equals("addListener")) {
             ConfigurationListener listener = (ConfigurationListener) args[0];
             configurationService.addListener(new PrefixForwardConfigurationListener(prefix, listener));
@@ -88,6 +91,22 @@ public class ConfigurationMappingFactoryBean<T> implements FactoryBean<T>, Invoc
                 defaultValues.put(name, Duration.ofSeconds(60));
             }
         }
+    }
+
+    private String describeEntries() {
+        StringBuilder builder = new StringBuilder();
+        try {
+            for (String key : subset.getKeys()) {
+                String value = subset.get(key);
+                if (SecretUtils.isSecret(key)) {
+                    value = SecretUtils.maskSecret(value);
+                }
+                StringUtils.append(builder, key + "=" + value, ';');
+            }
+        } catch (Exception e) {
+            return "#ERROR: " + getRootCauseDescription(e);
+        }
+        return builder.toString();
     }
 
 }

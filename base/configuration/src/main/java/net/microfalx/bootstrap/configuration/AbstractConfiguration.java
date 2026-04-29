@@ -6,6 +6,7 @@ import net.microfalx.bootstrap.registry.Registry;
 import net.microfalx.lang.StringUtils;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
@@ -34,7 +35,11 @@ abstract class AbstractConfiguration implements Configuration {
 
     @Override
     public Set<String> getKeys() {
-        return Set.of();
+        int prefixLength = getPrefix().length() + 1;
+        return configurationService.getEntries(getPrefix()).stream()
+                .map(Metadata::getFullKey)
+                .map(s -> s.substring(prefixLength))
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -126,6 +131,10 @@ abstract class AbstractConfiguration implements Configuration {
 
     protected String getFinalKey(String key) {
         return key;
+    }
+
+    protected String getPrefix() {
+        return StringUtils.EMPTY_STRING;
     }
 
     protected String getProperty(String key) {

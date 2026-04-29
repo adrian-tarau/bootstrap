@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.configuration;
 
 import lombok.Getter;
 import lombok.ToString;
-import net.microfalx.lang.StringUtils;
 
 import static net.microfalx.bootstrap.configuration.ConfigurationUtils.SEPARATOR;
 import static net.microfalx.lang.StringUtils.*;
@@ -23,7 +22,7 @@ class SubsetImpl extends AbstractConfiguration implements Subset {
     @Override
     public Subset at(String prefix) {
         if (isEmpty(prefix)) return this;
-        String newPrefix = StringUtils.isNotEmpty(this.prefix) ? this.prefix + SEPARATOR + prefix : prefix;
+        String newPrefix = isNotEmpty(this.prefix) ? this.prefix + SEPARATOR + prefix : prefix;
         return new SubsetImpl(getConfigurationService(), this, newPrefix, title);
     }
 

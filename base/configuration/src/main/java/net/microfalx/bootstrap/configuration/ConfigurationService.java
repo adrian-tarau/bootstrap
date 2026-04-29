@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.bootstrap.configuration.ConfigurationUtils.ROOT_METADATA_ID;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
@@ -123,6 +124,25 @@ public class ConfigurationService implements InitializingBean {
     }
 
     /**
+     * Returns all registered entries with a given prefix
+     *
+     * @param prefix the prefix
+     * @return a non-null instance
+     */
+    public Collection<Metadata> getEntries(String prefix) {
+        if (StringUtils.isEmpty(prefix)) {
+            return unmodifiableCollection(this.metadatas.values());
+        } else {
+            String idPrefix = toIdentifier(prefix);
+            return this.metadatas.values().stream()
+                    .filter(Metadata::isLeaf)
+                    .filter(metadata -> metadata.getId().startsWith(idPrefix))
+                    .toList();
+        }
+
+    }
+
+    /**
      * Registers metadata associated with the configuration entry.
      *
      * @param metadata the metadata to register
@@ -182,7 +202,10 @@ public class ConfigurationService implements InitializingBean {
             }
             cachedValues.put(key, new CachedValue(value));
         }
-        if (SecretUtils.isSecret(key) && EncryptionUtils.isEncrypted(key)) {
+        if (SecretUtils.isSecret(key)) {
+            System.out.println("Stop");
+        }
+        if (SecretUtils.isSecret(key) && EncryptionUtils.isEncrypted(value)) {
             value = EncryptionUtils.decrypt(value);
         }
         return defaultIfNull(value, defaultValue);

@@ -18,7 +18,7 @@ import static net.microfalx.lang.StringUtils.toIdentifier;
 
 @Getter
 @ToString
-public class Metadata implements Identifiable<String>, Nameable, Descriptable {
+public final class Metadata implements Identifiable<String>, Nameable, Descriptable {
 
     @ToString.Exclude
     private final Metadata parent;
