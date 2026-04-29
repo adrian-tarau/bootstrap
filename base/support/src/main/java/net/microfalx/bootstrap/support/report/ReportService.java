@@ -13,6 +13,7 @@ import net.microfalx.lang.annotation.Provider;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.CronTrigger;
+import net.microfalx.threadpool.IdentifiableTask;
 import net.microfalx.threadpool.ThreadPool;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +61,7 @@ import static net.microfalx.lang.TimeUtils.*;
 @Slf4j
 public class ReportService implements InitializingBean {
 
-    @Autowired(required = false) private ReportProperties properties = new ReportProperties();
+    @Autowired private ReportConfiguration configuration;
     @Autowired private ThreadPool threadPool;
     @Autowired private ApplicationContext applicationContext;
 
@@ -187,11 +188,12 @@ public class ReportService implements InitializingBean {
         loadListeners();
         initVariables();
         initTasks();
+        initListeners();
     }
 
     @EventListener
     public void onApplicationEvent(ApplicationStartedEvent event) {
-        if (properties.isEnabled() && properties.isOnBoot()) {
+        if (configuration.isEnabled() && configuration.isOnBoot()) {
             threadPool.execute(new SendReportTask(ofHours(1)));
         }
     }
@@ -254,7 +256,7 @@ public class ReportService implements InitializingBean {
     }
 
     private void send(Report report, Resource summary, Resource fullReport) {
-        Set<String> destinations = new HashSet<>(Arrays.asList(split(properties.getRecipients(), ",")));
+        Set<String> destinations = new HashSet<>(Arrays.asList(split(configuration.getRecipients(), ",")));
         if (destinations.isEmpty()) {
             LOGGER.info("No report destinations configured, ask services");
             for (ReportingListener listener : listeners) {
@@ -267,18 +269,29 @@ public class ReportService implements InitializingBean {
         LOGGER.info("Report sent to: {}", destinations);
     }
 
+    private void reload() {
+        initVariables();
+        initTasks();
+    }
+
     private void initVariables() {
         LOGGER.info("Startup time: {} ", new ReportHelper().getStartupTime());
-        if (properties.isEnabled()) {
-            LOGGER.info("Support report scheduled at '{}/{}/{}', recipients: '{}'", properties.getDailySchedule(), properties.getWithIssuesSchedule(), properties.getWithCriticalIssuesSchedule(), properties.getRecipients());
-        }
+    }
+
+    private void initListeners() {
+        configuration.addListener(event -> {
+            LOGGER.info("Settings changed for group '{}', reload", event.getKey());
+            reload();
+        });
     }
 
     private void initTasks() {
-        threadPool.schedule(new SendReportTask(ofHours(24)), new CronTrigger(properties.getDailySchedule()));
-        threadPool.schedule(new IssuesReportTask(Issue.Severity.NOTICE), new CronTrigger(properties.getWithIssuesSchedule()));
-        threadPool.schedule(new IssuesReportTask(Issue.Severity.MEDIUM), new CronTrigger(properties.getWithIssuesSchedule()));
-        threadPool.schedule(new IssuesReportTask(Issue.Severity.CRITICAL), new CronTrigger(properties.getWithCriticalIssuesSchedule()));
+        if (!configuration.isEnabled()) return;
+        LOGGER.info("Support report scheduled at '{}/{}/{}', recipients: '{}'", configuration.getDailySchedule(), configuration.getWithIssuesSchedule(), configuration.getWithCriticalIssuesSchedule(), configuration.getRecipients());
+        threadPool.schedule(new SendReportTask(ofHours(24)), new CronTrigger(configuration.getDailySchedule()));
+        threadPool.schedule(new IssuesReportTask(Issue.Severity.NOTICE), new CronTrigger(configuration.getWithIssuesSchedule()));
+        threadPool.schedule(new IssuesReportTask(Issue.Severity.MEDIUM), new CronTrigger(configuration.getWithIssuesSchedule()));
+        threadPool.schedule(new IssuesReportTask(Issue.Severity.CRITICAL), new CronTrigger(configuration.getWithCriticalIssuesSchedule()));
     }
 
     private synchronized void initEngine() {
@@ -336,7 +349,7 @@ public class ReportService implements InitializingBean {
     }
 
     private String getSystemName() {
-        String systemName = properties.getSystemName();
+        String systemName = configuration.getSystemName();
         if (isEmpty(systemName)) {
             try {
                 systemName = InetAddress.getLocalHost().getHostName();
@@ -348,12 +361,12 @@ public class ReportService implements InitializingBean {
     }
 
     private Resource encryptReport(Resource report) throws IOException {
-        if (StringUtils.isEmpty(properties.getPassword())) return report;
-        String systemName = StringUtils.toIdentifier(properties.getSystemName());
+        if (StringUtils.isEmpty(configuration.getPassword())) return report;
+        String systemName = StringUtils.toIdentifier(configuration.getSystemName());
         String reportPrefix = "support_report_" + systemName;
         File reportZip = new File(JvmUtils.getTemporaryDirectory(), getFileName(reportPrefix, "zip"));
         try (ZipOutputStream outputZipStream = new ZipOutputStream(getBufferedOutputStream(reportZip),
-                properties.getPassword().toCharArray())) {
+                configuration.getPassword().toCharArray())) {
             //init the zip parameters
             ZipParameters zipParams = new ZipParameters();
             zipParams.setCompressionMethod(DEFLATE);
@@ -385,8 +398,8 @@ public class ReportService implements InitializingBean {
                 // if it was requested to send only critical issues, but there are none, skip sending
                 if (criticalIssuesCount > 0 && severity != Issue.Severity.CRITICAL) return;
                 // if there are issues, sent the report, looking at the last hour
-                shouldSend = criticalIssuesCount >= properties.getCriticalIssuesThreshold() ||
-                        highIssuesCount >= properties.getHighIssuesThreshold();
+                shouldSend = criticalIssuesCount >= configuration.getCriticalIssuesThreshold() ||
+                        highIssuesCount >= configuration.getHighIssuesThreshold();
             }
             if (shouldSend) {
                 REPORT.count("Sent: " + severity.name());
@@ -451,7 +464,7 @@ public class ReportService implements InitializingBean {
         }
     }
 
-    private class IssuesReportTask implements Runnable {
+    private class IssuesReportTask implements Runnable, IdentifiableTask {
 
         private final Issue.Severity severity;
 
@@ -460,17 +473,27 @@ public class ReportService implements InitializingBean {
         }
 
         @Override
+        public String getId() {
+            return "support.report.issues." + severity.name().toLowerCase();
+        }
+
+        @Override
         public void run() {
             extractAndSendIssues(severity);
         }
     }
 
-    private class SendReportTask implements Runnable {
+    private class SendReportTask implements Runnable, IdentifiableTask {
 
         private final Duration interval;
 
         public SendReportTask(Duration interval) {
             this.interval = interval;
+        }
+
+        @Override
+        public String getId() {
+            return "support.report.daily";
         }
 
         private void cleanup() {
