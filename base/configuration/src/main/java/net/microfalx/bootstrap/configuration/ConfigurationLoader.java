@@ -20,6 +20,8 @@ import static net.microfalx.lang.XmlUtils.*;
 class ConfigurationLoader {
 
     @Getter
+    private int resourceCount;
+    @Getter
     private int groupCount;
     @Getter
     private int itemCount;
@@ -43,6 +45,7 @@ class ConfigurationLoader {
         try {
             configurationDescriptors = ConfigurationUtils.getDescriptors();
             for (URL configurationDescriptor : configurationDescriptors) {
+                resourceCount++;
                 try {
                     loadResources(configurationDescriptor);
                 } catch (Exception e) {

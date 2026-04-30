@@ -228,7 +228,8 @@ public class ConfigurationService implements InitializingBean {
         ConfigurationLoader loader = new ConfigurationLoader();
         loader.load();
         this.metadatas.putAll(loader.getMetadata());
-        LOGGER.info("Loaded {} configuration groups with {} items", loader.getGroupCount(), loader.getItemCount());
+        LOGGER.info("Loaded {} configuration groups with {} items from {} resources", loader.getGroupCount(),
+                loader.getItemCount(), loader.getResourceCount());
     }
 
     private void registerMetadata() {
