@@ -24,9 +24,9 @@
 
 <div th:fragment="settings_field(field)" class="input-group input-group-sm mb-1" th:classappend="${settingsHelper.getFieldGroupClass(field)}">
     <label class="input-group-text" th:text="${field.name}" style="min-width : 250px"></label>
-    <input th:if="${settingsHelper.isTextField(field)}" th:name="${field.fullKey}" th:required="${settingsHelper.isRequired(field)}" th:type="${settingsHelper.getTextFieldType(field)}" class="form-control" th:classappend="${settingsHelper.getFieldClass(field)}" th:value="${settingsHelper.getValue(field)}" autocomplete="new-password"></input>
-    <input th:if="${settingsHelper.isCheckboxField(field)}" th:name="${field.fullKey}" class="form-check-input m-2" type="checkbox" th:classappend="${settingsHelper.getFieldClass(field)}" th:checked="${settingsHelper.isChecked(field)}" autocomplete="new-password" ></input>
-    <textarea th:if="${settingsHelper.isTextArea(field)}" th:name="${field.fullKey}" th:required="${field.required}" class="form-control" th:classappend="${settingsHelper.getFieldClass(field)}" th:value="${settingsHelper.getValue(field)}"></textarea>
+    <input th:if="${settingsHelper.isTextField(field)}" th:name="${field.fullKey}" th:required="${settingsHelper.isRequired(field)}" th:type="${settingsHelper.getTextFieldType(field)}" class="form-control" th:classappend="${settingsHelper.getFieldClass(field)}" th:value="${settingsHelper.getValue(field)}" th:readonly="${field.readOnly}" th:disabled="${field.readOnly}" autocomplete="new-password"></input>
+    <input th:if="${settingsHelper.isCheckboxField(field)}" th:name="${field.fullKey}" class="form-check-input m-2" type="checkbox" th:classappend="${settingsHelper.getFieldClass(field)}" th:checked="${settingsHelper.isChecked(field)}" th:readonly="${field.readOnly}" th:disabled="${field.readOnly}" autocomplete="new-password" ></input>
+    <textarea th:if="${settingsHelper.isTextArea(field)}" th:name="${field.fullKey}" th:required="${field.required}" class="form-control" th:classappend="${settingsHelper.getFieldClass(field)}" th:value="${settingsHelper.getValue(field)}" th:readonly="${field.readOnly}" th:disabled="${field.readOnly}"></textarea>
 </div>
 
 <div th:fragment="settings_fields" th:remove="tag">

@@ -104,6 +104,7 @@ class ConfigurationLoader {
             metadata.separator = getAttribute(itemElement, "separator");
             metadata.client = getAttribute(itemElement, "client", false);
             metadata.required = getAttribute(itemElement, "required", true);
+            metadata.readOnly = getAttribute(itemElement, "read-only", false);
             loadRange(metadata, itemElement);
             loadComponent(metadata, itemElement);
             register(metadata);
