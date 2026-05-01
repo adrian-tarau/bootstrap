@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 
-import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.*;
 
 /**
@@ -59,17 +58,6 @@ public class ConfigurationUtils {
         String last = getLast(key);
         if (isEmpty(last)) return NA_STRING;
         return beautifyCamelCase(last);
-    }
-
-    /**
-     * Returns the path in registry to store a given metadata.
-     *
-     * @param metadata the metadata
-     * @return a non-null instance
-     */
-    static String getRegistryPath(Metadata metadata) {
-        requireNonNull(metadata);
-        return REGISTRY_PATH + "/" + toIdentifier(metadata.getId());
     }
 
     /**

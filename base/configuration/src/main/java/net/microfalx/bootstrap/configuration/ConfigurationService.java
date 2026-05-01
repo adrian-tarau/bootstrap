@@ -29,10 +29,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.unmodifiableCollection;
+import static net.microfalx.bootstrap.configuration.ConfigurationUtils.REGISTRY_PATH;
 import static net.microfalx.bootstrap.configuration.ConfigurationUtils.ROOT_METADATA_ID;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.TimeUtils.millisSince;
 
 @SuppressWarnings("unchecked")
 @Slf4j
@@ -160,6 +162,7 @@ public class ConfigurationService implements InitializingBean {
      */
     public void notifyGroupChange(Metadata metadata) {
         requireNonNull(metadata);
+        clearCache();
         ConfigurationEvent event = new ConfigurationEvent(configuration, ConfigurationEvent.Type.GROUP, metadata.getFullKey());
         fireConfigurationEvent(event);
     }
@@ -170,6 +173,13 @@ public class ConfigurationService implements InitializingBean {
         loadMetadata();
         initBinder();
         threadPool.execute(this::registerMetadata);
+    }
+
+    /**
+     * Clears the caches associated with the configuration.
+     */
+    public void clearCache() {
+        cachedValues.clear();
     }
 
     void propertyChanged(Configuration configuration, String key, String previousValue, String currentValue) {
@@ -197,7 +207,7 @@ public class ConfigurationService implements InitializingBean {
     String getFromRegistry(Configuration configuration, String key, String defaultValue) {
         String value = getFromCache(key);
         if (isEmpty(value)) {
-            String registryKey = getRegistryKey(key);
+            String registryKey = getRegistryPath(key);
             Optional<Data> data = getRegistry().get(registryKey);
             if (data.isPresent()) {
                 value = ObjectUtils.toString(data.get().get());
@@ -213,7 +223,7 @@ public class ConfigurationService implements InitializingBean {
     }
 
     void setToRegistry(Configuration configuration, String key, Object value) {
-        String registryKey = getRegistryKey(key);
+        String registryKey = getRegistryPath(key);
         Data data = getRegistry().getOrCreate(registryKey);
         String previousValue = ObjectUtils.toString(data.get());
         data.set(value);
@@ -247,7 +257,7 @@ public class ConfigurationService implements InitializingBean {
     }
 
     private boolean registerMetadata(Registry registry, Metadata metadata) {
-        Data data = registry.getOrCreate(ConfigurationUtils.getRegistryPath(metadata));
+        Data data = registry.getOrCreate(getRegistryPath(metadata.getFullKey()));
         if (data.exists() || !metadata.isLeaf()) return false;
         boolean isSecret = SecretUtils.isSecret(metadata.getFullKey());
         data.setAttribute("key", metadata.getFullKey());
@@ -269,8 +279,24 @@ public class ConfigurationService implements InitializingBean {
         }
     }
 
-    private String getRegistryKey(String key) {
-        return ConfigurationUtils.REGISTRY_PATH + "/" + StringUtils.toIdentifier(key);
+    private String getRegistryPath(String key) {
+        String path = null;
+        Metadata metadata = getMetadata(key);
+        if (metadata != null) {
+            Metadata parentMetadata = metadata.getParent();
+            if (parentMetadata != null) {
+                path = toIdentifier(parentMetadata.getFullKey()) + "/" + toIdentifier(metadata.getKey());
+            }
+        }
+        if (path == null) {
+            int index = key.lastIndexOf('.');
+            if (index >= 0) {
+                path = toIdentifier(key.substring(0, index)) + "/" + toIdentifier(key.substring(index + 1));
+            } else {
+                path = toIdentifier(key);
+            }
+        }
+        return REGISTRY_PATH + "/" + path;
     }
 
     void fireConfigurationEvent(ConfigurationEvent event) {
@@ -302,7 +328,7 @@ public class ConfigurationService implements InitializingBean {
         }
 
         boolean isExpired(Duration expiration) {
-            return TimeUtils.millisSince(currentTimeMillis()) > expiration.toMillis();
+            return millisSince(created) > expiration.toMillis();
         }
     }
 
