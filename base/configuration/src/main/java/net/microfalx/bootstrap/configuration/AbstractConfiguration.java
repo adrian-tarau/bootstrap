@@ -3,12 +3,8 @@ package net.microfalx.bootstrap.configuration;
 import lombok.AccessLevel;
 import lombok.Getter;
 import net.microfalx.bootstrap.registry.Registry;
-import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.StringUtils;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -65,9 +61,6 @@ abstract class AbstractConfiguration implements Configuration {
             result = configurationService.convert(key, defaultValue, type);
         } else {
             result = configurationService.convert(key, value, type);
-        }
-        if (result == null && type.isPrimitive()) {
-            result = createDefault(type);
         }
         return result;
     }
@@ -150,29 +143,5 @@ abstract class AbstractConfiguration implements Configuration {
     protected String getProperty(String key) {
         return configurationService.getProperty(key);
     }
-
-    @SuppressWarnings("unchecked")
-    private <T> T createDefault(Class<?> type) {
-        Object value = defaultValues.get(type);
-        if (value != null) {
-            return (T) value;
-        } else {
-            return null;
-        }
-    }
-
-    private static final Map<Class<?>, Object> defaultValues = new HashMap<>();
-
-    static {
-        defaultValues.put(boolean.class, false);
-        defaultValues.put(byte.class, (byte) 0);
-        defaultValues.put(short.class, (short) 0);
-        defaultValues.put(int.class, 0);
-        defaultValues.put(long.class, 0L);
-        defaultValues.put(float.class, 0f);
-        defaultValues.put(double.class, 0d);
-        defaultValues.put(Duration.class, Duration.ofSeconds(30));
-    }
-
 
 }

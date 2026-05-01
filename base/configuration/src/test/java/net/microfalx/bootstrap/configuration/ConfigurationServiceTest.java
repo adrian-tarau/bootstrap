@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.configuration;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,6 +38,16 @@ class ConfigurationServiceTest extends AbstractConfigurationTestCase {
     void getPropertyAsEnvironment() {
         environment.setProperty("A", 1);
         assertEquals("1", configurationService.getProperty("a"));
+    }
+
+    @Test
+    void getConfiguration() {
+        mockRegistry();
+        ReflectionTestUtils.invokeMethod(configurationService, "registerMetadata");
+        assertEquals("20", configurationService.getConfiguration().get("group1.group12.item1"));
+        assertEquals("20", configurationService.getConfiguration().get("group1.group12.item1", "10"));
+        assertEquals(20, configurationService.getConfiguration().get("group1.group12.item1", 10));
+        assertEquals(false, configurationService.getConfiguration().get("group1.group12.item5", boolean.class, null));
     }
 
     @Test

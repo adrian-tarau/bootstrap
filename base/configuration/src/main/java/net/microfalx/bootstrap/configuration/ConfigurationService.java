@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -130,7 +131,7 @@ public class ConfigurationService implements InitializingBean {
      * @return a non-null instance
      */
     public Collection<Metadata> getEntries(String prefix) {
-        if (StringUtils.isEmpty(prefix)) {
+        if (isEmpty(prefix)) {
             return unmodifiableCollection(this.metadatas.values());
         } else {
             String idPrefix = toIdentifier(prefix);
@@ -177,6 +178,9 @@ public class ConfigurationService implements InitializingBean {
     }
 
     <T> T convert(String key, Object value, Class<T> type) {
+        if (ObjectUtils.isEmpty(value) && type.isPrimitive()) {
+            value = createDefault(type);
+        }
         if (value == null) return null;
         if (type == Duration.class) {
             return (T) TimeUtils.parseDuration(value.toString());
@@ -192,7 +196,7 @@ public class ConfigurationService implements InitializingBean {
 
     String getFromRegistry(Configuration configuration, String key, String defaultValue) {
         String value = getFromCache(key);
-        if (StringUtils.isEmpty(value)) {
+        if (isEmpty(value)) {
             String registryKey = getRegistryKey(key);
             Optional<Data> data = getRegistry().get(registryKey);
             if (data.isPresent()) {
@@ -201,9 +205,6 @@ public class ConfigurationService implements InitializingBean {
                 value = getProperty(key);
             }
             cachedValues.put(key, new CachedValue(value));
-        }
-        if (SecretUtils.isSecret(key)) {
-            System.out.println("Stop");
         }
         if (SecretUtils.isSecret(key) && EncryptionUtils.isEncrypted(value)) {
             value = EncryptionUtils.decrypt(value);
@@ -252,6 +253,7 @@ public class ConfigurationService implements InitializingBean {
         data.setAttribute("key", metadata.getFullKey());
         data.setAttribute("name", metadata.getName());
         String value = getProperty(metadata.getFullKey());
+        if (isEmpty(value)) value = metadata.getDefaultValue();
         value = isSecret && !EncryptionUtils.isEncrypted(value) ? EncryptionUtils.encrypt(value) : value;
         data.set(value);
         registry.set(data);
@@ -278,6 +280,16 @@ public class ConfigurationService implements InitializingBean {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private <T> T createDefault(Class<?> type) {
+        Object value = defaultValues.get(type);
+        if (value != null) {
+            return (T) value;
+        } else {
+            return null;
+        }
+    }
+
     @Getter
     @ToString
     private static class CachedValue {
@@ -292,5 +304,18 @@ public class ConfigurationService implements InitializingBean {
         boolean isExpired(Duration expiration) {
             return TimeUtils.millisSince(currentTimeMillis()) > expiration.toMillis();
         }
+    }
+
+    private static final Map<Class<?>, Object> defaultValues = new HashMap<>();
+
+    static {
+        defaultValues.put(boolean.class, false);
+        defaultValues.put(byte.class, (byte) 0);
+        defaultValues.put(short.class, (short) 0);
+        defaultValues.put(int.class, 0);
+        defaultValues.put(long.class, 0L);
+        defaultValues.put(float.class, 0f);
+        defaultValues.put(double.class, 0d);
+        defaultValues.put(Duration.class, Duration.ofSeconds(30));
     }
 }

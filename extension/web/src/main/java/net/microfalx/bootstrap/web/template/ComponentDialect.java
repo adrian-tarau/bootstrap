@@ -69,7 +69,6 @@ public class ComponentDialect extends AbstractProcessorDialect {
 
         @Override
         protected void doProcess(ITemplateContext context, IProcessableElementTag tag, IElementTagStructureHandler structureHandler) {
-            System.out.println("Stop");
         }
     }
 
@@ -81,7 +80,6 @@ public class ComponentDialect extends AbstractProcessorDialect {
 
         @Override
         protected void doProcess(ITemplateContext context, IProcessableElementTag tag, IElementTagStructureHandler structureHandler) {
-            System.out.println("Stop");
         }
     }
 
