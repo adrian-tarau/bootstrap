@@ -16,6 +16,7 @@ public class ApiError {
     private String status;
     @JsonAlias("code")
     private String errorCode;
+    @JsonAlias({"errorMessage", "error"})
     private String message;
     @JsonAlias("details")
     private Map<String, Object> errors = Collections.emptyMap();

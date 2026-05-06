@@ -328,10 +328,14 @@ public class RestClient implements Identifiable<String>, Nameable, Descriptable 
         }
         apiError.setHttpStatus(status);
         return switch (status) {
-            case 400, 405, 406, 422 -> new BadRequestException(status, apiError);
+            case 400, 405, 406 -> new BadRequestException(status, apiError);
+            case 422 -> new UnprocessableRequestException(status, apiError);
             case 409 -> new ConflictException(status, apiError);
-            case 401, 403 -> new UnauthorizedException(status, apiError);
+            case 401 -> new UnauthorizedException(status, apiError);
+            case 403 -> new ForbiddenException(status, apiError);
             case 404 -> new NotFoundException(status, apiError);
+            case 502 -> new BadGatewayException(status, apiError);
+            case 503 -> new ServiceUnavailableException(status, apiError);
             default -> new ServerErrorException(status, apiError);
         };
     }
