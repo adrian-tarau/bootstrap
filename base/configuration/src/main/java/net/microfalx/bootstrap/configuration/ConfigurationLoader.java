@@ -137,8 +137,8 @@ class ConfigurationLoader {
     }
 
     private void loadComponent(Metadata metadata, Element element) {
-        metadata.lineCount = getAttribute(element, "line-count", 0);
-        metadata.multiline = metadata.lineCount > 1;
+        metadata.lineCount = getAttribute(element, "line-count", 3);
+        metadata.multiline = getAttribute(element, "multiline", false);
     }
 
     private void register(Metadata metadata) {

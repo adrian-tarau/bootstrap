@@ -55,6 +55,8 @@
             <xs:attribute name="client" type="xs:boolean" default="false"/>
             <xs:attribute name="required" type="xs:boolean" default="true"/>
             <xs:attribute name="read-only" type="xs:boolean" default="false"/>
+            <xs:attribute name="multiline" type="xs:boolean" default="false"/>
+            <xs:attribute name="line-count" type="xs:int" default="3"/>
             <xs:attribute name="separator"/>
             <xs:attribute name="order"/>
             <xs:attribute name="description"/>

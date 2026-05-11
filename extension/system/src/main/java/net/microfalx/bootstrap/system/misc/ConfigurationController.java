@@ -164,7 +164,11 @@ public class ConfigurationController extends SystemPageController {
         }
 
         public boolean isTextArea(Metadata metadata) {
-            return metadata.isMultiline() && isTextField(metadata);
+            return metadata.isMultiline() && isTextBased(metadata);
+        }
+
+        public int getLineCount(Metadata metadata) {
+            return metadata.getLineCount();
         }
 
         public boolean isCheckboxField(Metadata metadata) {
