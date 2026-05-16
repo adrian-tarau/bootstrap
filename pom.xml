@@ -74,6 +74,7 @@
         <lang.version>1.0.1-SNAPSHOT</lang.version>
         <resource.version>1.0.1-SNAPSHOT</resource.version>
         <metrics.version>1.0.1-SNAPSHOT</metrics.version>
+        <tracing.version>1.0.0-SNAPSHOT</tracing.version>
         <jvm.version>1.0.1-SNAPSHOT</jvm.version>
         <jdbcpool.version>0.8.0-SNAPSHOT</jdbcpool.version>
         <threadpool.version>0.8.1-SNAPSHOT</threadpool.version>
@@ -121,6 +122,12 @@
                 <groupId>net.microfalx</groupId>
                 <artifactId>metrics</artifactId>
                 <version>${metrics.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.microfalx</groupId>
+                <artifactId>tracing</artifactId>
+                <version>${tracing.version}</version>
             </dependency>
 
             <dependency>

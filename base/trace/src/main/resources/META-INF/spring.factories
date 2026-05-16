@@ -1,0 +1,1 @@
+org.springframework.context.ApplicationContextInitializer=net.microfalx.bootstrap.trace.startup.StartupApplicationContextInitializer
