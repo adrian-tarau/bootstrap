@@ -33,5 +33,10 @@ public class EnumDataSet<E extends Enum<E>> extends MemoryDataSet<E, Field<E>, S
         public boolean supports(Metadata<E, Field<E>, String> metadata) {
             return metadata.getModel().isEnum();
         }
+
+        @Override
+        public String toString() {
+            return "Enum";
+        }
     }
 }

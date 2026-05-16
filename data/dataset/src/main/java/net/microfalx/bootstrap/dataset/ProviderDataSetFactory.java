@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.dataset;
 
+import com.google.common.base.MoreObjects;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.lang.ArgumentUtils;
@@ -40,5 +41,13 @@ class ProviderDataSetFactory<M, F extends Field<M>, ID> extends AbstractDataSetF
     @Override
     public boolean supports(Metadata<M, F, ID> metadata) {
         return metadata.getModel() == modelClass;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("dataSetClass", dataSetClass)
+                .add("modelClass", modelClass)
+                .toString();
     }
 }

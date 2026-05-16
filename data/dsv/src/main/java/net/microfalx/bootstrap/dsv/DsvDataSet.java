@@ -119,6 +119,11 @@ public class DsvDataSet extends AbstractDataSet<DsvRecord, DsvField, String> {
         public boolean supports(Metadata<DsvRecord, DsvField, String> metadata) {
             return metadata instanceof DsvMetadata;
         }
+
+        @Override
+        public String toString() {
+            return "DSV";
+        }
     }
 
     private static class CsvRecordIterable implements Iterable<DsvRecord> {
