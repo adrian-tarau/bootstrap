@@ -2,7 +2,7 @@ package net.microfalx.bootstrap.restapi.client;
 
 import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.metrics.Metrics;
-import net.microfalx.metrics.Timer;
+import net.microfalx.metrics.Summary;
 import net.microfalx.threadpool.ThreadPool;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
@@ -135,8 +135,8 @@ public class RestClientService implements InitializingBean, TextEncryptor {
         if (client != null) {
             client.auditEnd(audit);
             auditsForPersistence.offer(audit);
-            Timer timer = METRICS.withGroup(client.getName()).getTimer(audit.getRequestPattern(), Timer.Type.SHORT_PERCENTILE);
-            timer.record(audit.getDuration());
+            Summary summary = METRICS.withGroup(client.getName()).getSummary(audit.getRequestPattern());
+            summary.record(audit.getDuration());
         }
     }
 

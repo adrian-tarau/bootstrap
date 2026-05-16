@@ -21,13 +21,13 @@ public abstract class Metric extends IdentityAware<String> {
 
     @Position(2)
     @Description("The group of the timer")
-    @Width("20%")
+    @Width("30%")
     private String group;
 
     @Position(3)
     @Name
     @Description("The name of the timer")
-    @Width("20%")
+    @Width("30%")
     private String name;
 
     @Position(101)
@@ -35,6 +35,7 @@ public abstract class Metric extends IdentityAware<String> {
     @CreatedDate
     @CreatedAt
     @Formattable(tooltip = Formatters.FirstAccessedTooltip.class, elapsed = true)
+    @Width("110px")
     private LocalDateTime firstAccess;
 
     @Position(102)
@@ -42,6 +43,7 @@ public abstract class Metric extends IdentityAware<String> {
     @Formattable(tooltip = Formatters.LastAccessedTooltip.class, elapsed = true)
     @LastModifiedDate
     @ModifiedAt
+    @Width("110px")
     private LocalDateTime lastAccess;
 
     static void update(Metric model, Meter meter) {

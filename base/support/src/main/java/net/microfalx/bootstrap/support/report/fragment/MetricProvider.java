@@ -3,10 +3,7 @@ package net.microfalx.bootstrap.support.report.fragment;
 import net.microfalx.bootstrap.support.report.AbstractFragmentProvider;
 import net.microfalx.bootstrap.support.report.Fragment;
 import net.microfalx.bootstrap.support.report.Template;
-import net.microfalx.metrics.Counter;
-import net.microfalx.metrics.Gauge;
-import net.microfalx.metrics.Metrics;
-import net.microfalx.metrics.Timer;
+import net.microfalx.metrics.*;
 
 import java.time.Duration;
 import java.util.Comparator;
@@ -37,8 +34,8 @@ public class MetricProvider extends AbstractFragmentProvider {
         template.addVariable("meter", this);
     }
 
-    public String getPercentile(Timer timer, int position, boolean calculate) {
-        if (calculate) PERCENTILES.set(timer.getPercentiles());
+    public String getPercentile(Summary summary, int position, boolean calculate) {
+        if (calculate) PERCENTILES.set(summary.getPercentiles());
         Duration duration = PERCENTILES.get()[position];
         if (duration.isZero()) {
             return "-";

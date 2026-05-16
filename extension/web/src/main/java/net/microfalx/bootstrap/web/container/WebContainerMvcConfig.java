@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.dataset.formatter.FormatterUtils;
 import net.microfalx.bootstrap.web.util.PathFilter;
 import net.microfalx.metrics.Metrics;
-import net.microfalx.metrics.Timer;
+import net.microfalx.metrics.Summary;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -54,8 +54,8 @@ public class WebContainerMvcConfig implements WebMvcConfigurer {
         private void recordTime(HttpServletRequest request) {
             String matchedPattern = PathFilter.getRequestPattern(request);
             long duration = System.nanoTime() - START_TIME.get();
-            Timer timer = METRICS.getTimer(matchedPattern, Timer.Type.SHORT_PERCENTILE);
-            timer.record(Duration.ofNanos(duration));
+            Summary summary = METRICS.getSummary(matchedPattern);
+            summary.record(Duration.ofNanos(duration));
         }
 
 
