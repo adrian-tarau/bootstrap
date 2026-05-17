@@ -29,6 +29,7 @@ public class MetricProvider extends AbstractFragmentProvider {
         super.update(template);
         Metrics root = Metrics.ROOT;
         template.addVariable("timers", root.getTimers().stream().sorted(Comparator.comparing(Timer::getAverageDuration).reversed()).toList());
+        template.addVariable("summaries", root.getSummaries().stream().sorted(Comparator.comparing(Summary::getAverageDuration).reversed()).toList());
         template.addVariable("counters", root.getCounters().stream().sorted(Comparator.comparing(Counter::getValue).reversed()).toList());
         template.addVariable("gauges", root.getGauges().stream().sorted(Comparator.comparing(Gauge::getValue).reversed()).toList());
         template.addVariable("meter", this);

@@ -12,9 +12,6 @@
             <th scope="col">Total</th>
             <th scope="col">Average</th>
             <th scope="col">Maximum</th>
-            <th scope="col">P50</th>
-            <th scope="col">P95</th>
-            <th scope="col">P99</th>
             <th scope="col">First Access</th>
             <th scope="col">Last Access</th>
         </tr>
@@ -27,11 +24,43 @@
             <td><span th:text="${helper.formatDuration(timer.duration)}"></span></td>
             <td><span th:text="${helper.formatDuration(timer.averageDuration)}"></span></td>
             <td><span th:text="${helper.formatDuration(timer.maximumDuration)}"></span></td>
-            <td><span th:text="${meter.getPercentile(timer, 0, true)}"></span></td>
-            <td><span th:text="${meter.getPercentile(timer, 1, false)}"></span></td>
-            <td><span th:text="${meter.getPercentile(timer, 2, false)}"></span></td>
             <td><span th:text="${helper.formatDateTime(timer.firstAccess)}"></span></td>
             <td><span th:text="${helper.formatDateTime(timer.lastAccess)}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="render-summaries-table">
+    <table class="table table-hover datatable">
+        <thead class="table-light">
+        <tr>
+            <th scope="col">Group</th>
+            <th scope="col">Name</th>
+            <th scope="col">Count</th>
+            <th scope="col">Total</th>
+            <th scope="col">Average</th>
+            <th scope="col">Maximum</th>
+            <th scope="col">P50</th>
+            <th scope="col">P95</th>
+            <th scope="col">P99</th>
+            <th scope="col">First Access</th>
+            <th scope="col">Last Access</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="summary : ${summaries}">
+            <td><span th:text="${summary.group}"></span></td>
+            <td><span th:text="${summary.name}"></span></td>
+            <td><span th:text="${helper.formatNumber(summary.count)}"></span></td>
+            <td><span th:text="${helper.formatDuration(summary.duration)}"></span></td>
+            <td><span th:text="${helper.formatDuration(summary.averageDuration)}"></span></td>
+            <td><span th:text="${helper.formatDuration(summary.maximumDuration)}"></span></td>
+            <td><span th:text="${meter.getPercentile(summary, 0, true)}"></span></td>
+            <td><span th:text="${meter.getPercentile(summary, 1, false)}"></span></td>
+            <td><span th:text="${meter.getPercentile(summary, 2, false)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(summary.firstAccess)}"></span></td>
+            <td><span th:text="${helper.formatDateTime(summary.lastAccess)}"></span></td>
         </tr>
         </tbody>
     </table>
@@ -67,9 +96,6 @@
             <th scope="col">Group</th>
             <th scope="col">Name</th>
             <th scope="col">Value</th>
-            <th scope="col">Total</th>
-            <th scope="col">Average</th>
-            <th scope="col">Maximum</th>
             <th scope="col">First Access</th>
             <th scope="col">Last Access</th>
         </tr>
@@ -89,6 +115,8 @@
 <div th:fragment="content">
     <h3 th:replace="~{fragments/utils :: h3_count('Timers', ${timers.size()})}"></h3>
     <div th:replace="~{meter :: render-timers-table}"></div>
+    <h3 th:replace="~{fragments/utils :: h3_count('Summaries', ${summaries.size()})}"></h3>
+    <div th:replace="~{meter :: render-summaries-table}"></div>
     <h3 th:replace="~{fragments/utils :: h3_count('Counters', ${counters.size()})}"></h3>
     <div th:replace="~{meter :: render-counters-table}"></div>
     <h3 th:replace="~{fragments/utils :: h3_count('Gauges', ${gauges.size()})}"></h3>
