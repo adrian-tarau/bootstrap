@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.broker.kafka;
 
-import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import net.microfalx.bootstrap.broker.BrokerException;
 import net.microfalx.bootstrap.broker.Topic;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -12,13 +11,15 @@ class KafkaDeserializer<T> implements Deserializer<T> {
     private final Topic topic;
     private final Deserializer<T> deserializer;
 
+    @SuppressWarnings("unchecked")
     KafkaDeserializer(Topic topic) {
         this.topic = topic;
         switch (topic.getFormat()) {
             case RAW -> deserializer = (Deserializer<T>) new ByteArrayDeserializer();
             case JSON -> deserializer = new JsonDeserializer<>();
-            case AVRO -> deserializer = (Deserializer<T>) new KafkaAvroDeserializer();
-            default -> throw new BrokerException("Unsupported format: " + topic.getFormat());
+            default -> {
+                throw new BrokerException("Unsupported format '" + topic.getFormat() + "' for topic '" + this.topic.getName() + "'");
+            }
         }
     }
 

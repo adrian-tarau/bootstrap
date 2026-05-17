@@ -1,7 +1,5 @@
 package net.microfalx.bootstrap.broker.pulsar;
 
-import io.confluent.kafka.serializers.KafkaAvroDeserializer;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import net.microfalx.bootstrap.broker.BrokerException;
 import net.microfalx.bootstrap.broker.Topic;
 import net.microfalx.lang.IOUtils;
@@ -51,7 +49,6 @@ public class PulsarSchema<T> extends AbstractSchema<T> {
         return switch (topic.getFormat()) {
             case RAW -> new ByteArraySerializer().serialize(topic.getName(), (byte[]) message);
             case JSON -> new JsonSerializer<>().serialize(topic.getName(), message);
-            case AVRO -> new KafkaAvroSerializer().serialize(topic.getName(), message);
             default -> throw new BrokerException("Unsupported format: " + topic.getFormat());
         };
     }
@@ -66,7 +63,6 @@ public class PulsarSchema<T> extends AbstractSchema<T> {
             return switch (topic.getFormat()) {
                 case RAW -> (T) new ByteArrayDeserializer().deserialize(topic.getName(), bytes);
                 case JSON -> (T) new JsonDeserializer<>().deserialize(topic.getName(), bytes);
-                case AVRO -> (T) new KafkaAvroDeserializer().deserialize(topic.getName(), bytes);
                 default -> throw new BrokerException("Unsupported format: " + topic.getFormat());
             };
         } catch (Exception e) {

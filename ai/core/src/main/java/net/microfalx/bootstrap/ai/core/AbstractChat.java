@@ -9,7 +9,7 @@ import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
@@ -511,7 +511,8 @@ public abstract class AbstractChat extends NamedAndTaggedIdentifyAware<String> i
 
     private List<Advisor> getAdvisors() {
         List<Advisor> advisors = new ArrayList<>();
-        advisors.add(PromptChatMemoryAdvisor.builder(chatMemory).conversationId(getId()).build());
+        // TODO conversationId(getId()) went away, why?
+        advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
         return advisors;
     }
 
