@@ -277,7 +277,11 @@ public abstract class AbstractDataSet<M, F extends Field<M>, ID> implements Data
                     StringBuilder builder = new StringBuilder();
                     Collection<Object> values = (Collection<Object>) value;
                     for (Object cvalue : values) {
-                        displayValue = modelMetadata.getName(cvalue);
+                        if (isJdkType(cvalue)) {
+                            displayValue = FormatterUtils.basicFormatting(cvalue, formattableAnnot);
+                        } else {
+                            displayValue = modelMetadata.getName(cvalue);
+                        }
                         StringUtils.append(builder, displayValue, COMMA_WITH_SPACE);
                     }
                     displayValue = builder.toString();
