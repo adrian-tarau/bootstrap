@@ -25,12 +25,12 @@
 
     <groupId>net.microfalx.bootstrap</groupId>
     <artifactId>bootstrap-ai-api</artifactId>
-    <version>0.8.5-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
         <artifactId>bootstrap-ai</artifactId>
-        <version>0.8.5-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
     <name>Bootstrap :: AI :: API</name>
