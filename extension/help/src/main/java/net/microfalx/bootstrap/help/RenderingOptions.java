@@ -54,4 +54,8 @@ public class RenderingOptions {
         return Long.toString(Math.abs(Hashing.create().update(heading).update(navigation).update(level)
                 .asLong()), Character.MAX_RADIX);
     }
+
+    public static class RenderingOptionsBuilder {
+
+    }
 }
