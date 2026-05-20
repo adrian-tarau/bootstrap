@@ -7,6 +7,7 @@ import net.microfalx.bootstrap.ai.api.Provider;
 import net.microfalx.bootstrap.ai.core.jpa.*;
 import net.microfalx.bootstrap.jdbc.jpa.JpaPersistence;
 import net.microfalx.bootstrap.jdbc.jpa.NaturalIdEntityUpdater;
+import net.microfalx.bootstrap.model.MetadataService;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TextUtils;
 import net.microfalx.resource.Resource;
@@ -35,6 +36,9 @@ public class AiPersistence extends JpaPersistence implements InitializingBean {
     @Getter
     @Autowired
     private ChatRepository chatRepository;
+
+    @Autowired
+    private MetadataService metadataService;
 
     AiServiceImpl aiService;
 
