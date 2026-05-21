@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="https://net.microfalx/xsd/logger-1.0.xsd"
+           targetNamespace="https://net.microfalx/xsd/logger-1.0.xsd"
+           elementFormDefault="unqualified"
+           attributeFormDefault="unqualified">
+
+    <xs:element name="logger">
+        <xs:annotation>
+            <xs:documentation>
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="appender" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="appender">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="1" maxOccurs="unbounded" ref="include"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="exclude"/>
+            </xs:sequence>
+            <xs:attribute name="id" use="required"/>
+            <xs:attribute name="name"/>
+            <xs:attribute name="file-name"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="include"/>
+    <xs:element name="exclude"/>
+
+</xs:schema>
+

@@ -17,6 +17,8 @@ public class LoggerProperties {
 
     private boolean debug;
     private boolean trace;
+    private int fileCount = 5;
+    private long fileSize = 20_000_000L;
     private String application;
     private String process;
     private Syslog syslog = new Syslog();
