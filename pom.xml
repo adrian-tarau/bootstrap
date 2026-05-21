@@ -72,7 +72,7 @@
     <properties>
         <bom.version>1.0.17</bom.version>
 
-        <lang.version>1.0.1</lang.version>
+        <lang.version>1.0.2-SNAPSHOT</lang.version>
         <resource.version>1.0.2-SNAPSHOT</resource.version>
         <metrics.version>1.0.2-SNAPSHOT</metrics.version>
         <tracing.version>1.0.1-SNAPSHOT</tracing.version>
