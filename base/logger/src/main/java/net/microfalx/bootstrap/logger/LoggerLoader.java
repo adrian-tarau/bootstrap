@@ -38,13 +38,14 @@ public class LoggerLoader {
                 try {
                     load(Resource.url(descriptor));
                 } catch (Exception e) {
-                    LOGGER.error("Failed to load loggers from descriptor: " + descriptor.toExternalForm(), e);
+                    LOGGER.atError().setCause(e)
+                            .log("Failed to load loggers from descriptor: {}", descriptor.toExternalForm());
                 }
             }
         } catch (IOException e) {
             LOGGER.error("Failed to discover descriptors", e);
         }
-        LOGGER.info("Discovered {} logger appenders from descriptors", appenders.size());
+        LOGGER.debug("Discovered {} logger appenders from descriptors", appenders.size());
     }
 
     void load(Resource resource) throws IOException {

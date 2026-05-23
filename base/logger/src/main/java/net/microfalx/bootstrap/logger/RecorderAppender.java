@@ -6,6 +6,8 @@ import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 import net.microfalx.lang.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -13,12 +15,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * An appender which takes all the log events and publish them to an application logger storage.
  */
-class LogbackAppender extends ch.qos.logback.core.AppenderBase<ILoggingEvent> {
+class RecorderAppender extends ch.qos.logback.core.AppenderBase<ILoggingEvent> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecorderAppender.class);
 
     static final String INSTALLED_FLAG = "BOOTSTRAP_APPENDER";
 
     volatile LoggerListener storage;
-    final Queue<LoggerEvent> pending = new LinkedBlockingQueue<>();
+    final Queue<LoggerEvent> pendingEvents = new LinkedBlockingQueue<>();
 
     /**
      * Initializes the internal appender for a given logger context.
@@ -26,14 +30,18 @@ class LogbackAppender extends ch.qos.logback.core.AppenderBase<ILoggingEvent> {
      * @param loggerContext the logger context
      */
     static void initialize(LoggerContext loggerContext) {
-        if (loggerContext.getObject(INSTALLED_FLAG) != null) return;
-        LogbackAppender appender = new LogbackAppender();
-        appender.setContext(loggerContext);
-        appender.setName("storage");
-        appender.start();
-        ch.qos.logback.classic.Logger logger = loggerContext.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-        logger.addAppender(appender);
-        loggerContext.putProperty(INSTALLED_FLAG, INSTALLED_FLAG);
+        try {
+            if (loggerContext.getObject(INSTALLED_FLAG) != null) return;
+            RecorderAppender appender = new RecorderAppender();
+            appender.setContext(loggerContext);
+            appender.setName("storage");
+            appender.start();
+            ch.qos.logback.classic.Logger logger = loggerContext.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+            logger.addAppender(appender);
+            loggerContext.putProperty(INSTALLED_FLAG, INSTALLED_FLAG);
+        } catch (Exception e) {
+            LOGGER.atError().setCause(e).log("Failed to initialize logback appender");
+        }
     }
 
     /**
@@ -65,7 +73,7 @@ class LogbackAppender extends ch.qos.logback.core.AppenderBase<ILoggingEvent> {
         if (storage != null) {
             storage.onEvent(loggerEvent);
         } else {
-            pending.add(loggerEvent);
+            pendingEvents.add(loggerEvent);
         }
     }
 

@@ -51,10 +51,14 @@ public class LoggerEvent implements Identifiable<Long>, Timestampable<LocalDateT
         DEBUG(3),
         TRACE(4);
 
-        private int value;
+        private final int value;
 
         Level(int value) {
             this.value = value;
+        }
+
+        public boolean isLowerSeverity(Level level) {
+            return !isHigherSeverity(level);
         }
 
         public boolean isHigherSeverity(Level level) {

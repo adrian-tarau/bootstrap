@@ -2,26 +2,17 @@ package net.microfalx.bootstrap.logger;
 
 import biz.paluch.logging.gelf.logback.GelfLogbackAppender;
 import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.net.SyslogAppender;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.FileAppender;
-import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
-import ch.qos.logback.core.rolling.RollingFileAppender;
-import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
-import ch.qos.logback.core.util.Duration;
-import ch.qos.logback.core.util.FileSize;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.store.Query;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
-import net.microfalx.lang.JvmUtils;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.threadpool.ThreadPool;
-import net.microfalx.threadpool.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -32,8 +23,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
@@ -45,10 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.microfalx.bootstrap.logger.LoggerUtils.METRICS_COUNTS_EXCEPTION;
-import static net.microfalx.bootstrap.logger.LoggerUtils.METRICS_COUNTS_SEVERITY;
+import static net.microfalx.bootstrap.logger.LoggerUtils.*;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.FormatterUtils.formatBytes;
 import static net.microfalx.lang.StringUtils.defaultIfNull;
 
 @Service
@@ -63,13 +50,10 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     @Autowired private ThreadPool threadPool;
 
     private String hostname;
-
     private Store<LoggerEvent, Long> store;
-
     private Store<AlertEvent, String> alertStore;
 
     private final Collection<LoggerListener> listeners = new CopyOnWriteArrayList<>();
-    private final Collection<FileAppender<ILoggingEvent>> appenders = new CopyOnWriteArrayList<>();
     private final Map<String, AlertEvent> alerts = new ConcurrentHashMap<>();
 
     @Override
@@ -165,7 +149,6 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     }
 
     private void initializeAppenders() {
-        loadAppenders();
         initializeApplicationAppender();
         initializeGelfAppender();
         initializeSyslogAppender();
@@ -176,9 +159,9 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
         Iterator<Appender<ILoggingEvent>> appenderIterator = logger.iteratorForAppenders();
         while (appenderIterator.hasNext()) {
             Appender<ILoggingEvent> appender = appenderIterator.next();
-            if (appender instanceof LogbackAppender internalAppender) {
-                processQueuedLoggerEvents(internalAppender.pending);
+            if (appender instanceof RecorderAppender internalAppender) {
                 internalAppender.storage = this;
+                processQueuedLoggerEvents(internalAppender.pendingEvents);
             }
         }
     }
@@ -186,8 +169,8 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     private void initializeGelfAppender() {
         LoggerProperties.Gelf gelf = properties.getGelf();
         if (StringUtils.isEmpty(gelf.getHostname())) return;
-        LOGGER.info("Send logs using GELF to " + gelf.toUri());
-        LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
+        LOGGER.info("Send logs using GELF to '{}'", gelf.toUri());
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         GelfLogbackAppender appender = new GelfLogbackAppender();
         appender.setHost(gelf.getHostname());
         appender.setPort(gelf.getPort());
@@ -198,106 +181,33 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
         appender.setFacility(gelf.getFacility());
         appender.setAdditionalFields("Application=" + defaultIfNull(properties.getApplication(), "Bootstrap"));
         appender.setAdditionalFields("Process=" + defaultIfNull(properties.getProcess(), "Web"));
-        appender.setContext(logCtx);
+        appender.setContext(loggerContext);
         appender.setName("gelf");
         appender.start();
-        ch.qos.logback.classic.Logger logger = logCtx.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        ch.qos.logback.classic.Logger logger = loggerContext.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
         logger.addAppender(appender);
     }
 
     private void initializeSyslogAppender() {
         LoggerProperties.Syslog syslog = properties.getSyslog();
         if (StringUtils.isEmpty(syslog.getHostname())) return;
-        LOGGER.info("Send logs using Syslog to " + syslog.toUri());
-        LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
+        LOGGER.info("Send logs using Syslog to '{}'", syslog.toUri());
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         SyslogAppender appender = new SyslogAppender();
         appender.setSyslogHost(syslog.getHostname());
         appender.setPort(syslog.getPort());
         appender.setFacility(syslog.getFacility());
         appender.setThrowableExcluded(true);
-        appender.setContext(logCtx);
+        appender.setContext(loggerContext);
         appender.setName("syslog");
         appender.start();
-        ch.qos.logback.classic.Logger logger = logCtx.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        ch.qos.logback.classic.Logger logger = loggerContext.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
         logger.addAppender(appender);
     }
 
-    private void loadAppenders() {
-        LoggerLoader loader = new LoggerLoader();
-        loader.load();
-        LOGGER.info("Loaded {}", loader.getAppenders().size() + " from descriptors");
-        //if (!JvmUtils.hasLogsDirectory()) return;
-        LoggerContext loggerContext = getLoggerContext();
-        for (net.microfalx.bootstrap.logger.Appender appender : loader.getAppenders()) {
-            FileAppender<ILoggingEvent> realAppender = createAppender(appender, loggerContext);
-            for (String included : appender.getIncluded()) {
-                loggerContext.getLogger(included).addAppender(realAppender);
-            }
-        }
-    }
-
-    private LoggerContext getLoggerContext() {
-        return (LoggerContext) LoggerFactory.getILoggerFactory();
-    }
-
-    private ch.qos.logback.classic.Logger getRootLogger() {
-        return getLoggerContext().getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-    }
-
-    private FileAppender<ILoggingEvent> createAppender(net.microfalx.bootstrap.logger.Appender appender, LoggerContext context) {
-        PatternLayoutEncoder layoutEncoder = createLayoutEncoder(context);
-
-        FixedWindowRollingPolicy rollingPolicy = createRollingPolicy(appender, context);
-        SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = createTriggeringPolicy(context);
-
-        RollingFileAppender<ILoggingEvent> fileAppender = new RollingFileAppender<>();
-        fileAppender.setImmediateFlush(true);
-        fileAppender.setBufferSize(FileSize.valueOf("8KB"));
-        fileAppender.setContext(context);
-        fileAppender.setFile(new File(JvmUtils.getLogsDirectory(), appender.getFileName()).getAbsolutePath());
-        fileAppender.setRollingPolicy(rollingPolicy);
-        fileAppender.setTriggeringPolicy(triggeringPolicy);
-        fileAppender.setName(appender.getName());
-        fileAppender.setEncoder(layoutEncoder);
-
-        rollingPolicy.setParent(fileAppender);
-        rollingPolicy.start();
-
-        fileAppender.start();
-        appenders.add(fileAppender);
-
-        return fileAppender;
-    }
-
-    private FixedWindowRollingPolicy createRollingPolicy(net.microfalx.bootstrap.logger.Appender appender, LoggerContext context) {
-        FixedWindowRollingPolicy rollingPolicy = new FixedWindowRollingPolicy();
-        rollingPolicy.setContext(context);
-        rollingPolicy.setMinIndex(1);
-        rollingPolicy.setMaxIndex(properties.getFileCount());
-        rollingPolicy.setFileNamePattern(".%i.log.gz");
-        return rollingPolicy;
-    }
-
-    private SizeBasedTriggeringPolicy<ILoggingEvent> createTriggeringPolicy(LoggerContext context) {
-        SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new SizeBasedTriggeringPolicy<>();
-        triggeringPolicy.setContext(context);
-        triggeringPolicy.setMaxFileSize(FileSize.valueOf(formatBytes(properties.getFileSize())));
-        triggeringPolicy.setCheckIncrement(Duration.buildByMinutes(60));
-        triggeringPolicy.start();
-        return triggeringPolicy;
-    }
-
-    private PatternLayoutEncoder createLayoutEncoder(LoggerContext context) {
-        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
-        encoder.setContext(context);
-        encoder.setPattern("%d{yyyy-MM-dd HH:mm:ss.SSSXXX} %-5level [%-15thread] %logger{-36} : %msg%n");
-        encoder.start();
-        return encoder;
-    }
 
     private void initializeWorkers() {
         threadPool.submit(new AcknowledgeAlertsTask());
-        threadPool.schedule(new AppenderTask(), Trigger.fixedDelay(java.time.Duration.ofSeconds(10)));
     }
 
     @Override
@@ -348,7 +258,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     }
 
     private void processAlertEvent(LoggerEvent event) {
-        if (!event.getLevel().isHigherSeverity(LoggerEvent.Level.WARN)) return;
+        if (event.getLevel().isLowerSeverity(LoggerEvent.Level.WARN)) return;
         AlertEvent alert = getAlert(event);
         alert.update(event);
         storeAlert(alert);
@@ -358,7 +268,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
         try {
             alertStore.add(event);
         } catch (Throwable e) {
-            LOGGER.debug("Failed to store logging event '{}' to internal storage", event);
+            LOGGER.debug("Failed to store alert event '{}' to internal storage", event);
             LoggerUtils.METRICS_ALERT_STORE_FAILURE.increment(ExceptionUtils.getRootCauseName(e));
         }
     }
@@ -369,21 +279,6 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
             if (alertEvent == null) alertEvent = AlertEvent.builder().id(s).build();
             return alertEvent;
         });
-    }
-
-    class AppenderTask implements Runnable {
-
-        @Override
-        public void run() {
-            for (FileAppender<ILoggingEvent> appender : appenders) {
-                if (!appender.isStarted()) continue;
-                try {
-                    appender.getOutputStream().flush();
-                } catch (IOException e) {
-                    // just ignore
-                }
-            }
-        }
     }
 
     class AcknowledgeAlertsTask implements Runnable {
