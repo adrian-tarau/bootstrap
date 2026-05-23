@@ -12,18 +12,27 @@ import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.spi.FilterReply;
 import ch.qos.logback.core.util.Duration;
 import ch.qos.logback.core.util.FileSize;
+import net.microfalx.lang.FileUtils;
 import net.microfalx.lang.JvmUtils;
 import net.microfalx.lang.ObjectUtils;
+import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static net.microfalx.bootstrap.logger.LoggerUtils.getLoggerContext;
 import static net.microfalx.bootstrap.logger.LoggerUtils.getRootLogger;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.FormatterUtils.formatBytes;
+import static net.microfalx.lang.IOUtils.*;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -41,9 +50,39 @@ class ApplicationAppenders {
         this.environment = environment;
     }
 
+    boolean hasLogsDirectory() {
+        File configuredLogsDirectory = getConfiguredLogsDirectory();
+        return JvmUtils.hasLogsDirectory() || configuredLogsDirectory != null;
+    }
+
+    File getLogsDirectory() {
+        if (logsDirectory == null) {
+            File configuredLogsDirectory = getConfiguredLogsDirectory();
+            logsDirectory = ObjectUtils.defaultIfNull(configuredLogsDirectory, JvmUtils.getLogsDirectory());
+        }
+        return logsDirectory;
+    }
+
+    void move(Resource resource) {
+        File[] files = getLogsDirectory().listFiles(this::acceptArchives);
+        if (files != null) {
+            for (File file : files) {
+                try {
+                    Resource source = Resource.file(file);
+                    Resource destination = resource.resolve(file.getName());
+                    destination.copyFrom(source);
+                    source.delete();
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to move log archive file: {}, root cause: {}", file.getAbsolutePath(), getRootCauseDescription(e));
+                }
+            }
+        }
+    }
+
     void register() {
         try {
             if (hasLogsDirectory()) {
+                archiveLogs();
                 addStandardAppenders();
                 addRegisteredAppenders();
             }
@@ -154,22 +193,49 @@ class ApplicationAppenders {
         return environment.getProperty("bootstrap.logger.file-size", Long.class, 20_000_000L);
     }
 
-    private boolean hasLogsDirectory() {
-        File configuredLogsDirectory = getConfiguredLogsDirectory();
-        return JvmUtils.hasLogsDirectory() || configuredLogsDirectory != null;
-    }
-
-    private File getLogsDirectory() {
-        if (logsDirectory == null) {
-            File configuredLogsDirectory = getConfiguredLogsDirectory();
-            logsDirectory = ObjectUtils.defaultIfNull(configuredLogsDirectory, JvmUtils.getLogsDirectory());
-        }
-        return logsDirectory;
-    }
-
     private File getConfiguredLogsDirectory() {
         String directory = environment.getProperty("bootstrap.logger.directory");
         return isNotEmpty(directory) && new File(directory).exists() ? new File(directory) : null;
     }
+
+    private void archiveLogs() {
+        String archiveFileName = "logs_archive_" + FORMATTER.format(LocalDateTime.now()) + ".zip";
+        File archiveFile = new File(getLogsDirectory(), archiveFileName);
+        int fileCount = 0;
+        try {
+            try (ZipOutputStream zipFile = new ZipOutputStream(getBufferedOutputStream(archiveFile))) {
+                File[] files = getLogsDirectory().listFiles(this::acceptLogs);
+                if (files != null) {
+                    for (File file : files) {
+                        fileCount++;
+                        add(zipFile, file);
+                    }
+                }
+            }
+            if (fileCount == 0) FileUtils.remove(archiveFile);
+        } catch (IOException e) {
+            LOGGER.warn("Failed to archive logs to file: {}, root cause: {}", archiveFile.getAbsolutePath(), getRootCauseDescription(e));
+        }
+
+    }
+
+    private void add(ZipOutputStream outputStream, File file) throws IOException {
+        ZipEntry entry = new ZipEntry(file.getName());
+        entry.setSize(file.length());
+        outputStream.putNextEntry(entry);
+        appendStream(outputStream, getBufferedInputStream(file), false);
+        outputStream.closeEntry();
+        FileUtils.remove(file);
+    }
+
+    private boolean acceptLogs(File file) {
+        return file.isFile() && !file.getName().endsWith(".zip");
+    }
+
+    private boolean acceptArchives(File file) {
+        return file.isFile() && file.getName().endsWith(".zip");
+    }
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
 }

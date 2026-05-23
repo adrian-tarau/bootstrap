@@ -6,12 +6,14 @@ import ch.qos.logback.classic.net.SyslogAppender;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
+import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.store.Query;
 import net.microfalx.bootstrap.store.Store;
 import net.microfalx.bootstrap.store.StoreService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.net.InetAddress;
@@ -44,8 +47,10 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerService.class);
 
+    @Autowired private Environment environment;
     @Autowired private ApplicationContext applicationContext;
     @Autowired private StoreService storeService;
+    @Autowired private ResourceService resourceService;
     @Autowired private LoggerProperties properties;
     @Autowired private ThreadPool threadPool;
 
@@ -208,6 +213,7 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
 
     private void initializeWorkers() {
         threadPool.submit(new AcknowledgeAlertsTask());
+        threadPool.submit(new ArchiveLogsTask());
     }
 
     @Override
@@ -286,6 +292,16 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
         @Override
         public void run() {
             acknowledgeAlerts();
+        }
+    }
+
+    class ArchiveLogsTask implements Runnable {
+
+        @Override
+        public void run() {
+            Resource logs = resourceService.getPersisted("logs");
+            ApplicationAppenders appenders = new ApplicationAppenders(environment);
+            appenders.move(logs);
         }
     }
 
