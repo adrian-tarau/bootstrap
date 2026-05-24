@@ -18,7 +18,8 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -69,7 +70,8 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <bom.version>1.0.17</bom.version>
+        <bom.version>1.0.18</bom.version>
+
         <lang.version>1.0.2-SNAPSHOT</lang.version>
         <resource.version>1.0.2-SNAPSHOT</resource.version>
         <metrics.version>1.0.2-SNAPSHOT</metrics.version>
@@ -78,6 +80,7 @@
         <jdbcpool.version>1.0.1-SNAPSHOT</jdbcpool.version>
         <threadpool.version>1.0.1-SNAPSHOT</threadpool.version>
         <webjar.version>1.0.1-SNAPSHOT</webjar.version>
+
         <spring.boot.version>3.5.10</spring.boot.version>
     </properties>
 
