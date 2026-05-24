@@ -70,14 +70,14 @@
 
     <properties>
         <bom.version>1.0.17</bom.version>
-        <lang.version>1.0.1</lang.version>
-        <resource.version>1.0.1</resource.version>
-        <metrics.version>1.0.1</metrics.version>
-        <tracing.version>1.0.0</tracing.version>
-        <jvm.version>1.0.1</jvm.version>
-        <jdbcpool.version>1.0.0</jdbcpool.version>
-        <threadpool.version>1.0.0</threadpool.version>
-        <webjar.version>1.0.0</webjar.version>
+        <lang.version>1.0.2-SNAPSHOT</lang.version>
+        <resource.version>1.0.2-SNAPSHOT</resource.version>
+        <metrics.version>1.0.2-SNAPSHOT</metrics.version>
+        <tracing.version>1.0.1-SNAPSHOT</tracing.version>
+        <jvm.version>1.0.2-SNAPSHOT</jvm.version>
+        <jdbcpool.version>1.0.1-SNAPSHOT</jdbcpool.version>
+        <threadpool.version>1.0.1-SNAPSHOT</threadpool.version>
+        <webjar.version>1.0.1-SNAPSHOT</webjar.version>
         <spring.boot.version>3.5.10</spring.boot.version>
     </properties>
 
