@@ -16,6 +16,7 @@ import java.time.Duration;
 @ToString
 @Name("Stores")
 @ReadOnly
+@Visible(value = false, fieldNames = "description")
 public class Store extends NamedIdentityAware<String> {
 
     @Position(20)
@@ -26,6 +27,7 @@ public class Store extends NamedIdentityAware<String> {
     @Position(21)
     @Label(value = "Size", group = "Memory")
     @Description("The estimated size of objects in the memory")
+    @Width("80px")
     @Formattable(unit = Formattable.Unit.BYTES)
     private long memorySize;
 
@@ -37,6 +39,7 @@ public class Store extends NamedIdentityAware<String> {
     @Position(23)
     @Label(value = "Size", group = "Disk")
     @Description("The estimated size of objects on disk")
+    @Width("80px")
     @Formattable(unit = Formattable.Unit.BYTES)
     private long diskSize;
 
@@ -63,6 +66,7 @@ public class Store extends NamedIdentityAware<String> {
     @Position(34)
     @Label(value = "Flush", group = "Operations")
     @Description("The number of flushes from the store")
+    @Visible(false)
     private long flushCount;
 
     @Position(40)
@@ -88,9 +92,12 @@ public class Store extends NamedIdentityAware<String> {
     @Position(44)
     @Label(value = "Flush", group = "Statistics")
     @Description("The average duration of a flush")
+    @Visible(false)
     private Duration flushDuration;
 
     @Position(100)
+    @Width("80px")
+    @Visible(false)
     private String location;
 
     public static Store from(net.microfalx.bootstrap.store.Store<?, ?> store) {
