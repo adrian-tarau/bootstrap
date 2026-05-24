@@ -22,54 +22,62 @@ import java.time.LocalDateTime;
 @ReadOnly
 public class Alert extends IdentityAware<String> {
 
-    @Position(1)
-    @Description("The time when the alert started to fire")
-    @CreatedDate
-    @CreatedAt
-    @Formattable(tooltip = Formatters.CreatedAtTooltip.class, elapsed = true)
-    private LocalDateTime createdAt;
-
-    @Position(2)
-    @Description("The last time when the alert fired")
-    @OrderBy(OrderBy.Direction.DESC)
-    @Formattable(tooltip = Formatters.ModifiedAtTooltip.class, elapsed = true)
-    @LastModifiedDate
-    @ModifiedAt
-    @Timestamp
-    private LocalDateTime modifiedAt;
-
     @Position(3)
-    @Description("The severity level")
-    private LoggerEvent.Level level;
-
-    @Position(10)
     @Name
     @Description("The message associated with the alert")
-    @Width("40%")
+    @Width("50%")
     private String message;
 
-    @Position(11)
+    @Position(10)
     @Label(value = "Failure Type")
+    @Width("120px")
     private String failureType;
 
+    @Position(11)
+    @Description("The severity level")
+    @Width("70px")
+    private LoggerEvent.Level level;
+
     @Position(15)
+    @Label(value = "Ack.")
     @Description("Indicates whether the alert has been acknowledged")
+    @Width("70px")
     private boolean acknowledged;
 
     @Position(20)
     @Label(value = "Total", group = "Counts")
     @Description("The total number of alerts received")
+    @Width("70px")
     private long totalCount;
 
     @Position(21)
     @Label(value = "Pending", group = "Counts")
     @Description("The total number of alerts received since the last acknowledgement")
+    @Width("70px")
     private long pendingCount;
 
     @Position(31)
     @Label(value = "Exception Class")
     @Visible(false)
     private String failureClass;
+
+    @Position(100)
+    @Description("The time when the alert started to fire")
+    @Width("120px")
+    @CreatedDate
+    @CreatedAt
+    @Formattable(tooltip = Formatters.CreatedAtTooltip.class, elapsed = true)
+    private LocalDateTime createdAt;
+
+    @Position(101)
+    @Description("The last time when the alert fired")
+    @Width("120px")
+    @OrderBy(OrderBy.Direction.DESC)
+    @Formattable(tooltip = Formatters.ModifiedAtTooltip.class, elapsed = true)
+    @LastModifiedDate
+    @ModifiedAt
+    @Timestamp
+    private LocalDateTime modifiedAt;
 
     public static Alert from(AlertEvent event) {
         if (event == null) return null;
