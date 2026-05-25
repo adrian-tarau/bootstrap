@@ -12,7 +12,7 @@
         <item key="highIssuesThreshold" name="High Issues" separator="Thresholds" data-type="integer" default="10" description="The threshold of issues less than critical to trigger the report."/>
         <item key="criticalIssuesThreshold" name="Critical Issues" data-type="integer" default="1" description="The threshold of critical issues to trigger the report."/>
 
-        <item key="recipients" name="Recipient" separator="Other" default="0 0 0/6 ? * * *" description="A comma-separated list of report recipients (email addresses)."/>
+        <item key="recipients" name="Recipient" separator="Other" default="" description="A comma-separated list of report recipients (email addresses)."/>
         <item key="password" name="Password" default="WzeXYN1j4S675lLsL4Vy" description="The password used to encrypt the report attachment."/>
         <item key="systemName" name="System Name" default="Bootstrap" description="A name of the reporting system."/>
     </group>
