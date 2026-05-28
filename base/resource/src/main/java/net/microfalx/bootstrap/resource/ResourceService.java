@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.resource;
 import lombok.CustomLog;
 import net.microfalx.lang.JvmUtils;
 import net.microfalx.resource.*;
+import net.microfalx.threadpool.ThreadPool;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
@@ -11,8 +12,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.resource.ResourceUtils.CLASS_PATH_SCHEME;
 import static net.microfalx.resource.ResourceUtils.toUri;
 
 /**
@@ -35,8 +38,13 @@ public class ResourceService implements InitializingBean {
 
     private Resource sharedResource;
 
+    @Autowired
+    private ThreadPool threadPool;
+
     @Autowired(required = false)
     private ResourceProperties properties = new ResourceProperties();
+
+    private final ClassPathManager classPathManager = new ClassPathManager();
 
     /**
      * Returns a resource directory for persisted data.
@@ -75,6 +83,27 @@ public class ResourceService implements InitializingBean {
     }
 
     /**
+     * Creates a resource from a URI.
+     * <p>
+     * If a provider does not exist, it will return a "NULL" resource.
+     * <p>
+     * The service has special handling for "classpath" scheme, and provides resources
+     * in development based on auto-detection of source directories.
+     *
+     * @param uri the URI
+     * @return a non-null instance
+     * @see ResourceFactory#resolve
+     */
+    public Resource resolve(URI uri) {
+        requireNonNull(uri);
+        if (CLASS_PATH_SCHEME.equalsIgnoreCase(uri.getScheme())) {
+            return classPathManager.resolve(uri);
+        } else {
+            return ResourceFactory.resolve(uri);
+        }
+    }
+
+    /**
      * Returns the resource directory.
      * <p>
      * For shared resource, they can be access also as
@@ -95,10 +124,11 @@ public class ResourceService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        initialize();
+        initializeDirectories();
+        initializeClassPath();
     }
 
-    protected void initialize() {
+    private void initializeDirectories() {
         validateDirectory(persistedDirectory = new File(properties.getPersistedDirectory()));
         validateDirectory(transientDirectory = new File(properties.getTransientDirectory()));
         initializeSharedResource();
@@ -113,6 +143,10 @@ public class ResourceService implements InitializingBean {
         JvmUtils.setVariableDirectory(persistedDirectory);
         JvmUtils.setCacheDirectory(persistedDirectory);
         ResourceFactory.setTemporary(FileResource.directory(transientDirectory));
+    }
+
+    private void initializeClassPath() {
+        threadPool.execute(classPathManager::initialize);
     }
 
     private void initializeSharedResource() {
