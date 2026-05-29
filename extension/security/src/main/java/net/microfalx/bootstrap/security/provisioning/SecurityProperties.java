@@ -17,6 +17,9 @@ public class SecurityProperties {
     private boolean register = false;
     private boolean terms = false;
 
+    private boolean xfo = false;
+    private boolean csrf = true;
+
     private String loginMessage = "Sign in to start your session";
 
     private String adminUserName = "admin";
