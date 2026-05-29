@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.security.provisioning;
 
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.restapi.RestApiAccessDeniedHandler;
 import net.microfalx.bootstrap.restapi.RestApiAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import static net.microfalx.lang.StringUtils.addEndSlash;
 import static net.microfalx.lang.StringUtils.addStartSlash;
 import static org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
@@ -71,16 +73,13 @@ public class SecurityConfiguration {
 
 
     private void updateOther(HttpSecurity httpSecurity) throws Exception {
-        if (securityProperties.isCsrf()) {
-            httpSecurity.csrf(Customizer.withDefaults());
-        } else {
-            httpSecurity.csrf(CsrfConfigurer::disable);
-
-        }
+        httpSecurity.csrf(securityProperties.isCsrf() ? Customizer.withDefaults() : CsrfConfigurer::disable);
+        if (!securityProperties.isCsrf()) LOGGER.info("CSRF protection is disabled");
     }
 
     private void updateHeaders(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.headers(headers -> {
+            if (securityProperties.isXfo()) LOGGER.info("XFrame protection is disabled");
             headers.frameOptions(securityProperties.isXfo() ? HeadersConfigurer.FrameOptionsConfig::disable : HeadersConfigurer.FrameOptionsConfig::sameOrigin);
             headers.xssProtection(HeadersConfigurer.XXssConfig::disable);
             headers.referrerPolicy(rp -> rp.policy(NO_REFERRER));
