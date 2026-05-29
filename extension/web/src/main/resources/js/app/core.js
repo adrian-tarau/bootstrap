@@ -283,7 +283,7 @@ Application.getHeaders = function () {
         "X-Application-Id": Application.getId(),
         "X-TimeZone": Application.getTimezoneOffset()
     };
-    if (Utils.isDefined(APP_CSRF)) headers[APP_CSRF.headerName] = APP_CSRF.token;
+    if (APP_CSRF !== false) headers[APP_CSRF.headerName] = APP_CSRF.token;
     return headers;
 }
 
@@ -293,7 +293,7 @@ Application.getHeaders = function () {
  * @param {Object} params the parameters where to set the token
  */
 Application.updateCsrf = function (params) {
-    if (Utils.isDefined(APP_CSRF)) params[APP_CSRF.parameterName] = APP_CSRF.token;
+    if (APP_CSRF !== false) params[APP_CSRF.parameterName] = APP_CSRF.token;
 }
 
 /**

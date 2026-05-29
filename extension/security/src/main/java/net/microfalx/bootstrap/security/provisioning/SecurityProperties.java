@@ -6,6 +6,10 @@ import lombok.ToString;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Set;
+
+import static java.util.Collections.emptySet;
+
 @Configuration
 @ConfigurationProperties("bootstrap.security")
 @Setter
@@ -19,6 +23,7 @@ public class SecurityProperties {
 
     private boolean xfo = false;
     private boolean csrf = true;
+    private Set<String> csrfDisable = emptySet();
 
     private String loginMessage = "Sign in to start your session";
 

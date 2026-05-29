@@ -9,7 +9,6 @@ import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
@@ -18,6 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.RememberMeServices;
 
+import static net.microfalx.lang.CollectionUtils.setToString;
 import static net.microfalx.lang.StringUtils.addEndSlash;
 import static net.microfalx.lang.StringUtils.addStartSlash;
 import static org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER;
@@ -71,10 +71,23 @@ public class SecurityConfiguration {
         httpSecurity.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
     }
 
-
     private void updateOther(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(securityProperties.isCsrf() ? Customizer.withDefaults() : CsrfConfigurer::disable);
-        if (!securityProperties.isCsrf()) LOGGER.info("CSRF protection is disabled");
+        if (securityProperties.isCsrf()) {
+            httpSecurity.csrf(csrf -> {
+                for (String disablePath : securityProperties.getCsrfDisable()) {
+                    disablePath = addMatchAll(disablePath);
+                    LOGGER.info("CSRF protection is disabled for path '{}'", disablePath);
+                    csrf.ignoringRequestMatchers(disablePath);
+                }
+            });
+        } else {
+            httpSecurity.csrf(CsrfConfigurer::disable);
+        }
+        if (!securityProperties.isCsrf()) {
+            LOGGER.info("CSRF protection is disabled");
+        } else {
+            LOGGER.info("CSRF protection is enabled with the exception of: {}", setToString(securityProperties.getCsrfDisable()));
+        }
     }
 
     private void updateHeaders(HttpSecurity httpSecurity) throws Exception {
