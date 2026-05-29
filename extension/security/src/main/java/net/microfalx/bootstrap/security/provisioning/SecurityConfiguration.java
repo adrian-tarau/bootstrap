@@ -11,6 +11,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -70,13 +71,18 @@ public class SecurityConfiguration {
 
 
     private void updateOther(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(Customizer.withDefaults());
+        if (securityProperties.isCsrf()) {
+            httpSecurity.csrf(Customizer.withDefaults());
+        } else {
+            httpSecurity.csrf(CsrfConfigurer::disable);
+
+        }
     }
 
     private void updateHeaders(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.headers(headers -> {
-            headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin);
-            //headers.xssProtection(Customizer.withDefaults());
+            headers.frameOptions(securityProperties.isXfo() ? HeadersConfigurer.FrameOptionsConfig::disable : HeadersConfigurer.FrameOptionsConfig::sameOrigin);
+            headers.xssProtection(HeadersConfigurer.XXssConfig::disable);
             headers.referrerPolicy(rp -> rp.policy(NO_REFERRER));
         });
     }
