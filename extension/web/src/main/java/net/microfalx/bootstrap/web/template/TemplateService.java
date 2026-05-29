@@ -21,32 +21,15 @@ public class TemplateService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TemplateService.class);
 
-    @Autowired
-    private ApplicationService applicationService;
-
-    @Autowired
-    private MetadataService metadataService;
-
-    @Autowired
-    private DataSetService dataSetService;
-
-    @Autowired
-    private HelpService helpService;
-
-    @Autowired
-    private ContentService contentService;
-
-    @Autowired
-    private ChartService chartService;
-
-    @Autowired
-    private I18nService i18nService;
-
-    @Autowired
-    private SpringTemplateEngine templateEngine;
-
-    @Autowired
-    private ApplicationContext applicationContext;
+    @Autowired private ApplicationService applicationService;
+    @Autowired private MetadataService metadataService;
+    @Autowired private DataSetService dataSetService;
+    @Autowired private HelpService helpService;
+    @Autowired private ContentService contentService;
+    @Autowired private ChartService chartService;
+    @Autowired private I18nService i18nService;
+    @Autowired private SpringTemplateEngine templateEngine;
+    @Autowired private ApplicationContext applicationContext;
 
     @PostConstruct
     private void initialize() {

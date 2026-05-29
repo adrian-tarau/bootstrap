@@ -47,12 +47,12 @@ class ResourceServiceTest {
     }
 
     @Test
-    void resolve() throws IOException {
-        Resource resource = resourceService.resolve(URI.create("classpath:/logger.xml"));
+    void resolveResource() throws IOException {
+        Resource resource = resourceService.resolveResource(URI.create("classpath:/logger.xml"));
         assertNotNull(resource);
         Assertions.assertThat(resource.exists()).isTrue();
 
-        resource = resourceService.resolve(URI.create("file:/tmp/bootstrap_test"));
+        resource = resourceService.resolveResource(URI.create("file:/tmp/bootstrap_test"));
         assertNotNull(resource);
         Assertions.assertThat(resource.exists()).isFalse();
     }

@@ -1,11 +1,12 @@
 package net.microfalx.bootstrap.template;
 
-import net.microfalx.lang.ArgumentUtils;
 import net.microfalx.metrics.Metrics;
 import net.microfalx.resource.Resource;
 
 import java.io.IOException;
 import java.io.OutputStream;
+
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Base class for all templates
@@ -15,16 +16,23 @@ public abstract class AbstractTemplate implements Template {
     private static final Metrics EXPRESSION = TemplateUtils.METRICS.withGroup("Evaluate Expression");
     private static final Metrics RESOURCE = TemplateUtils.METRICS.withGroup("Evaluate Resource");
 
+    private final TemplateService templateService;
     private final Resource resource;
 
-    public AbstractTemplate(Resource resource) {
-        ArgumentUtils.requireNonNull(resource);
+    public AbstractTemplate(TemplateService templateService, Resource resource) {
+        requireNonNull(templateService);
+        requireNonNull(resource);
+        this.templateService = templateService;
         this.resource = resource;
     }
 
     @Override
     public final Resource getResource() {
         return resource;
+    }
+
+    public final TemplateService getTemplateService() {
+        return templateService;
     }
 
     @Override

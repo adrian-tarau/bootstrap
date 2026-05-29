@@ -18,8 +18,8 @@ final class MvelTemplate<M, F extends Field<M>, ID> extends AbstractTemplate {
     private volatile CompiledTemplate template;
     private volatile Serializable expression;
 
-    MvelTemplate(Resource resource) {
-        super(resource);
+    MvelTemplate(TemplateService templateService,Resource resource) {
+        super(templateService, resource);
     }
 
     @Override

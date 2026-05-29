@@ -879,7 +879,7 @@ Application.start = function () {
     Logger.debug("Start application");
     this.fire("start");
     User.start();
-    Utils.schedule(this.ping, APP_AJAX_PING_DEFAULT_INTERVAL, this)
+    Utils.schedule(this.ping, APP_AJAX_PING_DEFAULT_INTERVAL, this);
 }
 
 // initialize application

@@ -83,7 +83,27 @@ public class ResourceService implements InitializingBean {
     }
 
     /**
-     * Creates a resource from a URI.
+     * Resolves an URI to a resource.
+     * <p>
+     * If a provider does not exist, it will return a "NULL" resource.
+     * <p>
+     * The service has special handling for "classpath" scheme, and provides resources
+     * in development based on auto-detection of source directories.
+     *
+     * @param resource the URI
+     * @return a non-null instance
+     * @see ResourceFactory#resolve
+     */
+    public Resource resolveResource(Resource resource) {
+        if (properties.isDebug() && resource instanceof ClassPathResource cpr) {
+            return classPathManager.resolve(ClassPathResource.toUri(cpr.getPath()));
+        } else {
+            return resource;
+        }
+    }
+
+    /**
+     * Resolves an URI to a resource.
      * <p>
      * If a provider does not exist, it will return a "NULL" resource.
      * <p>
@@ -94,13 +114,33 @@ public class ResourceService implements InitializingBean {
      * @return a non-null instance
      * @see ResourceFactory#resolve
      */
-    public Resource resolve(URI uri) {
+    public Resource resolveResource(URI uri) {
         requireNonNull(uri);
-        if (CLASS_PATH_SCHEME.equalsIgnoreCase(uri.getScheme())) {
+        if (properties.isDebug() && CLASS_PATH_SCHEME.equalsIgnoreCase(uri.getScheme())) {
             return classPathManager.resolve(uri);
         } else {
             return ResourceFactory.resolve(uri);
         }
+    }
+
+    /**
+     * Resolves the URI by rewriting the resource, if possible.
+     * <p>
+     * The service has special handling for "classpath" scheme, and provides resources
+     * in development based on auto-detection of source directories.
+     *
+     * @param uri the URI
+     * @return a non-null instance
+     * @see ResourceFactory#resolve
+     * @see #resolveResource(URI)
+     */
+    public URI resolveUri(URI uri) {
+        requireNonNull(uri);
+        if (properties.isDebug() && CLASS_PATH_SCHEME.equalsIgnoreCase(uri.getScheme())) {
+            Resource resolved = classPathManager.resolve(uri);
+            if (resolved != null) uri = resolved.toURI();
+        }
+        return uri;
     }
 
     /**

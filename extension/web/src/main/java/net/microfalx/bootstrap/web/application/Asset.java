@@ -256,16 +256,16 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
      * @return a non-null instance
      */
     public Resource getResource() {
-        if (resource != null) {
-            return resource;
-        } else {
-            String fullPath = getPathFromType();
-            if (assetBundle != null && isNotEmpty(assetBundle.getPath())) {
-                fullPath += addStartSlash(assetBundle.getPath());
-            }
-            fullPath += addStartSlash(path);
-            return ClassPathResource.file(fullPath);
-        }
+        return resource != null ? resource : ClassPathResource.file(getFullPath());
+    }
+
+    /**
+     * Returns the resource as a URI.
+     *
+     * @return a non-null instance
+     */
+    public URI getResourceUri() {
+        return resource != null ? resource.toURI() : ClassPathResource.toUri(getFullPath());
     }
 
     /**
@@ -329,6 +329,15 @@ public final class Asset implements Identifiable<String>, Nameable, Descriptable
                 .add("assetBundle=" + assetBundle.getName())
                 .add("lastModified=" + lastModified)
                 .toString();
+    }
+
+    private String getFullPath() {
+        String fullPath = getPathFromType();
+        if (assetBundle != null && isNotEmpty(assetBundle.getPath())) {
+            fullPath += addStartSlash(assetBundle.getPath());
+        }
+        fullPath += addStartSlash(path);
+        return fullPath;
     }
 
     private String getPathFromType() {
