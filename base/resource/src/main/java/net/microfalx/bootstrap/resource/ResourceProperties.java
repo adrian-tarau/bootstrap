@@ -28,6 +28,8 @@ public class ResourceProperties {
     private String sharedUserName;
     private String sharedPassword;
 
+    private boolean debug;
+
     /**
      * Returns default properties, for standalone use (mostly tests).
      *
@@ -35,6 +37,28 @@ public class ResourceProperties {
      */
     public static ResourceProperties get() {
         return new ResourceProperties();
+    }
+
+    /**
+     * Returns whether the resources are in debug mode, allowing class path resources
+     * to be loaded from the source directory.
+     * <p>
+     * This allows developers to pick their changes (HTML, CSS, JS, etc) live without restarting
+     * the application
+     *
+     * @return {@code true} if debug mode, {@code false} otherwise
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * Changes the debug flag.
+     *
+     * @param debug {@code true} if debug mode, {@code false} otherwise
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
     /**

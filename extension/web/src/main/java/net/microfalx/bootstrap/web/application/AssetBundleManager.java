@@ -6,6 +6,7 @@ import net.microfalx.bootstrap.feature.FeatureService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ConcurrencyUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
@@ -137,10 +138,14 @@ final class AssetBundleManager {
                         writer.append("\n\n/*\nAsset: ").append(asset.getName()).append(", path='")
                                 .append(defaultIfEmpty(asset.getPath(), NA_STRING)).append("'\n*/\n\n");
                     }
-                    if (!asset.getResource().exists() && missingAssets.add(asset.getResource().toURI().toASCIIString())) {
-                        LOGGER.error("Asset " + asset.getName() + " (" + asset.getPath() + ") in bundle " + assetBundle.getName() + " could not be located in class path");
+                    resource = asset.getResource();
+                    if (resource instanceof ClassPathResource) {
+                        resource = applicationService.getResourceService().resolveResource(resource);
                     }
-                    writer.append(asset.getResource().loadAsString());
+                    if (!resource.exists() && missingAssets.add(resource.toURI().toASCIIString())) {
+                        LOGGER.error("Asset {} ({}) in bundle {} could not be located in class path", asset.getName(), asset.getPath(), assetBundle.getName());
+                    }
+                    writer.append(resource.loadAsString());
                     if (counter < ids.length - 1) {
                         writer.append("\n\n");
                     }

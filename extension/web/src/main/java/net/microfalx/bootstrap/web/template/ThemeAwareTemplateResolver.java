@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.template;
 
 import lombok.extern.slf4j.Slf4j;
+import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.application.Theme;
 import org.slf4j.event.Level;
@@ -10,10 +11,15 @@ import org.springframework.core.io.Resource;
 import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
+import static net.microfalx.resource.ResourceUtils.CLASS_PATH_SCHEME;
 
 /**
  * A view resolver which is aware of the application template.
@@ -22,13 +28,17 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class ThemeAwareTemplateResolver extends SpringResourceTemplateResolver {
 
     private final ApplicationService applicationService;
+    private final ResourceService resourceService;
     private ApplicationContext applicationContext;
 
     private final Map<String, Boolean> themedResources = new ConcurrentHashMap<>();
     private final Set<String> resolvedTemplates = new CopyOnWriteArraySet<>();
 
-    public ThemeAwareTemplateResolver(ApplicationService applicationService) {
+    public ThemeAwareTemplateResolver(ApplicationService applicationService, ResourceService resourceService) {
+        requireNonNull(applicationService);
+        requireNonNull(resourceService);
         this.applicationService = applicationService;
+        this.resourceService = resourceService;
         setOrder(Integer.MIN_VALUE);
     }
 
@@ -64,6 +74,21 @@ public class ThemeAwareTemplateResolver extends SpringResourceTemplateResolver {
             } else {
                 LOGGER.atLevel(level).log("Resolve template '{}' with themed resource URI '{}', themed {}, exists {}",
                         template, resourceUri, hasThemedTemplate, exists);
+            }
+        }
+        if (resourceUri.startsWith(CLASS_PATH_SCHEME)) {
+            URI uri = null;
+            try {
+                uri = URI.create(resourceUri);
+            } catch (Exception e) {
+                // if we cannot parse, we ignore
+            }
+            try {
+                uri = resourceService.resolveUri(uri);
+                if (uri != null) resourceUri = uri.toASCIIString();
+            } catch (Exception e) {
+                // any exception here, just ignore and use the original
+                LOGGER.warn("Failed to resolve URI '{}', root cause: {}", uri, getRootCauseDescription(e));
             }
         }
         return resourceUri;

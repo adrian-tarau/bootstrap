@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.template;
 
+import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafProperties;
@@ -13,19 +14,15 @@ import org.thymeleaf.templateresolver.ITemplateResolver;
 @Configuration
 public class TemplateConfiguration {
 
-    @Autowired
-    private ApplicationService applicationService;
-
-    @Autowired
-    private ThymeleafProperties properties;
-
-    @Autowired
-    private ApplicationContext applicationContext;
+    @Autowired private ApplicationService applicationService;
+    @Autowired private ThymeleafProperties properties;
+    @Autowired private ApplicationContext applicationContext;
+    @Autowired private ResourceService resourceService;
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public ITemplateResolver getViewResolver() {
-        ThemeAwareTemplateResolver resolver = new ThemeAwareTemplateResolver(applicationService);
+        ThemeAwareTemplateResolver resolver = new ThemeAwareTemplateResolver(applicationService, resourceService);
         resolver.setApplicationContext(this.applicationContext);
         resolver.setPrefix(this.properties.getPrefix());
         resolver.setSuffix(this.properties.getSuffix());

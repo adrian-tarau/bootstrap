@@ -6,8 +6,8 @@ import java.io.OutputStream;
 
 final class ThymeleafTemplate extends AbstractTemplate {
 
-    ThymeleafTemplate(Resource resource) {
-        super(resource);
+    ThymeleafTemplate(TemplateService templateService, Resource resource) {
+        super(templateService, resource);
     }
 
     @Override

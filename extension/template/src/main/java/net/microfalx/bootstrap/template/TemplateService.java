@@ -7,6 +7,7 @@ import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
 import net.microfalx.bootstrap.model.MetadataService;
+import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.resource.MemoryResource;
 import net.microfalx.resource.Resource;
 import org.springframework.beans.factory.InitializingBean;
@@ -23,11 +24,9 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 @Service
 public class TemplateService implements InitializingBean {
 
-    @Autowired
-    private TemplateProperties properties;
-
-    @Autowired
-    private MetadataService metadataService;
+    @Autowired private TemplateProperties properties;
+    @Autowired private MetadataService metadataService;
+    @Autowired private ResourceService resourceService;
 
     private LoadingCache<String, Template> cache;
 
@@ -126,8 +125,8 @@ public class TemplateService implements InitializingBean {
     private Template doGetTemplate(Template.Type type, Resource resource) throws IOException {
         return TemplateUtils.METRICS.timeCallable("Get Template", () -> {
             return switch (type) {
-                case MVEL -> new MvelTemplate<>(resource);
-                case THYMELEAF -> new ThymeleafTemplate(resource);
+                case MVEL -> new MvelTemplate<>(this, resource);
+                case THYMELEAF -> new ThymeleafTemplate(this, resource);
             };
         });
     }
