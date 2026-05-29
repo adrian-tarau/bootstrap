@@ -88,7 +88,7 @@ public class ApplicationDialect extends AbstractProcessorDialect {
                 userInfo.resetPassword = userDetails.isResetPassword();
                 userInfo.imageUrl = userDetails.getImageUrl();
                 if (isEmpty(userInfo.imageUrl) && isNotEmpty(userInfo.email)) {
-                    userInfo.imageUrl =  new Gravatar(userInfo.email).getUrl();
+                    userInfo.imageUrl = new Gravatar(userInfo.email).getUrl();
                 }
             }
         }
@@ -135,6 +135,8 @@ public class ApplicationDialect extends AbstractProcessorDialect {
             if (csrf != null) {
                 csrf = new DefaultCsrfToken(csrf.getHeaderName(), csrf.getParameterName(), csrf.getToken());
                 builder.append("\nconst APP_CSRF=").append(linkTool.toJson(csrf)).append(";");
+            } else {
+                builder.append("\nconst APP_CSRF=false").append(";");
             }
             String timeZone = containerRequest.hasTimeZone() ? containerRequest.getTimeZone().getId() : EMPTY_STRING;
             builder.append("\nconst APP_TIME_ZONE=\"").append(timeZone).append("\";");
