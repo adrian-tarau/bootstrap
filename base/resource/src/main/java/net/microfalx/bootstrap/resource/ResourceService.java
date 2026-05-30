@@ -166,6 +166,7 @@ public class ResourceService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         initializeDirectories();
         initializeClassPath();
+        logOptions();
     }
 
     private void initializeDirectories() {
@@ -214,6 +215,12 @@ public class ResourceService implements InitializingBean {
             if (!directory.exists()) directory.create();
         } catch (IOException e) {
             throw new ResourceException("Directory " + directory + " cannot be created", e);
+        }
+    }
+
+    private void logOptions() {
+        if (properties.isDebug()) {
+            LOGGER.warn("Classpath resources are in debug mode. Do not enable debug mode in production");
         }
     }
 }

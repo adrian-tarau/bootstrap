@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.template;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.model.Attributes;
 import net.microfalx.bootstrap.model.Field;
 import net.microfalx.bootstrap.model.Metadata;
@@ -17,10 +18,12 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.FormatterUtils.formatDuration;
 
 /**
  * A service used to evaluate templates/expressions.
  */
+@Slf4j
 @Service
 public class TemplateService implements InitializingBean {
 
@@ -115,11 +118,20 @@ public class TemplateService implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         createCache();
+        logOptions();
     }
 
     private void createCache() {
         cache = CacheBuilder.newBuilder().expireAfterWrite(properties.getCacheExpiration())
                 .maximumSize(5000).softValues().build(CacheLoader.from(() -> null));
+    }
+
+    private void logOptions() {
+        if (properties.isCached()) {
+            LOGGER.info("Template caching is enabled with expiration of {}", formatDuration(properties.getCacheExpiration()));
+        } else {
+            LOGGER.warn("Template caching is disabled. Do not disable template caching in production");
+        }
     }
 
     private Template doGetTemplate(Template.Type type, Resource resource) throws IOException {
