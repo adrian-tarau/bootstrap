@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.template;
 
 import net.microfalx.bootstrap.resource.ResourceService;
+import net.microfalx.bootstrap.template.TemplateProperties;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafProperties;
@@ -18,6 +19,7 @@ public class TemplateConfiguration {
     @Autowired private ThymeleafProperties properties;
     @Autowired private ApplicationContext applicationContext;
     @Autowired private ResourceService resourceService;
+    @Autowired(required = false) private TemplateProperties templateProperties = new TemplateProperties();
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -31,6 +33,7 @@ public class TemplateConfiguration {
         if (this.properties.getEncoding() != null) {
             resolver.setCharacterEncoding(this.properties.getEncoding().name());
         }
+        properties.setCache(templateProperties.isCached());
         resolver.setCacheable(this.properties.isCache());
         resolver.setCheckExistence(this.properties.isCheckTemplate());
         return resolver;

@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.resource;
 
+import net.microfalx.bootstrap.core.config.BootstrapProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +18,8 @@ import static net.microfalx.resource.ResourceUtils.toDirectory;
 @Configuration
 @ConfigurationProperties("bootstrap.resource")
 public class ResourceProperties {
+
+    @Autowired(required = false) private BootstrapProperties bootstrap;
 
     @Value(PERSISTED_PATH)
     private String persistedDirectory;
@@ -49,7 +53,7 @@ public class ResourceProperties {
      * @return {@code true} if debug mode, {@code false} otherwise
      */
     public boolean isDebug() {
-        return debug;
+        return debug || bootstrap.isDebug();
     }
 
     /**

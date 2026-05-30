@@ -69,6 +69,7 @@ final class AssetBundleManager {
     void initialize(ApplicationContext applicationContext, AssetProperties assetProperties) {
         this.applicationContext = applicationContext;
         this.assetProperties = assetProperties;
+        logOptions();
     }
 
     Theme getTheme(String idOrName) {
@@ -266,6 +267,12 @@ final class AssetBundleManager {
     private void waitForBundlesToLoad() {
         if (!ConcurrencyUtils.await(latch, Duration.ofMinutes(5))) {
             LOGGER.warn("Timed out waiting for bundles to load");
+        }
+    }
+
+    private void logOptions() {
+        if (assetProperties.isDebug()) {
+            LOGGER.warn("Asset management is in debug mode. Do not enable debug mode in production");
         }
     }
 
