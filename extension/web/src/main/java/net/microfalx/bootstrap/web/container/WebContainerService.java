@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.container;
 
 import jakarta.servlet.ServletContext;
+import net.microfalx.bootstrap.web.util.HttpServletUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -47,5 +48,9 @@ public final class WebContainerService {
             fullPath += "?" + URLEncodedUtils.format(pairs, StandardCharsets.UTF_8);
         }
         return fullPath;
+    }
+
+    static {
+        HttpServletUtils.init();
     }
 }

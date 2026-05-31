@@ -54,6 +54,13 @@ class FailureTest {
         assertEquals(Failure.Type.CORRUPTED_DATA, Failure.getType(new MyException("Bad")));
     }
 
+    @Test
+    void withDeferred() {
+        Failure.registerSubType(Failure.Type.CORRUPTED_DATA, MyException.class);
+        assertEquals(Failure.Type.CORRUPTED_DATA, Failure.getType(new IOException(new MySubException("Bad"))));
+        assertEquals(Failure.Type.CORRUPTED_DATA, Failure.getType(new MyException("Bad")));
+    }
+
     public static class MyException extends RuntimeException {
 
         public MyException(String message) {
