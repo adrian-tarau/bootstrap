@@ -12,6 +12,7 @@
             <th scope="col">Failure Type</th>
             <th scope="col" class="text-center">Total Count</th>
             <th scope="col" class="text-center">Pending Count</th>
+            <th scope="col">Message</th>
         </tr>
         </thead>
         <tbody>
@@ -22,6 +23,7 @@
             <td><span th:text="${alert.failureType}"></span></td>
             <td class="text-center"><span th:text="${helper.formatNumber(alert.totalEventCount)}"></span></td>
             <td class="text-center"><span th:text="${helper.formatNumber(alert.pendingEventCount)}"></span></td>
+            <td><span th:text="${helper.toDisplay(alert.message, 200)}"></span></td>
         </tr>
         </tbody>
     </table>
