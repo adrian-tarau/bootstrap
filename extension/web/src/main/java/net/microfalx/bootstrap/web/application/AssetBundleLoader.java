@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.lang.XmlUtils.*;
 
@@ -26,14 +27,21 @@ final class AssetBundleLoader {
 
     private final AssetBundleManager assetBundleManager;
     private static final Map<String, Asset.Type> resourceTypeMapping = new HashMap<>();
+    private Theme.Mode themeMode = Theme.Mode.LIGHT;
 
     AssetBundleLoader(AssetBundleManager assetBundleManager) {
         this.assetBundleManager = assetBundleManager;
     }
 
+    AssetBundleLoader setThemeMode(Theme.Mode themeMode) {
+        requireNonNull(themeMode);
+        this.themeMode = themeMode;
+        return this;
+    }
+
     void load() {
         LOGGER.debug("Discover assets from web descriptors");
-        Collection<URL> webDescriptors = null;
+        Collection<URL> webDescriptors;
         try {
             webDescriptors = ApplicationUtils.getAssetDescriptors();
             for (URL webDescriptor : webDescriptors) {
@@ -69,7 +77,7 @@ final class AssetBundleLoader {
         try {
             theme = assetBundleManager.getTheme(name);
         } catch (ApplicationException e) {
-            theme = Theme.builder(name).build();
+            theme = Theme.builder(name).mode(themeMode).build();
             assetBundleManager.registerTheme(theme);
         }
         return theme;
