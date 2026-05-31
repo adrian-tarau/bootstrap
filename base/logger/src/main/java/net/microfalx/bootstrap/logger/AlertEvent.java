@@ -2,7 +2,6 @@ package net.microfalx.bootstrap.logger;
 
 import lombok.*;
 import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.TimeUtils;
 import net.microfalx.lang.Timestampable;
 
@@ -10,6 +9,8 @@ import java.time.LocalDateTime;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseName;
+import static net.microfalx.lang.StringUtils.NA_STRING;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
  * An alert with counts.
@@ -67,7 +68,7 @@ public class AlertEvent implements Identifiable<String>, Timestampable<LocalDate
             if (timestamp > modifiedAt) modifiedAt = timestamp;
         }
         failureClass = event.getExceptionClassName();
-        failureType = StringUtils.isNotEmpty(failureClass) ? getRootCauseName(failureClass) : null;
+        failureType = isNotEmpty(failureClass) ? getRootCauseName(failureClass) : NA_STRING;
         acknowledged = false;
         totalEventCount++;
         pendingEventCount++;
