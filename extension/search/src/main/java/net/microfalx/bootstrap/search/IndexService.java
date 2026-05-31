@@ -1,6 +1,5 @@
 package net.microfalx.bootstrap.search;
 
-import jakarta.annotation.PreDestroy;
 import net.microfalx.bootstrap.content.ContentService;
 import net.microfalx.bootstrap.core.async.ThreadPoolFactory;
 import net.microfalx.bootstrap.resource.ResourceService;
@@ -17,6 +16,7 @@ import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.InfoStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.support.RetryTemplate;
@@ -48,7 +48,7 @@ import static net.microfalx.lang.StringUtils.toIdentifier;
  * Provides indexing capabilities for full text search.
  */
 @Service
-public class IndexService implements InitializingBean {
+public class IndexService implements InitializingBean, DisposableBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexService.class);
 
@@ -312,8 +312,8 @@ public class IndexService implements InitializingBean {
         openIndexer();
     }
 
-    @PreDestroy
-    protected void destroy() {
+    @Override
+    public void destroy() {
         commitIndex();
         releaseIndex();
     }
