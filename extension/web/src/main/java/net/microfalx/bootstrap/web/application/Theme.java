@@ -68,6 +68,24 @@ public final class Theme implements Identifiable<String>, Nameable, Cloneable {
         return unmodifiableCollection(assetBundles);
     }
 
+    /**
+     * Returns whether the theme uses the light mode.
+     *
+     * @return {@code true} if light mode, {@code false} otherwise
+     */
+    public boolean isLight() {
+        return mode == Mode.LIGHT;
+    }
+
+    /**
+     * Returns whether the theme uses the dark mode.
+     *
+     * @return {@code true} if dark mode, {@code false} otherwise
+     */
+    public boolean isDark() {
+        return mode == Mode.DARK;
+    }
+
     void addAssetBundle(AssetBundle assetBundle) {
         requireNonNull(assetBundle);
         this.assetBundles.add(assetBundle);

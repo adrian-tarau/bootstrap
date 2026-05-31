@@ -3,6 +3,8 @@ package net.microfalx.bootstrap.support;
 import jakarta.annotation.security.RolesAllowed;
 import net.microfalx.bootstrap.support.report.Report;
 import net.microfalx.bootstrap.support.report.ReportService;
+import net.microfalx.bootstrap.web.application.ApplicationService;
+import net.microfalx.bootstrap.web.application.Theme;
 import net.microfalx.bootstrap.web.application.annotation.SystemTheme;
 import net.microfalx.bootstrap.web.controller.PageController;
 import net.microfalx.resource.Resource;
@@ -18,11 +20,12 @@ import org.springframework.web.bind.annotation.*;
 public class ReportController extends PageController {
 
     @Autowired private ReportService reportService;
+    @Autowired private ApplicationService applicationService;
 
     @GetMapping("")
     @ResponseBody
     public String home() {
-        Report report = reportService.createReport();
+        Report report = createReport();
         Resource reportBody = Resource.temporary("report", "html");
         try {
             report.render(reportBody);
@@ -35,7 +38,7 @@ public class ReportController extends PageController {
     @GetMapping("{id}")
     @ResponseBody
     public String fragment(@PathVariable("id") String id, @RequestParam(value = "dynamic", defaultValue = "true") boolean dynamic) {
-        Report report = reportService.createReport();
+        Report report = createReport();
         report.setFragment(id).setDynamic(dynamic);
         Resource reportBody = Resource.temporary("report_export", ".html");
         try {
@@ -44,5 +47,12 @@ public class ReportController extends PageController {
         } catch (Exception e) {
             return "Error generating report: " + ExceptionUtils.getRootCauseMessage(e);
         }
+    }
+
+    private Report createReport() {
+        Report report = reportService.createReport();
+        Theme theme = applicationService.getCurrentTheme();
+        report.setTheme(theme.isLight() ? Report.Theme.LIGHT : Report.Theme.DARK);
+        return report;
     }
 }

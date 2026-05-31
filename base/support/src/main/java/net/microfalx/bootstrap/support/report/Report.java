@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.support.report;
 
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.Nameable;
+import net.microfalx.resource.ClassPathResource;
 import net.microfalx.resource.Resource;
 
 import java.io.IOException;
@@ -12,11 +14,13 @@ import java.util.function.Supplier;
 import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
 import static net.microfalx.lang.ExceptionUtils.rethrowException;
 
 /**
  * Holds the system report.
  */
+@Slf4j
 public class Report implements Nameable {
 
     private final ReportService reportService;
@@ -28,6 +32,7 @@ public class Report implements Nameable {
     private boolean offline = true;
     private boolean dynamic = true;
     private String fragment;
+    private Theme theme = Theme.DARK;
     private final List<Fragment> fragments = new ArrayList<>();
     private final Map<String, Object> attributes = new HashMap<>();
 
@@ -180,6 +185,27 @@ public class Report implements Nameable {
     }
 
     /**
+     * Returns the theme of the report.
+     *
+     * @return a non-null instance
+     */
+    public Theme getTheme() {
+        return theme;
+    }
+
+    /**
+     * Changes the theme of the report.
+     *
+     * @param theme the new theme
+     * @return self
+     */
+    public Report setTheme(Theme theme) {
+        requireNonNull(theme);
+        this.theme = theme;
+        return this;
+    }
+
+    /**
      * Returns the fragment identifier to be rendered instead of rendering all fragments.
      *
      * @return the fragment identifier, null to render all fragments
@@ -286,8 +312,18 @@ public class Report implements Nameable {
 
     private void updateTemplate(Template template) {
         template.addVariable("report", this);
+        template.addVariable("theme", getTheme().name().toLowerCase());
         template.addVariable("fragments", getVisibleFragments());
+        updateTemplateResources(template);
         updateCodeFragments(template);
+    }
+
+    private void updateTemplateResources(Template template) {
+        boolean useCdn = isOffline();
+        template.addVariable("useCdn", useCdn);
+        if (useCdn) return;
+        template.addVariable("css", getResources("css/bootstrap/tabler.css"));
+        template.addVariable("js", getResources("css/bootstrap/tabler.js"));
     }
 
     private void updateCodeFragments(Template template) {
@@ -297,6 +333,26 @@ public class Report implements Nameable {
 
     private Collection<Fragment> getVisibleFragments() {
         return fragments.stream().filter(Fragment::isVisible).toList();
+    }
+
+    private String getResources(String... resources) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n");
+        for (String resource : resources) {
+            if (!builder.isEmpty()) builder.append("\n\n");
+            builder.append("/* ").append(resource).append(" */\n\n");
+            try {
+                builder.append(ClassPathResource.file(resource).loadAsString());
+            } catch (IOException e) {
+                LOGGER.warn("Failed to load resource '{}', root cause: {}", resource, getRootCauseDescription(e));
+            }
+        }
+        return builder.toString();
+    }
+
+    public enum Theme {
+        LIGHT,
+        DARK
     }
 
 }
