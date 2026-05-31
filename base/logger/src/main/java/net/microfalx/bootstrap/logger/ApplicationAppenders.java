@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -220,12 +221,15 @@ class ApplicationAppenders {
     }
 
     private void add(ZipOutputStream outputStream, File file) throws IOException {
-        ZipEntry entry = new ZipEntry(file.getName());
+        String name = file.getName();
+        ZipEntry entry = new ZipEntry(name);
         entry.setSize(file.length());
         outputStream.putNextEntry(entry);
         appendStream(outputStream, getBufferedInputStream(file), false);
         outputStream.closeEntry();
-        FileUtils.remove(file);
+        if (!("boot.log".equals(name) || RETAIN_LOG_PATTERN.matcher(name).matches())) {
+            FileUtils.remove(file);
+        }
     }
 
     private boolean acceptLogs(File file) {
@@ -237,5 +241,7 @@ class ApplicationAppenders {
     }
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+
+    private static final Pattern RETAIN_LOG_PATTERN = Pattern.compile("boot\\.(.*)\\.log");
 
 }
