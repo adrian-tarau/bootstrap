@@ -168,7 +168,7 @@ public class ReportService implements InitializingBean {
         } catch (Exception e) {
             throw new ReportException("Failed to render the report for interval " + interval, e);
         }
-        report.setDynamic(false).setFragment("summary");
+        report.setDynamic(false).setOffline(false).setFragment("summary");
         Resource summaryReport = Resource.temporary("report_summary_", ".html");
         try {
             report.render(summaryReport);
