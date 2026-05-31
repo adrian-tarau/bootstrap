@@ -291,6 +291,10 @@ public final class ApplicationService implements InitializingBean {
         return featureService;
     }
 
+    ApplicationProperties getProperties() {
+        return applicationProperties;
+    }
+
     private void appendEndOfTag(StringBuilder builder, Asset.Type type, Resource resource) {
         builder.append(">");
         if (resource != null) {

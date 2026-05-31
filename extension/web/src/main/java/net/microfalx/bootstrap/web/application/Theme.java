@@ -1,26 +1,36 @@
 package net.microfalx.bootstrap.web.application;
 
+import lombok.Getter;
+import lombok.ToString;
+import net.microfalx.lang.EnumUtils;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 
+import static java.util.Collections.unmodifiableCollection;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
+import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.toIdentifier;
 
 /**
  * Holds information about a theme.
  */
-public final class Theme implements Identifiable<String>, Nameable {
+@Getter
+@ToString
+public final class Theme implements Identifiable<String>, Nameable, Cloneable {
 
     public static final String SYSTEM = "adminlte";
     public static final String DEFAULT = "adminlte";
 
     private final String id;
     private final String name;
+    /**
+     * The ode for this theme
+     */
+    private Mode mode = Mode.AUTO;
     private final Collection<AssetBundle> assetBundles = new ArrayList<>();
 
     public static Builder builder(String name) {
@@ -36,18 +46,26 @@ public final class Theme implements Identifiable<String>, Nameable {
         this.name = name;
     }
 
-    @Override
-    public String getId() {
-        return id;
+    /**
+     * Creates a copy of the theme, with a different mode.
+     *
+     * @param mode the new mode
+     * @return a new instance
+     */
+    public Theme withMode(Mode mode) {
+        requireNonNull(mode);
+        Theme copy = copy();
+        copy.mode = mode;
+        return copy;
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
+    /**
+     * Returns the asset bundles associated with the theme.
+     *
+     * @return a non-null instance
+     */
     public Collection<AssetBundle> getAssetBundles() {
-        return Collections.unmodifiableCollection(assetBundles);
+        return unmodifiableCollection(assetBundles);
     }
 
     void addAssetBundle(AssetBundle assetBundle) {
@@ -55,13 +73,37 @@ public final class Theme implements Identifiable<String>, Nameable {
         this.assetBundles.add(assetBundle);
     }
 
-    @Override
-    public String toString() {
-        return "Theme{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", assetBundles=" + assetBundles +
-                '}';
+    private Theme copy() {
+        try {
+            return (Theme) clone();
+        } catch (CloneNotSupportedException e) {
+            return rethrowExceptionAndReturn(e);
+        }
+    }
+
+    /**
+     * An enum for the modes of a theme.
+     */
+    public enum Mode {
+
+        /**
+         * Use the light mode.
+         */
+        LIGHT,
+
+        /**
+         * Use the dark mode.
+         */
+        DARK,
+
+        /**
+         * Use the system mode
+         */
+        AUTO;
+
+        public static Mode of(String mode) {
+            return EnumUtils.fromName(Mode.class, mode, AUTO);
+        }
     }
 
     public static class Builder {
@@ -69,6 +111,7 @@ public final class Theme implements Identifiable<String>, Nameable {
         private String id;
         private final String name;
         private final Collection<AssetBundle> assetBundles = new ArrayList<>();
+        private Mode mode = Mode.AUTO;
 
         Builder(String name) {
             this.name = name;
@@ -81,6 +124,12 @@ public final class Theme implements Identifiable<String>, Nameable {
             return this;
         }
 
+        public Builder mode(Mode mode) {
+            requireNotEmpty(mode);
+            this.mode = mode;
+            return this;
+        }
+
         public Builder assetBundle(AssetBundle assetBundle) {
             requireNonNull(assetBundle);
             this.assetBundles.add(assetBundle);
@@ -89,6 +138,7 @@ public final class Theme implements Identifiable<String>, Nameable {
 
         public Theme build() {
             Theme theme = new Theme(id, name);
+            theme.mode = mode;
             theme.assetBundles.addAll(assetBundles);
             return theme;
         }

@@ -28,9 +28,11 @@ public class ApplicationProperties {
 
     private String theme = Theme.DEFAULT;
 
-    private Map<String, String> domainThemes= Collections.emptyMap();
+    private Map<String, String> domainThemes = Collections.emptyMap();
 
     private String systemTheme;
+
+    private Theme.Mode themeMode = Theme.Mode.LIGHT;
 
     private String version = "1.0.0";
 

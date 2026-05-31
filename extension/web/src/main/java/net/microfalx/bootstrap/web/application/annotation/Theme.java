@@ -24,4 +24,33 @@ public @interface Theme {
      * @return a non-null instance
      */
     String value();
+
+    /**
+     * Returns the  mode for the theme.
+     *
+     * @return a non-null instance
+     */
+    Mode mode() default Mode.AUTO;
+
+    /**
+     * An enum for the modes of a theme.
+     */
+    enum Mode {
+
+        /**
+         * Use the light mode.
+         */
+        LIGHT,
+
+        /**
+         * Use the dark mode.
+         */
+        DARK,
+
+        /**
+         * Use the system mode
+         */
+        AUTO;
+    }
+
 }

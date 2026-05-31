@@ -8,6 +8,7 @@ import net.microfalx.bootstrap.dataset.DataSetService;
 import net.microfalx.bootstrap.search.SearchUtils;
 import net.microfalx.bootstrap.security.userinfo.ExtendedUserDetails;
 import net.microfalx.bootstrap.web.application.ApplicationService;
+import net.microfalx.bootstrap.web.application.Theme;
 import net.microfalx.bootstrap.web.chart.ChartService;
 import net.microfalx.bootstrap.web.container.WebContainerRequest;
 import net.microfalx.bootstrap.web.template.tools.DataSetTool;
@@ -24,8 +25,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.DefaultCsrfToken;
 import org.thymeleaf.context.ITemplateContext;
+import org.thymeleaf.engine.AttributeName;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.IProcessor;
+import org.thymeleaf.processor.element.AbstractAttributeTagProcessor;
 import org.thymeleaf.processor.element.AbstractElementTagProcessor;
 import org.thymeleaf.processor.element.IElementTagStructureHandler;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -64,6 +67,7 @@ public class ApplicationDialect extends AbstractProcessorDialect {
     public Set<IProcessor> getProcessors(String dialectPrefix) {
         Set<IProcessor> processors = new HashSet<>();
         processors.add(new ContextTagProcessor());
+        processors.add(new ThemeModeAttributeProcessor());
         return processors;
     }
 
@@ -104,12 +108,37 @@ public class ApplicationDialect extends AbstractProcessorDialect {
         }
     }
 
+    private abstract class BaseAttributeProcessor extends AbstractAttributeTagProcessor {
+
+        public BaseAttributeProcessor(String attributeName) {
+            super(TemplateMode.HTML, DIALECT_PREFIX, null, true, attributeName, true, PRECEDENCE, true);
+        }
+
+    }
+
     private abstract class BaseTagProcessor extends AbstractElementTagProcessor {
 
         public BaseTagProcessor(String elementName) {
             super(TemplateMode.HTML, DIALECT_PREFIX, elementName, true, null, false, PRECEDENCE);
         }
 
+    }
+
+    private class ThemeModeAttributeProcessor extends BaseAttributeProcessor {
+
+        public ThemeModeAttributeProcessor() {
+            super("theme-mode");
+        }
+
+        @Override
+        protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName, String attributeValue, IElementTagStructureHandler structureHandler) {
+            ApplicationService applicationService = applicationContext.getBean(ApplicationService.class);
+            Theme theme = applicationService.getCurrentTheme();
+            Theme.Mode mode = theme.getMode();
+            if (mode != Theme.Mode.AUTO) {
+                structureHandler.setAttribute("data-bs-theme", mode.name().toLowerCase());
+            }
+        }
     }
 
     private class ContextTagProcessor extends BaseTagProcessor {

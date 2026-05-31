@@ -23,14 +23,9 @@ import static org.mockito.Mockito.doAnswer;
 @ExtendWith(MockitoExtension.class)
 class ApplicationServiceTest {
 
-    @Mock
-    private WebContainerService webContainerService;
-
-    @Spy
-    private ApplicationProperties applicationProperties;
-
-    @InjectMocks
-    private ApplicationService applicationService;
+    @Mock private WebContainerService webContainerService;
+    @Spy private ApplicationProperties applicationProperties;
+    @InjectMocks private ApplicationService applicationService;
 
     @BeforeEach
     void before() throws Exception {

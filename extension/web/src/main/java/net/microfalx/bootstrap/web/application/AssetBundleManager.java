@@ -74,7 +74,7 @@ final class AssetBundleManager {
 
     Theme getTheme(String idOrName) {
         requireNotEmpty(idOrName);
-        Theme theme = themes.get(StringUtils.toIdentifier(idOrName));
+        Theme theme = themes.get(toIdentifier(idOrName));
         if (theme == null) {
             throw new ApplicationException("A theme with identifier or name '" + idOrName + "' is not registered");
         }
@@ -85,7 +85,7 @@ final class AssetBundleManager {
         requireNonNull(theme);
         LOGGER.debug("Register theme {}, name {}", theme.getId(), theme.getName());
         themes.put(theme.getId(), theme);
-        themes.put(StringUtils.toIdentifier(theme.getName()), theme);
+        themes.put(toIdentifier(theme.getName()), theme);
     }
 
     void registerAssetBundle(AssetBundle assetBundle) {
@@ -112,7 +112,7 @@ final class AssetBundleManager {
 
     AssetBundle getAssetBundle(String id) {
         requireNonNull(id);
-        AssetBundle assetBundle = bundles.get(StringUtils.toIdentifier(id));
+        AssetBundle assetBundle = bundles.get(toIdentifier(id));
         if (assetBundle == null) {
             throw new ApplicationException("An asset bundle with identifier '" + id + "' is not registered");
         }
@@ -194,7 +194,8 @@ final class AssetBundleManager {
     }
 
     void load() {
-        AssetBundleLoader loader = new AssetBundleLoader(this);
+        AssetBundleLoader loader = new AssetBundleLoader(this)
+                .setThemeMode(applicationService.getProperties().getThemeMode());
         loader.load();
     }
 
