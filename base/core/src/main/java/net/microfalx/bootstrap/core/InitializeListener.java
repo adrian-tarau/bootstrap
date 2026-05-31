@@ -9,6 +9,7 @@ import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.boot.context.event.ApplicationStartingEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 
@@ -25,7 +26,8 @@ public class InitializeListener implements ApplicationListener<ApplicationEvent>
         if (event instanceof ApplicationStartingEvent) {
             logJvmInfo();
             beforeStarting();
-        } else if (event instanceof ApplicationStartedEvent) {
+        } else if (event instanceof ApplicationStartedEvent startedEvent) {
+            initShutdownHook(startedEvent.getApplicationContext());
             logOptions();
         } else if (event instanceof ApplicationEnvironmentPreparedEvent environmentPreparedEvent) {
             environment = environmentPreparedEvent.getEnvironment();
@@ -55,5 +57,9 @@ public class InitializeListener implements ApplicationListener<ApplicationEvent>
         if (environment.getProperty("bootstrap.debug", Boolean.class, false)) {
             LOGGER.warn("Bootstrap debug mode is enabled. Do not enable debug mode in production since it will slow down the application");
         }
+    }
+
+    private void initShutdownHook(ConfigurableApplicationContext applicationContext) {
+        applicationContext.registerShutdownHook();
     }
 }

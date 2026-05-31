@@ -52,17 +52,10 @@ public class IndexService implements InitializingBean, DisposableBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexService.class);
 
-    @Autowired(required = false)
-    private SearchProperties searchProperties = new SearchProperties();
-
-    @Autowired(required = false)
-    private IndexProperties indexProperties = new IndexProperties();
-
-    @Autowired
-    private ResourceService resourceService;
-
-    @Autowired
-    private ContentService contentService;
+    @Autowired(required = false) private SearchProperties searchProperties = new SearchProperties();
+    @Autowired(required = false) private IndexProperties indexProperties = new IndexProperties();
+    @Autowired private ResourceService resourceService;
+    @Autowired private ContentService contentService;
 
     private volatile ThreadPool threadPool;
 
