@@ -36,6 +36,10 @@ public class HttpServletUtils {
         return forwardedHost;
     }
 
+    public static void init() {
+        // do nothing, used to warmup statics
+    }
+
     static {
         Failure.registerType(Failure.Type.RESOURCE_NOT_FOUND, NoResourceFoundException.class);
         Failure.registerType(Failure.Type.RESOURCE_NOT_FOUND, NoHandlerFoundException.class);

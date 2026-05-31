@@ -30,6 +30,7 @@ import java.util.jar.JarException;
 import java.util.zip.DataFormatException;
 import java.util.zip.ZipException;
 
+import static net.microfalx.bootstrap.core.utils.Failure.Type.INTERNAL_ERROR;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
@@ -65,7 +66,7 @@ public final class Failure {
      * @return a non-null instance
      */
     public static Failure of(Throwable throwable) {
-        if (throwable == null) return new Failure(Type.INTERNAL_ERROR, null);
+        if (throwable == null) return new Failure(INTERNAL_ERROR, null);
         return new Failure(getType(throwable), throwable);
     }
 
@@ -181,19 +182,32 @@ public final class Failure {
      * @return the failure description
      */
     public static Failure.Type getType(Throwable throwable) {
-        if (throwable == null) return Failure.Type.INTERNAL_ERROR;
+        if (throwable == null) return INTERNAL_ERROR;
         List<Throwable> throwableList = org.apache.commons.lang3.exception.ExceptionUtils.getThrowableList(throwable);
         Collections.reverse(throwableList);
-        for (Throwable chainedThrowable : throwableList) {
-            Throwable unwrapThrowable = unwrapThrowable(chainedThrowable);
+        Failure.Type type = getType(throwableList, false);
+        if (type == null) type = getType(throwableList, true);
+        if (type == null) {
+            type = INTERNAL_ERROR;
+            registerMissing(throwable);
+        }
+        return type;
+    }
+
+    private static Failure.Type getType(Collection<Throwable> throwableList, boolean deferred) {
+        for (Throwable throwable : throwableList) {
+            Throwable unwrapThrowable = unwrapThrowable(throwable);
             Class<? extends Throwable> unwrapThrowableClass = unwrapThrowable.getClass();
             Failure.Type type = exceptionTypes.get(unwrapThrowableClass);
-            if (type != null && type != Failure.Type.INTERNAL_ERROR) return registerMapped(type);
+            if (type != null && type.isDeferred() == deferred && type != INTERNAL_ERROR) {
+                return registerMapped(type);
+            }
             type = resolveType(unwrapThrowable);
-            if (type != null && type != Failure.Type.INTERNAL_ERROR) return registerMapped(type);
+            if (type != null && type.isDeferred() == deferred && type != INTERNAL_ERROR) {
+                return registerMapped(type);
+            }
         }
-        registerMissing(throwable);
-        return Failure.Type.INTERNAL_ERROR;
+        return null;
     }
 
     /**
@@ -288,7 +302,7 @@ public final class Failure {
 
         registerType(Type.SERVICE_UNAVAILABLE, ServiceUnavailableException.class);
 
-        registerType(Type.INTERNAL_ERROR, NullPointerException.class);
+        registerType(INTERNAL_ERROR, NullPointerException.class);
     }
 
     static {
@@ -322,80 +336,80 @@ public final class Failure {
         /**
          * A category for network accessibility failures (a service cannot be reached, etc).
          */
-        CONNECTIVITY(true, true),
+        CONNECTIVITY(true, true, true),
 
         /**
          * A category for network-related failures that are not necessarily connectivity issues, such as I/O exceptions,
          * socket exceptions, etc.
          */
-        NETWORK(true, true),
+        NETWORK(true, true, true),
 
         /**
          * A category for network/service timeout failures (it can be reached, but it doesn't respond in a timely manner).
          */
-        TIMED_OUT(true, true),
+        TIMED_OUT(true, true, true),
 
         /**
          * A category for authentication failures (wrong credentials, cannot perform authentication, etc).
          */
-        AUTHENTICATION(false, false),
+        AUTHENTICATION(false, false, false),
 
         /**
          * A category for authorization failures (access denied, not enough privileges, etc).
          */
-        AUTHORIZATION(false, false),
+        AUTHORIZATION(false, false, false),
 
         /**
          * A category for service availability.
          */
-        SERVICE_UNAVAILABLE(true, true),
+        SERVICE_UNAVAILABLE(true, true, false),
 
         /**
          * A category for system capacity limits (too many requests in a given amount of time). Intended for use with rate limiting schemes.
          */
-        OVERLOAD(true, true),
+        OVERLOAD(true, true, false),
 
         /**
          * A category for missing resources (file, etc).
          */
-        RESOURCE_NOT_FOUND(false, false),
+        RESOURCE_NOT_FOUND(false, false, false),
 
         /**
          * A category for temporary unavailability of an existing resource due to resource being busy (used by another process).
          */
-        RESOURCE_BUSY(true, true),
+        RESOURCE_BUSY(true, true, false),
 
         /**
          * A category for temporary unavailability of a resource due to unknown causes.
          */
-        RESOURCE_UNAVAILABLE(true, true),
+        RESOURCE_UNAVAILABLE(true, true, false),
 
         /**
          * Data access exceptions that are considered transient - where a previously failed operation might be able to succeed when the operation
          * is retried without any intervention by application-level functionality.
          */
-        TRANSIENT_DATA_ACCESS(true, true),
+        TRANSIENT_DATA_ACCESS(true, true, false),
 
         /**
          * Data access exceptions that are considered non-transient - where a retry of the same operation would fail unless the cause of the Exception
          * is corrected.
          */
-        NON_TRANSIENT_DATA_ACCESS(false, false),
+        NON_TRANSIENT_DATA_ACCESS(false, false, false),
 
         /**
          * A category for all data corruption failures (cannot open archives & other formats, etc).
          */
-        CORRUPTED_DATA(false, false),
+        CORRUPTED_DATA(false, false, false),
 
         /**
          * A category for failures due to storage unavailability (file system, database storage, memory storage, etc).
          */
-        INSUFFICIENT_STORAGE(true, true),
+        INSUFFICIENT_STORAGE(true, true, false),
 
         /**
          * A category for failures due to application misconfiguration.
          */
-        CONFIGURATION(false, false),
+        CONFIGURATION(false, false, false),
 
         /**
          * A category for failures due to invalid input when performing an action. It is different from <code>CORRUPTED_DATA</code> because it doesn't
@@ -407,42 +421,44 @@ public final class Failure {
          * </ul>
          * This failure is not recoverable without manual intervention (correcting a configuration, patching the application, etc).
          */
-        ILLEGAL_INPUT(false, false),
+        ILLEGAL_INPUT(false, false, false),
 
         /**
          * A category for failures due to an invalid output when performing an action. This failure is not recoverable
          * without manual intervention (correcting a configuration, patching the application, etc).
          */
-        ILLEGAL_OUTPUT(false, false),
+        ILLEGAL_OUTPUT(false, false, false),
 
         /**
          * A category for failures due to conflict in the request, such as an edit conflict (version conflict) or a constraint violation.
          */
-        CONFLICT(false, true),
+        CONFLICT(false, true, false),
 
         /**
          * A category for "failures" which should not considered failures and they should be treated as
          * "abort/cancel current operation" and report no failure.
          */
-        ABORT(false, false),
+        ABORT(false, false, false),
 
         /**
          * A category for "failures" which should not considered failures and they should be treated as
          * "client asks for a reset" and retried.
          */
-        RESET(true, true),
+        RESET(true, true, false),
 
         /**
          * A category for any other types of failures (usually bugs).
          */
-        INTERNAL_ERROR(false, false);
+        INTERNAL_ERROR(false, false, false);
 
-        private final boolean retriable;
         private final boolean _transient;
+        private final boolean retriable;
+        private final boolean deferred;
 
-        Type(boolean _transient, boolean retriable) {
+        Type(boolean _transient, boolean retriable, boolean deferred) {
             this._transient = _transient;
             this.retriable = retriable;
+            this.deferred = deferred;
             if (_transient && !retriable) {
                 throw new IllegalArgumentException("A transient failure should be retriable, name " + name());
             }
@@ -465,6 +481,15 @@ public final class Failure {
          */
         public boolean isTransient() {
             return _transient;
+        }
+
+        /**
+         * Returns whether this type of failure should be deferred after other failure types were resolved first.
+         *
+         * @return {@code true} if the failure should be deferred, {@code false} otherwise
+         */
+        public boolean isDeferred() {
+            return deferred;
         }
 
         /**
