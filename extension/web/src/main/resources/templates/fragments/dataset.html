@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:component="https://net.microfalx/component" xmlns:chart="https://net.microfalx/chart">
 <body>
 
-<thead class="table-light" th:fragment="grid-header">
+<thead th:class="${#bootstrap.isLightTheme()} ? 'table-light' : 'table-dark'" th:fragment="grid-header">
 <tr th:if="${#dataset.hasColumnGroups()}">
     <th scope="col" class="text-right align-middle" rowspan="2">#</th>
     <th scope="col" th:each="group : ${#dataset.getColumnGroupsFirstRow()}" th:class="${#dataset.getHeaderClass(group)}" th:style="${#dataset.getHeaderStyle(group)}"
@@ -109,7 +109,7 @@
             </div>
             <form class="d-flex" role="search" th:attr="onsubmit='return DataSet.search()'">
                 <div id="daterange" th:if="${hasTimeRange}" class="form-control me-2 text-nowrap"
-                     style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%"
+                     style="cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%"
                      component:tooltip-text="A time interval used to restrict the number of records">
                     <i class="fa fa-calendar"></i>&nbsp;
                     <span></span> <i class="fa fa-caret-down"></i>

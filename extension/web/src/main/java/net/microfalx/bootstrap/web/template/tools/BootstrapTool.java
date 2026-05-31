@@ -1,5 +1,7 @@
 package net.microfalx.bootstrap.web.template.tools;
 
+import net.microfalx.bootstrap.web.application.ApplicationService;
+import net.microfalx.bootstrap.web.application.Theme;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
@@ -24,5 +26,28 @@ public class BootstrapTool extends AbstractTool {
             css = "active";
         }
         return css;
+    }
+
+    /**
+     * Returns whether the theme asks for dark mode.
+     *
+     * @return {@code true} if dark mode, {@code false} otherwise
+     */
+    public boolean isDarkTheme() {
+        return getTheme().getMode() == Theme.Mode.DARK;
+    }
+
+    /**
+     * Returns whether the theme asks for light mode.
+     *
+     * @return {@code true} if light mode, {@code false} otherwise
+     */
+    public boolean isLightTheme() {
+        return getTheme().getMode() == Theme.Mode.LIGHT;
+    }
+
+    private Theme getTheme() {
+        ApplicationService applicationService = applicationContext.getBean(ApplicationService.class);
+        return applicationService.getCurrentTheme();
     }
 }
