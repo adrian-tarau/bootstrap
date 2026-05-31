@@ -3,12 +3,14 @@ package net.microfalx.bootstrap.jdbc.support.mysql;
 import net.microfalx.bootstrap.jdbc.support.*;
 import net.microfalx.resource.Resource;
 
+import java.sql.Types;
 import java.util.Set;
 
 public class MySqlSchema extends AbstractSchema {
 
     public MySqlSchema(Database database) {
         super(database);
+        initJdbcTypes();
     }
 
     @Override
@@ -46,6 +48,10 @@ public class MySqlSchema extends AbstractSchema {
     @Override
     protected Script createScript(Resource resource) {
         return new MySqlScript(this, resource);
+    }
+
+    private void initJdbcTypes() {
+        registerJdbcType("datetime", Types.TIMESTAMP);
     }
 
     private static final String GET_TABLE_NAMES_SQL = "select table_name from information_schema.tables where table_schema = ?";
