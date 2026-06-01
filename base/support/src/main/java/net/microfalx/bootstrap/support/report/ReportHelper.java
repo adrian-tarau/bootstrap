@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.support.report;
 
 import net.microfalx.lang.*;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -61,6 +62,21 @@ public class ReportHelper {
 
     public String toDisplay(Object value, int maxLength) {
         return TextUtils.abbreviateMiddle(toDisplay(value), maxLength);
+    }
+
+    public String toSummary(Object value) {
+        return toSummary(value, 5);
+    }
+
+    public String toSummary(Object value, int maxLength) {
+        String text = toDisplay(value);
+        String[] parts = StringUtils.split(text, " ");
+        String[] remaining = ArrayUtils.subarray(parts, 0, maxLength);
+        String scrambled = String.join(" ", remaining).trim();
+        if (parts.length > remaining.length) {
+            scrambled += "...";
+        }
+        return scrambled;
     }
 
     @SuppressWarnings("unchecked")
