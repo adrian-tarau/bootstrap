@@ -80,6 +80,13 @@
     <h3 th:replace="~{fragments/utils :: h2('Environment')}"></h3>
     <div class="container-fluid">
         <div class="row justify-content-start g-0">
+            <div class="col-4">Application</div>
+            <div class="col-8">
+                <span th:text="${application.name}"></span>, Version: <span th:text="${application.version}"/>
+                , Build Number: <span th:text="${application.buildNumber}"/>, Build Time: <span th:text="${application.buildTime}"/>
+            </div>
+        </div>
+        <div class="row justify-content-start g-0">
             <div class="col-4">Server</div>
             <div class="col-8">
                 Average CPU: <span th:text="${helper.formatPercent(environment.getAverageServerCpu())}"></span>
