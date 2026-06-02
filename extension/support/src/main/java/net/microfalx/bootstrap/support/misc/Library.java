@@ -24,41 +24,41 @@ public class Library extends NamedIdentityAware<String> {
     @Position(20)
     @Label(value = "Vendor", group = "Implementation")
     @Description("The vendor which provides the library or specification (API)")
-    @Width("200px")
+    @Width("140px")
     private String vendor;
 
     @Position(21)
     @Label(value = "Version", group = "Implementation")
     @Description("The version of the library implementation or specification (API)")
-    @Width("80px")
+    @Width("75px")
     @Filterable
     private String version;
 
     @Position(22)
     @Label(value = "Build", group = "Implementation")
     @Description("The build number/commit hash of the library implementation or specification (API)")
-    @Width("80px")
+    @Width("85px")
     @Filterable
     private String build;
 
     @Position(22)
-    @Label(value = "Number", group = "Build")
+    @Label(value = "No", group = "Build")
     @Description("The build number (commit hash) of the library")
-    @Width("80px")
+    @Width("70px")
     @Filterable
     private String buildNumber;
 
     @Position(30)
     @Label(value = "Time", group = "Build")
     @Description("The build time of the library")
-    @Width("80px")
+    @Width("120px")
     @Filterable
     private String buildTime;
 
     @Position(60)
     @Label(value = "Name", group = "File")
     @Description("The file name of the library")
-    @Width("180px")
+    @Width("220px")
     @Filterable
     private String fileName;
 
@@ -73,13 +73,13 @@ public class Library extends NamedIdentityAware<String> {
     @Label(value = "Modified At", group = "File")
     @Description("The modification time of the library")
     @Formattable(tooltip = Formatters.LastAccessedTooltip.class, elapsed = true)
-    @Width("120px")
+    @Width("110px")
     private LocalDateTime fileLastModified;
 
     @Position(63)
     @Label(value = "Info")
     @Description("The additional attributes/information available for the library")
-    @Width("40px")
+    @Width("50px")
     @Formattable(alert = InfoProvider.class)
     private String info;
 
