@@ -38,7 +38,7 @@
     <h1 class="h2" th:text="${title}"></h1>
 </div>
 
-<aside th:fragment="navigation" class="navbar navbar-vertical navbar-expand-sm" style="width: 18rem">
+<aside th:fragment="navigation" class="navbar navbar-vertical navbar-expand-sm" style="width: 18rem" data-bs-theme="dark">
     <div class="container-fluid">
         <h1 class="navbar-brand navbar-brand-autodark">
             <i class="fa-solid fa-cube fs-8"></i>
@@ -59,7 +59,7 @@
     </div>
 </aside>
 
-<div th:fragment="content" class="container-fluid">
+<div th:fragment="content" class="container-fluid mt-3">
     <div class="row row-deck row-cards">
         <div th:id="${fragment.id}" class="col-lg-12" th:each="fragment : ${fragments}">
             <div th:if="${fragment.rendered}" class="card">
