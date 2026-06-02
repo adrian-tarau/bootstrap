@@ -20,6 +20,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.time.ZoneId;
@@ -30,8 +31,7 @@ import java.util.regex.Pattern;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
-import static net.microfalx.lang.StringUtils.defaultIfNull;
-import static net.microfalx.lang.StringUtils.isNotEmpty;
+import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TextUtils.insertSpaces;
 
 /**
@@ -267,7 +267,7 @@ public final class ApplicationService implements InitializingBean {
                 }
                 if (asset.isAsync()) builder.append(" async");
                 if (asset.isDefer()) builder.append(" defer");
-                if (StringUtils.isNotEmpty(asset.getOnLoad())) {
+                if (isNotEmpty(asset.getOnLoad())) {
                     builder.append(" onload=\"").append(asset.getOnLoad()).append('"');
                 }
             }
@@ -425,12 +425,14 @@ public final class ApplicationService implements InitializingBean {
 
     @EventListener(ApplicationStartedEvent.class)
     public void onStart(ApplicationStartedEvent event) {
+        LOGGER.info("Started application, version: {}, build number: {}, build time: {}",
+                application.getVersion(), application.getBuildNumber(), application.getBuildTime());
         assetBundleManager.loadDynamic();
     }
 
     private void initTheme() {
         application.theme = getTheme(defaultIfNull(applicationProperties.getTheme(), Theme.DEFAULT));
-        if (StringUtils.isNotEmpty(applicationProperties.getSystemTheme())) {
+        if (isNotEmpty(applicationProperties.getSystemTheme())) {
             application.theme = getTheme(defaultIfNull(applicationProperties.getSystemTheme(), Theme.SYSTEM));
         } else {
             application.systemTheme = application.theme;
@@ -462,7 +464,40 @@ public final class ApplicationService implements InitializingBean {
         application.owner = applicationProperties.getOwner();
         application.url = applicationProperties.getUrl();
         application.logo = applicationProperties.getLogo();
-        application.version = defaultIfNull(applicationProperties.getVersion(), "1.0.0");
+        application.version = getVersion();
+        application.buildNumber = getBuildNumber();
+        application.buildTime = getBuildTime();
+    }
+
+    private String getVersion() {
+        String version = System.getenv("APP_VERSION");
+        if (isNotEmpty(version)) return version;
+        version = loadFromHomeFile(".version");
+        return defaultIfEmpty(version, defaultIfNull(applicationProperties.getVersion(), "1.0.0"));
+    }
+
+    private String getBuildNumber() {
+        String buildNumber = System.getenv("APP_BUILD_NUMBER");
+        if (isNotEmpty(buildNumber)) return buildNumber;
+        buildNumber = loadFromHomeFile(".build-number");
+        return defaultIfEmpty(buildNumber, NA_STRING);
+    }
+
+    private String getBuildTime() {
+        String buildNumber = System.getenv("APP_BUILD_TIME");
+        if (isNotEmpty(buildNumber)) return buildNumber;
+        buildNumber = loadFromHomeFile(".build-time");
+        return defaultIfEmpty(buildNumber, NA_STRING);
+    }
+
+    private String loadFromHomeFile(String fileName) {
+        Resource resource = Resource.file(new File(JvmUtils.getHomeDirectory(), fileName));
+        try {
+            if (resource.exists()) return resource.loadAsString();
+        } catch (IOException e) {
+            // ignore, should not happen
+        }
+        return null;
     }
 
     private void initAssets() {
@@ -492,7 +527,8 @@ public final class ApplicationService implements InitializingBean {
     }
 
     private void logApplication() {
-        LOGGER.info("Initialize application: {} ({}), theme {}, logo {}", application.getName(), application.getVersion(), application.getTheme().getName(), application.getLogo());
+        LOGGER.info("Initialize application: {} ({} / {}/ {}), theme {}, logo {}", application.getName(), application.getVersion(),
+                application.getBuildNumber(), application.getBuildTime(), application.getTheme().getName(), application.getLogo());
     }
 
     private void initAssetBundleListeners() {

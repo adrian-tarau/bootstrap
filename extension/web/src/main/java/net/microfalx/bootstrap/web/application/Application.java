@@ -21,6 +21,8 @@ public final class Application implements Nameable, Descriptable {
     String owner;
     String url;
     String version;
+    String buildNumber;
+    String buildTime;
     String logo;
 
     Theme theme;
