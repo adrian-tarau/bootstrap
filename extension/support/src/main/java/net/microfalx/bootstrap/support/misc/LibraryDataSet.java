@@ -36,7 +36,7 @@ public class LibraryDataSet extends PojoDataSet<Library, PojoField<Library>, Str
         library.setVendor(defaultIfEmpty(jar.getImplementationVendor(), jar.getSpecificationVendor()));
         library.setVersion(defaultIfEmpty(jar.getImplementationVersion().toString(), jar.getSpecificationVersion()));
         library.setBuild(jar.getImplementationBuild());
-        library.setBuildNumber(jar.getImplementationBuild());
+        library.setBuildNumber(jar.getBuildId());
         library.setBuildTime(jar.getBuildTime());
         library.setFileName(jar.getFile().getName());
         library.setFileSize(jar.getFile().length());
