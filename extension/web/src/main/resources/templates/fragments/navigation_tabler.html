@@ -68,6 +68,16 @@
     </a>
 </div>
 
+<li class="nav-item dropdown" th:fragment="home">
+    <a href="#" class="nav-link" id="applicationNavigation" data-bs-toggle="dropdown">
+        <i class="fa-solid fa-bars fs-4"></i>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" style="--bs-dropdown-min-width: 8rem">
+        <li><a class="dropdown-item" href="#" th:attr="onclick=|Help.open('Help','/')|" component:tooltip-text="Opens the application navigation menu">Help</a></li>
+        <li><a class="dropdown-item" href="#" th:attr="onclick=|Application.about()|" component:tooltip-text="Opens the application about box">About</a></li>
+    </ul>
+</li>
+
 <div class="nav-item dropdown" th:fragment="user">
     <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
         <span class="avatar avatar-sm">
@@ -79,7 +89,7 @@
     </a>
     <div id ="user" class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
         <a th:href="@{/user/settings}" class="dropdown-item">Settings</a>
-        <a th:href="@{/user/messages}" class="dropdown-item">Messages</a>
+        <!--a th:href="@{/user/messages}" class="dropdown-item">Messages</a-->
         <a th:href="@{/user/profile}" class="dropdown-item">Profile</a>
         <th:block th:if="${#security.isAuthenticated()}">
             <div class="dropdown-divider"></div>
@@ -185,7 +195,7 @@
                     <div th:replace="~{::ajax}"></div>
                 </div>
                 <div th:replace="~{::user}"></div>
-                <div th:replace="~{::help}"></div>
+                <div th:replace="~{::home}"></div>
             </div>
         </div>
     </header>

@@ -57,5 +57,43 @@
         </div>
     </div>
 </div>
+
+<div id="help-about" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-3">About</h1>
+            </div>
+            <div class="modal-body help">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-4"><b>Name</b></div>
+                        <div class="col-8" th:text="${#application.name}"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4"><b>Version</b></div>
+                        <div class="col-8" th:text="${#application.version}"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4"><b>Build Number</b></div>
+                        <div class="col-8" th:text="${#application.buildNumber}"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4"><b>Build Time</b></div>
+                        <div class="col-8" th:text="${#application.buildTime}"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4"><b>Vendor</b></div>
+                        <div class="col-8" th:text="${#application.owner}"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
