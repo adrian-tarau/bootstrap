@@ -467,6 +467,9 @@ public final class ApplicationService implements InitializingBean {
         application.version = getVersion();
         application.buildNumber = getBuildNumber();
         application.buildTime = getBuildTime();
+        System.setProperty("application.version", application.getVersion());
+        System.setProperty("application.build.number", application.getBuildNumber());
+        System.setProperty("application.build.time", application.getBuildTime());
     }
 
     private String getVersion() {

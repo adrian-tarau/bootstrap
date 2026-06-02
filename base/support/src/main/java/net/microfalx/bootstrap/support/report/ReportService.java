@@ -53,8 +53,7 @@ import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.EnumUtils.toLabel;
 import static net.microfalx.lang.FormatterUtils.formatDuration;
 import static net.microfalx.lang.IOUtils.getBufferedOutputStream;
-import static net.microfalx.lang.StringUtils.isEmpty;
-import static net.microfalx.lang.StringUtils.split;
+import static net.microfalx.lang.StringUtils.*;
 import static net.microfalx.lang.TimeUtils.*;
 
 @Service
@@ -533,9 +532,19 @@ public class ReportService implements InitializingBean {
     @Getter
     @ToString
     private static class Application {
+
         private final String url = "http://localhost:8080";
         private final String name = "Test";
         private final String owner = "The team";
+        private final String version;
+        private final String buildNumber;
+        private final String buildTime;
+
+        public Application() {
+            version = System.getProperty("application.version", NA_STRING);
+            buildNumber = System.getProperty("application.build.number", NA_STRING);
+            buildTime = System.getProperty("application.build.time", NA_STRING);
+        }
     }
 
     private static final Metrics REPORT = Metrics.of("Support").withGroup("Report");
