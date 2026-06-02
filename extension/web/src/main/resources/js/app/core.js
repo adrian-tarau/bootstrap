@@ -131,6 +131,15 @@ Application.home = function () {
 }
 
 /**
+ * Displays the about box.
+ */
+Application.about = function () {
+    Application.get("/help/about", {}, function (data) {
+        Application.loadModal("help-about", data);
+    }, {self: false});
+}
+
+/**
  * Logs out the current session.
  */
 Application.logout = function () {

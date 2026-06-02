@@ -23,18 +23,28 @@
     </ul>
 </li>
 
-<li th:fragment="ajax">
+<li class="nav-item" th:fragment="ajax">
     <div class="spinner-border text-secondary" role="status" style="display: none" id="ajax">
         <span class="visually-hidden">Loading...</span>
     </div>
 </li>
 
-<li th:fragment="help">
+<li class="nav-item" th:fragment="help">
     <h3>
-        <a href="#" th:attr="onclick=|Help.open('Help','/')|" component:tooltip-text="Opens the documentation for the application">
+        <a href="#" th:attr="onclick=|Help.open('Help','/')|" component:tooltip-text="Opens the application navigation menu">
             <i class="fa-solid fa-circle-question text-success help-icon"></i>
         </a>
     </h3>
+</li>
+
+<li class="nav-item dropdown" th:fragment="home">
+    <a href="#" class="nav-link" id="applicationNavigation" data-bs-toggle="dropdown">
+        <i class="fa-solid fa-bars fs-4"></i>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" style="--bs-dropdown-min-width: 8rem">
+        <li><a class="dropdown-item" href="#" th:attr="onclick=|Help.open('Help','/')|" component:tooltip-text="Opens the application navigation menu">Help</a></li>
+        <li><a class="dropdown-item" href="#" th:attr="onclick=|Application.about()|" component:tooltip-text="Opens the application about box">About</a></li>
+    </ul>
 </li>
 
 <li id = "user" class="nav-item dropdown user-menu" th:fragment="user">
@@ -176,7 +186,7 @@
             <li th:replace="~{::ajax}"></li>
             <!--li th:replace="~{notifications}"></li-->
             <li th:replace="~{::user}"></li>
-            <li th:replace="~{::help}"></li>
+            <li th:replace="~{::home}"></li>
         </ul>
     </div>
 </nav>

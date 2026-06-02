@@ -26,11 +26,20 @@
     </div>
 </li>
 
-<!-- The help button for the whole application -->
+<!-- The help button for the application -->
 <li th:fragment="help">
     <h3>
         <a href="#" th:attr="onclick=|Help.open('Help','/')|" component:tooltip-text="Opens the documentation for the application">
             <i class="fa-solid fa-circle-question text-success"></i>
+        </a>
+    </h3>
+</li>
+
+<!-- The home button for the navigation -->
+<li th:fragment="home">
+    <h3>
+        <a href="#" th:attr="onclick=|Help.open('Help','/')|" component:tooltip-text="Opens the documentation for the application">
+            <i class="fa-solid fa-bars"></i>
         </a>
     </h3>
 </li>

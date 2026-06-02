@@ -48,6 +48,11 @@ public class HelpController extends PageController {
         }
     }
 
+    @GetMapping("/about")
+    public String about(Model model) {
+        return "help/article::#help-about";
+    }
+
     @GetMapping("/view/{*path}")
     public String dialog(Model model, @PathVariable("path") String path,
                          @RequestParam(value = "title") String title,
