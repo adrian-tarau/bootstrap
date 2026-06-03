@@ -66,7 +66,7 @@ User.getData = function () {
 }
 
 /**
- * Initializes the user
+ * Shows the user profile.
  */
 User.showProfile = function () {
     Application.get("/user/profile", {}, function (data) {
@@ -75,7 +75,7 @@ User.showProfile = function () {
 }
 
 /**
- * Saves the profile form
+ * Saves the profile form.
  */
 User.saveProfile = function () {
     const me = this;
@@ -84,6 +84,28 @@ User.saveProfile = function () {
         success: function (data) {
             Application.showInfoAlert("Profile", "The profile information has been saved");
             me.updateInfo(data.payload);
+            Application.closeModal();
+        }
+    });
+}
+
+/**
+ * Shows the user settings.
+ */
+User.showSettings = function () {
+    Application.get("/user/settings", {}, function (data) {
+        Application.loadModal("user-settings", data);
+    }, {self: false});
+}
+
+/**
+ * Saves the settings form.
+ */
+User.saveSettings = function () {
+    Application.saveForm('#user-settings-form', "/user/settings", {}, {
+        self: false,
+        success: function (data) {
+            Application.showInfoAlert("Settings", "The settings information has been saved");
             Application.closeModal();
         }
     });

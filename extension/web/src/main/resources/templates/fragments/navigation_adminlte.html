@@ -63,8 +63,8 @@
         </li>
         <li class="user-body">
             <div class="row">
-                <div class="col-4 text-center"> <a href="/user/settings">Settings</a> </div>
-                <div class="col-4 text-center"> <a href="/user/messages">Messages</a> </div>
+                <div class="col-4 text-center"> <a href="#" th:attr="onclick=|User.showSettings()|">Settings</a> </div>
+                <!--div class="col-4 text-center"> <a href="/user/messages">Messages</a> </div-->
                 <div class="col-4 text-center"> <a href="#" th:attr="onclick=|User.showProfile()|">Profile</a> </div>
             </div>
         </li>

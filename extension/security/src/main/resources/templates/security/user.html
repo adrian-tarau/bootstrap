@@ -34,5 +34,43 @@
     </div>
 </div>
 
+<div id="user-settings" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-sm modal-dialog-centered" style="min-width: 400px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-3">Settings</h1>
+            </div>
+            <div class="modal-body help">
+                <div class="container-fluid">
+                    <form id ="user-settings-form" th:action="@{/user/settings}" method="post">
+                        <div class="mb-1">
+                            <label class="form-label">User Name</label>
+                            <input type="text" class="form-control" name="username" readonly disabled th:value="${settings.username}"></input>
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Time Zone</label>
+                            <select name="timeZone" class="form-select">
+                                <option th:each="zone : ${zones}" th:selected="${helper.isZoneSelected(settings, zone.id)}" th:value="${zone.id}" th:text="${zone.name}"></option>
+                            </select>
+                        </div>
+                        <div class="mb-q">
+                            <label class="form-label">Theme</label>
+                            <select name="theme" class="form-select">
+                                <option th:selected="${helper.isThemeSelected(settings, 'light')}" value="light">Light</option>
+                                <option th:selected="${helper.isThemeSelected(settings, 'dark')}" value="dark">Dark</option>
+                                <option th:selected="${helper.isThemeSelected(settings, 'auto')}" value="auto">Auto</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="User.saveSettings()">Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
