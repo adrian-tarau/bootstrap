@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.web.controller;
 
 import net.microfalx.bootstrap.help.*;
+import net.microfalx.bootstrap.web.util.SecurityUtils;
 import net.microfalx.lang.UriUtils;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,15 +29,15 @@ import static net.microfalx.lang.StringUtils.removeStartSlash;
  */
 @RequestMapping("/help")
 @Controller
-public class HelpController extends PageController {
+public class HelpController implements AnonymousController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HelpController.class);
 
-    @Autowired
-    private HelpService helpService;
+    @Autowired private HelpService helpService;
 
     @GetMapping(value = "/image/{*path}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> image(@PathVariable("path") String path) {
+        checkSecurity();
         try {
             Resource content = HelpUtilities.resolveImage(path);
             if (!content.exists()) return ResponseEntity.notFound().build();
@@ -57,6 +59,7 @@ public class HelpController extends PageController {
     public String dialog(Model model, @PathVariable("path") String path,
                          @RequestParam(value = "title") String title,
                          @RequestParam(value = "anchor", required = false) String anchor) {
+        checkSecurity();
         model.addAttribute("title", title);
         boolean root = UriUtils.isRoot(path);
         path = removeStartSlash(path);
@@ -71,6 +74,7 @@ public class HelpController extends PageController {
 
     @GetMapping(value = "/article/{*path}")
     public String renderArticle(Model model, @PathVariable("path") String path) {
+        checkSecurity();
         String content;
         try {
             content = doRender(path);
@@ -106,6 +110,12 @@ public class HelpController extends PageController {
             return helpService.renderToc(RenderingOptions.DEFAULT).loadAsString();
         } catch (IOException e) {
             return "Failed to render Table of Contents";
+        }
+    }
+
+    private void checkSecurity() {
+        if (helpService.isSecure() && !SecurityUtils.isAuthenticated()) {
+            throw new AccessDeniedException("Help access requires a security context");
         }
     }
 }
