@@ -185,8 +185,7 @@ public class ReportService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         loadProviders();
         loadListeners();
-        initVariables();
-        initTasks();
+        reload(true);
         initListeners();
     }
 
@@ -268,19 +267,22 @@ public class ReportService implements InitializingBean {
         LOGGER.info("Report sent to: {}", destinations);
     }
 
-    private void reload() {
-        initVariables();
+    private void reload(boolean onStartup) {
+        initVariables(onStartup);
         initTasks();
     }
 
-    private void initVariables() {
-        LOGGER.info("Startup time: {} ", new ReportHelper().getStartupTime());
+    private void initVariables(boolean onStartup) {
+        if (onStartup) {
+            LOGGER.info("Startup time: {} ", new ReportHelper().getStartupTime());
+        }
+        LOGGER.info("Report password: {} ", SecretUtils.maskSecret(configuration.getPassword()));
     }
 
     private void initListeners() {
         configuration.addListener(event -> {
             LOGGER.info("Settings changed for group '{}', reload", event.getKey());
-            reload();
+            reload(false);
         });
     }
 
