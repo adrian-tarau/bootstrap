@@ -529,6 +529,24 @@ Application.getModals = function () {
 }
 
 /**
+ * Returns the application theme.
+ *
+ * @returns {*|string} a non-null string
+ */
+Application.getTheme = function() {
+    return APP_THEME || "bootstrap";
+}
+
+/**
+ * Returns the mode for the application theme (light/dark/auto).
+ *
+ * @returns {*|string} a non-null string
+ */
+Application.getThemeMode = function() {
+    return APP_THEME_MODE || "auto";
+}
+
+/**
  * Returns the time zone offset.
  *
  * @return {number} offset in minutes since UTC

@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.web.controller;
 
 import net.microfalx.bootstrap.help.*;
+import net.microfalx.bootstrap.web.application.ApplicationService;
+import net.microfalx.bootstrap.web.application.Theme;
 import net.microfalx.bootstrap.web.util.SecurityUtils;
 import net.microfalx.lang.UriUtils;
 import net.microfalx.resource.Resource;
@@ -34,6 +36,7 @@ public class HelpController implements AnonymousController {
     private static final Logger LOGGER = LoggerFactory.getLogger(HelpController.class);
 
     @Autowired private HelpService helpService;
+    @Autowired private ApplicationService applicationService;
 
     @GetMapping(value = "/image/{*path}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> image(@PathVariable("path") String path) {
@@ -58,7 +61,9 @@ public class HelpController implements AnonymousController {
     @GetMapping("/view/{*path}")
     public String dialog(Model model, @PathVariable("path") String path,
                          @RequestParam(value = "title") String title,
-                         @RequestParam(value = "anchor", required = false) String anchor) {
+                         @RequestParam(value = "anchor", required = false) String anchor,
+                         @RequestParam(value = "theme", required = false) String theme,
+                         @RequestParam(value = "theme_mode", required = false) String themeMode) {
         checkSecurity();
         model.addAttribute("title", title);
         boolean root = UriUtils.isRoot(path);
@@ -69,6 +74,7 @@ public class HelpController implements AnonymousController {
         model.addAttribute("root", root);
         model.addAttribute("toc", renderToc());
         model.addAttribute("dialogClasses", dialogClasses);
+        selectTheme(theme, themeMode);
         return "help/article::#help-article";
     }
 
@@ -86,6 +92,13 @@ public class HelpController implements AnonymousController {
         }
         model.addAttribute("content", content);
         return "help/layout";
+    }
+
+    private void selectTheme(String theme, String themeMode) {
+        Theme activeTheme = applicationService.getCurrentTheme();
+        if (isNotEmpty(theme)) activeTheme = applicationService.getTheme(theme);
+        if (isNotEmpty(themeMode)) activeTheme = activeTheme.withMode(Theme.Mode.of(themeMode));
+        Theme.set(activeTheme);
     }
 
     private String doRender(String path) {

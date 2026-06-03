@@ -33,6 +33,30 @@ public final class Theme implements Identifiable<String>, Nameable, Cloneable {
     private Mode mode = Mode.AUTO;
     private final Collection<AssetBundle> assetBundles = new ArrayList<>();
 
+    /**
+     * Returns the active theme (associated with the current thread).
+     *
+     * @return a non-null instance
+     */
+    public static Theme get() {
+        Theme theme = ApplicationService.THEME.get();
+        if (theme == null) theme = new Theme(DEFAULT);
+        return theme;
+    }
+
+    /**
+     * Changes the active theme (associated with the current thread).
+     *
+     * @param theme the theme, null to remove and fall back to default
+     */
+    public static void set(Theme theme) {
+        if (theme != null) {
+            ApplicationService.THEME.set(theme);
+        } else {
+            ApplicationService.THEME.remove();
+        }
+    }
+
     public static Builder builder(String name) {
         return new Builder(name);
     }
