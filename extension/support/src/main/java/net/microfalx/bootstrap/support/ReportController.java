@@ -24,8 +24,9 @@ public class ReportController extends PageController {
 
     @GetMapping("")
     @ResponseBody
-    public String home() {
-        Report report = createReport();
+    public String home(@RequestParam(value = "dynamic", defaultValue = "true") boolean dynamic,
+                       @RequestParam(value = "secure", defaultValue = "false") boolean secure) {
+        Report report = createReport().setDynamic(dynamic).setSecure(secure);
         Resource reportBody = Resource.temporary("report", "html");
         try {
             report.render(reportBody);
@@ -37,9 +38,11 @@ public class ReportController extends PageController {
 
     @GetMapping("{id}")
     @ResponseBody
-    public String fragment(@PathVariable("id") String id, @RequestParam(value = "dynamic", defaultValue = "true") boolean dynamic) {
+    public String fragment(@PathVariable("id") String id,
+                           @RequestParam(value = "dynamic", defaultValue = "true") boolean dynamic,
+                           @RequestParam(value = "secure", defaultValue = "false") boolean secure) {
         Report report = createReport();
-        report.setFragment(id).setDynamic(dynamic);
+        report.setFragment(id).setDynamic(dynamic).setSecure(secure);
         Resource reportBody = Resource.temporary("report_export", ".html");
         try {
             report.render(reportBody);

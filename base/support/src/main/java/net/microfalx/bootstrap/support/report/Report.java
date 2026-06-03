@@ -31,6 +31,7 @@ public class Report implements Nameable {
     private boolean failOnError;
     private boolean offline = true;
     private boolean dynamic = true;
+    private boolean secure;
     private String fragment;
     private Theme theme = Theme.DARK;
     private final List<Fragment> fragments = new ArrayList<>();
@@ -185,6 +186,26 @@ public class Report implements Nameable {
     }
 
     /**
+     * Returns whether the report should be secure (critical information hidden)
+     *
+     * @return {@code true} if secure, {@code false} otherwise
+     */
+    public boolean isSecure() {
+        return secure;
+    }
+
+    /**
+     * Changes the secure flag.
+     *
+     * @param secure the new value for the flag
+     * @return self
+     */
+    public Report setSecure(boolean secure) {
+        this.secure = secure;
+        return this;
+    }
+
+    /**
      * Returns the theme of the report.
      *
      * @return a non-null instance
@@ -271,7 +292,7 @@ public class Report implements Nameable {
         CURRENT_REPORT.set(this);
         try {
             buildFragments();
-            Template template = reportService.createTemplate("report");
+            Template template = reportService.createTemplate("report", this);
             updateTemplate(template);
             template.render(resource);
         } finally {
@@ -312,6 +333,7 @@ public class Report implements Nameable {
 
     private void updateTemplate(Template template) {
         template.addVariable("report", this);
+        template.addVariable("helper", new ReportHelper(this));
         template.addVariable("theme", getTheme().name().toLowerCase());
         template.addVariable("fragments", getVisibleFragments());
         updateTemplateResources(template);

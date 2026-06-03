@@ -13,7 +13,14 @@ import java.util.Collection;
 public class ReportHelper {
 
     private static final ZonedDateTime startupTime = ZonedDateTime.now();
-    private final ZonedDateTime currentTime = ZonedDateTime.now();
+    private static final int SECURE_WORD_COUNT = 5;
+    static final ZonedDateTime currentTime = ZonedDateTime.now();
+
+    private final Report report;
+
+    public ReportHelper(Report report) {
+        this.report = report;
+    }
 
     public ZonedDateTime getStartupTime() {
         return startupTime;
@@ -65,21 +72,25 @@ public class ReportHelper {
     }
 
     public String toSummary(Object value) {
-        return toSummary(value, 5);
+        return toSummary(value, Integer.MAX_VALUE);
     }
 
     public String toSummary(Object value, int maxLength) {
-        String text = toDisplay(value);
-        String[] parts = StringUtils.split(text, " ");
-        String[] remaining = ArrayUtils.subarray(parts, 0, maxLength);
-        String scrambled = String.join(" ", remaining).trim();
-        if (parts.length > remaining.length) {
-            scrambled += "...";
+        if (report == null || report.isSecure()) {
+            String text = toDisplay(value);
+            String[] parts = StringUtils.split(text, " ");
+            String[] remaining = ArrayUtils.subarray(parts, 0, SECURE_WORD_COUNT);
+            String scrambled = String.join(" ", remaining).trim();
+            if (parts.length > remaining.length) {
+                scrambled += "...";
+            }
+            return scrambled;
+        } else {
+            return toDisplay(value, maxLength);
         }
-        return scrambled;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public String toLabel(Object value) {
         if (value instanceof Enum) {
             return EnumUtils.toLabel((Enum) value);

@@ -23,7 +23,7 @@
             <td><span th:text="${alert.failureType}"></span></td>
             <td class="text-center"><span th:text="${helper.formatNumber(alert.totalEventCount)}"></span></td>
             <td class="text-center"><span th:text="${helper.formatNumber(alert.pendingEventCount)}"></span></td>
-            <td><span th:text="${helper.toSummary(alert.message)}"></span></td>
+            <td><span th:text="${helper.toSummary(alert.message, 200)}"></span></td>
         </tr>
         </tbody>
     </table>
@@ -128,7 +128,7 @@
             <td><span th:text="${helper.formatDateTime(issue.firstDetectedAt)}"></span></td>
             <td><span th:text="${helper.formatDateTime(issue.lastDetectedAt)}"></span></td>
             <td><span th:text="${helper.toDisplay(issue.getAttributesDescription(), 100)}"></span></td>
-            <td><span th:text="${helper.toSummary(issue.description)}"></span></td>
+            <td><span th:text="${helper.toSummary(issue.description, 200)}"></span></td>
         </tr>
         </tbody>
     </table>
