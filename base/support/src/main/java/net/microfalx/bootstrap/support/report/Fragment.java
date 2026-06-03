@@ -77,7 +77,7 @@ public class Fragment implements Identifiable<String>, Nameable {
         requireNonNull(resource);
         this.resource = resource;
         try {
-            Template template = reportService.createTemplate(this.template).setSelector(selector);
+            Template template = reportService.createTemplate(this.template, report).setSelector(selector);
             template.addVariable("report", report);
             template.render(resource);
         } catch (Exception e) {

@@ -97,7 +97,7 @@ public class Template implements Nameable {
 
     private Context initContext() {
         Context context = new Context();
-        ReportHelper helper = new ReportHelper();
+        ReportHelper helper = new ReportHelper(null);
         context.setVariable("helper", helper);
         context.setVariables(variables);
         return context;

@@ -10,7 +10,7 @@ import java.util.Collection;
 public class LoggerProvider extends AbstractFragmentProvider {
 
     private final TrendHelper trendHelper = new TrendHelper();
-    private final ReportHelper reportHelper = new ReportHelper();
+    private final ReportHelper reportHelper = new ReportHelper(null);
 
     @Override
     public Fragment create() {

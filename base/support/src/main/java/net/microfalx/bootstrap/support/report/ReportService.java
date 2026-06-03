@@ -167,7 +167,7 @@ public class ReportService implements InitializingBean {
         } catch (Exception e) {
             throw new ReportException("Failed to render the report for interval " + interval, e);
         }
-        report.setDynamic(false).setOffline(false).setFragment("summary");
+        report.setDynamic(false).setOffline(false).setSecure(true).setFragment("summary");
         Resource summaryReport = Resource.temporary("report_summary_", ".html");
         try {
             report.render(summaryReport);
@@ -203,10 +203,20 @@ public class ReportService implements InitializingBean {
      * @return a non-null instance
      */
     public Template createTemplate(String name) {
+        return createTemplate(name, null);
+    }
+
+    /**
+     * Creates a template used by the report service.
+     *
+     * @param name the name of the template
+     * @return a non-null instance
+     */
+    public Template createTemplate(String name, Report report) {
         requireNonNull(name);
         initEngine();
         Template template = new Template(templateEngine, name);
-        updateTemplate(template);
+        updateTemplate(template, report);
         return template;
     }
 
@@ -274,7 +284,7 @@ public class ReportService implements InitializingBean {
 
     private void initVariables(boolean onStartup) {
         if (onStartup) {
-            LOGGER.info("Startup time: {} ", new ReportHelper().getStartupTime());
+            LOGGER.info("Startup time: {} ", ReportHelper.currentTime);
         }
         LOGGER.info("Report password: {} ", SecretUtils.maskSecret(configuration.getPassword()));
     }
@@ -315,8 +325,8 @@ public class ReportService implements InitializingBean {
         threadPool.schedule(new ReleaseEngineTask(), 5, TimeUnit.MINUTES);
     }
 
-    private void updateTemplate(Template template) {
-        template.addVariable("helper", new ReportHelper());
+    private void updateTemplate(Template template, Report report) {
+        template.addVariable("helper", new ReportHelper(report));
         template.addVariable("issues", getIssues());
         for (ReportingListener listener : listeners) {
             listener.update(template);
