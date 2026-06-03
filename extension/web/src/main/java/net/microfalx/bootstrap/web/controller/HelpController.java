@@ -4,6 +4,7 @@ import net.microfalx.bootstrap.help.*;
 import net.microfalx.bootstrap.web.application.ApplicationService;
 import net.microfalx.bootstrap.web.application.Theme;
 import net.microfalx.bootstrap.web.util.SecurityUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.UriUtils;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
@@ -68,6 +69,7 @@ public class HelpController implements AnonymousController {
         model.addAttribute("title", title);
         boolean root = UriUtils.isRoot(path);
         path = removeStartSlash(path);
+        path = appendThemeToPath(path, theme, themeMode);
         if (isNotEmpty(anchor)) path += "#" + anchor;
         model.addAttribute("path", "/help/article/" + path);
         String dialogClasses = root ? "modal-xl" : "modal-lg";
@@ -79,7 +81,9 @@ public class HelpController implements AnonymousController {
     }
 
     @GetMapping(value = "/article/{*path}")
-    public String renderArticle(Model model, @PathVariable("path") String path) {
+    public String renderArticle(Model model, @PathVariable("path") String path,
+                                @RequestParam(value = "theme", required = false) String theme,
+                                @RequestParam(value = "theme_mode", required = false) String themeMode) {
         checkSecurity();
         String content;
         try {
@@ -91,6 +95,7 @@ public class HelpController implements AnonymousController {
             LOGGER.error(content, e);
         }
         model.addAttribute("content", content);
+        selectTheme(theme, themeMode);
         return "help/layout";
     }
 
@@ -99,6 +104,14 @@ public class HelpController implements AnonymousController {
         if (isNotEmpty(theme)) activeTheme = applicationService.getTheme(theme);
         if (isNotEmpty(themeMode)) activeTheme = activeTheme.withMode(Theme.Mode.of(themeMode));
         Theme.set(activeTheme);
+    }
+
+    private String appendThemeToPath(String path, String theme, String themeMode) {
+        if (StringUtils.isEmpty(theme) && StringUtils.isEmpty(themeMode)) return path;
+        if (!path.contains("?")) path += "?";
+        if (isNotEmpty(theme)) path += "theme=" + theme;
+        if (isNotEmpty(themeMode)) path += (path.contains("?") ? "&" : "?") + "theme_mode=" + themeMode;
+        return path;
     }
 
     private String doRender(String path) {
