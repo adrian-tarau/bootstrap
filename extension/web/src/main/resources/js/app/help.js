@@ -13,6 +13,8 @@ window.Help = window.Help || {};
 Help.open = function (title, path, anchor) {
     Logger.debug("Show help '" + path + "', fragment '" + anchor + "'");
     let params = {title: title};
+    params["theme"] = Application.getTheme();
+    params["theme_mode"] = Application.getThemeMode();
     if (Utils.isNotEmpty(anchor)) params["anchor"] = anchor;
     if (Utils.isEmpty(path) || "/" === path) path = "";
     Application.get("/help/view/" + path, params, function (data) {

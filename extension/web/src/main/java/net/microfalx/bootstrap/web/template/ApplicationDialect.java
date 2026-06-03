@@ -170,6 +170,9 @@ public class ApplicationDialect extends AbstractProcessorDialect {
             String timeZone = containerRequest.hasTimeZone() ? containerRequest.getTimeZone().getId() : EMPTY_STRING;
             builder.append("\nconst APP_TIME_ZONE=\"").append(timeZone).append("\";");
             builder.append("\nconst APP_USER=").append(getCurrentUserAsJson()).append(";");
+            Theme theme = applicationService.getCurrentTheme();
+            builder.append("\nconst APP_THEME=\"").append(theme.getId()).append("\";");
+            builder.append("\nconst APP_THEME_MODE=\"").append(theme.getMode().name().toLowerCase()).append("\";");
             String filterableOperator = defaultIfEmpty(dataSetTool.getFilterableOperator(), SearchUtils.DEFAULT_FILTER_OPERATOR);
             builder.append("\nconst DATASET_FILTERABLE_OPERATOR=\"").append(filterableOperator).append("\"");
             String filterableQuoteChar = defaultIfEmpty(dataSetTool.getFilterableQuoteChar(), String.valueOf(SearchUtils.DEFAULT_FILTER_QUOTE_CHAR));
