@@ -184,6 +184,24 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     }
 
     /**
+     * Updates the display name and the email
+     *
+     * @param displayName the display name
+     * @param email       the email
+     */
+    public void updateUser(String displayName, String email) {
+        requireNotEmpty(displayName);
+        SecurityContext securityContext = getCurrentSecurityContext();
+        if (securityContext.getName().equals(SecurityConstants.ANONYMOUS_USER_NAME)) {
+            throw new SecurityException("Cannot update user information for anonymous user");
+        }
+        net.microfalx.bootstrap.security.user.User user = securityContext.getUser();
+        securityContexts.remove(normalizeUserName(user.getName()));
+        LOGGER.info("Update user profile for '{}', display name '{}', email '{}'", user.getName(), displayName, email);
+        userRepository.updateProfile(displayName, email, normalizeUserName(user.getName()));
+    }
+
+    /**
      * Returns the entity which contains the user information for the user attached to the web session.
      *
      * @return a non-null instance
@@ -306,7 +324,7 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
     /**
      * Resets the password of a given user.
      *
-     * @param userName the user name
+     * @param userName the username
      * @return the new temporary password
      */
     public String resetPassword(String userName) {

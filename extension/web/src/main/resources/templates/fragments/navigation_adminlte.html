@@ -50,22 +50,22 @@
 <li id = "user" class="nav-item dropdown user-menu" th:fragment="user">
     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
         <img th:src="${#security.imageUrl}" class="user-image rounded-circle shadow" alt="User Image">
-        <span class="d-none d-md-inline" th:text="${#security.getDisplayName()}"></span>
+        <span class="d-none d-md-inline user-display-name" th:text="${#security.getDisplayName()}"></span>
     </a>
     <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
         <li class="user-header text-bg-primary"> <img th:src="${#security.imageUrl}" class="rounded-circle shadow" alt="User Image">
             <p>
-                <span th:text="${#security.getDisplayName()}"></span>
+                <span class="user-display-name" th:text="${#security.getDisplayName()}"></span>
             </p>
             <p>
-                <small th:text="${#security.getEmail()}"></small>
+                <small class="user-email" th:text="${#security.getEmail()}"></small>
             </p>
         </li>
         <li class="user-body">
             <div class="row">
                 <div class="col-4 text-center"> <a href="/user/settings">Settings</a> </div>
                 <div class="col-4 text-center"> <a href="/user/messages">Messages</a> </div>
-                <div class="col-4 text-center"> <a href="/user/profile">Profile</a> </div>
+                <div class="col-4 text-center"> <a href="#" th:attr="onclick=|User.showProfile()|">Profile</a> </div>
             </div>
         </li>
         <li class="user-footer">

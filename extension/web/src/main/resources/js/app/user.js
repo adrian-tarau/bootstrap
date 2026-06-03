@@ -68,6 +68,30 @@ User.getData = function () {
 /**
  * Initializes the user
  */
+User.showProfile = function () {
+    Application.get("/user/profile", {}, function (data) {
+        Application.loadModal("user-profile", data);
+    }, {self: false});
+}
+
+/**
+ * Saves the profile form
+ */
+User.saveProfile = function () {
+    const me = this;
+    Application.saveForm('#user-profile-form', "/user/profile", {}, {
+        self: false,
+        success: function (data) {
+            Application.showInfoAlert("Profile", "The profile information has been saved");
+            me.updateInfo(data.payload);
+            Application.closeModal();
+        }
+    });
+}
+
+/**
+ * Initializes the user
+ */
 User.initialize = function () {
     Logger.debug("Initialize user: " + this.getName() + " (" + this.getUserName() + ")");
 }
@@ -79,6 +103,18 @@ User.start = function () {
     if (this.getData().resetPassword) {
         Application.showWarnAlert("Security", "Your password was reset recently by the system administrator or yourself. Please change your password to a password known only to you, as soon as possible.");
     }
+}
+
+/**
+ * Updates user info.
+ *
+ * @param {Object} user the user object containing the updated user information
+ */
+User.updateInfo = function (user) {
+    this.getData().name = user.name;
+    this.getData().email = user.email;
+    $('.user-display-name').html(user.name);
+    $('.user-email').html(user.email);
 }
 
 // initialize user

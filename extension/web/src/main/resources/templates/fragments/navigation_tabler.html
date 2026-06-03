@@ -84,13 +84,13 @@
             <img th:src="${#security.imageUrl}" alt="User Image"/>
         </span>
         <div class="d-none d-xl-block ps-2">
-            <div th:text="${#security.getDisplayName()}"></div>
+            <div class="user-display-name" th:text="${#security.getDisplayName()}"></div>
         </div>
     </a>
     <div id ="user" class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
         <a th:href="@{/user/settings}" class="dropdown-item">Settings</a>
         <!--a th:href="@{/user/messages}" class="dropdown-item">Messages</a-->
-        <a th:href="@{/user/profile}" class="dropdown-item">Profile</a>
+        <a href="#" th:attr="onclick=|User.showProfile()|" class="dropdown-item">Profile</a>
         <th:block th:if="${#security.isAuthenticated()}">
             <div class="dropdown-divider"></div>
             <a onclick="Application.logout()" class="dropdown-item">Sign out</a>
