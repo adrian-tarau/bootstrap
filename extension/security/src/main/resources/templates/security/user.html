@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div id="user-profile" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-sm modal-dialog-centered" style="min-width: 400px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-3">Profile</h1>
+            </div>
+            <div class="modal-body help">
+                <div class="container-fluid">
+                    <form id ="user-profile-form" th:action="@{/user/profile}" method="post">
+                        <div class="mb-1">
+                            <label class="form-label">User Name</label>
+                            <input type="text" class="form-control" name="username" readonly disabled th:value="${user.username}"></input>
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Display Name</label>
+                            <input type="text" class="form-control" name="name"  th:value="${user.name}"></input>
+                        </div>
+                        <div class="mb-q">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" name="email" th:value="${user.email}"></input>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="User.saveProfile()">Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
