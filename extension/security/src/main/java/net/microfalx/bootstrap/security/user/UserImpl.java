@@ -26,10 +26,13 @@ class UserImpl implements User {
     private final String email;
     private final String description;
     private final String imageUrl;
+    @Builder.Default private volatile Settings settings = new Settings();
     private Collection<GrantedAuthority> authorities = Collections.emptyList();
 
     @Override
     public String getPassword() {
         return null;
     }
+
+    static String USER_SETTINGS = "user:settings";
 }

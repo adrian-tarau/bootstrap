@@ -1,4 +1,4 @@
-package net.microfalx.bootstrap.security.user;
+package net.microfalx.bootstrap.security.user.jpa;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

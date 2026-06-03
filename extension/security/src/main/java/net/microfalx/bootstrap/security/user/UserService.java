@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import jakarta.annotation.PostConstruct;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
+import net.microfalx.bootstrap.core.utils.Json;
 import net.microfalx.bootstrap.restapi.ApiCredentialService;
 import net.microfalx.bootstrap.security.SecurityConstants;
 import net.microfalx.bootstrap.security.SecurityContext;
@@ -17,10 +18,13 @@ import net.microfalx.bootstrap.security.group.jpa.Group;
 import net.microfalx.bootstrap.security.provisioning.SecurityProperties;
 import net.microfalx.bootstrap.security.user.jpa.User;
 import net.microfalx.bootstrap.security.user.jpa.UserRepository;
+import net.microfalx.bootstrap.security.user.jpa.UserSetting;
+import net.microfalx.bootstrap.security.user.jpa.UserSettingRepository;
 import net.microfalx.bootstrap.security.userinfo.ExtendedUserDetails;
 import net.microfalx.bootstrap.support.report.Issue;
 import net.microfalx.bootstrap.web.preference.PreferenceService;
 import net.microfalx.bootstrap.web.preference.PreferenceStorage;
+import net.microfalx.lang.ExceptionUtils;
 import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +49,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -239,6 +244,21 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
      * @param name the setting name
      * @return the setting, null if it does not exist
      */
+    public <T> T getSetting(String name, Class<T> type) {
+        byte[] data = getSetting(getCurrentUser(), name);
+        try {
+            return Json.asObject(data, type);
+        } catch (IOException e) {
+            return ExceptionUtils.rethrowExceptionAndReturn(e);
+        }
+    }
+
+    /**
+     * Returns a setting for the current user.
+     *
+     * @param name the setting name
+     * @return the setting, null if it does not exist
+     */
     public byte[] getSetting(String name) {
         return getSetting(getCurrentUser(), name);
     }
@@ -265,6 +285,17 @@ public class UserService extends ApplicationContextSupport implements ApiCredent
      */
     public void setSetting(String name, byte[] value) {
         setSetting(getCurrentUser(), name, value);
+    }
+
+    /**
+     * Changes a setting for the current user.
+     *
+     * @param name  the setting name
+     * @param value the setting value
+     */
+    public void setSetting(String name, Object value) {
+        byte[] data = Json.asBytes(value);
+        setSetting(getCurrentUser(), name, data);
     }
 
     /**

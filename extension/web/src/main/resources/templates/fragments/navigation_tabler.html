@@ -88,7 +88,7 @@
         </div>
     </a>
     <div id ="user" class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-        <a th:href="@{/user/settings}" class="dropdown-item">Settings</a>
+        <a href="#" th:attr="onclick=|User.showSettings()|" class="dropdown-item">Settings</a>
         <!--a th:href="@{/user/messages}" class="dropdown-item">Messages</a-->
         <a href="#" th:attr="onclick=|User.showProfile()|" class="dropdown-item">Profile</a>
         <th:block th:if="${#security.isAuthenticated()}">

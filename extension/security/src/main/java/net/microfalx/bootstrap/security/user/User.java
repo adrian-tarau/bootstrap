@@ -1,11 +1,16 @@
 package net.microfalx.bootstrap.security.user;
 
+import lombok.Data;
 import net.microfalx.bootstrap.security.userinfo.ExtendedUserDetails;
+import net.microfalx.bootstrap.web.application.Theme;
 import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Identifiable;
 import net.microfalx.lang.Nameable;
+import net.microfalx.lang.ZoneContext;
 
 import java.security.Principal;
+
+import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 
 /**
  * Represents a user in the system.
@@ -50,4 +55,24 @@ public interface User extends Identifiable<String>, ExtendedUserDetails, Nameabl
      * @return the email address, null if not set
      */
     String getEmail();
+
+    /**
+     * Returns the settings associated with a user.
+     *
+     * @return a non-null instance
+     */
+    Settings getSettings();
+
+    @Data
+    class Settings {
+
+        private String timeZone = ZoneContext.BROWSER_ZONE;
+        private String theme = Theme.Mode.LIGHT.name().toLowerCase();
+
+        public void copy(Settings settings) {
+            requireNonNull(settings);
+            this.timeZone = settings.timeZone;
+            this.theme = settings.theme;
+        }
+    }
 }
