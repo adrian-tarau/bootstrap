@@ -68,6 +68,15 @@ public class HelpService implements InitializingBean {
     final AtomicBoolean indexed = new AtomicBoolean(false);
 
     /**
+     * Returns the help properties.
+     *
+     * @return a non-null instance
+     */
+    public HelpProperties getProperties() {
+        return properties;
+    }
+
+    /**
      * Returns whether the help can be accessed only by a secure context.
      *
      * @return {@code true} if secure (private), {@code false} otherwise

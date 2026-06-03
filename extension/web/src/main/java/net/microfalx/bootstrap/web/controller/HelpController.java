@@ -100,6 +100,11 @@ public class HelpController implements AnonymousController {
     }
 
     private void selectTheme(String theme, String themeMode) {
+        // first, see if the help asks for a specific theme and mode
+        HelpProperties properties = helpService.getProperties();
+        if (isNotEmpty(properties.getTheme())) theme = properties.getTheme();
+        if (isNotEmpty(properties.getThemeMode())) themeMode = properties.getThemeMode();
+        // select the theme based on request and help setup
         Theme activeTheme = applicationService.getCurrentTheme();
         if (isNotEmpty(theme)) activeTheme = applicationService.getTheme(theme);
         if (isNotEmpty(themeMode)) activeTheme = activeTheme.withMode(Theme.Mode.of(themeMode));
