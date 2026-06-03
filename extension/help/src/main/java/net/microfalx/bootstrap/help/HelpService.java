@@ -68,6 +68,15 @@ public class HelpService implements InitializingBean {
     final AtomicBoolean indexed = new AtomicBoolean(false);
 
     /**
+     * Returns whether the help can be accessed only by a secure context.
+     *
+     * @return {@code true} if secure (private), {@code false} otherwise
+     */
+    public boolean isSecure() {
+        return properties.isSecure();
+    }
+
+    /**
      * Returns the root Table of Contents (ToC) entry.
      *
      * @return a non-null instance
@@ -245,8 +254,8 @@ public class HelpService implements InitializingBean {
      * The path of the document is extracted from the annotated element.
      *
      * @param element the annotated element
-     * @throws IOException if an I/O error occurs
      * @return the rendered content as a Resource
+     * @throws IOException if an I/O error occurs
      * @see Help
      */
     public Resource render(AnnotatedElement element, RenderingOptions options) throws IOException {
@@ -261,8 +270,8 @@ public class HelpService implements InitializingBean {
      * Renders the content of the whole help as a single page.
      *
      * @param options the options for rendering
-     * @throws IOException if an I/O error occurs
      * @return the rendered content as a Resource
+     * @throws IOException if an I/O error occurs
      */
     public Resource renderAll(RenderingOptions options) throws IOException {
         requireNonNull(options);
@@ -302,7 +311,7 @@ public class HelpService implements InitializingBean {
     /**
      * Renders a document.
      *
-     * @param toc   the toc to render
+     * @param toc     the toc to render
      * @param options the options for rendering
      * @throws IOException if an I/O error occurs
      */
@@ -369,7 +378,7 @@ public class HelpService implements InitializingBean {
         String path = FileUtils.removeFileExtension(resource.getPath());
         markdownOptions.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create(),
                 AdmonitionExtension.create(), MediaTagsExtension.create(), FootnoteExtension.create(),
-                TaskListExtension.create(),ResizableImageExtension.create(), GitLabExtension.create(),
+                TaskListExtension.create(), ResizableImageExtension.create(), GitLabExtension.create(),
                 TypographicExtension.create(), AnchorLinkExtension.create(), DefinitionExtension.create(),
                 EmojiExtension.create(), TocExtension.create(),
                 new HelpExtension(this, path)));
