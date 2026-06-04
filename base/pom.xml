@@ -40,6 +40,7 @@
         <module>logger</module>
         <module>resource</module>
         <module>metrics</module>
+        <module>cli</module>
         <module>trace</module>
         <module>registry</module>
         <module>configuration</module>
