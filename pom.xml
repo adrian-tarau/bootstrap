@@ -78,7 +78,7 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <bom.version>1.0.19</bom.version>
+        <bom.version>1.0.20</bom.version>
 
         <lang.version>1.0.4-SNAPSHOT</lang.version>
         <resource.version>1.0.3-SNAPSHOT</resource.version>
