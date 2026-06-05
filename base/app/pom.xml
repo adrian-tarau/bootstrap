@@ -18,39 +18,33 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.microfalx.bootstrap</groupId>
-    <artifactId>bootstrap-base</artifactId>
-    <packaging>pom</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <artifactId>bootstrap-base-app</artifactId>
+    <version>1.1.0-SNAPSHOT</version>
 
     <parent>
         <groupId>net.microfalx.bootstrap</groupId>
-        <artifactId>bootstrap</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <artifactId>bootstrap-base</artifactId>
+        <version>1.1.0-SNAPSHOT</version>
     </parent>
 
-    <name>Bootstrap :: Base</name>
-	
-	<modules>
-        <module>core</module>
-        <module>logger</module>
-        <module>resource</module>
-        <module>metrics</module>
-        <module>app</module>
-        <module>cli</module>
-        <module>trace</module>
-        <module>registry</module>
-        <module>configuration</module>
-        <module>store</module>
-        <module>support</module>
-        <module>feature</module>
-        <module>security</module>
-        <module>web</module>
-        <module>test</module>
-    </modules>
+    <name>Bootstrap :: Base :: Application</name>
+
+    <dependencies>
+
+        <!-- Runtime -->
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+    </dependencies>
 
 </project>

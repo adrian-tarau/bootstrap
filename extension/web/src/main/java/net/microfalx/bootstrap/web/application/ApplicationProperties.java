@@ -9,22 +9,14 @@ import org.springframework.context.annotation.Configuration;
 import java.util.Collections;
 import java.util.Map;
 
-@Configuration
+@Configuration("WebApplicationProperties")
 @ConfigurationProperties("bootstrap.application")
 @Getter
 @Setter
-@ToString
-public class ApplicationProperties {
-
-    private String name = "Default";
-
-    private String description = "The default application descriptor";
-
-    private String owner;
+@ToString(callSuper = true)
+public class ApplicationProperties extends net.microfalx.bootstrap.application.ApplicationProperties {
 
     private String logo = "default.png";
-
-    private String url = "#";
 
     private String theme = Theme.DEFAULT;
 
@@ -33,9 +25,5 @@ public class ApplicationProperties {
     private String systemTheme;
 
     private Theme.Mode themeMode = Theme.Mode.LIGHT;
-
-    private String version = "1.0.0";
-
-    private String timeZone;
 
 }

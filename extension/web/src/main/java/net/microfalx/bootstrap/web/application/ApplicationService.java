@@ -20,24 +20,22 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
-import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
-import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.StringUtils.defaultIfNull;
+import static net.microfalx.lang.StringUtils.isNotEmpty;
 import static net.microfalx.lang.TextUtils.insertSpaces;
 
 /**
  * A service which provides metadata for a web application.
  */
-@Service
+@Service("WebApplicationService")
 public final class ApplicationService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationService.class);
@@ -52,6 +50,7 @@ public final class ApplicationService implements InitializingBean {
     @Autowired private WebContainerService webContainerService;
     @Autowired private FeatureService featureService;
     @Autowired private ResourceService resourceService;
+    @Autowired private net.microfalx.bootstrap.application.ApplicationService applicationService;
 
     private final AssetBundleManager assetBundleManager = new AssetBundleManager(this);
     private final Map<String, Menu> navigations = new ConcurrentHashMap<>();
@@ -416,7 +415,6 @@ public final class ApplicationService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         initApplication();
         initAssets();
-        initTimeZone();
         initNavigation();
         initTheme();
         initDomains();
@@ -459,70 +457,23 @@ public final class ApplicationService implements InitializingBean {
     }
 
     private void initApplication() {
-        application.name = applicationProperties.getName();
-        application.description = applicationProperties.getDescription();
-        application.owner = applicationProperties.getOwner();
-        application.url = applicationProperties.getUrl();
+        net.microfalx.bootstrap.application.Application coreApplication = applicationService.getApplication();
+        application.name = coreApplication.getName();
+        application.description = coreApplication.getDescription();
+        application.owner = coreApplication.getVendor();
+        application.url = coreApplication.getUrl();
         application.logo = applicationProperties.getLogo();
-        application.version = getVersion();
-        application.buildNumber = getBuildNumber();
-        application.buildTime = getBuildTime();
-        System.setProperty("application.version", application.getVersion());
-        System.setProperty("application.build.number", application.getBuildNumber());
-        System.setProperty("application.build.time", application.getBuildTime());
-    }
-
-    private String getVersion() {
-        String version = System.getenv("APP_VERSION");
-        if (isNotEmpty(version)) return version;
-        version = loadFromHomeFile(".version");
-        return defaultIfEmpty(version, defaultIfNull(applicationProperties.getVersion(), "1.0.0"));
-    }
-
-    private String getBuildNumber() {
-        String buildNumber = System.getenv("APP_BUILD_NUMBER");
-        if (isNotEmpty(buildNumber)) return buildNumber;
-        buildNumber = loadFromHomeFile(".build-number");
-        return defaultIfEmpty(buildNumber, NA_STRING);
-    }
-
-    private String getBuildTime() {
-        String buildNumber = System.getenv("APP_BUILD_TIME");
-        if (isNotEmpty(buildNumber)) return buildNumber;
-        buildNumber = loadFromHomeFile(".build-time");
-        return defaultIfEmpty(buildNumber, NA_STRING);
-    }
-
-    private String loadFromHomeFile(String fileName) {
-        Resource resource = Resource.file(new File(JvmUtils.getHomeDirectory(), fileName));
-        try {
-            if (resource.exists()) return resource.loadAsString();
-        } catch (IOException e) {
-            // ignore, should not happen
-        }
-        return null;
+        application.version = coreApplication.getVersion();
+        application.buildNumber = coreApplication.getBuildNumber();
+        application.buildTime = coreApplication.getBuildTime();
+        application.buildTime = coreApplication.getBuildTime();
+        application.timeZone = coreApplication.getTimeZone();
     }
 
     private void initAssets() {
         assetBundleManager.initialize(applicationContext, assetProperties);
         assetBundleManager.load();
         initAssetBundleListeners();
-    }
-
-    private void initTimeZone() {
-        ZoneId systemZoneId = ZoneId.systemDefault();
-        ZoneId zoneId = systemZoneId;
-        String source = "OS";
-        if (isNotEmpty(applicationProperties.getTimeZone())) {
-            try {
-                zoneId = ZoneId.of(applicationProperties.getTimeZone());
-                source = "Application";
-            } catch (Exception e) {
-                LOGGER.error("Invalid application time zone : {}, root cause: {}", applicationProperties.getTimeZone(), getRootCauseDescription(e));
-            }
-        }
-        TimeZone.setDefault(TimeZone.getTimeZone(zoneId));
-        LOGGER.info("Application Time Zone '{}', source '{}', initial time zone '{}'", zoneId, source, systemZoneId);
     }
 
     private void initNavigation() {
