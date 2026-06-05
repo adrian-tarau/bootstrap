@@ -1,15 +1,15 @@
-package net.microfalx.bootstrap.web.application;
+package net.microfalx.bootstrap.application;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration("WebApplicationConfiguration")
+@Configuration
 public class ApplicationConfiguration {
 
     @Autowired private ApplicationService applicationService;
 
-    @Bean(name = "webApplication")
+    @Bean(name = "application")
     public Application getApplication() {
         return applicationService.getApplication();
     }

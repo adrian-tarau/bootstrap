@@ -6,11 +6,12 @@ import net.microfalx.lang.Descriptable;
 import net.microfalx.lang.Nameable;
 
 import java.util.Objects;
+import java.util.TimeZone;
 
 import static net.microfalx.lang.StringUtils.defaultIfEmpty;
 
 /**
- * A class which holds information about current (web) application.
+ * A class which holds information about current web application.
  */
 @Getter
 @ToString
@@ -27,6 +28,8 @@ public final class Application implements Nameable, Descriptable {
 
     Theme theme;
     Theme systemTheme;
+
+    TimeZone timeZone;
 
     @Override
     public boolean equals(Object o) {
