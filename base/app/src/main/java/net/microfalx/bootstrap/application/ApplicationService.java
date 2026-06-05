@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.application;
 
 import net.microfalx.lang.JvmUtils;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,8 @@ public final class ApplicationService implements InitializingBean {
 
     private void initApplication() {
         application.name = applicationProperties.getName();
+        String defaultExecutable = toIdentifier(StringUtils.split(application.name, " "));
+        application.executable = defaultIfEmpty(applicationProperties.getExecutable(), defaultExecutable);
         application.description = applicationProperties.getDescription();
         application.vendor = applicationProperties.getVendor();
         application.url = applicationProperties.getUrl();

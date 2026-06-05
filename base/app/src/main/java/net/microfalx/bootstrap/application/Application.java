@@ -22,6 +22,7 @@ public final class Application implements Nameable, Descriptable {
     String version;
     String buildNumber;
     String buildTime;
+    String executable;
     TimeZone timeZone;
 
     @Override
