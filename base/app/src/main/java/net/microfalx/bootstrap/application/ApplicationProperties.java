@@ -26,4 +26,6 @@ public class ApplicationProperties {
 
     private String timeZone;
 
+    private String executable;
+
 }
