@@ -1,7 +1,9 @@
 package net.microfalx.bootstrap.core;
 
+import net.microfalx.bootstrap.core.utils.BootUtils;
 import net.microfalx.lang.FileUtils;
 import net.microfalx.lang.JvmUtils;
+import net.microfalx.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
@@ -16,8 +18,6 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import static net.microfalx.lang.StringUtils.formatMessage;
 
 public class InitializeListener implements ApplicationListener<ApplicationEvent>, Ordered {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(InitializeListener.class);
 
     private volatile ConfigurableEnvironment environment;
 
@@ -44,22 +44,28 @@ public class InitializeListener implements ApplicationListener<ApplicationEvent>
     }
 
     private void logJvmInfo() {
-        if (!JvmUtils.isClient()) return;
+        if (!JvmUtils.isClient() || BootUtils.isCli()) return;
         String jvmSettings = formatMessage("home: ''{0}'', version: ''{1}'', vm info: ''{2}''",
                 System.getProperty("java.home"), Runtime.version(), System.getProperty("java.vm.info"));
-        LOGGER.error("C2 is disabled, the JVM is running in client mode and this will result in poor performance. " +
+        getLogger().warn("C2 is disabled, the JVM is running in client mode and this will result in poor performance. " +
                 "To enable C2, use the JVM option -XX:+TieredCompilation or make sure -XX:-TieredCompilation is not present." +
                 " JVM settings: {}", jvmSettings);
     }
 
     private void logOptions() {
         if (environment == null) return;
-        if (environment.getProperty("bootstrap.debug", Boolean.class, false)) {
-            LOGGER.warn("Bootstrap debug mode is enabled. Do not enable debug mode in production since it will slow down the application");
+        if (environment.getProperty("bootstrap.debug", Boolean.class, false) && !BootUtils.isCli()) {
+            getLogger().warn("Bootstrap debug mode is enabled. Do not enable debug mode in production since it will slow down the application");
         }
     }
 
     private void initShutdownHook(ConfigurableApplicationContext applicationContext) {
         applicationContext.registerShutdownHook();
     }
+
+    private Logger getLogger() {
+        return LoggerFactory.getLogger(InitializeListener.class);
+    }
+
+
 }
