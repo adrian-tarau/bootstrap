@@ -1,0 +1,12 @@
+<configuration>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <appender name="CLI" class="ch.qos.logback.core.helpers.NOPAppender"/>
+
+    <root level="INFO">
+        <appender-ref ref="CLI" />
+    </root>
+
+    <logger name="net.microfalx.bootstrap.core.InitializeListener" level="ERROR" />
+
+</configuration>

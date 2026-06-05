@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.cli;
 
 import net.microfalx.bootstrap.configuration.annotation.EnableConfigurationMapping;
+import net.microfalx.bootstrap.core.utils.BootUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,6 +18,7 @@ public class CliApplication implements CommandLineRunner {
     }
 
     public static void main(String[] args) {
+        BootUtils.asCli();
         SpringApplication.run(CliApplication.class, args);
     }
 }
