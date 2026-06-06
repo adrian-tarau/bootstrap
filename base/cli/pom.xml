@@ -75,6 +75,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-logger</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Library -->
 
         <dependency>
@@ -85,13 +91,10 @@
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli-codegen</artifactId>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>
 
-    <build>
-        <plugins>
-        </plugins>
-    </build>
 
 </project>
