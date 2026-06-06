@@ -32,8 +32,10 @@ import static net.microfalx.bootstrap.logger.LoggerUtils.getLoggerContext;
 import static net.microfalx.bootstrap.logger.LoggerUtils.getRootLogger;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
 import static net.microfalx.lang.ExceptionUtils.getRootCauseDescription;
+import static net.microfalx.lang.FileUtils.isDirectoryWritable;
 import static net.microfalx.lang.FormatterUtils.formatBytes;
 import static net.microfalx.lang.IOUtils.*;
+import static net.microfalx.lang.StringUtils.isEmpty;
 import static net.microfalx.lang.StringUtils.isNotEmpty;
 
 /**
@@ -195,8 +197,25 @@ class ApplicationAppenders {
     }
 
     private File getConfiguredLogsDirectory() {
-        String directory = environment.getProperty("bootstrap.logger.directory");
-        return isNotEmpty(directory) && new File(directory).exists() ? new File(directory) : null;
+        String path = environment.getProperty("bootstrap.logger.directory");
+        if (isEmpty(path)) {
+            File logs = new File(JvmUtils.getWorkingDirectory(), "logs");
+            if (logs.exists() && isDirectoryWritable(logs)) path = logs.getAbsolutePath();
+            if (isEmpty(path)) {
+                path = environment.getProperty("bootstrap.resource.directory");
+                if (isNotEmpty(path)) {
+                    logs = new File(path);
+                    if (isDirectoryWritable(logs)) {
+                        try {
+                            path = FileUtils.validateDirectoryExists(new File(logs, "logs")).getAbsolutePath();
+                        } catch (Exception e) {
+                            // if we fail, no logs
+                        }
+                    }
+                }
+            }
+        }
+        return isNotEmpty(path) && new File(path).exists() && isDirectoryWritable(new File(path)) ? new File(path) : null;
     }
 
     private void archiveLogs() {
