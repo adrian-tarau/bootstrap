@@ -160,6 +160,10 @@ public class LoggerService extends ApplicationContextSupport implements Initiali
     }
 
     private void initializeApplicationAppender() {
+        ApplicationAppenders appenders = new ApplicationAppenders(environment);
+        if (appenders.hasLogsDirectory()) {
+            LOGGER.info("Use logs directory: {}", appenders.getLogsDirectory().getAbsolutePath());
+        }
         ch.qos.logback.classic.Logger logger = getRootLogger();
         Iterator<Appender<ILoggingEvent>> appenderIterator = logger.iteratorForAppenders();
         while (appenderIterator.hasNext()) {
