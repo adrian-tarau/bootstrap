@@ -89,7 +89,7 @@
         <threadpool.version>1.0.1-SNAPSHOT</threadpool.version>
         <webjar.version>1.0.1-SNAPSHOT</webjar.version>
 
-        <spring.boot.version>3.5.10</spring.boot.version>
+        <spring.boot.version>3.5.14</spring.boot.version>
     </properties>
 
     <developers>
@@ -221,8 +221,6 @@
 
     <build>
         <plugins>
-
-            <!-- Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
