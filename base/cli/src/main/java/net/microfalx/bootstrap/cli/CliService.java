@@ -56,6 +56,7 @@ public class CliService implements InitializingBean {
      */
     public int execute(String... args) {
         CommandLine commandLine = new CommandLine(createRootCommand());
+        commandLine.setExecutionExceptionHandler(new CiExceptionHandling());
         return commandLine.execute(args);
     }
 
