@@ -9,6 +9,9 @@ import java.io.PrintWriter;
 import java.util.Objects;
 import java.util.Scanner;
 
+import static net.microfalx.lang.StringUtils.*;
+import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+
 /**
  * Base class for all commands
  */
@@ -17,6 +20,8 @@ public abstract class Command implements Identifiable<String>, Nameable, Descrip
     protected final static CommandLine.Help.Ansi ANSI = CommandLine.Help.Ansi.AUTO;
 
     private String id;
+
+    private File workingDirectory;
 
     @Override
     public final String getId() {
@@ -86,13 +91,45 @@ public abstract class Command implements Identifiable<String>, Nameable, Descrip
         return writeAndFlush(message + "\n");
     }
 
+    protected final String ok(String text) {
+        return ANSI.string("@|green " + defaultIfEmpty(text, NA_STRING) + "|@");
+    }
+
+    protected final String failure(String text) {
+        return ANSI.string("@|red " + defaultIfEmpty(text, NA_STRING) + "|@");
+    }
+
+    protected final String bold(String text) {
+        return ANSI.string("@|bold " + defaultIfEmpty(text, NA_STRING) + "|@");
+    }
+
     /**
      * Returns the working directory for the command.
      *
      * @return a non-null instance
      */
-    protected final File getWorkingDirectory() {
-        return JvmUtils.getWorkingDirectory();
+    protected final File getWorkingDirectory(String workingDirectoryOverride) {
+        if (workingDirectory == null) {
+            workingDirectory = JvmUtils.getWorkingDirectory();
+            if (isNotEmpty(workingDirectoryOverride)) {
+                File workingDirectory = new File(workingDirectoryOverride);
+                if (!workingDirectory.exists()) {
+                    throw new CommandException("The project directory '" + workingDirectory + "' does not exist");
+                }
+                this.workingDirectory = workingDirectory;
+            }
+        }
+        return workingDirectory;
+    }
+
+    /**
+     * Single quotes a string.
+     *
+     * @param value the value
+     * @return a non-null instance
+     */
+    protected static String quote(String value) {
+        return "'" + defaultIfEmpty(value, NA_STRING) + "'";
     }
 
     private Command writeAndFlush(String message) throws IOException {
