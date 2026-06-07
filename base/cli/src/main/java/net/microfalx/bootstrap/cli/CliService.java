@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.cli;
 
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.application.Application;
 import net.microfalx.bootstrap.cli.command.Command;
 import net.microfalx.lang.StringUtils;
@@ -11,9 +12,11 @@ import picocli.CommandLine;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static net.microfalx.lang.ArgumentUtils.requireNotEmpty;
 
+@Slf4j
 @Service
 public class CliService implements InitializingBean {
 
@@ -55,6 +58,7 @@ public class CliService implements InitializingBean {
      * @return the return code
      */
     public int execute(String... args) {
+        LOGGER.info("Execute command: {}", Arrays.toString(args));
         CommandLine commandLine = new CommandLine(createRootCommand());
         commandLine.setExecutionExceptionHandler(new CiExceptionHandling());
         return commandLine.execute(args);
@@ -91,5 +95,11 @@ public class CliService implements InitializingBean {
             root.addSubcommand(command.getName(), CommandLine.Model.CommandSpec.forAnnotatedObject(command));
         }
         return root;
+    }
+
+    private void listCommands() {
+        String commands = getCommands().stream().map(Command::getName).sorted(String::compareToIgnoreCase)
+                .collect(Collectors.joining(", "));
+        LOGGER.info("Registered commands: " + commands);
     }
 }
