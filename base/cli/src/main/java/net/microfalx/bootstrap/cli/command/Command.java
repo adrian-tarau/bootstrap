@@ -78,6 +78,14 @@ public abstract class Command implements Identifiable<String>, Nameable, Descrip
     }
 
     /**
+     * Prints 3 dots  to the console.
+     *
+     */
+    public final Command printDots() {
+        return print("...");
+    }
+
+    /**
      * Prints a line to the console, no new line after.
      *
      * @param message the message to print
