@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<logger xmlns="https://net.microfalx/xsd/logger-1.0.xsd">
+
+    <appender id="bootstrap.cli">
+        <include>net.microfalx.bootstrap.cli</include>
+        <include>picocli</include>
+    </appender>
+
+</logger>
