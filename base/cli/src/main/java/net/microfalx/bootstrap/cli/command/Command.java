@@ -1,6 +1,8 @@
 package net.microfalx.bootstrap.cli.command;
 
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.lang.*;
+import net.microfalx.threadpool.ThreadPool;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -8,13 +10,17 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import static net.microfalx.lang.StringUtils.*;
-import static net.microfalx.lang.StringUtils.defaultIfEmpty;
+import static net.microfalx.lang.TextUtils.abbreviateMiddle;
+import static net.microfalx.lang.ThreadUtils.sleepMillis;
 
 /**
  * Base class for all commands
  */
+@Slf4j
 public abstract class Command implements Identifiable<String>, Nameable, Descriptable {
 
     protected final static CommandLine.Help.Ansi ANSI = CommandLine.Help.Ansi.AUTO;
@@ -75,19 +81,24 @@ public abstract class Command implements Identifiable<String>, Nameable, Descrip
      * Prints a line to the console, no new line after.
      *
      * @param message the message to print
-     * @throws IOException if an I/O error occurs
      */
-    public final Command print(String message) throws IOException {
+    public final Command print(String message) {
         return writeAndFlush(message);
+    }
+
+    /**
+     * Moves to a new line.
+     */
+    public final Command printLn() {
+        return printLn(EMPTY_STRING);
     }
 
     /**
      * Prints a line to the console and adds a new line after.
      *
      * @param message the message to print
-     * @throws IOException if an I/O error occurs
      */
-    public final Command printLn(String message) throws IOException {
+    public final Command printLn(String message) {
         return writeAndFlush(message + "\n");
     }
 
@@ -140,10 +151,44 @@ public abstract class Command implements Identifiable<String>, Nameable, Descrip
         return "'" + defaultIfEmpty(value, NA_STRING) + "'";
     }
 
-    private Command writeAndFlush(String message) throws IOException {
-        PrintWriter writer = getWriter();
-        writer.write(message);
-        writer.flush();
+    /**
+     * Executed a task while printing "." in the console.
+     *
+     * @param runnable the runnable
+     */
+    protected void execute(Runnable runnable) {
+        PrintDotTask task = new PrintDotTask();
+        ThreadPool.get().execute(task);
+        try {
+            runnable.run();
+        } finally {
+            task.cancel();
+        }
+    }
+
+    /**
+     * Executed a task while printing "." in the console.
+     *
+     * @param supplier the supplier
+     */
+    protected <T> T execute(Supplier<T> supplier) {
+        PrintDotTask task = new PrintDotTask();
+        ThreadPool.get().execute(task);
+        try {
+            return supplier.get();
+        } finally {
+            task.cancel();
+        }
+    }
+
+    private Command writeAndFlush(String message) {
+        try {
+            PrintWriter writer = getWriter();
+            writer.write(message);
+            writer.flush();
+        } catch (IOException e) {
+            LOGGER.warn("Failed to write message '{}'", abbreviateMiddle(message, 20));
+        }
         return this;
     }
 
@@ -153,5 +198,25 @@ public abstract class Command implements Identifiable<String>, Nameable, Descrip
             throw new IllegalStateException("A command class (" + ClassUtils.getName(this) + ") must be annotated with @Command");
         }
         return commandAnnot;
+    }
+
+    private class PrintDotTask implements Runnable {
+
+        private final AtomicBoolean running = new AtomicBoolean(true);
+
+        private float sleep = 1000;
+
+        @Override
+        public void run() {
+            while (running.get()) {
+                sleepMillis(sleep);
+                if (running.get()) print(".");
+                sleep = (float) Math.max(10f, sleep * 1.5);
+            }
+        }
+
+        void cancel() {
+            running.set(false);
+        }
     }
 }
