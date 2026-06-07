@@ -91,6 +91,14 @@ public abstract class Command implements Identifiable<String>, Nameable, Descrip
         return writeAndFlush(message + "\n");
     }
 
+    protected final String exitCode(int code) {
+        if (code == 0) {
+            return ok("OK");
+        } else {
+            return failure("Failed (" + code + ")");
+        }
+    }
+
     protected final String ok(String text) {
         return ANSI.string("@|green " + defaultIfEmpty(text, NA_STRING) + "|@");
     }
