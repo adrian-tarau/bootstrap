@@ -282,16 +282,12 @@ Application.ajax = function (type, path, params, callback, options) {
             if (options.mask) me.unmask(options.mask);
         }
     });
-    let shouldRunAnalytics = true;
-    let ping = uri.startsWith("/ping");
-    // run Analytics on ping only 10 pings
-    if (ping) shouldRunAnalytics = me.pingCount % 10 === 0;
+    let shouldRunAnalytics = !uri.startsWith("/ping");
     if (shouldRunAnalytics) {
         this.analytics("ajax", {
             page_title: window.title,
             page_location: window.location.href,
             ajax_location: uri,
-            ping : ping,
             page_path: APP_REQUEST_PATH
         })
     }
