@@ -6,7 +6,7 @@ window.Google.Gis = window.Google.Gis || {};
 /**
  * An initialization function called after the API was loaded.
  *
- * @return {Object} the JWT response object containing the ID token
+ * @return {Object} clientId the JWT response object containing the ID token
  */
 Google.Gis.initialize = function (clientId) {
     Logger.info("Initialize Google Identity Services, client id: " + clientId);
