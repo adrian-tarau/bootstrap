@@ -14,7 +14,10 @@ Google.Analytics.initialize = function (clientId) {
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', clientId);
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    gtag('config', clientId, {
+        debug_mode: isLocalhost
+    });
     // let everybody know Analytics is available
     Application.fire("google.analytics");
 }
