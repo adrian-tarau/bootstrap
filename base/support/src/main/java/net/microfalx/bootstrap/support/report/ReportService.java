@@ -155,9 +155,19 @@ public class ReportService implements InitializingBean {
      * @param interval the reporting interval
      */
     public void send(Duration interval) {
+        send(interval, null);
+    }
+
+    /**
+     * Sends a report about the system, using the given duration as the report time interval.
+     *
+     * @param interval the reporting interval
+     * @param suffix   a suffix added to the title, to signal a special case
+     */
+    public void send(Duration interval, String suffix) {
         requireNonNull(interval);
         Report report = createReport();
-        updateReportName(report);
+        updateReportName(report, suffix);
         report.setEndTime(ZonedDateTime.now());
         report.setStartTime(report.getEndTime().minus(interval));
         Resource fullReport = Resource.temporary("report_", ".html");
@@ -192,7 +202,7 @@ public class ReportService implements InitializingBean {
     @EventListener
     public void onApplicationEvent(ApplicationStartedEvent event) {
         if (configuration.isEnabled() && configuration.isOnBoot()) {
-            threadPool.execute(new SendReportTask(ofHours(1)));
+            threadPool.execute(new SendReportTask(ofHours(1), "Startup"));
         }
     }
 
@@ -298,7 +308,8 @@ public class ReportService implements InitializingBean {
 
     private void initTasks() {
         if (!configuration.isEnabled()) return;
-        LOGGER.info("Support report scheduled at '{}/{}/{}', recipients: '{}'", configuration.getDailySchedule(), configuration.getWithIssuesSchedule(), configuration.getWithCriticalIssuesSchedule(), configuration.getRecipients());
+        LOGGER.info("Support report scheduled at '{}/{}/{}', recipients: '{}'", configuration.getDailySchedule(),
+                configuration.getWithIssuesSchedule(), configuration.getWithCriticalIssuesSchedule(), configuration.getRecipients());
         threadPool.schedule(new SendReportTask(ofHours(24)), new CronTrigger(configuration.getDailySchedule()));
         threadPool.schedule(new IssuesReportTask(Issue.Severity.NOTICE), new CronTrigger(configuration.getWithIssuesSchedule()));
         threadPool.schedule(new IssuesReportTask(Issue.Severity.MEDIUM), new CronTrigger(configuration.getWithIssuesSchedule()));
@@ -339,8 +350,9 @@ public class ReportService implements InitializingBean {
         }
     }
 
-    private void updateReportName(Report report) {
+    private void updateReportName(Report report, String suffix) {
         String name = "System Report - " + getSystemName();
+        if (isNotEmpty(suffix)) name += " - " + suffix;
         int issueCriticalCount = getIssueCount(Issue.Severity.CRITICAL);
         int issueHighCount = getIssueCount(Issue.Severity.HIGH);
         int issueMediumHighCount = getIssueCount(Issue.Severity.MEDIUM);
@@ -497,9 +509,15 @@ public class ReportService implements InitializingBean {
     private class SendReportTask implements Runnable, IdentifiableTask {
 
         private final Duration interval;
+        private final String suffix;
 
         public SendReportTask(Duration interval) {
+            this(interval, null);
+        }
+
+        public SendReportTask(Duration interval, String suffix) {
             this.interval = interval;
+            this.suffix = suffix;
         }
 
         @Override
@@ -522,7 +540,7 @@ public class ReportService implements InitializingBean {
             DAILY_REPORT.set(interval.toHours() >= 24);
             try {
                 REPORT.count("Send Report: " + formatDuration(interval));
-                send(interval);
+                send(interval, suffix);
             } finally {
                 cleanup();
             }
