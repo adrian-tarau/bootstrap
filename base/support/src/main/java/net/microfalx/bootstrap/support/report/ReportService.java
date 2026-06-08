@@ -414,19 +414,23 @@ public class ReportService implements InitializingBean {
             long criticalIssuesCount = getIssueCount(Issue.Severity.CRITICAL);
             long highIssuesCount = getIssueCount(Issue.Severity.HIGH);
             long noticeIssuesCount = getIssueCount(Issue.Severity.NOTICE);
+            String suffix;
             boolean shouldSend;
             if (severity == Issue.Severity.NOTICE) {
-                shouldSend = noticeIssuesCount > 0;
+                suffix = "Notices";
+                shouldSend = noticeIssuesCount > 0 && configuration.isOnNotice();
             } else {
                 // if it was requested to send only critical issues, but there are none, skip sending
                 if (criticalIssuesCount > 0 && severity != Issue.Severity.CRITICAL) return;
                 // if there are issues, sent the report, looking at the last hour
-                shouldSend = criticalIssuesCount >= configuration.getCriticalIssuesThreshold() ||
-                        highIssuesCount >= configuration.getHighIssuesThreshold();
+                boolean hasCritical = criticalIssuesCount >= configuration.getCriticalIssuesThreshold();
+                boolean hasHigh = highIssuesCount >= configuration.getHighIssuesThreshold();
+                shouldSend = hasCritical || hasHigh;
+                suffix = hasCritical ? "Critical Issues" : "Important Issues";
             }
             if (shouldSend) {
                 REPORT.count("Sent: " + severity.name());
-                send(Duration.ofHours(1));
+                send(Duration.ofHours(1), suffix);
             }
         }
 
@@ -517,7 +521,15 @@ public class ReportService implements InitializingBean {
 
         public SendReportTask(Duration interval, String suffix) {
             this.interval = interval;
+            if (StringUtils.isEmpty(suffix)) {
+                if (interval.toHours() >= 24) {
+                    suffix = "Daily";
+                } else {
+                    suffix = "Hourly";
+                }
+            }
             this.suffix = suffix;
+
         }
 
         @Override

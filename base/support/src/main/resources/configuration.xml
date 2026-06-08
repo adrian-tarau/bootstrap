@@ -4,6 +4,7 @@
     <group key="bootstrap.support.report" name="Support" section="System" description="System report configuration">
         <item key="enabled" name="Enabled" separator="Flags" data-type="boolean" default="true" description="Indicates whether the support email is enabled"/>
         <item key="onBoot" name="On Boot" data-type="boolean" default="true" description="Indicates whether the a support email is sent on boot"/>
+        <item key="onNotice" name="On Notice" data-type="boolean" default="false" description="Indicates whether the a support email is sent on when an issue of type 'Notice' is registered"/>
 
         <item key="dailySchedule" name="Daily" separator="Schedules" default="0 0 0 * * ?" description="The daily report daily schedule in CRON format."/>
         <item key="withIssuesSchedule" name="With Issues" default="0 0 0/6 ? * * *" description="The regular issues report schedule in CRON format."/>
