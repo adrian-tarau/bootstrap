@@ -17,6 +17,15 @@ User.isAuthenticated = function () {
  *
  * @return {string} the username
  */
+User.getId = function () {
+    return Utils.defaultIfNotDefinedOrNull(this.getData().id, "anonymous");
+}
+
+/**
+ * Returns the username of the current user.
+ *
+ * @return {string} the username
+ */
 User.getUserName = function () {
     return Utils.defaultIfNotDefinedOrNull(this.getData().userName, "anonymous");
 }

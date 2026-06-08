@@ -282,6 +282,11 @@ Application.ajax = function (type, path, params, callback, options) {
             if (options.mask) me.unmask(options.mask);
         }
     });
+    this.analytics("ajax", {
+        page_title: window.title,
+        page_location: window.location.href,
+        page_path: APP_REQUEST_PATH
+    })
 }
 
 /**
@@ -362,7 +367,7 @@ Application.saveForm = function (selector, path, params, options) {
     let me = Application;
     options = options || {};
     let form = $(selector);
-    let url = this.getUri(path, params, {params: false, self : options.self});
+    let url = this.getUri(path, params, {params: false, self: options.self});
     let headers = this.getHeaders();
     let before = options.before;
     let success = options.success;
@@ -533,7 +538,7 @@ Application.getModals = function () {
  *
  * @returns {*|string} a non-null string
  */
-Application.getTheme = function() {
+Application.getTheme = function () {
     return APP_THEME || "bootstrap";
 }
 
@@ -542,7 +547,7 @@ Application.getTheme = function() {
  *
  * @returns {*|string} a non-null string
  */
-Application.getThemeMode = function() {
+Application.getThemeMode = function () {
     return APP_THEME_MODE || "auto";
 }
 
@@ -864,6 +869,18 @@ Application.initTimeZone = function () {
     Application.post("settings/session/time-zone", {}, function (data) {
         // nothing to process
     }, {self: false});
+}
+
+/**
+ * Pushes an event to the analytics.
+ *
+ * By default, it does nothing, it will be replaced if analytics is enabled.
+ *
+ * @param event the event name
+ * @param options the options
+ */
+Application.analytics = function (event, options) {
+    // empty on purpose
 }
 
 /**
