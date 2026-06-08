@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.web.template.tools;
 
+import net.microfalx.bootstrap.web.application.Application;
 import org.springframework.context.ApplicationContext;
 import org.thymeleaf.context.IContext;
 
@@ -36,10 +37,27 @@ public class PageTool extends AbstractTool {
      * @see #hasTitle()
      */
     public String getTitle() {
+        return getTitle(false);
+    }
+
+    /**
+     * Returns the page title.
+     *
+     * @return the page title, null if there is no title
+     * @see #hasTitle()
+     */
+    public String getTitle(boolean includeApplication) {
         try {
-            return doGetTitle();
+            String title = doGetTitle();
+            if (includeApplication) {
+                Application application = getApplicationContext().getBean(Application.class);
+                title = isNotEmpty(title) ? application.getName() + " / " + title : application.getName();
+            }
+            return title;
         } finally {
-            setModelAttribute(getTemplateContext(), PAGE_TITLE_WAS_CONSUMED, Boolean.TRUE);
+            if (!includeApplication) {
+                setModelAttribute(getTemplateContext(), PAGE_TITLE_WAS_CONSUMED, Boolean.TRUE);
+            }
         }
     }
 

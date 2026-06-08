@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import static net.microfalx.lang.StringUtils.EMPTY_STRING;
+
 @RequestMapping("/")
 @Dashboard("home")
 @Controller
@@ -20,4 +22,8 @@ public class HomeController extends DashboardController {
         return AssetUtils.getResource("favicon.ico", Asset.Type.IMAGE);
     }
 
+    @Override
+    protected String getTitle() {
+        return EMPTY_STRING;
+    }
 }
