@@ -19,6 +19,11 @@ public class GoogleFeatures implements Features {
     public static final String GIS = "google.gis";
 
     /**
+     * The feature identifier for Google Analytics API.
+     */
+    public static final String ANALYTICS = "google.analytics";
+
+    /**
      * Google Map feature.
      */
     public static final Feature MAP_FEATURE = Feature.create(MAP, "Google Maps");
@@ -27,4 +32,9 @@ public class GoogleFeatures implements Features {
      * Google Identity Services feature.
      */
     public static final Feature GIS_FEATURE = Feature.create(GIS, "Google Identity Services");
+
+    /**
+     * Google Analytics feature.
+     */
+    public static final Feature ANALYTICS_FEATURE = Feature.create(ANALYTICS, "Google Analytics");
 }

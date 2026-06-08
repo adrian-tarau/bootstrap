@@ -1,15 +1,18 @@
 package net.microfalx.bootstrap.cloud.google;
 
+import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.feature.FeatureService;
 import net.microfalx.bootstrap.web.application.Asset;
 import net.microfalx.bootstrap.web.application.AssetBundle;
 import net.microfalx.bootstrap.web.application.AssetBundleListener;
+import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.annotation.Provider;
 
 import java.util.Collection;
 
 @Provider
+@Slf4j
 public class GoogleAssetBundleListener extends ApplicationContextSupport implements AssetBundleListener {
 
     @Override
@@ -22,6 +25,7 @@ public class GoogleAssetBundleListener extends ApplicationContextSupport impleme
         GoogleProperties properties = getBean(GoogleProperties.class);
         if (properties.isMapApiEnabled()) initMaps(properties, asserts);
         if (properties.isGisEnabled()) initGis(properties, asserts);
+        if (properties.isAnalyticsEnabled()) initAnalytics(properties, asserts);
     }
 
     private void initMaps(GoogleProperties properties, Collection<Asset> asserts) {
@@ -42,6 +46,20 @@ public class GoogleAssetBundleListener extends ApplicationContextSupport impleme
         Asset.Builder builder = Asset.uri(Asset.Type.JAVA_SCRIPT, "https://accounts.google.com/gsi/client")
                 .defer(true).feature(GoogleFeatures.GIS)
                 .requiresAuthentication(false).onLoad("Google.Gis.initialize('" + properties.getClientId() + "')");
+        asserts.add(builder.build());
+    }
+
+    private void initAnalytics(GoogleProperties properties, Collection<Asset> asserts) {
+        String analyticsId = properties.getAnalyticsId();
+        if (StringUtils.isEmpty(analyticsId)) {
+            LOGGER.error("Google Analytics is enabled but the application identifier is not set");
+            return;
+        }
+        FeatureService featureService = getBean(FeatureService.class);
+        featureService.setEnabled(GoogleFeatures.ANALYTICS_FEATURE, true);
+        Asset.Builder builder = Asset.uri(Asset.Type.JAVA_SCRIPT, "https://www.googletagmanager.com/gtag/js?id=" + properties.getAnalyticsId())
+                .defer(true).feature(GoogleFeatures.ANALYTICS)
+                .onLoad("Google.Analytics.initialize('" + analyticsId + "')");
         asserts.add(builder.build());
     }
 

@@ -52,6 +52,16 @@ public class GoogleProperties {
     private String mapId;
 
     /**
+     * Indicates whether the analytics is enabled
+     */
+    private boolean analyticsEnabled;
+
+    /**
+     * Returns the account used to track analytics
+     */
+    private String analyticsId;
+
+    /**
      * Returns the client ID for Google Identity Services.
      *
      * @return a non-null instance
