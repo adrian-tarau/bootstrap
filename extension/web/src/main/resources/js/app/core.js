@@ -282,12 +282,19 @@ Application.ajax = function (type, path, params, callback, options) {
             if (options.mask) me.unmask(options.mask);
         }
     });
-    this.analytics("ajax", {
-        page_title: window.title,
-        page_location: window.location.href,
-        ajax_location: uri,
-        page_path: APP_REQUEST_PATH
-    })
+    let shouldRunAnalytics = true;
+    let ping = uri.startsWith("/ping");
+    // run Analytics on ping only 10 pings
+    if (ping) shouldRunAnalytics = me.pingCount % 10 === 0;
+    if (shouldRunAnalytics) {
+        this.analytics("ajax", {
+            page_title: window.title,
+            page_location: window.location.href,
+            ajax_location: uri,
+            ping : ping,
+            page_path: APP_REQUEST_PATH
+        })
+    }
 }
 
 /**
@@ -624,6 +631,7 @@ Application.copyElementToClipboard = async function (selector, title) {
  */
 Application.ping = function () {
     let me = this;
+    me.pingCount = (me.pingCount ?? 0) + 1;
     Application.get("/ping", {}, function (data) {
         if (me.isConnectionLost()) {
             Logger.info("Connection re-established");
@@ -895,7 +903,6 @@ Application.initTheme = function () {
 
     // Set theme on load
     updateTheme();
-
     // Update theme when the preferred scheme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
 }
