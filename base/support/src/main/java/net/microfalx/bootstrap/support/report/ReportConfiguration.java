@@ -20,11 +20,18 @@ public interface ReportConfiguration extends ConfigurationListenerAware {
     boolean isEnabled();
 
     /**
-     * Returns  whether the system report should be generated on boot.
+     * Returns whether the system report should be generated on boot.
      *
      * @return {@code true} if a report is sent out after application was started, {@code false} otherwise
      */
     boolean isOnBoot();
+
+    /**
+     * Returns whether the system report should be sent when a notice is detected.
+     *
+     * @return {@code true} for notices, {@code false} otherwise
+     */
+    boolean isOnNotice();
 
     /**
      * Return the daily report daily schedule in CRON format.
