@@ -199,7 +199,7 @@ class ApplicationAppenders {
     private File getConfiguredLogsDirectory() {
         String path = environment.getProperty("bootstrap.logger.directory");
         if (isEmpty(path)) {
-            File logs = new File(JvmUtils.getWorkingDirectory(), "logs");
+            File logs = new File(JvmUtils.getWorkingDirectory(false), "logs");
             if (logs.exists() && isDirectoryWritable(logs)) path = logs.getAbsolutePath();
             if (isEmpty(path)) {
                 path = environment.getProperty("bootstrap.resource.directory");

@@ -175,7 +175,7 @@ public class ResourceService implements InitializingBean {
         initializeSharedResource();
         validateResource(getSharedResource(null));
         LOGGER.info("JVM directories: home = {}, working = {}, var = {}, tmp = {}", JvmUtils.getHomeDirectory(),
-                JvmUtils.getWorkingDirectory(), JvmUtils.getVariableDirectory(), JvmUtils.getTemporaryDirectory());
+                JvmUtils.getWorkingDirectory(false), JvmUtils.getVariableDirectory(), JvmUtils.getTemporaryDirectory());
         LOGGER.info("Persisted resources directory {}", persistedDirectory);
         ResourceFactory.setWorkspace(FileResource.directory(persistedDirectory));
         LOGGER.info("Transient resources directory {}", transientDirectory);
