@@ -285,6 +285,7 @@ Application.ajax = function (type, path, params, callback, options) {
     this.analytics("ajax", {
         page_title: window.title,
         page_location: window.location.href,
+        ajax_location: uri,
         page_path: APP_REQUEST_PATH
     })
 }
