@@ -15,6 +15,8 @@ import net.microfalx.bootstrap.web.template.tools.DataSetTool;
 import net.microfalx.bootstrap.web.template.tools.LinkTool;
 import net.microfalx.bootstrap.web.util.Gravatar;
 import net.microfalx.lang.IdGenerator;
+import net.microfalx.lang.Identifiable;
+import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.TextUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -37,6 +39,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.lang.Character.MAX_RADIX;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.StringUtils.*;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeEcmaScript;
@@ -74,12 +77,18 @@ public class ApplicationDialect extends AbstractProcessorDialect {
     private static UserInfo getCurrentUser() {
         UserInfo userInfo = new UserInfo();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        userInfo.id = "anonymous";
         userInfo.userName = "anonymous";
         userInfo.name = "Anonymous";
         userInfo.authenticated = authentication != null && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken);
         if (authentication != null) {
             Object principal = authentication.getPrincipal();
+            if (principal instanceof Identifiable<?> identifiable) {
+                Object id = identifiable.getId();
+                if (id instanceof Number idAsNumber) id = Long.toString(idAsNumber.longValue(), MAX_RADIX);
+                userInfo.id = ObjectUtils.toString(id);
+            }
             if (principal instanceof UserDetails userDetails) {
                 userInfo.userName = userDetails.getUsername();
                 userInfo.name = authentication.getName();
@@ -192,6 +201,7 @@ public class ApplicationDialect extends AbstractProcessorDialect {
     @ToString
     private static final class UserInfo {
 
+        private String id;
         private String userName;
         private String name;
         private String email;
