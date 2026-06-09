@@ -1,6 +1,7 @@
 package net.microfalx.bootstrap.cli.command;
 
 import net.microfalx.bootstrap.application.Application;
+import net.microfalx.bootstrap.cli.util.Console;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -19,7 +20,8 @@ public class VersionCommand extends RunnableCommand {
 
     @Override
     protected void execute() throws IOException {
-        printLn(application.getName() + " - " + application.getDescription());
-        printLn("Version: " + application.getVersion() + ", Build Number: " + application.getBuildNumber() + ", Build Time: " + application.getBuildTime());
+        Console console = getConsole();
+        console.printLn(application.getName() + " - " + application.getDescription());
+        console.printLn("Version: " + application.getVersion() + ", Build Number: " + application.getBuildNumber() + ", Build Time: " + application.getBuildTime());
     }
 }
