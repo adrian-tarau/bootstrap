@@ -209,10 +209,12 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
     public Resource getLogs() {
         if (dryRun) {
             return Resource.text("Executed: " + String.join(" ", buildCommandLine()));
-        } else {
+        } else if (logFile != null) {
             StringBuilder builder = new StringBuilder();
             append(builder, logFile);
             return Resource.text(builder.toString());
+        } else {
+            return Resource.text(EMPTY_STRING);
         }
     }
 
@@ -237,13 +239,15 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
     public Stream<String> getLogsStream() {
         if (dryRun) {
             return Stream.of(getDescription());
-        } else {
+        } else if (logFile != null) {
             try {
                 LineNumberReader reader = new LineNumberReader(getBufferedReader(new FileReader(logFile)));
                 return reader.lines();
             } catch (FileNotFoundException e) {
                 return Stream.of((getException(logFile, e)));
             }
+        } else {
+            return Stream.empty();
         }
     }
 
