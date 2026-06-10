@@ -1,7 +1,7 @@
 package net.microfalx.bootstrap.help;
 
 import net.microfalx.bootstrap.content.ContentService;
-import net.microfalx.bootstrap.core.async.AsynchronousConfig;
+import net.microfalx.bootstrap.core.async.AsynchronousConfiguration;
 import net.microfalx.bootstrap.core.i18n.I18nProperties;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.bootstrap.model.MetadataService;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ContextConfiguration(classes = {I18nService.class, ResourceService.class, ResourceProperties.class, OptionalValidatorFactoryBean.class,
         MetadataService.class, ContentService.class, IndexService.class, SearchService.class, HelpService.class})
-@Import({I18nProperties.class, AsynchronousConfig.class})
+@Import({I18nProperties.class, AsynchronousConfiguration.class})
 @OverrideAutoConfiguration(enabled = false)
 @ImportAutoConfiguration
 @SpringBootTest

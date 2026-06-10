@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.test;
 
+import lombok.Getter;
 import net.microfalx.bootstrap.configuration.ConfigurationService;
 import net.microfalx.bootstrap.registry.Registry;
 import net.microfalx.bootstrap.resource.ResourceService;
@@ -8,17 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@Getter
 public class TestService {
 
-    @Autowired
-    private Registry registry;
-
-    @Autowired
-    private StoreService storeService;
-
-    @Autowired
-    private ResourceService resourceService;
-
-    @Autowired
-    private ConfigurationService configurationService;
+    @Autowired private Registry registry;
+    @Autowired private StoreService storeService;
+    @Autowired private ResourceService resourceService;
+    @Autowired private ConfigurationService configurationService;
 }

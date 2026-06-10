@@ -33,18 +33,13 @@ import static net.microfalx.resource.ResourceUtils.toUri;
 @CustomLog
 public class ResourceService implements InitializingBean {
 
-    private File persistedDirectory;
-    private File transientDirectory;
-
-    private Resource sharedResource;
-
-    @Autowired
-    private ThreadPool threadPool;
-
-    @Autowired(required = false)
-    private ResourceProperties properties = new ResourceProperties();
+    @Autowired private ThreadPool threadPool;
+    @Autowired(required = false) private ResourceProperties properties = new ResourceProperties();
 
     private final ClassPathManager classPathManager = new ClassPathManager();
+    private File persistedDirectory;
+    private File transientDirectory;
+    private Resource sharedResource;
 
     /**
      * Returns a resource directory for persisted data.

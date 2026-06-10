@@ -17,7 +17,7 @@ import static java.time.Duration.ofSeconds;
 @Setter
 public class TemplateProperties {
 
-    @Autowired(required = false) private BootstrapProperties bootstrap;
+    @Autowired(required = false) private BootstrapProperties bootstrap = new BootstrapProperties();
 
     /**
      * Flag, true (default) to cache the templates
