@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Optional.ofNullable;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
+import static net.microfalx.lang.ClassUtils.isSubClassOf;
 
 /**
  * A Mockito answer that provides safe behaviors for JPA repositories.
@@ -38,9 +39,20 @@ public class JpaRepositoryAnswer extends AbstractAnswer {
      * @param <R>             the type of the repository
      * @return the mocked repository
      */
-    public static <T, ID, R extends JpaRepository<T, ID>> R mock(Class<R> repositoryClass) {
+    @SuppressWarnings("unchecked")
+    public static <T, ID, R extends JpaRepository<T, ID>> R mock(Class<?> repositoryClass) {
         requireNonNull(repositoryClass);
-        return Mockito.mock(repositoryClass, new JpaRepositoryAnswer());
+        return Mockito.mock((Class<R>) repositoryClass, new JpaRepositoryAnswer());
+    }
+
+    /**
+     * Returns whether the given type is a JPA repository.
+     *
+     * @param type the type
+     * @return {@code true} if JPA repository, {@code false} otherwise
+     */
+    public static boolean isRepository(Class<?> type) {
+        return isSubClassOf(type, JpaRepository.class);
     }
 
     @Override

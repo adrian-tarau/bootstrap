@@ -19,7 +19,6 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -30,7 +29,6 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import static java.util.Collections.unmodifiableSet;
 import static net.microfalx.lang.ArgumentUtils.requireNonNull;
-import static net.microfalx.lang.ClassUtils.isSubClassOf;
 import static net.microfalx.lang.ExceptionUtils.rethrowExceptionAndReturn;
 import static net.microfalx.lang.FileUtils.validateDirectoryExists;
 
@@ -252,8 +250,8 @@ public class TestContext {
             } catch (Exception e) {
                 return rethrowExceptionAndReturn(e);
             }
-        } else if (isSubClassOf(type, JpaRepository.class)) {
-            instance = (T) JpaRepositoryAnswer.mock((Class<JpaRepository>) type);
+        } else if (TestUtils.isJpaAvailable() && JpaRepositoryAnswer.isRepository(type)) {
+            instance = (T) JpaRepositoryAnswer.mock(type);
         } else {
             instance = Mockito.mock(type, Mockito.RETURNS_SMART_NULLS);
         }
