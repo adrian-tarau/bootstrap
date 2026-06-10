@@ -20,7 +20,7 @@ import java.util.concurrent.Executor;
 @Configuration
 @EnableAsync
 @EnableScheduling
-public class AsynchronousConfig implements AsyncConfigurer, SchedulingConfigurer {
+public class AsynchronousConfiguration implements AsyncConfigurer, SchedulingConfigurer {
 
     @Autowired(required = false)
     private AsynchronousProperties properties = new AsynchronousProperties();
