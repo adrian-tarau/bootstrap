@@ -1,5 +1,6 @@
 package net.microfalx.bootstrap.model;
 
+import jakarta.validation.ValidatorFactory;
 import net.microfalx.bootstrap.core.i18n.I18nService;
 import net.microfalx.lang.ClassUtils;
 import net.microfalx.lang.ExceptionUtils;
@@ -9,10 +10,13 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +35,9 @@ public class MetadataService implements InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataService.class);
 
     @Autowired(required = false) private Validator validator;
+    @Autowired(required = false) private jakarta.validation.Validator jakartaValidator;
+    @Autowired(required = false) private ValidatorFactory jakartaValidatorFactory;
+    @Autowired(required = false) private ConversionService conversionService;
     @Autowired(required = false) private I18nService i18nService;
     @Autowired ApplicationContext applicationContext;
 
@@ -144,6 +151,7 @@ public class MetadataService implements InitializingBean {
     }
 
     protected void initialize() {
+        initializeConvertorService();
         initializeValidator();
         initializeI18n();
         discoverMetadataProviders();
@@ -160,10 +168,34 @@ public class MetadataService implements InitializingBean {
         throw new ModelException("A metadata provider is not registered for model " + ClassUtils.getName(modelClass));
     }
 
+    private void initializeConvertorService() {
+        if (conversionService == null) {
+            LOGGER.warn("Convertor service is not available, use internal implementation");
+            conversionService = new DefaultConversionService();
+        } else {
+            LOGGER.info("ConvertorService is available, implementation: {}",
+                    ClassUtils.getName(conversionService));
+        }
+    }
+
     private void initializeValidator() {
-        if (i18nService == null) {
+        if (validator == null) {
             LOGGER.warn("Validator is not available, disable validation");
             validator = new NoOpValidator();
+        } else {
+            if (validator.getClass() != jakartaValidatorFactory.getClass()) {
+                LOGGER.info("Validator is available, implementation: {}, validator: {}, factory: {}",
+                        ClassUtils.getName(validator), ClassUtils.getName(jakartaValidator),
+                        ClassUtils.getName(jakartaValidatorFactory));
+            } else {
+                LOGGER.info("Validator is available, implementation: {}", ClassUtils.getName(validator));
+            }
+            if (validator instanceof LocalValidatorFactoryBean lvfb) {
+                jakarta.validation.Validator nativeValidator = lvfb.unwrap(jakarta.validation.Validator.class);
+                jakarta.validation.ValidatorFactory nativeValidatorFactory = lvfb.unwrap(jakarta.validation.ValidatorFactory.class);
+                LOGGER.info("Native validator implementation: {}, factory: {}",
+                        ClassUtils.getName(nativeValidator), ClassUtils.getName(nativeValidatorFactory));
+            }
         }
     }
 
