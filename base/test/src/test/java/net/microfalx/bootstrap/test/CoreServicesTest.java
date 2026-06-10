@@ -17,17 +17,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @Prepare(mocks = RegistryService.class, subjects = ConfigurationService.class)
 public class CoreServicesTest extends ServiceUnitTestCase {
 
-    @Mock
-    private ThreadPool threadPool;
-
-    @Mock
-    private StoreService storeService;
-
-    @Subject
-    private ResourceService resourceService;
-
-    @Subject
-    private TestService testService;
+    @Mock private ThreadPool threadPool;
+    @Mock private StoreService storeService;
+    @Subject private ResourceService resourceService;
+    @Subject private TestService testService;
 
     private TestContext testContext;
 

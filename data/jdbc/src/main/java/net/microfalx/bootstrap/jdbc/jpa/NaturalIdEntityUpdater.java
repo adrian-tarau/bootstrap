@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.jdbc.jpa;
 
-import net.microfalx.bootstrap.core.config.RetryConfig;
+import net.microfalx.bootstrap.core.config.RetryConfiguration;
 import net.microfalx.bootstrap.core.utils.ApplicationContextSupport;
 import net.microfalx.bootstrap.model.*;
 import net.microfalx.lang.AnnotationUtils;
@@ -63,7 +63,7 @@ public final class NaturalIdEntityUpdater<M, ID> extends ApplicationContextSuppo
                 // let it pass, we will create one manually
             }
         }
-        if (retryTemplate == null) retryTemplate = new RetryConfig().retryTemplate();
+        if (retryTemplate == null) retryTemplate = new RetryConfiguration().retryTemplate();
         return retryTemplate;
     }
 

@@ -4,6 +4,7 @@ import net.microfalx.bootstrap.registry.Registry;
 import net.microfalx.bootstrap.registry.RegistryService;
 import net.microfalx.bootstrap.registry.Storage;
 import net.microfalx.bootstrap.test.annotation.AnswerFor;
+import org.mockito.internal.util.MockUtil;
 import org.mockito.invocation.InvocationOnMock;
 
 @SuppressWarnings("unused")
@@ -16,7 +17,7 @@ public class RegistryAnswer extends AbstractAnswer {
     public void initialize(Object... context) {
         super.initialize(context);
         RegistryService registryService = getContext().lookup(RegistryService.class);
-        if (registryService != null) {
+        if (registryService != null && !MockUtil.isMock(registryService)) {
             registry = registryService.getRegistry();
         } else {
             registry = Registry.create(Storage.create());

@@ -34,8 +34,8 @@
     </parent>
 
     <name>Bootstrap :: Base</name>
-	
-	<modules>
+
+    <modules>
         <module>core</module>
         <module>logger</module>
         <module>resource</module>

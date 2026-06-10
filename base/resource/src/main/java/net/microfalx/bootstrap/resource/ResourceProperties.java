@@ -19,7 +19,7 @@ import static net.microfalx.resource.ResourceUtils.toDirectory;
 @ConfigurationProperties("bootstrap.resource")
 public class ResourceProperties {
 
-    @Autowired(required = false) private BootstrapProperties bootstrap;
+    @Autowired(required = false) private BootstrapProperties bootstrap = new BootstrapProperties();
 
     @Value(PERSISTED_PATH)
     private String persistedDirectory;

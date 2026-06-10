@@ -1,8 +1,19 @@
 package net.microfalx.bootstrap.test;
 
 import lombok.extern.slf4j.Slf4j;
+import net.microfalx.bootstrap.application.ApplicationConfiguration;
+import net.microfalx.bootstrap.application.ApplicationService;
+import net.microfalx.bootstrap.core.config.BootstrapProperties;
+import net.microfalx.bootstrap.core.config.ConverterConfiguration;
+import net.microfalx.bootstrap.core.config.RetryConfiguration;
+import net.microfalx.bootstrap.core.config.RetryProperties;
+import net.microfalx.bootstrap.core.i18n.I18nProperties;
+import net.microfalx.bootstrap.core.i18n.I18nService;
+import net.microfalx.bootstrap.feature.FeatureService;
 import net.microfalx.bootstrap.registry.Registry;
+import net.microfalx.bootstrap.registry.RegistryConfiguration;
 import net.microfalx.bootstrap.registry.RegistryService;
+import net.microfalx.bootstrap.resource.ResourceService;
 import net.microfalx.bootstrap.test.annotation.AnswerFor;
 import net.microfalx.bootstrap.test.annotation.Prepare;
 import net.microfalx.bootstrap.test.annotation.Subject;
@@ -19,6 +30,7 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.validation.beanvalidation.OptionalValidatorFactoryBean;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -190,6 +202,9 @@ public class TestContext {
 
     private void initCoreServices() {
         applicationContext = new AnnotationConfigApplicationContext();
+        registerCoreProperties();
+        registerCoreConfigurations();
+        registerCoreServices();
         registerCoreMocksWithContext();
         registerPreparedWithContext();
         if (!getSubjectClasses().isEmpty()) {
@@ -197,6 +212,31 @@ public class TestContext {
         }
         applicationContext.refresh();
         updateObjectsFromApplicationContext();
+    }
+
+    private void registerCoreProperties() {
+        applicationContext.register(BootstrapProperties.class);
+        applicationContext.register(RetryProperties.class);
+        applicationContext.register(I18nProperties.class);
+        applicationContext.register(RetryConfiguration.class);
+        applicationContext.register(ConverterConfiguration.class);
+        applicationContext.register(RegistryConfiguration.class);
+    }
+
+    private void registerCoreConfigurations() {
+        applicationContext.register(RetryConfiguration.class);
+        applicationContext.register(ConverterConfiguration.class);
+        applicationContext.register(RegistryConfiguration.class);
+        applicationContext.register(ApplicationConfiguration.class);
+    }
+
+    private void registerCoreServices() {
+        applicationContext.register(I18nService.class);
+        applicationContext.register(ApplicationService.class);
+        applicationContext.register(RegistryService.class);
+        applicationContext.register(ResourceService.class);
+        applicationContext.register(FeatureService.class);
+        applicationContext.register(OptionalValidatorFactoryBean.class);
     }
 
     private <T> void registerCoreMocksWithContext() {
