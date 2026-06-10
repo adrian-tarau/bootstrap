@@ -1,6 +1,6 @@
 package net.microfalx.bootstrap.core.i18n;
 
-import net.microfalx.bootstrap.core.async.AsynchronousConfig;
+import net.microfalx.bootstrap.core.async.AsynchronousConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ContextConfiguration(classes = {MessageSource.class, I18nService.class})
-@Import({I18nProperties.class, AsynchronousConfig.class})
+@Import({I18nProperties.class, AsynchronousConfiguration.class})
 @OverrideAutoConfiguration(enabled = false)
 @ImportAutoConfiguration
 @SpringBootTest

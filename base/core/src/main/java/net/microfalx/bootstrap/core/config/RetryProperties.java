@@ -17,7 +17,7 @@ public class RetryProperties {
     private int maxAttempts = 3;
 
     /**
-     * The default 'initialInterval' value - 100 millisecs. Coupled with the default
+     * The default 'initialInterval' value - 100 milliseconds. Coupled with the default
      * 'multiplier' value this gives a useful initial spread of pauses for 1-5 retries.
      */
     private long initialInterval = ExponentialBackOffPolicy.DEFAULT_INITIAL_INTERVAL;
