@@ -1,18 +1,17 @@
 package net.microfalx.bootstrap.cli;
 
 import net.microfalx.bootstrap.cli.command.Command;
-import net.microfalx.bootstrap.cli.command.VersionCommand;
-import net.microfalx.bootstrap.test.ServiceUnitTestCase;
-import net.microfalx.bootstrap.test.annotation.Prepare;
-import net.microfalx.bootstrap.test.annotation.Subject;
+import net.microfalx.bootstrap.test.ServiceIntegrationTestCase;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Prepare(subjects = VersionCommand.class)
-class CliServiceTest extends ServiceUnitTestCase {
+@ContextConfiguration(classes = CliService.class)
+public class CliServiceIntegrationTest extends ServiceIntegrationTestCase {
 
-    @Subject CliService cliService;
+    @Autowired CliService cliService;
 
     @Test
     void getCommands() {
@@ -42,5 +41,4 @@ class CliServiceTest extends ServiceUnitTestCase {
     void versionCommand() {
         cliService.execute("version");
     }
-
 }

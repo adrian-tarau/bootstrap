@@ -47,6 +47,18 @@
 
         <dependency>
             <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-resource</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.microfalx.resource</groupId>
+                    <artifactId>resource-s3</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
             <artifactId>bootstrap-base-store</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -92,6 +104,15 @@
             <groupId>info.picocli</groupId>
             <artifactId>picocli-codegen</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- Testing -->
+
+        <dependency>
+            <groupId>net.microfalx.bootstrap</groupId>
+            <artifactId>bootstrap-base-test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
