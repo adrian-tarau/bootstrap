@@ -47,9 +47,11 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
     private ThreadPool threadPool = ThreadPool.get();
     private Process process;
     private File logFile;
-    private Duration timeout = Duration.ofMinutes(5);
+    private Duration startupTimeout = Duration.ofSeconds(5);
+    private Duration executionTimeout = Duration.ofMinutes(5);
     private File workingDirectory;
     private boolean dryRun;
+    private boolean startupFailed;
     private volatile int exitCode;
     private final Map<String, Object> environment = new HashMap<>();
     private volatile boolean started;
@@ -140,13 +142,24 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
     }
 
     /**
+     * Changes the startup timeout.
+     *
+     * @param timeout the new timeout
+     * @return self
+     */
+    public ProcessLauncher setStartupTimeout(Duration timeout) {
+        this.startupTimeout = requireNonNull(timeout);
+        return this;
+    }
+
+    /**
      * Changes the execution timeout.
      *
      * @param timeout the new timeout
      * @return self
      */
-    public ProcessLauncher setTimeout(Duration timeout) {
-        this.timeout = requireNonNull(timeout);
+    public ProcessLauncher setExecutionTimeout(Duration timeout) {
+        this.executionTimeout = requireNonNull(timeout);
         return this;
     }
 
@@ -250,13 +263,14 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
      */
     public int waitFor() {
         if (dryRun) return 0;
-        long end = currentTimeMillis() + timeout.toMillis();
-        while (!isStarted() && currentTimeMillis() < end) {
+        long end = currentTimeMillis() + startupTimeout.toMillis();
+        while (!isStarted() && currentTimeMillis() < end && !startupFailed) {
             sleepMillis(10);
         }
         if (!isStarted()) {
             throw new ProcessException("Process '" + executable + "' failed to start, logs: " + getLogsAsString());
         }
+        end = currentTimeMillis() + executionTimeout.toMillis();
         while (isRunning() && currentTimeMillis() < end) {
             sleepMillis(10);
         }
@@ -320,7 +334,8 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
                 .add("name", name)
                 .add("executable", executable)
                 .add("arguments", arguments)
-                .add("timeout", timeout)
+                .add("startupTimeout", startupTimeout)
+                .add("executionTimeout", executionTimeout)
                 .add("workingDirectory", workingDirectory)
                 .add("dryRun", dryRun)
                 .add("started", started)
@@ -353,6 +368,7 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
             started = true;
             running = true;
         } catch (Exception e) {
+            startupFailed = true;
             throw new ProcessException("Failed to run executable '" + executable + "'", e);
         }
         threadPool.execute(new Worker());
