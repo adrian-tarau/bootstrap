@@ -69,6 +69,15 @@ public abstract class Tool<T extends Tool<T>> implements Identifiable<String>, N
     }
 
     /**
+     * Returns whether the tool has a custom workspace set.
+     *
+     * @return {@code true} if a custom workspace is set, {@code false} to use the process working directory
+     */
+    public final boolean hasWorkingDirectory() {
+        return workingDirectory != null;
+    }
+
+    /**
      * Returns the working directory.
      *
      * @return a non-null instance
