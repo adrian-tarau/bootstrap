@@ -118,6 +118,15 @@ public final class Console {
     }
 
     /**
+     * Prints a single space to the console.
+     *
+     * @return self
+     */
+    public Console printSpace() {
+        return print(" ");
+    }
+
+    /**
      * Prints a line to the console, no new line after.
      *
      * @param message the message to print
