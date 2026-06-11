@@ -63,7 +63,7 @@ class ApplicationRequestInterceptor implements HandlerInterceptor {
                 Optional<Theme> themeForDomain = applicationService.getThemeForDomain(host);
                 if (themeForDomain.isPresent()) {
                     themeId = themeForDomain.get().getId();
-                    LOGGER.info("Applying theme '{}' for domain '{}'", themeForDomain.get().getId(), host);
+                    LOGGER.debug("Applying theme '{}' for domain '{}'", themeForDomain.get().getId(), host);
                     session.setAttribute(THEME_SESSION_ATTR, themeId);
                     session.setAttribute(THEME_SESSION_DOMAIN_APPLIED_ATTR, Boolean.TRUE);
                 }
@@ -74,11 +74,11 @@ class ApplicationRequestInterceptor implements HandlerInterceptor {
 
     private void storeThemeInSession(HttpServletRequest request, HttpSession session, String themeId, String themeMode) {
         if (isNotEmpty(themeId)) {
-            LOGGER.info("Applying theme '{}' for request '{}'", themeId, request.getRequestURI());
+            LOGGER.debug("Applying theme '{}' for request '{}'", themeId, request.getRequestURI());
             session.setAttribute(THEME_SESSION_ATTR, themeId);
         }
         if (isNotEmpty(themeMode)) {
-            LOGGER.info("Applying theme mode '{}' for request '{}'", themeId, request.getRequestURI());
+            LOGGER.debug("Applying theme mode '{}' for request '{}'", themeId, request.getRequestURI());
             session.setAttribute(THEME_SESSION_MODE_ATTR, themeMode);
         }
     }
