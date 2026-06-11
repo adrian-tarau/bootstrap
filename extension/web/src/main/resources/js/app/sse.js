@@ -42,7 +42,7 @@ Application.Sse.start = function (path, callback, params, options) {
     this.events = this.events || [];
     this.events.push(events);
     events.addEventListener("error-event", (event) => {
-        Logger.warn("Received a server side failure from SSO connection '" + event.target.url + "', error: " + event.data);
+        Logger.warn("Received a server side failure from SSE connection '" + event.target.url + "', error: " + event.data);
     });
     events.onopen = (event) => {
         Logger.debug("SSE connection has been established to '" + event.target.url + "'");
@@ -71,7 +71,7 @@ Application.Sse.setEnabled = function (enabled) {
  * @return {boolean} the true if SSE is enabled, false otherwise
  */
 Application.Sse.isEnabled = function () {
-    return Application.Sse.enabled !== false;
+    return Application.Sse.enabled !== false && Application.isAuthenticated();
 }
 
 /**
@@ -79,6 +79,7 @@ Application.Sse.isEnabled = function () {
  */
 Application.Sse.initialize = function () {
     Application.Sse.setEnabled(true);
+    if (!Application.isAuthenticated()) return;
     Application.Sse.start("/event/out", function (data, event) {
         let json = JSON.parse(data);
         let name = json.name;
@@ -93,5 +94,4 @@ Application.Sse.initialize = function () {
     }, {}, {self: false});
 }
 
-// initialize application
-Application.Sse.initialize();
+Application.bind("start", Application.Sse.initialize);
