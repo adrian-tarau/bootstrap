@@ -22,9 +22,17 @@ $(document).on({
                 Application.showErrorAlert("Request", "A request (" + json.path + ") has invalid data");
             }
         } else if (jqxhr.status === 401) {
-            Application.showErrorAlert("Request", "A request (" + json.path + ") is not authorized");
+            if (Application.isAuthenticated()) {
+                Application.showErrorAlert("Request", "A request (" + json.path + ") is not authorized");
+            } else {
+                Logger.warn("A request (" + json.path + ") is not authorized");
+            }
         } else if (jqxhr.status === 403) {
-            Application.showErrorAlert("Request", "A request (" + json.path + ") is forbidden");
+            if (Application.isAuthenticated()) {
+                Application.showErrorAlert("Request", "A request (" + json.path + ") is forbidden");
+            } else {
+                Logger.warn("A request (" + json.path + ") is not authorized");
+            }
         } else {
             Application.showErrorAlert("Request", "A request (" + json.path + "') failed with an error '" + json.error + "'");
         }
