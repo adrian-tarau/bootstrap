@@ -2,10 +2,7 @@ package net.microfalx.bootstrap.core.process;
 
 import com.google.common.base.MoreObjects;
 import lombok.extern.slf4j.Slf4j;
-import net.microfalx.lang.Identifiable;
-import net.microfalx.lang.JvmUtils;
-import net.microfalx.lang.Nameable;
-import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.*;
 import net.microfalx.resource.Resource;
 import net.microfalx.threadpool.ThreadPool;
 
@@ -312,6 +309,7 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
         File workingDirectory = this.workingDirectory != null ? this.workingDirectory : JvmUtils.getWorkingDirectory();
         ProcessBuilder builder = new ProcessBuilder(buildCommandLine()).directory(workingDirectory);
         builder.redirectOutput(logFile).redirectErrorStream(true);
+        environment.forEach((k, v) -> builder.environment().put(k, ObjectUtils.toString(v)));
         if (async) {
             threadPool.execute(() -> doStart(builder));
         } else {
