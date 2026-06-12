@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.web.util;
 
 import jakarta.servlet.http.HttpServletRequest;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.lang.UriUtils;
 import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.Arrays;
@@ -25,6 +26,10 @@ public class PathFilter {
 
     public PathFilter(boolean withDefaults) {
         if (withDefaults) registerDefaultPaths();
+    }
+
+    public boolean isRoot(HttpServletRequest request) {
+        return UriUtils.isRoot(request.getRequestURI());
     }
 
     public void registerExclusion(String path) {
