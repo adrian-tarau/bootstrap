@@ -17,6 +17,7 @@ public abstract class Tool<T extends Tool<T>> implements Identifiable<String>, N
     private final String name;
     private boolean dryRun;
     private boolean clean;
+    private boolean yes;
     private File workingDirectory;
 
     private Console console;
@@ -134,6 +135,26 @@ public abstract class Tool<T extends Tool<T>> implements Identifiable<String>, N
      */
     public final T setClean(boolean clean) {
         this.clean = clean;
+        return self();
+    }
+
+    /**
+     * Returns whether the tool will answer to questions automatically.
+     *
+     * @return {@code true} to cleanup, {@code false} otherwise
+     */
+    public final boolean isYes() {
+        return yes;
+    }
+
+    /**
+     * Changes whether the auto-answer is enabled.
+     *
+     * @param yes {@code true} to clean, {@code false} otherwise
+     * @return self
+     */
+    public final T setYes(boolean yes) {
+        this.yes = yes;
         return self();
     }
 
