@@ -65,7 +65,7 @@ public class Template implements Nameable {
         requireNonNull(name);
         Object previous = variables.put(name, value);
         if (previous != null && !previous.equals(value)) {
-            LOGGER.warn("Overriding existing template variable '{}' ({} -> {})", name, previous, value);
+            LOGGER.debug("Overriding existing template variable '{}' ({} -> {})", name, previous, value);
         }
         return this;
     }
