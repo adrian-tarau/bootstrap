@@ -11,23 +11,18 @@ import net.microfalx.metrics.Metrics;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
-import org.springframework.util.PathMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class GlobalExceptionListener implements HandlerExceptionResolver {
 
     private static final Map<Failure.Type, Issue.Severity> FAILURE_SEVERITIES = new HashMap<>();
-    private static final Set<String> FAILURE_PATH_IGNORES = new HashSet<>();
-    private static final PathFilter DEFAULT_EXCLUSIONS = new PathFilter();
+    private static final PathFilter DEFAULT_EXCLUSIONS = new PathFilter(true, true);
 
     private static final Metrics FAILURE = Metrics.of("Bootstrap").withGroup("Controller Failures");
     private static final Metrics FAILURE_BY_EXCEPTION = FAILURE.withGroup("Exception");
@@ -37,7 +32,7 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
     public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception exception) {
         FAILURE_BY_EXCEPTION.count(ClassUtils.getCompactName(exception));
         FAILURE_BY_PATH.count(PathFilter.getRootPath(request));
-        if (shouldIgnorePath(request) || shouldIgnoreException(request, exception)) return null;
+        if (shouldIgnore(request, exception)) return null;
         String matchedPattern = PathFilter.getRequestPattern(request);
         Issue.Severity severity = getSeverityFromException(request, exception);
         if (severity != null) {
@@ -48,22 +43,8 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
         return null;
     }
 
-    private boolean shouldIgnoreException(HttpServletRequest request, Exception exception) {
-        Failure.Type type = Failure.getType(exception);
-        if (type == Failure.Type.AUTHORIZATION) {
-            return DEFAULT_EXCLUSIONS.isRoot(request) || DEFAULT_EXCLUSIONS.shouldExclude(request);
-        } else {
-            return false;
-        }
-    }
-
-    private boolean shouldIgnorePath(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        PathMatcher matcher = new AntPathMatcher();
-        for (String pathIgnore : FAILURE_PATH_IGNORES) {
-            if (matcher.match(pathIgnore, uri)) return true;
-        }
-        return false;
+    private boolean shouldIgnore(HttpServletRequest request, Exception exception) {
+        return DEFAULT_EXCLUSIONS.shouldExclude(request) || DEFAULT_EXCLUSIONS.shouldExcludeException(request, exception);
     }
 
     private Issue.Severity getSeverityFromException(HttpServletRequest request, Exception exception) {
@@ -86,7 +67,5 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
         FAILURE_SEVERITIES.put(Failure.Type.RESOURCE_NOT_FOUND, Issue.Severity.LOW);
         FAILURE_SEVERITIES.put(Failure.Type.SERVICE_UNAVAILABLE, Issue.Severity.HIGH);
         FAILURE_SEVERITIES.put(Failure.Type.CONFIGURATION, Issue.Severity.CRITICAL);
-
-        FAILURE_PATH_IGNORES.add("/**/*.php");
     }
 }
