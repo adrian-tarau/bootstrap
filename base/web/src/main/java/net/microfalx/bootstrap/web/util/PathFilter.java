@@ -1,8 +1,11 @@
 package net.microfalx.bootstrap.web.util;
 
 import jakarta.servlet.http.HttpServletRequest;
+import net.microfalx.bootstrap.core.utils.Failure;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.UriUtils;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.Arrays;
@@ -15,49 +18,127 @@ import static net.microfalx.lang.UriUtils.SLASH;
 
 /**
  * A utility class which filters paths based on exclusion rules.
+ * <p>
+ * The filter accepts path prefix (everything starting with) and Ant patterns.
  */
 public class PathFilter {
 
     private final Set<String> excludedPaths = new CopyOnWriteArraySet<>();
+    private final Set<String> excludedPatterns = new CopyOnWriteArraySet<>();
 
     public PathFilter() {
         this(true);
     }
 
     public PathFilter(boolean withDefaults) {
+        this(withDefaults, false);
+    }
+
+    public PathFilter(boolean withDefaults, boolean withNonJavaHandler) {
         if (withDefaults) registerDefaultPaths();
+        if (withNonJavaHandler) registerDefaultNonJavaPatterns();
     }
 
     public boolean isRoot(HttpServletRequest request) {
         return UriUtils.isRoot(request.getRequestURI());
     }
 
-    public void registerExclusion(String path) {
+    /**
+     * Registers a path prefix for exclusions (basically /path/**).
+     *
+     * @param path the path
+     */
+    public void registerExclusionPathPrefix(String path) {
+        requireNonNull(path);
         excludedPaths.add(removeStartSlash(path).toLowerCase());
     }
 
+    /**
+     * Registers a path pattern for exclusion.
+     * <p>
+     * The pattern is an Ant pattern
+     *
+     * @param pattern the pattern
+     */
+    public void registerExclusionPattern(String pattern) {
+        requireNonNull(pattern);
+        excludedPatterns.add(removeStartSlash(pattern).toLowerCase());
+    }
+
+    /**
+     * Returns whether the request should be excluded.
+     *
+     * @param request the HTTP request
+     * @return {@code true} if excluded, {@code false} otherwise
+     */
     public boolean shouldExclude(HttpServletRequest request) {
         String path = request.getRequestURI();
         return shouldExclude(path);
     }
 
+    /**
+     * Returns whether the request failure should be excluded.
+     *
+     * @param request   the request
+     * @param throwable the exception
+     * @return {@code true} if excluded, {@code false} otherwise
+     */
+    public boolean shouldExcludeException(HttpServletRequest request, Throwable throwable) {
+        Failure.Type type = Failure.getType(throwable);if (type == Failure.Type.AUTHORIZATION) {
+            return isRoot(request) || shouldExclude(request);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Returns whether the request should be excluded.
+     *
+     * @param path the HTTP request path
+     * @return {@code true} if excluded, {@code false} otherwise
+     */
     public boolean shouldExclude(String path) {
         path = removeStartSlash(path).toLowerCase();
         for (String excludedPath : excludedPaths) {
             if (path.startsWith(excludedPath)) return true;
         }
+        PathMatcher matcher = new AntPathMatcher();
+        for (String ignorePattern : excludedPatterns) {
+            if (matcher.match(ignorePattern, path)) return true;
+        }
         return false;
     }
 
+    /**
+     * Returns whether the request should be included.
+     *
+     * @param request the HTTP request
+     * @return {@code true} if included, {@code false} otherwise
+     */
     public boolean shouldInclude(HttpServletRequest request) {
         String path = request.getRequestURI();
         return shouldInclude(path);
     }
 
+    /**
+     * Returns whether the request should be included.
+     *
+     * @param path the HTTP request path
+     * @return {@code true} if included, {@code false} otherwise
+     */
     public boolean shouldInclude(String path) {
         return !shouldExclude(path);
     }
 
+    /**
+     * Returns the request as a pattern.
+     * <p>
+     * If method checks the request object for the original controller matcher, otherwise it returns the root
+     * of the request.
+     *
+     * @param request the request
+     * @return the patter (or root path as a backup)
+     */
     public static String getRequestPattern(HttpServletRequest request) {
         requireNonNull(request);
         String matchedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
@@ -88,14 +169,23 @@ public class PathFilter {
     }
 
     private void registerDefaultPaths() {
-        registerExclusion("ping");
-        registerExclusion("status");
-        registerExclusion("event");
-        registerExclusion("asset");
-        registerExclusion("image");
-        registerExclusion("error");
-        registerExclusion("favicon.ico");
-        registerExclusion(".well-known");
+        registerExclusionPathPrefix("ping");
+        registerExclusionPathPrefix("status");
+        registerExclusionPathPrefix("event");
+        registerExclusionPathPrefix("asset");
+        registerExclusionPathPrefix("image");
+        registerExclusionPathPrefix("error");
+        registerExclusionPathPrefix("favicon.ico");
+        registerExclusionPathPrefix(".well-known");
+    }
+
+    private void registerDefaultNonJavaPatterns() {
+        registerExclusionPattern("**/*.php");
+        registerExclusionPattern("**/*.php5");
+        registerExclusionPattern("**/*.phtml");
+        registerExclusionPattern("**/*.asp");
+        registerExclusionPattern("**/*.cgi");
+        registerExclusionPattern("**/*.cfm");
     }
 
     private static String getRootPath(String path, int parts) {
