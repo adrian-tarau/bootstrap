@@ -29,7 +29,7 @@ public final class Console {
     private Scanner scanner;
     private java.io.Console console;
 
-    private int tabSize = 3;
+    private int tabSize = 2;
 
     private static volatile Console instance;
 
@@ -315,7 +315,7 @@ public final class Console {
             while (running.get()) {
                 sleepMillis(sleep);
                 if (running.get()) print(".");
-                sleep = (float) Math.max(10f, sleep * 1.5);
+                sleep = (float) Math.max(10f, sleep * 1.2);
             }
         }
 
