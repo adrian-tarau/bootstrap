@@ -21,6 +21,8 @@ import net.microfalx.bootstrap.test.answer.AbstractAnswer;
 import net.microfalx.bootstrap.test.answer.JpaRepositoryAnswer;
 import net.microfalx.bootstrap.test.extension.ComponentCreator;
 import net.microfalx.lang.*;
+import net.microfalx.resource.Resource;
+import net.microfalx.resource.ResourceFactory;
 import net.microfalx.threadpool.ThreadPool;
 import org.atteo.classindex.ClassIndex;
 import org.mockito.Mock;
@@ -313,10 +315,15 @@ public class TestContext {
 
     private void initDirectory() {
         workingDirectory = new File(JvmUtils.getWorkingDirectory(), "target");
-        if (!workingDirectory.exists()) workingDirectory = JvmUtils.getTemporaryDirectory();
+        if (!workingDirectory.exists()) {
+            workingDirectory = JvmUtils.getTemporaryDirectory();
+        } else {
+            ResourceFactory.setTemporary(Resource.directory(workingDirectory));
+        }
         workingDirectory = validateDirectoryExists(new File(workingDirectory, IdGenerator.get().nextAsString()));
         LOGGER.debug("Working director for '{}' is '{}'", ClassUtils.getName(testClass), workingDirectory);
         JvmUtils.setCacheDirectory(workingDirectory);
+
     }
 
     private void initComponentCreators() {
