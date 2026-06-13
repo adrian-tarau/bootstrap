@@ -49,6 +49,7 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
     private File workingDirectory;
     private boolean dryRun;
     private boolean startupFailed;
+    private boolean inheritEnvironment = true;
     private volatile int exitCode;
     private final Map<String, Object> environment = new HashMap<>();
     private volatile boolean started;
@@ -168,6 +169,19 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
      */
     public ProcessLauncher setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
+        return this;
+    }
+
+    /**
+     * Indicates whether the environment of the current process passed to the child process.
+     * <p>
+     * By default, all child processes will inherit the environment.
+     *
+     * @param inheritEnvironment {@code true} to inherit the environment
+     * @return self
+     */
+    public ProcessLauncher setInheritEnvironment(boolean inheritEnvironment) {
+        this.inheritEnvironment = inheritEnvironment;
         return this;
     }
 
@@ -309,6 +323,9 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
         File workingDirectory = this.workingDirectory != null ? this.workingDirectory : JvmUtils.getWorkingDirectory();
         ProcessBuilder builder = new ProcessBuilder(buildCommandLine()).directory(workingDirectory);
         builder.redirectOutput(logFile).redirectErrorStream(true);
+        if (inheritEnvironment) {
+            System.getenv().forEach((k, v) -> builder.environment().put(k, ObjectUtils.toString(v)));
+        }
         environment.forEach((k, v) -> builder.environment().put(k, ObjectUtils.toString(v)));
         if (async) {
             threadPool.execute(() -> doStart(builder));
