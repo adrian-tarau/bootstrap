@@ -3,6 +3,7 @@ package net.microfalx.bootstrap.cli;
 import lombok.extern.slf4j.Slf4j;
 import net.microfalx.bootstrap.application.Application;
 import net.microfalx.bootstrap.cli.command.Command;
+import net.microfalx.lang.JvmUtils;
 import net.microfalx.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class CliService implements InitializingBean {
      * @return the return code
      */
     public int execute(String... args) {
-        LOGGER.info("Execute command: {}", Arrays.toString(args));
+        LOGGER.info("Execute command: {} in directory {}", Arrays.toString(args), JvmUtils.getWorkingDirectory());
         CommandLine commandLine = new CommandLine(createRootCommand());
         commandLine.setExecutionExceptionHandler(new CiExceptionHandling());
         return commandLine.execute(args);
