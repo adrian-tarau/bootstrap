@@ -30,6 +30,7 @@ public final class Console {
     private java.io.Console console;
 
     private int tabSize = 2;
+    private int indent = 0;
 
     private static volatile Console instance;
 
@@ -246,6 +247,18 @@ public final class Console {
     }
 
     /**
+     * Prints a number of tabs/indents based on the current indent size.
+     *
+     * @return self
+     */
+    public Console printList() {
+        for (int index = 0; index < indent; index++) {
+            printTab();
+        }
+        return printBullet();
+    }
+
+    /**
      * Prints the exit code explanation to the console and a new line.
      *
      * @param code the exit code
@@ -269,6 +282,22 @@ public final class Console {
             printFailure("Failed (" + code + ")");
         }
         if (newLine) printLn();
+        return this;
+    }
+
+    /**
+     * Increases the indent used for lists.
+     */
+    public Console increaseIndent() {
+        indent++;
+        return this;
+    }
+
+    /**
+     * Decreases the indent used for lists.
+     */
+    public Console decreaseIndent() {
+        indent = Math.max(0, indent - 1);
         return this;
     }
 
