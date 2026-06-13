@@ -188,6 +188,17 @@ public final class Console {
     }
 
     /**
+     * Prints a message with a yellow color to signal the outcome is "problematic" (a posible problem).
+     *
+     * @param text the text
+     * @return self
+     */
+    public Console printWarning(String text) {
+        String value = ANSI.string("@|yellow " + defaultIfEmpty(text, NA_STRING) + "|@");
+        return print(value);
+    }
+
+    /**
      * Prints a bolded message to signal an important part of the message.
      *
      * @param text the text
@@ -235,18 +246,29 @@ public final class Console {
     }
 
     /**
-     * Prints the exit code explanation to the console.
+     * Prints the exit code explanation to the console and a new line.
      *
      * @param code the exit code
      * @return self
      */
     public Console printExitCode(int code) {
+        return printExitCode(code, true);
+    }
+
+    /**
+     * Prints the exit code explanation to the console.
+     *
+     * @param code    the exit code
+     * @param newLine {@code true} if a new line should be added, {@code false} otherwise
+     * @return self
+     */
+    public Console printExitCode(int code, boolean newLine) {
         if (code == 0) {
             printOk("OK");
         } else {
             printFailure("Failed (" + code + ")");
         }
-        printLn();
+        if (newLine) printLn();
         return this;
     }
 
