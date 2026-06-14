@@ -118,6 +118,15 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
     }
 
     /**
+     * Returns the working directory.
+     *
+     * @return a non-null instance
+     */
+    public File getWorkingDirectory() {
+        return workingDirectory != null ? workingDirectory : JvmUtils.getWorkingDirectory();
+    }
+
+    /**
      * Changes the working directory.
      *
      * @param workingDirectory the new working directory
@@ -213,6 +222,18 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
     }
 
     /**
+     * Returns the log file which will contain the output of the process, if any.
+     *
+     * @return a non-null instance
+     */
+    public File getLogFile() {
+        if (logFile == null) {
+            logFile = new File(getLogsDirectory(), getId() + "_" + LOG_COUNTER.getAndIncrement() + "_" + FORMATTER.format(LocalDateTime.now()) + ".log");
+        }
+        return logFile;
+    }
+
+    /**
      * Returns the logs of the server, including both standard output and standard error.
      *
      * @return a non-null instance
@@ -283,11 +304,17 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
             sleepMillis(10);
         }
         if (!isStarted()) {
+            LOGGER.info("Process failed to start: {}", toDescription());
             throw new ProcessException("Process '" + executable + "' failed to start, logs: " + getLogsAsString());
         }
         end = currentTimeMillis() + executionTimeout.toMillis();
         while (isRunning() && currentTimeMillis() < end) {
             sleepMillis(10);
+        }
+        if (exitCode > 0) {
+            LOGGER.warn("Process exists with code {} : {}", exitCode, toDescription());
+        } else {
+            LOGGER.info("Process completed successful: {}", toDescription());
         }
         return exitCode;
     }
@@ -319,14 +346,13 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
             started = true;
             return;
         }
-        logFile = new File(getLogsDirectory(), getId() + "_" + LOG_COUNTER.getAndIncrement() + "_" + FORMATTER.format(LocalDateTime.now()) + ".log");
-        File workingDirectory = this.workingDirectory != null ? this.workingDirectory : JvmUtils.getWorkingDirectory();
-        ProcessBuilder builder = new ProcessBuilder(buildCommandLine()).directory(workingDirectory);
-        builder.redirectOutput(logFile).redirectErrorStream(true);
+        ProcessBuilder builder = new ProcessBuilder(buildCommandLine()).directory(this.getWorkingDirectory());
+        builder.redirectOutput(getLogFile()).redirectErrorStream(true);
         if (inheritEnvironment) {
             System.getenv().forEach((k, v) -> builder.environment().put(k, ObjectUtils.toString(v)));
         }
         environment.forEach((k, v) -> builder.environment().put(k, ObjectUtils.toString(v)));
+        LOGGER.info("Start process {}", toDescription());
         if (async) {
             threadPool.execute(() -> doStart(builder));
         } else {
@@ -346,6 +372,16 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
         }
     }
 
+    /**
+     * Returns a short description of the command line parameters.
+     *
+     * @return a non-null instance
+     */
+    public String toDescription() {
+        return getName() + " (" + executable + "), arguments: " + arguments + ", environment: " + environment.size()
+                + ", logs: " + getLogFile();
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -356,6 +392,7 @@ public class ProcessLauncher implements Identifiable<String>, Nameable {
                 .add("startupTimeout", startupTimeout)
                 .add("executionTimeout", executionTimeout)
                 .add("workingDirectory", workingDirectory)
+                .add("environment", environment.size())
                 .add("dryRun", dryRun)
                 .add("started", started)
                 .add("running", running)
