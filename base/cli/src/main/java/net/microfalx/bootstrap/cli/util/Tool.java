@@ -204,7 +204,6 @@ public abstract class Tool<T extends Tool<T>> implements Identifiable<String>, N
      */
     protected abstract String[] getFiles();
 
-
     @SuppressWarnings("unchecked")
     protected final T self() {
         return (T) this;
@@ -217,6 +216,6 @@ public abstract class Tool<T extends Tool<T>> implements Identifiable<String>, N
      * @param launcher the launcher
      */
     protected void updateLauncher(ProcessLauncher launcher) {
-        // empty by default
+        launcher.setName(getName());
     }
 }

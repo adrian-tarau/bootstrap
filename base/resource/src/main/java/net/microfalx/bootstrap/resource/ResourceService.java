@@ -169,7 +169,7 @@ public class ResourceService implements InitializingBean {
         validateDirectory(transientDirectory = new File(properties.getTransientDirectory()));
         initializeSharedResource();
         validateResource(getSharedResource(null));
-        LOGGER.info("JVM directories: home = {}, working = {}, var = {}, tmp = {}", JvmUtils.getHomeDirectory(),
+        LOGGER.info("Initial JVM directories: home = {}, working = {}, var = {}, tmp = {}", JvmUtils.getHomeDirectory(),
                 JvmUtils.getWorkingDirectory(false), JvmUtils.getVariableDirectory(), JvmUtils.getTemporaryDirectory());
         LOGGER.info("Persisted resources directory {}", persistedDirectory);
         ResourceFactory.setWorkspace(FileResource.directory(persistedDirectory));
@@ -179,6 +179,9 @@ public class ResourceService implements InitializingBean {
         JvmUtils.setVariableDirectory(persistedDirectory);
         JvmUtils.setCacheDirectory(persistedDirectory);
         ResourceFactory.setTemporary(FileResource.directory(transientDirectory));
+
+        LOGGER.info("Final JVM directories: home = {}, working = {}, var = {}, tmp = {}", JvmUtils.getHomeDirectory(),
+                JvmUtils.getWorkingDirectory(false), JvmUtils.getVariableDirectory(), JvmUtils.getTemporaryDirectory());
     }
 
     private void initializeClassPath() {
