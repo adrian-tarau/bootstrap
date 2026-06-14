@@ -279,7 +279,7 @@ public final class Console {
         if (code == 0) {
             printOk("OK");
         } else {
-            printFailure("Failed (" + code + ")");
+            printFailure("Failed (exit code=" + code + ")");
         }
         if (newLine) printLn();
         return this;
@@ -366,7 +366,7 @@ public final class Console {
             while (running.get()) {
                 sleepMillis(sleep);
                 if (running.get()) print(".");
-                sleep = (float) Math.max(10f, sleep * 1.2);
+                sleep = (float) Math.max(5f, sleep * 1.2);
             }
         }
 
