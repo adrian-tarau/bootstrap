@@ -1,7 +1,6 @@
 package net.microfalx.bootstrap.web.util;
 
 import jakarta.servlet.http.HttpServletRequest;
-import net.microfalx.bootstrap.core.utils.Failure;
 import net.microfalx.lang.StringUtils;
 import net.microfalx.lang.UriUtils;
 import org.springframework.util.AntPathMatcher;
@@ -74,21 +73,6 @@ public class PathFilter {
     public boolean shouldExclude(HttpServletRequest request) {
         String path = request.getRequestURI();
         return shouldExclude(path);
-    }
-
-    /**
-     * Returns whether the request failure should be excluded.
-     *
-     * @param request   the request
-     * @param throwable the exception
-     * @return {@code true} if excluded, {@code false} otherwise
-     */
-    public boolean shouldExcludeException(HttpServletRequest request, Throwable throwable) {
-        Failure.Type type = Failure.getType(throwable);if (type == Failure.Type.AUTHORIZATION) {
-            return isRoot(request) || shouldExclude(request);
-        } else {
-            return false;
-        }
     }
 
     /**
