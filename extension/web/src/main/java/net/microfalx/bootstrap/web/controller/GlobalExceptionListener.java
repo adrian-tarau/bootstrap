@@ -4,9 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.microfalx.bootstrap.core.utils.Failure;
 import net.microfalx.bootstrap.support.report.Issue;
+import net.microfalx.bootstrap.web.util.HttpServletUtils;
 import net.microfalx.bootstrap.web.util.PathFilter;
 import net.microfalx.lang.ClassUtils;
-import net.microfalx.lang.UriUtils;
 import net.microfalx.metrics.Metrics;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -44,13 +44,13 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
     }
 
     private boolean shouldIgnore(HttpServletRequest request, Exception exception) {
-        return DEFAULT_EXCLUSIONS.shouldExclude(request) || DEFAULT_EXCLUSIONS.shouldExcludeException(request, exception);
+        boolean ignore = DEFAULT_EXCLUSIONS.shouldExclude(request);
+        if (!ignore) ignore = HttpServletUtils.shouldIgnoreFailure(request, exception);
+        return ignore;
     }
 
     private Issue.Severity getSeverityFromException(HttpServletRequest request, Exception exception) {
-        String rootPath = PathFilter.getRootPath(request);
         Failure.Type type = Failure.getType(exception);
-        if (type.isSecurity() && UriUtils.isRoot(rootPath)) return null;
         Issue.Severity severity = FAILURE_SEVERITIES.get(type);
         if (severity == null) severity = Issue.Severity.HIGH;
         return severity;

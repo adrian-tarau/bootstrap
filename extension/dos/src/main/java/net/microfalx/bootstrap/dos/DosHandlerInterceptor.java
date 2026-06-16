@@ -2,6 +2,7 @@ package net.microfalx.bootstrap.dos;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import net.microfalx.bootstrap.web.util.HttpServletUtils;
 import net.microfalx.bootstrap.web.util.PathFilter;
 import net.microfalx.lang.ExceptionUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -41,8 +42,8 @@ public class DosHandlerInterceptor implements HandlerInterceptor {
     }
 
     private boolean shouldInclude(HttpServletRequest request, Exception exception) {
-        // certain exception, conditioned by path or not, do not
-        if (pathFilter.shouldExcludeException(request, exception)) return false;
+        // if a failure, ignore unless it goes above a given threshold
+        if (HttpServletUtils.shouldIgnoreFailure(request, exception)) return false;
         // follow the rest of the rules
         return pathFilter.shouldInclude(request);
     }

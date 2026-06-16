@@ -4,12 +4,16 @@ import jakarta.servlet.ServletContext;
 import net.microfalx.bootstrap.web.util.HttpServletUtils;
 import net.microfalx.lang.ObjectUtils;
 import net.microfalx.lang.StringUtils;
+import net.microfalx.threadpool.ThreadPool;
+import net.microfalx.threadpool.Trigger;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -18,10 +22,10 @@ import java.util.Map;
  * A service which gives access to some of the web container features.
  */
 @Service
-public final class WebContainerService {
+public final class WebContainerService implements InitializingBean {
 
-    @Autowired
-    private ServletContext servletContext;
+    @Autowired private ServletContext servletContext;
+    @Autowired ThreadPool threadPool;
 
     /**
      * Returns a relative path to access a web resource.
@@ -50,7 +54,28 @@ public final class WebContainerService {
         return fullPath;
     }
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initTasks();
+    }
+
+    private void initTasks() {
+        threadPool.schedule(new MaintenanceTask(), Trigger.fixedDelay(Duration.ofSeconds(60)));
+    }
+
+    private void clearRequestFailures() {
+        HttpServletUtils.cleanupFailures();
+    }
+
     static {
         HttpServletUtils.init();
+    }
+
+    class MaintenanceTask implements Runnable {
+
+        @Override
+        public void run() {
+            clearRequestFailures();
+        }
     }
 }
