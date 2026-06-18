@@ -57,7 +57,7 @@ public class GlobalExceptionListener implements HandlerExceptionResolver {
     }
 
     static {
-        FAILURE_SEVERITIES.put(Failure.Type.AUTHORIZATION, Issue.Severity.CRITICAL);
+        FAILURE_SEVERITIES.put(Failure.Type.AUTHORIZATION, Issue.Severity.HIGH);
         FAILURE_SEVERITIES.put(Failure.Type.AUTHENTICATION, Issue.Severity.HIGH);
         FAILURE_SEVERITIES.put(Failure.Type.ILLEGAL_INPUT, Issue.Severity.LOW);
         FAILURE_SEVERITIES.put(Failure.Type.ILLEGAL_OUTPUT, Issue.Severity.LOW);
