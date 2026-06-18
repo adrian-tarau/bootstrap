@@ -1,33 +1,68 @@
 # Bootstrap
 
 ## Introduction
-Building blocks for Spring Boot projects. Although Spring Boot (and the rest of the Spring projects) are coming with many services, this project provides some custom services and components to speed up the development process.
+_Bootstrap_ provides building blocks for Spring Boot projects. Although Spring Boot (and the rest of the Spring projects) are coming with many services, this project provides some custom services and components to speed up the development process.
 
 _Bootstrap_ is very opinionated when it comes to building (web) application in Java based on Spring Boot. It's opinions are based on personal experience of the creators.
 
 It is recommended to read the following documents to get familiar with Spring Boot and related extensions/plugins:
 
+* [Spring Framework Documentation](https://spring.io/)
+* [Spring Quickstart Guide](https://spring.io/quickstart)
 * [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/index.html)
+* [Spring Boot Application Properties](https://docs.spring.io/spring-boot/appendix/application-properties/index.html)
+
+## Features
+
+_Bootstrap_ is organized in multiple modules, each module provides a set of features. The modules are:
+
+* `base`: provides basic services and components, such as feature flags, configuration, exception handling, logging, CLI support, etc.
+  * `app`: provides application metadata.
+  * `cli`: provides command line interface support.
+  * `configuration`: provides application dynamic configuration.
+  * `core`: provides core setups, services, components and utilities.
+  * `feature`: provides feature flags.
+  * `logging`: provides logging.
+  * `metrics`: provides metrics.
+  * `registry`: provides a hierarchical storage.
+  * `resource`: provides resource management.
+  * `security`: provides additional Spring Boot security elements.
+  * `store`: provides key-value stores based on RocksDB.
+  * `support`: provides application support.
+  * `trace`: provides tracing integration.
+  * `web`: provides additional Spring web support
+  * `test`: provides additional test setups.
+* `data`: provides additional data access support
+  * `broker`: provides brokers integration.
+  * `content`: provides file type detection and content extraction support based on Apache Tika.
+  * `dataset`: provides data as records under DataSet API.
+  * `dsv`: provides delimiter-separated values support.
+  * `jdbc`: provides additional JDBC integration, including modular database migration support.
+  * `model`: provides Record Metadata API.
+  * `test`: provides additional data related testing support.
+* `extension`: provides additional extensions and plugins support
+  * `dos`: provides Denial of Service support.
+  * `help`: provides integrated application help.
+  * `mail`: provides email sending support.
+  * `rest-api`: provides Rest-API integration with Spring Boot.
+  * `rest-api-client`: provides Rest-API client management and type-safe HTTP clients using Retrofit.
+  * `security`: provides security integration with Spring Boot.
+  * `support`: Web UI to manage & monitor the application.
+  * `system`: Web UI to configure the application.
+  * `template`: provides template support using Thymeleaf.
+  * `web`: provides additional Spring MVC support.
+  * `test`: provides additional test setups for Web & Rest API support.
+* `cloud`: provides cloud related support
+  * `google`: provides Google Cloud related support.
+* `ai`: provides AI related support
+* `serenity`: provides web browser testing support based on Serenity BDD.
+* `bom`: provides a Bill of Materials (BOM) for dependency management.
 
 ## Getting Started
 
 ## Build & Run
 
-The project requires Java 17 to develop and run and uses Spring Boot 3.X. The latest version can be downloaded from https://adoptium.net/
-
-Once it is installed, check the version from the shell:
-
-```
-java --version
-```
-
-The output must show a text similar to the one bellow (maybe a newer version is acceptable):
-
-```
-openjdk 17.0.6 2023-01-17
-OpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10)
-OpenJDK 64-Bit Server VM Temurin-17.0.6+10 (build 17.0.6+10, mixed mode, sharing)
-```
+The project requires Java 17 and Spring Boot 3.X to develop and run and uses and Apache Maven to build.
 
 ### IDE
 
@@ -40,30 +75,15 @@ Apache Maven is used to build the project.
 
 `mvn clean install -DskipTests` can be used to compile the application.
 
-`mvn spring-boot:run` can be used to run the demo application using Apache Maven.
+`mvn spring-boot:run` can be used in the *demo* module to run the demo application using Apache Maven.
 
 ### Tests
 
 `mvn clean test` can be used to compile and run tests only.
 
-## MVC & Templates
-
-_Bootstrap_ uses [Thymeleaf](https://www.thymeleaf.org/) as a template engine and expects the following template configurations:
-
-```
-spring.mvc.view.prefix=resources/templates
-spring.mvc.view.suffix=.html
-```
-
 ## Database
 
-_Bootstrap_ relies on [Flyway](https://flywaydb.org/) for automatic database migration.
-
-_Bootstrap_ expects that Flyway will be configured to expect all migration files separated by vendor.
-
-```
-spring.flyway.locations=classpath:db/migration/{vendor}
-```
+_Bootstrap_ provides automatic database migration system, which supports a modular application.
 
 ## Demo
 
