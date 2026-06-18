@@ -1,7 +1,9 @@
 package net.microfalx.bootstrap.security.user;
 
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import net.microfalx.bootstrap.security.SecurityContext;
 import net.microfalx.bootstrap.web.controller.PageController;
 import net.microfalx.bootstrap.web.util.JsonResponse;
@@ -19,7 +21,8 @@ public class UserProfileController extends PageController {
     @GetMapping("")
     public String get(Model model) {
         User user = SecurityContext.get().getUser();
-        model.addAttribute("user", new UserForm(user.getName(), user.getDisplayName(), user.getEmail()));
+        model.addAttribute("user", new UserForm().setName(user.getDisplayName())
+                .setEmail(user.getEmail()));
         return "security/user::#user-profile";
     }
 
@@ -38,11 +41,7 @@ public class UserProfileController extends PageController {
     @Getter
     @Setter
     @ToString
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class UserForm {
-
-        private String username;
 
         @Size(min = 1, max = 100)
         private String name;

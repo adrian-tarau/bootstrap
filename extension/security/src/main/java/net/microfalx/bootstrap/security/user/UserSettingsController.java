@@ -34,7 +34,7 @@ public class UserSettingsController extends PageController {
         User user = SecurityContext.get().getUser();
         User.Settings settings = user.getSettings();
         model.addAttribute("zones", getTimeZones());
-        model.addAttribute("settings", new SettingsForm().setUsername(user.getName())
+        model.addAttribute("settings", new SettingsForm()
                 .setTimeZone(settings.getTimeZone()).setTheme(settings.getTheme()));
         model.addAttribute("helper", this);
         return "security/user::#user-settings";
@@ -74,8 +74,6 @@ public class UserSettingsController extends PageController {
     @Setter
     @ToString
     public static class SettingsForm {
-
-        private String username;
 
         @Size(min = 1, max = 100)
         private String theme;
