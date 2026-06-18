@@ -16,7 +16,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="alert : ${alerts}">
+        <tr th:each="alert : ${pendingAlerts}">
             <td><span th:text="${helper.formatDateTime(alert.createdAt)}"></span></td>
             <td><span th:text="${helper.formatDateTime(alert.modifiedAt)}"></span></td>
             <td><span th:text="${helper.toLabel(alert.level)}"></span></td>
@@ -147,8 +147,8 @@
         <h3 th:replace="~{fragments/utils :: h3_count('Issue Types', ${issues.size()})}"></h3>
         <div th:replace="~{summary :: render-issues}" ></div>
     </th:block>
-    <th:block th:if="${alerts.size()}">
-        <h3 th:replace="~{fragments/utils :: h3_count('Pending Alerts', ${alerts.size()})}"></h3>
+    <th:block th:if="${pendingAlerts.size()}">
+        <h3 th:replace="~{fragments/utils :: h3_count('Pending Alerts', ${pendingAlerts.size()})}"></h3>
         <div th:replace="~{summary :: render-alerts}" ></div>
     </th:block>
     <th:block th:if="${failedAggregatedTasks.size()}">
