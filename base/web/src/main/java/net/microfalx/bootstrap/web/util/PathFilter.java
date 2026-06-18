@@ -164,12 +164,12 @@ public class PathFilter {
     }
 
     private void registerDefaultNonJavaPatterns() {
-        registerExclusionPattern("**/*.php");
-        registerExclusionPattern("**/*.php5");
+        registerExclusionPattern("**/*.php*");
         registerExclusionPattern("**/*.phtml");
         registerExclusionPattern("**/*.asp");
         registerExclusionPattern("**/*.cgi");
         registerExclusionPattern("**/*.cfm");
+        registerExclusionPattern("**/.env*");
     }
 
     private static String getRootPath(String path, int parts) {
