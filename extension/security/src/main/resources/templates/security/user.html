@@ -12,10 +12,6 @@
                 <div class="container-fluid">
                     <form id ="user-profile-form" th:action="@{/user/profile}" method="post">
                         <div class="mb-1">
-                            <label class="form-label">User Name</label>
-                            <input type="text" class="form-control" name="username" readonly disabled th:value="${user.username}"></input>
-                        </div>
-                        <div class="mb-1">
                             <label class="form-label">Display Name</label>
                             <input type="text" class="form-control" name="name"  th:value="${user.name}"></input>
                         </div>
@@ -43,10 +39,6 @@
             <div class="modal-body help">
                 <div class="container-fluid">
                     <form id ="user-settings-form" th:action="@{/user/settings}" method="post">
-                        <div class="mb-1">
-                            <label class="form-label">User Name</label>
-                            <input type="text" class="form-control" name="username" readonly disabled th:value="${settings.username}"></input>
-                        </div>
                         <div class="mb-1">
                             <label class="form-label">Time Zone</label>
                             <select name="timeZone" class="form-select">
