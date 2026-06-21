@@ -170,6 +170,7 @@ public class PathFilter {
         registerExclusionPattern("**/*.cgi");
         registerExclusionPattern("**/*.cfm");
         registerExclusionPattern("**/.env*");
+        registerExclusionPattern("**/.git");
     }
 
     private static String getRootPath(String path, int parts) {
