@@ -92,6 +92,9 @@ public class SearchUtils {
 
     final static String INDEX_NAME = "primary";
 
+    private static final Fields[] EMPTY_FIELDS_ARRAY = new Fields[0];
+    private static final ReaderSlice[] EMPTY_READER_SLICE_ARRAY = new ReaderSlice[0];
+
     /**
      * Returns whether the given field name is part of the standard field names.
      *
@@ -115,8 +118,8 @@ public class SearchUtils {
     /**
      * Transforms the query and escapes if requested.
      *
-     * @param query                the query
-     * @param escape   {@code true} if the query should be escaped, {@code false} otherwise
+     * @param query  the query
+     * @param escape {@code true} if the query should be escaped, {@code false} otherwise
      * @return a wildcard query or the original query
      */
     public static String normalizeQuery(String query, boolean escape) {
@@ -207,9 +210,9 @@ public class SearchUtils {
             slices.add(new ReaderSlice(ctx.docBase, r.maxDoc(), fields.size() - 1));
         }
         if (fields.size() == 1) {
-            return fields.get(0);
+            return fields.getFirst();
         } else {
-            return new MultiFields(fields.toArray(Fields.EMPTY_ARRAY), slices.toArray(ReaderSlice.EMPTY_ARRAY));
+            return new MultiFields(fields.toArray(EMPTY_FIELDS_ARRAY), slices.toArray(EMPTY_READER_SLICE_ARRAY));
         }
     }
 
