@@ -80,7 +80,7 @@
     <properties>
         <bom.version>1.0.21</bom.version>
 
-        <lang.version>1.0.4</lang.version>
+        <lang.version>1.0.5</lang.version>
         <resource.version>1.0.3</resource.version>
         <metrics.version>1.0.2</metrics.version>
         <tracing.version>1.0.1</tracing.version>
@@ -89,7 +89,7 @@
         <threadpool.version>1.0.1</threadpool.version>
         <webjar.version>1.0.1</webjar.version>
 
-        <spring.boot.version>3.5.15</spring.boot.version>
+        <spring.boot.version>3.5.16</spring.boot.version>
     </properties>
 
     <developers>
